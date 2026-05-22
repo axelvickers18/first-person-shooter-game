@@ -164,6 +164,15 @@
   }
   .smallbtn:hover { transform: translateY(-2px); }
 
+  /* Settings screen */
+  .setBlock { background: rgba(0,0,0,0.25); border-radius: 10px; padding: 16px 22px; min-width: 360px; text-align: center; }
+  .setLabel { font-size: 18px; font-weight: bold; letter-spacing: 2px; color: #ffe600; margin-bottom: 10px; }
+  .setHint { font-size: 12px; opacity: .8; margin-top: 8px; }
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .stepper #botCountVal { font-size: 40px; font-weight: bold; min-width: 60px; }
+  .stepper .smallbtn { font-size: 26px; width: 52px; padding: 6px 0; }
+  #throwPick button.selected { background: #34d058; color: #fff; outline: 3px solid #fff; }
+
   /* In-game scoreboard (hold TAB) */
   #scoreboard {
     position: fixed; inset: 0; z-index: 15; display: none;
@@ -209,7 +218,7 @@
     <div id="weaponName">PISTOL</div>
     <div id="ammo"><span id="ammoCur">12</span><span class="mag"> / <span id="ammoMag">12</span></span></div>
     <div id="reloading"></div>
-    <div id="grenades">GRENADES <span id="grenadeCount">2</span></div>
+    <div id="grenades"><span id="grenadeLabel">GRENADES</span> <span id="grenadeCount">2</span></div>
   </div>
 </div>
 
@@ -256,7 +265,33 @@
     <button class="bigbtn" id="menuHost">HOST PRIVATE LOBBY</button>
     <button class="bigbtn" id="menuJoin">JOIN WITH CODE</button>
   </div>
+  <button class="smallbtn" id="menuSettings">⚙ SETTINGS</button>
   <p class="controls-hint">Host a lobby to get a 5-letter code, share it with friends, and they join from anywhere online.</p>
+</div>
+
+<!-- ============================================================
+     SETTINGS SCREEN — bot count + throwable choice
+     ============================================================ -->
+<div id="settingsScreen" class="overlay hidden">
+  <h1>SETTINGS<small>MATCH OPTIONS</small></h1>
+  <div class="setBlock">
+    <div class="setLabel">BOTS <span class="setHint">(host / solo only)</span></div>
+    <div class="stepper">
+      <button class="smallbtn" id="botMinus">–</button>
+      <span id="botCountVal">8</span>
+      <button class="smallbtn" id="botPlus">+</button>
+    </div>
+    <div class="setHint">0 = pure player free-for-all, up to 16 bots.</div>
+  </div>
+  <div class="setBlock">
+    <div class="setLabel">THROWABLE</div>
+    <div class="weaponPick" id="throwPick">
+      <button data-throw="grenade" id="throwGrenadeBtn">FRAG GRENADE<small>lob • area blast</small></button>
+      <button data-throw="tomahawk" id="throwTomahawkBtn">TOMAHAWK<small>fast • direct hit one-shot</small></button>
+    </div>
+    <div class="setHint">Press <b>G</b> in-game to throw your chosen weapon.</div>
+  </div>
+  <button class="bigbtn" id="settingsBack">DONE</button>
 </div>
 
 <!-- ============================================================
@@ -286,6 +321,7 @@
   <div class="weaponPick" id="lobbyWeaponPick"></div>
   <div class="menuRow">
     <button class="bigbtn" id="lobbyStart">START MATCH</button>
+    <button class="smallbtn" id="lobbySettings">⚙ SETTINGS</button>
     <button class="smallbtn" id="lobbyLeave">LEAVE</button>
   </div>
   <div id="lobbyStatus" class="netStatus"></div>
@@ -304,7 +340,7 @@
   </div>
   <p class="controls-hint">
     WASD move &nbsp;•&nbsp; SPACE jump (double-jump) &nbsp;•&nbsp; SHIFT slide &nbsp;•&nbsp; MOUSE look / fire<br>
-    R reload &nbsp;•&nbsp; 1–4 or mouse-wheel switch weapon &nbsp;•&nbsp; RIGHT-CLICK aim (SNIPER = scope) &nbsp;•&nbsp; G grenade &nbsp;•&nbsp; ESC release mouse<br>
+    R reload &nbsp;•&nbsp; 1–4 or mouse-wheel switch weapon &nbsp;•&nbsp; RIGHT-CLICK aim (SNIPER = scope) &nbsp;•&nbsp; G throw (grenade / tomahawk) &nbsp;•&nbsp; TAB scoreboard &nbsp;•&nbsp; ESC release mouse<br>
     Step on a glowing <b style="color:#00fff7">launch pad</b> to rocket skyward &nbsp;•&nbsp; grab <b style="color:#34ff77">green loot crates</b> for special weapons (keys 5–7)!
   </p>
 </div>
@@ -340,8 +376,15 @@
 const SCORE_TARGET   = 2500;       // first to this many points wins the match
 const POINTS_KILL     = 100;       // points awarded per kill
 const POINTS_HEADSHOT = 40;        // bonus added on a headshot kill (headshot kill = 140)
-const BOT_COUNT   = 8;             // bots alive on the map at any time (6–10)
+const BOT_COUNT   = 8;             // default bot count (overridable in Settings)
+const BOT_MAX     = 16;            // hard cap for the Settings stepper
 const BOT_RESPAWN = 3.0;           // seconds before a dead bot respawns
+
+// --- Player-adjustable settings (persisted in localStorage) ---
+let botCount = parseInt(localStorage.getItem('blockoutBots'), 10);
+if (isNaN(botCount)) botCount = BOT_COUNT;
+botCount = Math.max(0, Math.min(BOT_MAX, botCount));
+let throwableType = localStorage.getItem('blockoutThrow') || 'grenade';   // 'grenade' | 'tomahawk'
 
 // Each weapon: damage, fireRate (sec between shots), magazine size, reload time,
 // spread (radians: base / how fast it grows per shot / cap), recoil (camera kick),
@@ -448,6 +491,19 @@ const GRENADE = {
   shakeRange: 24      // player within this distance of a blast gets screen shake
 };
 
+// --- Tomahawk tuning (alternate throwable; pick it in Settings) ---
+const TOMAHAWK = {
+  maxCarry: 3,        // tomahawks carried per life
+  throwVel: 42,       // fast, flat throw
+  upArc: 2,           // tiny arc
+  gravity: 22,        // lighter than a grenade so it flies straighter
+  spin: 26,           // rad/s tumble
+  hitRadius: 1.3,     // direct-hit detection radius around a body
+  damage: 200,        // direct hit one-shots a bot (and most players)
+  headMult: 1.0,      // already lethal; head not special
+  life: 5.0           // seconds before it despawns
+};
+
 // --- Bullet-tracer styling (improvement #1) ---
 // One entry per weapon (+ 'bot' for enemy fire). life = seconds before fade-out;
 // thick = use a glowing beam box instead of a thin line.
@@ -480,7 +536,8 @@ const LOOT = {
 // Kill-feed tags for special-weapon / grenade kills (gold flag => legendary styling).
 const WEAPON_TAGS = {
   rocket: { label: 'ROCKET' }, laser: { label: 'LASER' },
-  deagle: { label: 'LEGENDARY', gold: true }, grenade: { label: 'GRENADE' }
+  deagle: { label: 'LEGENDARY', gold: true }, grenade: { label: 'GRENADE' },
+  tomahawk: { label: 'TOMAHAWK' }
 };
 
 /* ============================================================================
@@ -1517,7 +1574,7 @@ function spawnBot(bot) {
 }
 
 function createBots() {
-  for (let i = 0; i < BOT_COUNT; i++) {
+  for (let i = 0; i < botCount; i++) {
     const bot = {
       id: i + 1,
       pos: new THREE.Vector3(), vel: new THREE.Vector3(),
@@ -1525,6 +1582,21 @@ function createBots() {
     };
     bots.push(bot);
     spawnBot(bot);   // builds the rig
+  }
+}
+
+// Reconcile the live bot list to the current `botCount` setting (host/solo only).
+// Lets Settings add or remove bots without restarting the match.
+function applyBotCount() {
+  if (NET.active && !NET.isHost) return;          // clients get bots from the host
+  while (bots.length < botCount) {
+    const bot = { id: bots.length + 1, pos: new THREE.Vector3(), vel: new THREE.Vector3(),
+                  health: 100, alive: true, respawnTimer: 0, group: null };
+    bots.push(bot); spawnBot(bot);
+  }
+  while (bots.length > botCount) {
+    const bot = bots.pop();
+    if (bot.group) { scene.remove(bot.group); disposeGroup(bot.group); }
   }
 }
 
@@ -1966,13 +2038,87 @@ const grenadeGeo = new THREE.SphereGeometry(0.28, 8, 6);
 const grenadeMat = new THREE.MeshLambertMaterial({ color: 0x2b2b2b, flatShading: true });
 const explGeo = new THREE.SphereGeometry(1, 12, 10);
 
+/* --- Tomahawk throwable: a spinning axe that one-shots on a direct hit --- */
+const liveTomahawks = [];
+function buildTomahawkMesh() {
+  const g = new THREE.Group();
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.7), new THREE.MeshLambertMaterial({ color: 0x6b4326, flatShading: true }));
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.34, 0.07), new THREE.MeshLambertMaterial({ color: 0xcfd6dd, flatShading: true }));
+  blade.position.set(0.16, 0, 0.30);
+  g.add(handle); g.add(blade);
+  return g;
+}
+function throwTomahawk(pos, dir) {
+  const mesh = buildTomahawkMesh();
+  mesh.position.copy(pos); scene.add(mesh);
+  const vel = dir.normalize().multiplyScalar(TOMAHAWK.throwVel); vel.y += TOMAHAWK.upArc;
+  liveTomahawks.push({ mesh, pos: pos.clone(), vel, life: TOMAHAWK.life, spin: 0, stuck: false });
+}
+function updateTomahawks(dt) {
+  const lim = ARENA - 1;
+  for (let i = liveTomahawks.length - 1; i >= 0; i--) {
+    const t = liveTomahawks[i];
+    t.life -= dt;
+    if (t.stuck) {                                  // landed: linger briefly, then fade out
+      if (t.life <= 0) { scene.remove(t.mesh); disposeGroup(t.mesh); liveTomahawks.splice(i, 1); }
+      continue;
+    }
+    t.vel.y -= TOMAHAWK.gravity * dt;
+    t.pos.addScaledVector(t.vel, dt);
+    t.spin += TOMAHAWK.spin * dt;
+    t.mesh.position.copy(t.pos);
+    t.mesh.rotation.set(t.spin, Math.atan2(t.vel.x, t.vel.z), 0);
+
+    // --- Direct hit on a bot (host adjudicates; client reports) ---
+    let hit = false;
+    for (const bot of bots) {
+      if (!bot.alive) continue;
+      const bp = new THREE.Vector3(bot.pos.x, bot.pos.y + 1.1, bot.pos.z);
+      if (bp.distanceTo(t.pos) < TOMAHAWK.hitRadius) {
+        spawnBlood(t.pos, 16);
+        if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: TOMAHAWK.damage, head: false, weapon: 'tomahawk', fromId: NET.selfId });
+        else {
+          if (NET.isHost) NET.botCredit = NET.selfId;
+          damageBot(bot, TOMAHAWK.damage, t.vel.clone().setY(0).normalize(), null, { weapon: 'tomahawk', dist: 4 });
+          if (NET.isHost) NET.botCredit = null;
+        }
+        showHitMarker(); hit = true; break;
+      }
+    }
+    // --- Direct hit on a remote player ---
+    if (!hit && NET.active) {
+      NET.players.forEach(rp => {
+        if (hit || !rp.alive) return;
+        const pp = new THREE.Vector3(rp.pos.x, rp.pos.y + 1.1, rp.pos.z);
+        if (pp.distanceTo(t.pos) < TOMAHAWK.hitRadius) { spawnBlood(t.pos, 16); NET.damageRemote(rp, TOMAHAWK.damage, false); showHitMarker(); hit = true; }
+      });
+    }
+    if (hit) { scene.remove(t.mesh); disposeGroup(t.mesh); liveTomahawks.splice(i, 1); continue; }
+
+    // --- Stick into the ground / walls / arena edges ---
+    const gh = groundHeightAt(t.pos.x, t.pos.z, t.pos.y);
+    let land = false;
+    if (t.pos.y < gh + 0.15) { t.pos.y = gh + 0.15; land = true; }
+    if (Math.abs(t.pos.x) > lim || Math.abs(t.pos.z) > lim) land = true;
+    for (const s of solids) {
+      if (t.pos.y < s.max.y && t.pos.y > s.min.y &&
+          t.pos.x > s.min.x && t.pos.x < s.max.x && t.pos.z > s.min.z && t.pos.z < s.max.z) { land = true; break; }
+    }
+    if (land || t.life <= 0) { t.stuck = true; t.life = Math.min(t.life, 1.6); t.mesh.position.copy(t.pos); }
+  }
+}
+
+// How many throwables a fresh life carries (depends on the chosen throwable).
+function throwMaxCarry() { return throwableType === 'tomahawk' ? TOMAHAWK.maxCarry : GRENADE.maxCarry; }
+
 function throwGrenade() {
   if (!gameState.running || !player.alive || player.grenades <= 0) return;
   player.grenades--;
-  const mesh = new THREE.Mesh(grenadeGeo, grenadeMat);
   const origin = camera.getWorldPosition(new THREE.Vector3());
   const dir = camera.getWorldDirection(new THREE.Vector3());
   const pos = origin.clone().add(dir.clone().multiplyScalar(0.6));
+  if (throwableType === 'tomahawk') { throwTomahawk(pos, dir.clone()); updateHUD(); return; }
+  const mesh = new THREE.Mesh(grenadeGeo, grenadeMat);
   const vel = dir.multiplyScalar(GRENADE.throwVel); vel.y += GRENADE.upArc;   // forward + arc
   mesh.position.copy(pos); scene.add(mesh);
   liveGrenades.push({ mesh, pos, vel, fuse: GRENADE.fuseTime });   // fuse starts on throw
@@ -2132,9 +2278,9 @@ function updatePickups(dt) {
           Math.hypot(player.pos.x - pk.pos.x, player.pos.z - pk.pos.z) < 2.2 &&
           Math.abs(player.pos.y - pk.pos.y) < 3) {
         WEAPON_ORDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; });
-        player.grenades = Math.min(GRENADE.maxCarry, player.grenades + 1);
+        player.grenades = Math.min(throwMaxCarry(), player.grenades + 1);
         pk.active = false; pk.mesh.visible = false; pk.respawn = 12;
-        floatText(pk.pos.clone().setY(pk.pos.y + 1), 'AMMO +1 GRENADE', '#8fd0ff');
+        floatText(pk.pos.clone().setY(pk.pos.y + 1), throwableType === 'tomahawk' ? 'AMMO +1 TOMAHAWK' : 'AMMO +1 GRENADE', '#8fd0ff');
         updateHUD();
       }
     } else {
@@ -2200,6 +2346,29 @@ function updateLoot(dt) {
     if (lootTimer <= 0) spawnLootCrate();
   }
 }
+
+// --- Client: render the host's loot crate + request a pickup when standing on it ---
+function applyClientLoot(loot) {
+  if (!loot) return;
+  NET._lootActive = loot.active;
+  if (loot.active) { lootBaseY = loot.y; lootPos.set(loot.x, loot.y, loot.z); lootGroup.position.set(loot.x, loot.y, loot.z); lootGroup.visible = true; }
+  else lootGroup.visible = false;
+}
+function updateClientLoot(dt) {
+  el('lootInfo').style.display = 'none';                 // clients don't track the spawn timer
+  if (NET._lootReqCd > 0) NET._lootReqCd -= dt;
+  if (lootGroup.visible) {
+    NET._lootBob = (NET._lootBob || 0) + dt;
+    lootGroup.rotation.y += dt * 1.2;
+    lootGroup.position.y = lootBaseY + Math.sin(NET._lootBob * 2) * 0.25;
+  }
+  if (NET._lootActive && player.alive && (NET._lootReqCd || 0) <= 0 &&
+      Math.hypot(player.pos.x - lootPos.x, player.pos.z - lootPos.z) < 2.3 &&
+      Math.abs(player.pos.y - (lootBaseY - 1.5)) < 3.5) {
+    NET.route(NET.hostId, { t: 'lootgrab', fromId: NET.selfId });
+    NET._lootReqCd = 1.5;                                 // debounce repeated requests
+  }
+}
 function showPickupBanner(text, gold, subtitle) {
   const b = el('pickupBanner');
   b.innerHTML = `<div class="main"${gold ? ' style="color:#ffd700;text-shadow:0 0 12px rgba(255,215,0,.7)"' : ''}>${text}</div>` +
@@ -2225,6 +2394,7 @@ function updateHUD() {
   el('scoreVal').textContent = gameState.score;
   el('killCount').textContent = gameState.kills;
   el('grenadeCount').textContent = player.grenades;
+  el('grenadeLabel').textContent = throwableType === 'tomahawk' ? 'TOMAHAWKS' : 'GRENADES';
   // Health bar
   const hp = Math.max(0, player.health);
   const bar = el('healthBar');
@@ -2318,7 +2488,7 @@ function playerDie() {
     player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 50), sp.z);
     player.vel.set(0, 0, 0);
     player.health = 100; player.alive = true;
-    player.grenades = GRENADE.maxCarry;                 // refill grenades on respawn
+    player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
     updateHUD();
   }, 1400);
@@ -2341,11 +2511,12 @@ function startMatch() {
   else player.pos.set(0, 0, 45);
   player.vel.set(0, 0, 0);
   player.health = 100; player.alive = true; player.sliding = false; player.launchCd = 0;
-  player.grenades = GRENADE.maxCarry;
+  player.grenades = throwMaxCarry();
   yaw = NET.active ? Math.random() * Math.PI * 2 : Math.PI; pitch = 0; recoilPitch = 0; recoilYaw = 0;
   aiming = false; scopeBlend = 0; scopePunch = 0; shakeTime = 0; shakeMag = 0;
-  // Clear any leftover thrown grenades / explosion FX from a previous match
+  // Clear any leftover thrown grenades / tomahawks / explosion FX from a previous match
   liveGrenades.forEach(g => scene.remove(g.mesh)); liveGrenades.length = 0;
+  liveTomahawks.forEach(t => { scene.remove(t.mesh); disposeGroup(t.mesh); }); liveTomahawks.length = 0;
   explosions.forEach(e => scene.remove(e.mesh)); explosions.length = 0;
   bloodDecals.forEach(d => scene.remove(d.mesh)); bloodDecals.length = 0;
   debris.forEach(d => { scene.remove(d.obj); disposeGroup(d.obj); }); debris.length = 0;
@@ -2361,6 +2532,7 @@ function startMatch() {
   // --- Bots: host (or solo) simulates them; clients render host snapshots ---
   if (!NET.active || NET.isHost) {
     if (bots.length === 0) createBots(); else bots.forEach(spawnBot);
+    applyBotCount();                                   // honor the Settings bot count
   } else {
     // client: drop any local bots; they'll be rebuilt from the host's snapshots
     bots.forEach(b => { if (b.group) { scene.remove(b.group); disposeGroup(b.group); } });
@@ -2453,6 +2625,34 @@ el('lobbyCode').onclick = () => {
   if (NET.code && navigator.clipboard) { navigator.clipboard.writeText(NET.code); setNetStatus('lobbyStatus', 'Code copied!'); }
 };
 el('soloBack').onclick = () => showScreen('mainMenu');
+
+// --- Settings screen ---
+let settingsReturn = 'mainMenu';
+function refreshSettingsUI() {
+  el('botCountVal').textContent = botCount;
+  el('throwGrenadeBtn').classList.toggle('selected', throwableType === 'grenade');
+  el('throwTomahawkBtn').classList.toggle('selected', throwableType === 'tomahawk');
+}
+function openSettings(from) { settingsReturn = from; refreshSettingsUI(); showScreen('settingsScreen'); }
+el('menuSettings').onclick = () => openSettings('mainMenu');
+el('lobbySettings').onclick = () => openSettings('lobbyScreen');
+el('settingsBack').onclick = () => showScreen(settingsReturn);
+function setBotCount(n) {
+  botCount = Math.max(0, Math.min(BOT_MAX, n));
+  localStorage.setItem('blockoutBots', botCount);
+  refreshSettingsUI();
+  if (gameState.running && (!NET.active || NET.isHost)) applyBotCount();   // add/remove live
+}
+el('botMinus').onclick = () => setBotCount(botCount - 1);
+el('botPlus').onclick = () => setBotCount(botCount + 1);
+[['throwGrenadeBtn', 'grenade'], ['throwTomahawkBtn', 'tomahawk']].forEach(([id, type]) => {
+  el(id).onclick = () => {
+    throwableType = type; localStorage.setItem('blockoutThrow', type);
+    if (gameState.running && player.alive) player.grenades = throwMaxCarry();   // swap carry on the fly
+    refreshSettingsUI(); updateHUD();
+  };
+});
+refreshSettingsUI();
 
 // Start / restart
 el('startButton').onclick = () => startMatch();         // solo
@@ -2662,7 +2862,8 @@ const NET = {
   broadcastBots() {
     const list = [];
     for (const b of bots) list.push({ id: b.id, x: b.pos.x, y: b.pos.y, z: b.pos.z, yaw: b.yawFacing || 0, alive: !!b.alive });
-    this.broadcast({ t: 'bots', list });
+    // include the loot-crate state so every player sees the green block
+    this.broadcast({ t: 'bots', list, loot: { active: lootActive, x: lootPos.x, y: lootBaseY, z: lootPos.z } });
   },
 
   /* ---------------- INBOUND ---------------- */
@@ -2704,7 +2905,22 @@ const NET = {
       case 'roster': { this.code = msg.code; el('lobbyCode').textContent = this.code; this.applyRoster(msg.list); break; }
       case 'start': { beginMatch(); break; }
       case 'players': { this.applyPlayers(msg.list); break; }
-      case 'bots': { applyBotsSnapshot(msg.list); break; }
+      case 'bots': { applyBotsSnapshot(msg.list); applyClientLoot(msg.loot); break; }
+      case 'lootgrab': {                               // a client walked into the crate
+        if (lootActive) {
+          const key = chooseSpecial();
+          spawnBlood(lootPos, 22, 0x33ff66);
+          lootGroup.visible = false; lootActive = false; lootTimer = LOOT.cooldown;
+          this.route(msg.fromId, { t: 'lootgrant', key });
+          this.broadcastBots();                        // immediately tell everyone it's gone
+        }
+        break;
+      }
+      case 'lootgrant': {                              // host granted me a special weapon
+        el('lootFlash').style.opacity = 0.55; setTimeout(() => el('lootFlash').style.opacity = 0, 130);
+        grantSpecial(msg.key); updateHUD();
+        break;
+      }
       case 'scores': { this.scores.clear(); msg.list.forEach(s => this.scores.set(s.id, { name: s.name, score: s.score, kills: s.kills })); this.applyScoresLocal(); break; }
       case 'feed': { addKillFeed(msg.html); break; }
       case 'matchover': { doMatchOver(msg.winner); break; }
@@ -2899,7 +3115,7 @@ function setNetStatus(id, text, isErr) {
 
 /* ---- Screen routing ---- */
 function showScreen(id) {
-  ['mainMenu', 'joinScreen', 'lobbyScreen', 'startScreen'].forEach(s => el(s).classList.toggle('hidden', s !== id));
+  ['mainMenu', 'joinScreen', 'lobbyScreen', 'startScreen', 'settingsScreen'].forEach(s => el(s).classList.toggle('hidden', s !== id));
   el('endScreen').style.display = 'none';
 }
 function leaveToMenu() {
@@ -2953,9 +3169,11 @@ function animate() {
     if (NET.active) lerpRemotePlayers(dt);   // smooth other humans toward their net positions
     netTick(dt);                             // send/relay positions
     updateGrenades(dt);   // frag grenade physics + fuse
+    updateTomahawks(dt);  // thrown tomahawks (alternate throwable)
     updateRockets(dt);    // rocket projectiles (special weapon)
     updatePickups(dt);    // ammo boxes (refill + grenade)
     if (!NET.active || NET.isHost) updateLoot(dt);   // loot crates are host-driven in MP
+    else if (NET.isClient) updateClientLoot(dt);     // clients see + can grab the crate
 
     // Weapon cooldowns / reloads (all weapons incl. specials)
     for (const key of ALL_KEYS) {

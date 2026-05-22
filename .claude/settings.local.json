@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node --check /tmp/game.js)",
+      "Bash(rm /tmp/game.js)",
+      "Bash(grep -n \"^<script>$\" index.html)",
+      "Bash(grep -n \"^</script>$\" index.html)",
+      "Bash([ -x \"$CHROME\" ])",
+      "Read(//Applications/**)"
+    ]
+  }
+}

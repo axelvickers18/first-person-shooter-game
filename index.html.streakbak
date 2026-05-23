@@ -123,10 +123,6 @@
   #healthLabel { font-size: 14px; margin-bottom: 4px; font-weight: bold; }
   #healthBarBg { width: 100%; height: 22px; background: rgba(0,0,0,0.4); border: 2px solid #000; border-radius: 4px; }
   #healthBar { height: 100%; width: 100%; background: #34d058; transition: width .12s, background .2s; border-radius: 2px; }
-  /* Jack Daniels overheal/shield bar (amber/gold) — stacked above HP, pulses while active */
-  #overhealBarBg { width: 100%; height: 12px; background: rgba(0,0,0,0.4); border: 2px solid #000; border-radius: 4px; margin-bottom: 4px; display: none; box-shadow: 0 0 8px rgba(232,170,40,0.6); animation: ohPulse 1.1s ease-in-out infinite; }
-  #overhealBar { height: 100%; width: 100%; background: linear-gradient(90deg,#e8aa28,#ffd47a); transition: width .12s; border-radius: 2px; }
-  @keyframes ohPulse { 0%,100% { box-shadow: 0 0 6px rgba(232,170,40,0.45); } 50% { box-shadow: 0 0 14px rgba(255,212,122,0.9); } }
 
   /* Ammo + weapon (bottom-right) */
   #ammoWrap { position: absolute; bottom: 22px; right: 26px; text-align: right; }
@@ -141,38 +137,11 @@
   #hurtFlash { position: fixed; inset: 0; background: radial-gradient(circle, transparent 55%, rgba(180,0,0,0.65) 100%); opacity: 0; pointer-events: none; z-index: 8; transition: opacity .15s; }
   /* Launch-pad boost flash (improvement #2) */
   #boostFlash { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,247,0.45) 0%, transparent 65%); opacity: 0; pointer-events: none; z-index: 8; transition: opacity .12s; }
-  /* Jack Daniels drink (golden warm tint) + lightsaber ignition (blue-white) screen flashes */
-  #jdFlash { position: fixed; inset: 0; background: radial-gradient(circle, transparent 45%, rgba(232,170,40,0.55) 100%); opacity: 0; pointer-events: none; z-index: 8; }
-  #saberFlash { position: fixed; inset: 0; background: radial-gradient(circle, rgba(150,210,255,0.55) 0%, transparent 60%); opacity: 0; pointer-events: none; z-index: 8; }
 
-  /* SCORESTREAK ladder (left, vertically centered) */
-  #streakBar { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 188px; display: none; z-index: 11; font-family: 'Segoe UI', system-ui, sans-serif; }
-  #streakCount { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #ffe600; text-shadow: 0 2px 3px #000; margin-bottom: 8px; }
-  .streakTier { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.42); border: 2px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 6px 8px; margin-bottom: 8px; transition: border-color .2s, opacity .2s, box-shadow .2s; }
-  .streakTier .stIcon { font-size: 20px; line-height: 1; filter: grayscale(0.7) brightness(0.7); transition: filter .2s; flex: 0 0 auto; }
-  .streakTier .stBody { flex: 1 1 auto; min-width: 0; }
-  .streakTier .stLabel { font-size: 12px; font-weight: 700; color: #cfe3ff; letter-spacing: .5px; white-space: nowrap; }
-  .streakTier .stProgBg { height: 6px; background: rgba(255,255,255,0.12); border-radius: 3px; margin: 4px 0 2px; overflow: hidden; }
-  .streakTier .stProg { height: 100%; width: 0%; background: #6fb4ff; border-radius: 3px; transition: width .2s; }
-  .streakTier .stReady { font-size: 11px; font-weight: 700; color: #8fa6bf; letter-spacing: .5px; }
-  /* Unlocked + ready: bright glowing icon + keybind hint */
-  .streakTier.ready { border-color: #7fe9ff; box-shadow: 0 0 14px rgba(127,233,255,0.5); }
-  .streakTier.ready .stIcon { filter: none; text-shadow: 0 0 10px rgba(127,233,255,0.9); }
-  .streakTier.ready .stLabel { color: #eaf6ff; }
-  .streakTier.ready .stProg { background: #7fe9ff; }
-  .streakTier.ready .stReady { color: #7fe9ff; }
-  /* Consumed: grayed out */
-  .streakTier.consumed { opacity: 0.4; border-color: rgba(255,255,255,0.08); box-shadow: none; }
-  .streakTier.consumed .stIcon { filter: grayscale(1) brightness(0.5); }
-  .streakTier.consumed .stReady { color: #777; }
-  /* Unlock flash animation */
-  .streakTier.unlockFlash { animation: stUnlock 0.7s ease-out; }
-  @keyframes stUnlock { 0% { transform: scale(1); box-shadow: 0 0 0 rgba(255,255,255,0); } 25% { transform: scale(1.08); box-shadow: 0 0 26px rgba(255,255,255,0.95); background: rgba(255,255,255,0.85); } 100% { transform: scale(1); } }
-  /* "STREAK LOST" notification */
-  #streakLost { position: absolute; left: 50%; top: 38%; transform: translate(-50%,-50%); z-index: 15; display: none; opacity: 0; transition: opacity .35s;
-    font: 800 30px 'Segoe UI', sans-serif; color: #ff5a5a; letter-spacing: 3px; text-shadow: 0 2px 8px #000, 0 0 18px rgba(255,40,40,0.6); pointer-events: none; }
-
-  /* RC ROCKET LAUNCHER (5-kill scorestreak) overlays */
+  /* SECRET RC ROCKET LAUNCHER overlays */
+  #rcUnlockMsg { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); z-index: 20; display: none; opacity: 0;
+    transition: opacity .35s; font: 700 22px/1 'Segoe UI', sans-serif; color: #7af0ff; letter-spacing: 2px; pointer-events: none;
+    text-shadow: 0 0 12px rgba(60,220,255,.85), 0 2px 4px #000; }
   #rcFade { position: fixed; inset: 0; background: #000; opacity: 0; z-index: 18; pointer-events: none; }
   #rcHud { position: fixed; inset: 0; z-index: 14; display: none; pointer-events: none; font-family: 'Consolas','Courier New',monospace; color: #9affc0; }
   #rcHud.on { display: block; }
@@ -472,23 +441,8 @@
 
   <div id="healthWrap">
     <div id="healthLabel">HEALTH</div>
-    <div id="overhealBarBg"><div id="overhealBar"></div></div>
     <div id="healthBarBg"><div id="healthBar"></div></div>
   </div>
-
-  <!-- SCORESTREAK ladder (left side): current streak + the two reward tiers with progress -->
-  <div id="streakBar">
-    <div id="streakCount">STREAK 0</div>
-    <div class="streakTier locked" id="streakTier0">
-      <div class="stIcon">⚔️🥃</div>
-      <div class="stBody"><div class="stLabel">3 · SABER + JACK</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 3</div></div>
-    </div>
-    <div class="streakTier locked" id="streakTier1">
-      <div class="stIcon">🚀</div>
-      <div class="stBody"><div class="stLabel">5 · RC ROCKET</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 5</div></div>
-    </div>
-  </div>
-  <div id="streakLost">STREAK LOST</div>
 
   <div id="ammoWrap">
     <div id="ggLevel"></div>
@@ -502,7 +456,8 @@
   </div>
 </div>
 
-<!-- RC ROCKET LAUNCHER (5-kill scorestreak): camera-handoff fade + nose-cam HUD -->
+<!-- SECRET RC ROCKET LAUNCHER: unlock toast, camera-handoff fade, nose-cam HUD -->
+<div id="rcUnlockMsg">🚀 RC ROCKET LAUNCHER UNLOCKED</div>
 <div id="rcFade"></div>
 <div id="rcHud">
   <div id="rcTint"></div>
@@ -540,8 +495,6 @@
 <div id="hurtFlash"></div>
 <div id="boostFlash"></div>
 <div id="lootFlash"></div>
-<div id="jdFlash"></div>
-<div id="saberFlash"></div>
 
 <!-- Sniper scope overlay (improvement #1): black vignette ring + clean reticle -->
 <div id="scopeOverlay">
@@ -974,18 +927,11 @@ WEAPONS.gg11.projType = 'grenade';   // Grenade Launcher
 WEAPONS.gg12.projType = 'rocket';    // RPG
 WEAPONS.gg19.projType = 'knife';     // Throwing Knives
 
-// RC ROCKET LAUNCHER (NOT on the gun-game ladder). Unlocked by the 5-kill SCORESTREAK and
-// deployed with "N" (1 rocket, consumed on fire). Firing launches a steerable guided missile.
+// SECRET easter-egg weapon (NOT on the gun-game ladder). Unlocked mid-match by a hidden
+// code, equipped with "0". Firing launches a steerable guided missile (see the RC system).
 WEAPONS.rcrl = { name:"RC ROCKET LAUNCHER", baseModel:"rcrl", color:0x23272e, damage:8, fireRate:0.6,
-  mag:1, reload:0, spreadBase:0, spreadGrow:0, spreadMax:0, recoil:0, pellets:1, range:0,
+  mag:2, reload:0, spreadBase:0, spreadGrow:0, spreadMax:0, recoil:0, pellets:1, range:0,
   headMult:1.0, auto:false, rc:true, speed:0.78, sight:'none', noads:true };
-
-// LIGHTSABER — the 3-kill SCORESTREAK melee (paired with the Jack Daniels bottle). NOT on the
-// ladder; equipped only while the saber+JD scorestreak is active. One-hit kill within ~2.5u,
-// fast 250ms swings, plus an RMB block stance (handled in the scorestreak/saber system).
-WEAPONS.saber = { name:"LIGHTSABER", baseModel:"saber", color:0x35a7ff, damage:9999, fireRate:0.25,
-  mag:1, reload:1.0, spreadBase:0, spreadGrow:0, spreadMax:0, recoil:0, pellets:1, range:2.5,
-  headMult:1.0, auto:false, melee:true, saber:true, speed:1.05, sight:'none', noads:true };
 
 /* --- Iron-sight ADS geometry + anchors (CoD-style raise-to-center) ---------
    Per weapon: sy = local height the rear/front sights sit at (their tops); the
@@ -1301,8 +1247,6 @@ function playerEarPos() { return camera.getWorldPosition(new THREE.Vector3()); }
 // Play a weapon's fire sound at a world position (used locally + for networked remote shots).
 function sfxFire(weaponKey, pos, side) {
   const cat = 'weapons';
-  // Lightsaber swing: airy whoosh + the iconic high energy zing.
-  if (weaponKey === 'saber') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.22, peak: 0.34, filter: 'bandpass', freq: 700, freq1: 2400, q: 0.8 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 900, f1: 1500, dur: 0.18, peak: 0.16 }); aTone(ctx, out, t + 0.03, { type: 'sine', f0: 1700, f1: 1200, dur: 0.16, peak: 0.1 }); }, pos, cat, 'sabersw', 0.8, 0.24); return; }
   if (weaponKey === KARAMBIT_KEY) { SND.play3d(buildSlash(true), pos, cat, 'melee', 0.7, 0.2); return; }
   if (weaponKey === 'gg20' || (WEAPONS[weaponKey] && WEAPONS[weaponKey].melee)) { SND.play3d(buildSlash(false), pos, cat, 'melee', 0.8, 0.2); return; }
   if (weaponKey === 'gg19') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.3, filter: 'bandpass', freq: 1700, freq1: 2600, q: 1.4 }); }, pos, cat, 'melee', 0.6, 0.13); return; }   // throwing-knife release
@@ -1409,24 +1353,6 @@ function sfxFinalLevel() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [784,
 function sfxWin() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [523, 659, 784, 1046, 1318], 0.12, 0.28, 0.36), 'ui', 'prog', 1.0, 1.5); }
 function sfxLose() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [440, 349, 262], 0.16, 0.3, 0.3), 'ui', 'prog', 0.8, 0.9); }
 
-/* --- SCORESTREAK feedback chimes --- */
-// Bright triumphant power chime when a streak tier unlocks (distinct from level-up/notify).
-function sfxStreakUnlock() { SND.play2d((ctx, out, t) => { aChime(ctx, out, t, [784, 1046, 1318, 1568], 0.06, 0.22, 0.32, 'sine'); aTone(ctx, out, t, { type: 'triangle', f0: 392, f1: 784, dur: 0.4, peak: 0.18 }); }, 'ui', 'streak', 0.95, 0.6); }
-// Soft low "nope" blip when a not-yet-unlocked streak key is pressed.
-function sfxStreakDenied() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'square', f0: 240, f1: 150, dur: 0.1, peak: 0.16 }), 'ui', 'deny', 0.6, 0.12); }
-// Descending power-down when the player dies and the streak resets.
-function sfxStreakLost() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 520, f1: 90, dur: 0.5, peak: 0.22 }), 'ui', 'streak', 0.7, 0.5); }
-
-/* --- LIGHTSABER + JACK DANIELS (3-kill scorestreak) --- */
-// Ignition "SHWOOM": a fast upward whoosh layered with a rising hum.
-function sfxSaberIgnite() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.3, peak: 0.4, filter: 'bandpass', freq: 300, freq1: 2200, q: 0.7 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 120, f1: 320, dur: 0.32, peak: 0.22 }); aTone(ctx, out, t + 0.02, { type: 'sine', f0: 240, f1: 600, dur: 0.3, peak: 0.14 }); }, 'weapons', 'saberig', 0.9, 0.34); }
-// Blade-flesh contact: a meaty thrum-strike (played locally on a successful hit).
-function sfxSaberHit(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 420, f1: 120, dur: 0.16, peak: 0.34 }); aNoise(ctx, out, t, { dur: 0.12, peak: 0.3, filter: 'lowpass', freq: 1400 }); }, pos, 'weapons', 'saberhit', 0.85, 0.16); }
-// Blade-vs-solid: sharp electric crackle/sizzle.
-function sfxSaberClash(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.36, filter: 'highpass', freq: 3500 }); for (let i = 0; i < 5; i++) aTone(ctx, out, t + Math.random() * 0.12, { type: 'square', f0: 2600 + Math.random() * 3000, dur: 0.03, peak: 0.12 }); }, pos, 'weapons', 'saberclash', 0.8, 0.2); }
-// Jack Daniels swig: a few liquid glugs then a satisfied exhale.
-function sfxJDDrink() { SND.play2d((ctx, out, t) => { for (let i = 0; i < 3; i++) aNoise(ctx, out, t + 0.15 + i * 0.18, { dur: 0.1, peak: 0.18, filter: 'bandpass', freq: 380, freq1: 700, q: 1.4 }); aTone(ctx, out, t + 0.85, { type: 'sine', f0: 300, f1: 220, dur: 0.5, peak: 0.16, atk: 0.08 }); aNoise(ctx, out, t + 0.85, { dur: 0.5, peak: 0.06, filter: 'bandpass', freq: 700, q: 0.5 }); }, 'voice', 'jd', 0.8, 1.3); }
-
 /* --- UI / menu / lobby / notifications --- */
 function sfxHover() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 900, dur: 0.04, peak: 0.12 }), 'ui', 'hover', 0.5, 0.05); }
 function sfxClick() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 700, f1: 480, dur: 0.05, peak: 0.2 }); }, 'ui', 'click', 0.6, 0.06); }
@@ -1473,24 +1399,6 @@ const Ambient = {
       SND.play3d((ctx, out, t) => { const f0 = 2200 + Math.random() * 900; aTone(ctx, out, t, { type: 'sine', f0, f1: f0 * 1.3, dur: 0.08, peak: 0.13 }); aTone(ctx, out, t + 0.11, { type: 'sine', f0: f0 * 1.1, f1: f0 * 0.85, dur: 0.07, peak: 0.1 }); }, p, 'ambient', 'bird', 0.6, 0.2);
     }
   }
-};
-// Continuous lightsaber idle hum (two detuned saws + slow wobble) while the saber is equipped.
-const SaberHum = {
-  on: false, oscA: null, oscB: null, g: null, lfo: null,
-  start() {
-    if (!SND.ready || this.on) return; this.on = true;
-    const ctx = SND.ctx;
-    const oscA = ctx.createOscillator(); oscA.type = 'sawtooth'; oscA.frequency.value = 102;
-    const oscB = ctx.createOscillator(); oscB.type = 'sawtooth'; oscB.frequency.value = 106;   // slight detune = beating hum
-    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 520; f.Q.value = 4;
-    const g = ctx.createGain(); g.gain.value = 0.0;
-    oscA.connect(f); oscB.connect(f); f.connect(g); g.connect(SND.cat.weapons);
-    const lfo = ctx.createOscillator(), la = ctx.createGain(); lfo.frequency.value = 5.5; la.gain.value = 6; lfo.connect(la); la.connect(oscA.frequency);
-    oscA.start(); oscB.start(); lfo.start();
-    g.gain.setTargetAtTime(0.06, ctx.currentTime, 0.1);
-    this.oscA = oscA; this.oscB = oscB; this.g = g; this.lfo = lfo;
-  },
-  stop() { if (!this.on) return; this.on = false; const ctx = SND.ctx; try { if (this.g) this.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); const a = this.oscA, b = this.oscB, l = this.lfo; setTimeout(() => { try { a.stop(); b.stop(); l.stop(); } catch (e) {} }, 200); } catch (e) {} this.oscA = this.oscB = this.lfo = this.g = null; }
 };
 let _heartT = 0;
 function updateHeartbeat(dt) {
@@ -2031,16 +1939,20 @@ document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (!gameState.running) return;
   if (invOpen) { if (e.code === 'KeyI' && !e.repeat) toggleInventory(); return; }   // inventory open: only I closes it (ESC handled separately)
+  // SECRET: typing "8888" within a 2s window unlocks the RC Rocket Launcher (per-match, this player only).
+  if ((e.code === 'Digit8' || e.code === 'Numpad8') && !e.repeat) {
+    const now = performance.now();
+    rc8.push(now); while (rc8.length && now - rc8[0] > 2000) rc8.shift();
+    if (rc8.length >= 4) { rcUnlock(); rc8.length = 0; }
+  }
   if (rcActive) return;   // piloting a missile: keys stay tracked (boost/brake) but no body actions fire
+  // "0" equips / un-equips the unlocked RC launcher (1-3 are already bound).
+  if ((e.code === 'Digit0' || e.code === 'Numpad0') && !e.repeat) { cigCancel(); rcToggleEquip(); return; }
   // C: HOLD to crouch (released => stand; handled each frame in updateMovement). A press
   // while sprinting still triggers a DIVE.
   if (e.code === 'KeyC' && !e.repeat) crouchKey();
   if (player.diving) return;                                            // no reload / swap / grenade / jump mid-dive
-  // SCORESTREAK rewards: B = saber + Jack Daniels (3 kills), N = RC rocket launcher (5 kills).
-  if (e.code === 'KeyB' && !e.repeat) { streakActivate('saberjd'); return; }
-  if (e.code === 'KeyN' && !e.repeat) { streakActivate('rcrl'); return; }
-  // Q: drink from the Jack Daniels bottle while saber+JD is active; otherwise light a cigar.
-  if (e.code === 'KeyQ' && !e.repeat) { if (saberMode) drinkJD(); else useCigar(); }
+  if (e.code === 'KeyQ' && !e.repeat) useCigar();                       // light up a self-heal cigar
   if (e.code === 'KeyE' && !e.repeat) tryGrabLadder();                  // grab a watchtower ladder
   if (e.code === 'KeyR') { cigCancel(); reload(); }                     // reloading cancels a cigar in progress
   if (e.code === 'KeyI' && !e.repeat && gameMode !== 'gungame') { toggleInventory(); return; }   // FFA: weapon inventory
@@ -2070,18 +1982,16 @@ document.addEventListener('mousedown', (e) => {
   if (cigSmoking) { if (e.button === 0) cigCancel(); return; }   // smoking: LMB cancels (weapon holstered); RMB/ADS blocked
   if (player.onLadder) return;   // climbing: hands occupied — no fire / ADS / melee
   if (e.button === 0) { firing = true; tryShoot(akimboEquipped() ? 'R' : undefined); }
-  // Right-click: akimbo fires the LEFT pistol; karambit does a backhand slash; saber raises a
-  // block stance (50% damage taken, 70% move speed); else ADS.
+  // Right-click: akimbo fires the LEFT pistol; karambit does a backhand slash; else ADS.
   if (e.button === 2) {
     if (akimboEquipped()) { firingL = true; tryShoot('L'); }
     else if (currentWeaponKey === KARAMBIT_KEY) meleeAttack(-1);
-    else if (currentWeaponKey === 'saber') saberBlocking = true;
     else { if (!aiming && ggAdsInfo()) { const i = ggAdsInfo(); sfxADS(true, i && i.kind === 'scope'); } aiming = true; }   // weapon-raise / scope-click on ADS in
   }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) firing = false;
-  if (e.button === 2) { if (aiming && ggAdsInfo()) sfxADS(false); firingL = false; aiming = false; saberBlocking = false; }   // reverse swish on ADS out
+  if (e.button === 2) { if (aiming && ggAdsInfo()) sfxADS(false); firingL = false; aiming = false; }   // reverse swish on ADS out
 });
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -2129,7 +2039,6 @@ const player = {
   impulseT: 0,                           // brief window where an impulse launch isn't speed-clamped
   impulseGrace: 0,                       // window where impulse-launch fall damage is suppressed
   cigar: 1,                              // self-heal cigars carried this life (1, refills on respawn)
-  overheal: 0,                           // amber whiskey shield (Jack Daniels) — absorbs damage before HP
   onLadder: false, ladder: null          // climbing a watchtower ladder (E to grab, W/S to climb, Space to drop)
 };
 const LADDER_SPEED = 4;                  // climb speed (units/sec) up or down
@@ -2525,7 +2434,7 @@ function updateMovement(dt) {
 
   // Movement: scoped slow (FFA) × per-weapon mult × 70% ADS × 50% crouched (not while diving) × 80% smoking.
   const moveScale = (1 - scopeBlend * (1 - SCOPE.moveMult)) * ggSpeedMult()
-                  * (ggAdsActive ? 0.70 : 1) * (crouchedNow ? MOVE.crouchSpeed : 1) * (cigSmoking ? 0.80 : 1) * (saberBlocking ? 0.70 : 1);
+                  * (ggAdsActive ? 0.70 : 1) * (crouchedNow ? MOVE.crouchSpeed : 1) * (cigSmoking ? 0.80 : 1);
   const effGroundSpeed = MOVE.groundSpeed * moveScale;
   const effMaxSpeed = MOVE.maxSpeed * moveScale;
   if (player.launchCd > 0) player.launchCd -= dt;
@@ -2751,8 +2660,7 @@ GUNGAME_LADDER.forEach(k => {
   weaponState[k] = { ammo: WEAPONS[k].mag, cooldown: 0, reloading: 0, reserve: Infinity };
 });
 weaponState[KARAMBIT_KEY] = { ammo: 1, cooldown: 0, reloading: 0, reserve: Infinity };   // permanent gun-game melee
-weaponState.saber = { ammo: 1, cooldown: 0, reloading: 0, reserve: Infinity };           // 3-kill scorestreak melee
-weaponState.rcrl = { ammo: 0, cooldown: 0, reloading: 0, reserve: 0 };                    // RC launcher: granted (1) on the 5-kill scorestreak
+weaponState.rcrl = { ammo: 2, cooldown: 0, reloading: 0, reserve: 0 };                    // SECRET RC launcher: 2 rockets/life, no reload
 let currentSpread = 0;
 let playerFlashTimer = 0;   // hides the viewmodel muzzle flash shortly after firing
 
@@ -2999,43 +2907,6 @@ function buildGunModel(key) {
       new THREE.MeshBasicMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
     trail.position.set(-0.1, -0.2, -0.12); trail.rotation.y = Math.PI / 2; g.add(trail); g.userData.karTrail = trail;
     muzzleZ = -0.22;
-  } else if (model === 'saber') {
-    // LIGHTSABER — silver cylindrical hilt held in a fist (lower-right); a glowing blue blade
-    // (white-hot core → blue glow → soft halo) ignites upward from the emitter. The blade lives
-    // in `bladeGrp` so its scale.y can animate the ignition; refs are kept on g.userData.saber.
-    const sab = new THREE.Group();
-    const metal = new THREE.MeshLambertMaterial({ color: 0xb8bdc6, flatShading: true });
-    const dark  = new THREE.MeshLambertMaterial({ color: 0x3a3d44, flatShading: true });
-    const cyl = (ry, rx, h, mat, y) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(ry, rx, h, 12), mat); m.position.y = y; sab.add(m); return m; };
-    cyl(0.052, 0.052, 0.30, metal, 0.06);                 // main grip
-    cyl(0.056, 0.056, 0.018, dark, 0.00);                 // detail ring
-    cyl(0.056, 0.056, 0.018, dark, 0.12);                 // detail ring
-    cyl(0.05, 0.045, 0.04, metal, -0.11);                 // pommel
-    cyl(0.06, 0.05, 0.06, metal, 0.235);                  // emitter shroud (top)
-    const btn = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.03), new THREE.MeshBasicMaterial({ color: 0xff3a3a }));
-    btn.position.set(0.055, 0.06, 0); sab.add(btn);       // activation button (glows red)
-    // Right-hand fist wrapped around the grip (blocky, matches the low-poly style).
-    const skin = new THREE.MeshLambertMaterial({ color: 0xc98f5a, flatShading: true });
-    const palm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.12), skin); palm.position.set(-0.02, 0.05, 0.07); sab.add(palm);
-    for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.04, 0.045), skin); f.position.set(0.0, 0.10 - i * 0.05, 0.04); sab.add(f); }
-    const thumb = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.09, 0.05), skin); thumb.position.set(0.07, 0.10, 0.04); sab.add(thumb);
-    // Blade: grows from the emitter (+Y). Center each cylinder at half-length so scale.y grows up.
-    const BL = 1.32;
-    const bladeGrp = new THREE.Group(); bladeGrp.position.y = 0.27;
-    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.016, BL, 10), new THREE.MeshBasicMaterial({ color: 0xeaf6ff }));
-    const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, BL * 0.99, 12), new THREE.MeshBasicMaterial({ color: 0x3aa0ff, transparent: true, opacity: 0.55 }));
-    const halo = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, BL * 0.98, 12), new THREE.MeshBasicMaterial({ color: 0x2f7fff, transparent: true, opacity: 0.22, depthWrite: false }));
-    [core, glow, halo].forEach(m => { m.position.y = BL / 2; bladeGrp.add(m); });
-    sab.add(bladeGrp);
-    // Hold pose: hilt in the lower-right fist, blade rising up-and-forward into view.
-    sab.rotation.set(-0.42, 0.15, 0.12);
-    sab.position.set(0.0, 0.02, 0.02);
-    g.add(sab);
-    const swTrail = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.9),
-      new THREE.MeshBasicMaterial({ color: 0x8ec8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
-    swTrail.position.set(0, 0.55, 0.0); swTrail.rotation.y = Math.PI / 2; sab.add(swTrail);
-    g.userData.saber = { sab, bladeGrp, core, glow, halo, trail: swTrail };
-    muzzleZ = -0.2;
   } else if (model === 'rcrl') {
     // SECRET RC ROCKET LAUNCHER — sleek black/gray high-tech tube with a camera/sensor
     // module + antennas (visually distinct from the olive gg12 RPG).
@@ -3205,20 +3076,14 @@ function updateTracers(dt) {
 function meleeAttack(swingDir) {
   if (!gameState.running || !player.alive) return;
   const ws = weaponState[currentWeaponKey], w = WEAPONS[currentWeaponKey];
-  if (w.saber && saberBlocking) return;          // can't swing while holding the block stance
   if (ws.cooldown > 0) return;
   ws.cooldown = w.fireRate;
-  // The saber kills as the player's CURRENT ladder weapon (so it advances gun-game normally) and
-  // does NOT demote like the karambit. Everything else melees as its own weapon (knife demotes).
-  const creditW = w.saber ? saberCreditWeapon() : currentWeaponKey;
-  const meleeFlag = w.saber ? false : true;
-  sfxFire(currentWeaponKey, playerEarPos());     // slash whoosh (karambit higher-pitched, saber = energy zing)
+  sfxFire(currentWeaponKey, playerEarPos());     // slash whoosh (karambit higher-pitched)
   if (NET.active) NET.broadcast({ t: 'fire', id: NET.selfId, w: currentWeaponKey, x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z });
-  // Distinct viewmodel motion: saber = fast alternating arc, karambit = arcing slash (+1/-1),
+  // Distinct viewmodel motion: karambit = arcing slash (+1 forehand / -1 backhand),
   // combat knife = forward stab.
   if (gunMesh) {
-    if (w.saber) { saberSwingT = 0.28; saberSwingDir = -saberSwingDir; }
-    else if (w.karambit) { karSwingT = 0.35; karSwingDir = (swingDir === -1) ? -1 : 1; }
+    if (w.karambit) { karSwingT = 0.35; karSwingDir = (swingDir === -1) ? -1 : 1; }
     else gunMesh.position.z = -0.2;
   }
   alertBots(player.pos);
@@ -3232,24 +3097,18 @@ function meleeAttack(swingDir) {
   for (const bot of bots) {
     if (!bot.alive || !inFront(bot.pos)) continue;
     hit = true; spawnBlood(new THREE.Vector3(bot.pos.x, bot.pos.y + 1.2, bot.pos.z), 16);
-    if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: 9999, head: false, weapon: creditW, fromId: NET.selfId });
-    else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, 9999, dir, null, { weapon: creditW, melee: meleeFlag }); if (NET.isHost) NET.botCredit = null; }
+    if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: 9999, head: false, weapon: currentWeaponKey, fromId: NET.selfId });
+    else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, 9999, dir, null, { weapon: currentWeaponKey, melee: true }); if (NET.isHost) NET.botCredit = null; }
     break;
   }
   if (!hit && NET.active) {
     NET.players.forEach(rp => {
       if (hit || !rp.alive || !inFront(rp.pos)) return;
       hit = true; spawnBlood(new THREE.Vector3(rp.pos.x, rp.pos.y + 1.2, rp.pos.z), 16);
-      NET.damageRemote(rp, 9999, false, creditW, meleeFlag);   // saber: melee=false (no demote, counts as a gun kill)
+      NET.damageRemote(rp, 9999, false, currentWeaponKey, true);   // melee=true -> demotes victim
     });
   }
-  if (hit) { showHitMarker(); showKillFlash(); if (w.saber) sfxSaberHit(origin.clone().addScaledVector(dir, reach * 0.6)); }
-  else if (w.saber) {
-    // Missed a body — if the swing clips a wall/object, give an electric clash + sparks.
-    const ray = new THREE.Raycaster(origin, dir, 0, reach);
-    const ch = ray.intersectObjects(colliders, false);
-    if (ch.length) { sfxSaberClash(ch[0].point); spawnSmokePuff(ch[0].point, 0x9ed2ff, 0.18, 0.3); }
-  }
+  if (hit) { showHitMarker(); showKillFlash(); }
   updateHUD();
 }
 
@@ -4585,26 +4444,46 @@ const RC = {
   maxFlight: 12,          // seconds of fuel
   boostDrain: 2,          // fuel multiplier while boosting
   killR: 4, blastR: 8, blastDmg: 60,   // explosion (lethal within killR; splash to blastR)
-  ammo: 1                              // 1 rocket per 5-kill scorestreak activation
+  ammo: 2
 };
-// Set true (e.g. from the dev console) to log the missile's pitch input→angle each steered frame.
-let RC_DEBUG = false;
-// Reused temps for the roll-locked heading matrix (avoid per-frame allocation churn).
-const _rcZero = new THREE.Vector3(0, 0, 0), _rcWorldUp = new THREE.Vector3(0, 1, 0), _rcNegDir = new THREE.Vector3();
+let rcUnlocked = false;   // per-match: has the local player typed 8888 this match?
 let rcEquipped = false;   // is the RC launcher the currently-held weapon?
-let rcPrevWeapon = null;  // weapon to restore when un-equipping (gun or saber)
+let rcPrevWeapon = null;  // weapon to restore when un-equipping
 let rcActive = false;     // currently piloting a missile (body frozen + vulnerable)
 let rcMissile = null;     // the local controlled missile
 let rcCamLive = false;    // is the nose cam currently the rendered view?
 let rcFade = 0, rcFadeMode = null, rcFadePeak = null;   // black-fade transition (in/out)
 let rcSteerX = 0, rcSteerY = 0;   // accumulated mouse delta while piloting
+let rcUnlockMsgT = 0;
+const rc8 = [];                   // timestamps of recent "8" presses (the 8888 code)
 const rcRemote = new Map();       // ownerId -> network render-only missile copy
 const rcCam = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 scene.add(rcCam);
 
 // Unlock (only for the local player who typed the code) — toast + chime, persists this match.
-// (The RC launcher is now deployed via the 5-kill scorestreak — see streakDeployRC() — so the
-//  old typed-code unlock + "0" toggle have been removed.)
+function rcUnlock() {
+  if (rcUnlocked) return;
+  rcUnlocked = true;
+  const m = el('rcUnlockMsg'); m.style.display = 'block';
+  requestAnimationFrame(() => m.style.opacity = '1');
+  clearTimeout(rcUnlockMsgT);
+  rcUnlockMsgT = setTimeout(() => { m.style.opacity = '0'; setTimeout(() => m.style.display = 'none', 400); }, 2600);
+  sfxNotify();   // attention-getting unlock chime
+}
+// "0" toggles the hidden RC slot in/out (gated on unlock; can't swap mid-flight).
+function rcToggleEquip() {
+  if (!rcUnlocked || rcActive || !player.alive) return;
+  if (!rcEquipped) {
+    rcPrevWeapon = currentWeaponKey;
+    rcEquipped = true;
+    currentWeaponKey = 'rcrl'; weaponState.rcrl.reloading = 0; currentSpread = 0;
+    buildGunModel('rcrl'); updateHUD();
+  } else {
+    rcEquipped = false;
+    if (gameMode === 'gungame') ggEquipCurrent();
+    else { currentWeaponKey = rcPrevWeapon || 'pistol'; buildGunModel(currentWeaponKey); updateHUD(); }
+  }
+}
 
 // Build the distinct sleek black/gray missile (local +Z = forward). Has a glowing nose
 // camera lens, antennas, fins, a thruster flame, and a blinking light.
@@ -4635,18 +4514,13 @@ function rcTryLaunch() {
   const ws = weaponState.rcrl;
   if (ws.cooldown > 0 || ws.ammo <= 0) return;
   ws.ammo--; ws.cooldown = WEAPONS.rcrl.fireRate;
-  // Firing CONSUMES the 5-kill scorestreak reward (one rocket only; pressing N again gives nothing).
-  const rcTier = STREAK.tiers.find(t => t.id === 'rcrl'); if (rcTier) { rcTier.consumed = true; updateStreakHUD(); }
   const origin = gunMuzzleWorld();
   const dir = camera.getWorldDirection(new THREE.Vector3()).normalize();
   const grp = buildRcMissileMesh(); grp.position.copy(origin);
   grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone());
   scene.add(grp);
   rcMissile = { grp, pos: origin.clone(), dir: dir.clone(), quat: grp.quaternion.clone(), speed: RC.launchSpeed,
-                fuel: RC.maxFlight, flameMat: grp.userData.flameMat, age: 0, trailT: 0, netAcc: 0,
-                // Absolute heading angles (single source of truth for steering). Roll is always
-                // locked to world-up so "mouse up = climb" can never invert mid-flight.
-                yaw: Math.atan2(dir.x, dir.z), pitch: Math.asin(Math.max(-1, Math.min(1, dir.y))) };
+                fuel: RC.maxFlight, flameMat: grp.userData.flameMat, age: 0, trailT: 0, netAcc: 0 };
   if (gunMesh) gunMesh.position.z = -0.5;
   alertBots(player.pos);
   rcActive = true; rcSteerX = rcSteerY = 0;          // body freezes immediately (vulnerable)
@@ -4694,8 +4568,8 @@ function rcDetonate(center, directBot, directRemote, immediate) {
   rcApplyDamage(center, directBot, directRemote);
   if (NET.active) NET.broadcast({ t: 'rc', s: 'boom', id: NET.selfId, x: center.x, y: center.y, z: center.z });
   scene.remove(rcMissile.grp); disposeGroup(rcMissile.grp); rcMissile = null;
-  if (immediate) { rcActive = false; rcCamLive = false; rcFade = 0; rcFadeMode = null; el('rcFade').style.opacity = 0; }   // death: respawn re-equips the loadout
-  else { rcFadeMode = 'in'; rcFadePeak = () => { rcCamLive = false; rcActive = false; streakRcReturnWeapon(); }; }   // fade back to the body + drop the spent launcher
+  if (immediate) { rcActive = false; rcCamLive = false; rcFade = 0; rcFadeMode = null; el('rcFade').style.opacity = 0; }
+  else { rcFadeMode = 'in'; rcFadePeak = () => { rcCamLive = false; rcActive = false; }; }   // fade to black then back to the body
   updateHUD();
 }
 
@@ -4714,27 +4588,17 @@ function rcUpdate(dt) {
   const m = rcMissile, lim = ARENA - 1;
   m.age += dt;
 
-  // Steering (only once the nose cam is live). DETERMINISTIC, single source of truth:
-  //   * rcSteerY = accumulated mouse e.movementY this frame (browser: mouse UP => movementY < 0).
-  //   * FIXED sign convention, hard-coded (no game-state / settings conditionals):
-  //       mouse UP  (rcSteerY < 0) => pitch angle INCREASES => missile climbs.
-  //       mouse RIGHT(rcSteerX > 0) => yaw decreases (turns right; same feel as before).
-  // We integrate ABSOLUTE yaw/pitch and rebuild the heading every frame, with roll locked to
-  // world-up. That removes the roll-drift that used to make pitch feel intermittently inverted.
+  // Steering (only once the nose cam is live): mouse pitches/yaws in the MISSILE'S OWN frame,
+  // clamped by the turn rate. Frame-relative rotation never gimbal-locks (even flying straight up).
   if (rcCamLive) {
+    let dyaw = -rcSteerX * RC.steerSens, dpitch = rcSteerY * RC.steerSens;   // mouse UP -> climb (standard FPS, not inverted)
     const maxTurn = RC.turnRate * dt;
-    const dPitch = Math.max(-maxTurn, Math.min(maxTurn, -rcSteerY * RC.steerSens));   // sign = -1, always
-    const dYaw   = Math.max(-maxTurn, Math.min(maxTurn, -rcSteerX * RC.steerSens));
-    m.yaw += dYaw;
-    m.pitch += dPitch;
-    m.pitch = Math.max(-1.45, Math.min(1.45, m.pitch));   // ~±83°: keep clear of straight-up gimbal
-    const cp = Math.cos(m.pitch);
-    m.dir.set(Math.sin(m.yaw) * cp, Math.sin(m.pitch), Math.cos(m.yaw) * cp).normalize();
-    // Orient the exterior mesh: +Z faces dir, up locked to world +Y (no roll). lookAt(0,-dir,up)
-    // puts the matrix's +Z column on dir.
-    m.quat.setFromRotationMatrix(new THREE.Matrix4().lookAt(
-      _rcZero, _rcNegDir.copy(m.dir).negate(), _rcWorldUp));
-    if (RC_DEBUG) console.log(`[RC] mouseY=${rcSteerY.toFixed(1)} sign=-1 dPitch=${dPitch.toFixed(4)} pitch=${m.pitch.toFixed(3)} dir.y=${m.dir.y.toFixed(3)}`);
+    dyaw = Math.max(-maxTurn, Math.min(maxTurn, dyaw));
+    dpitch = Math.max(-maxTurn, Math.min(maxTurn, dpitch));
+    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), dyaw);    // local up (yaw)
+    const qp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), dpitch);  // local right (pitch)
+    m.quat.multiply(qy).multiply(qp);
+    m.dir.set(0, 0, 1).applyQuaternion(m.quat).normalize();
   }
   rcSteerX = rcSteerY = 0;
 
@@ -4820,14 +4684,16 @@ function updateRcRemote(dt) {
   });
 }
 
-// Reset all RC state for a fresh match / leaving to the menu (RC is now a streak reward).
+// Reset all RC state for a fresh match / leaving to the menu (unlock is per-match).
 function rcResetMatch() {
-  rcEquipped = false; rcActive = false; rcCamLive = false;
+  rcUnlocked = false; rcEquipped = false; rcActive = false; rcCamLive = false;
   rcFade = 0; rcFadeMode = null; rcFadePeak = null; rcPrevWeapon = null; rcSteerX = rcSteerY = 0;
   if (rcMissile) { scene.remove(rcMissile.grp); disposeGroup(rcMissile.grp); rcMissile = null; }
   rcRemote.forEach(o => { scene.remove(o.grp); disposeGroup(o.grp); }); rcRemote.clear();
-  weaponState.rcrl.ammo = 0; weaponState.rcrl.cooldown = 0;
+  weaponState.rcrl.ammo = RC.ammo; weaponState.rcrl.cooldown = 0;
+  rc8.length = 0;
   el('rcHud').classList.remove('on'); el('rcFade').style.opacity = 0;
+  const um = el('rcUnlockMsg'); um.style.display = 'none'; um.style.opacity = 0;
 }
 
 /* ============================================================================
@@ -5117,195 +4983,6 @@ function updateCigar(dt) {
   if (cigT >= CIGAR.dur) { sfxCigarDone(); cigFinish(); }   // warm satisfaction tone at full heal
 }
 
-/* ============================================================================
-   7h. SCORESTREAKS — kills-without-dying unlock powerful rewards (CoD-style).
-     3 kills -> SABER + JACK DANIELS combo (press B)
-     5 kills -> RC ROCKET LAUNCHER (press N)
-   Dying resets the streak to 0 and forfeits every unlocked/active reward. The
-   streak counter is LOCAL; kill credit is funneled here from the host-authoritative
-   kill code (and directly in solo). See streakCredit() / the 'kc' net message.
-   ============================================================================ */
-const STREAK = {
-  count: 0,
-  tiers: [
-    { id: 'saberjd', need: 3, key: 'KeyB', label: '3 · SABER + JACK', hint: 'PRESS B', unlocked: false, consumed: false },
-    { id: 'rcrl',    need: 5, key: 'KeyN', label: '5 · RC ROCKET',    hint: 'PRESS N', unlocked: false, consumed: false }
-  ]
-};
-// Saber + Jack Daniels combo state.
-const SABER_IGNITE = 0.4, JD_DRINK = 1.5, OVERHEAL_MAX = 100, JD_REST_Y = -0.40;
-let saberMode = false;          // saber+JD scorestreak currently equipped
-let saberBlocking = false;      // RMB block stance (50% damage taken, 70% move speed, can't swing)
-let saberIgniteT = 0;           // blade-ignition animation timer (counts down from SABER_IGNITE)
-let saberSwingT = 0, saberSwingDir = 1;   // slash arc timer + alternating direction
-let _jdVM = null, jdDrinking = false, jdDrinkT = 0;   // Jack Daniels left-hand viewmodel + drink anim
-
-// A kill happened for the LOCAL player (any weapon). Bump the streak + unlock tiers.
-function streakOnKill() {
-  if (!player.alive || !gameState.running) return;
-  STREAK.count++;
-  STREAK.tiers.forEach(t => {
-    if (!t.unlocked && !t.consumed && STREAK.count >= t.need) { t.unlocked = true; streakFlashUnlock(t); sfxStreakUnlock(); }
-  });
-  updateStreakHUD();
-}
-// Host-authority credit: bump the killer's streak (locally if it's me, else notify that peer).
-function streakCredit(killerId, victimId) {
-  if (!killerId || killerId === 'bot' || killerId === victimId) return;   // no self/environment streaks
-  if (!NET.active || killerId === NET.selfId) streakOnKill();
-  else NET.route(killerId, { t: 'kc' });
-}
-// Death (or match reset): wipe the streak + forfeit rewards. announce=true shows "STREAK LOST".
-function streakReset(announce) {
-  const had = STREAK.count > 0 || STREAK.tiers.some(t => t.unlocked || t.consumed);
-  STREAK.count = 0;
-  STREAK.tiers.forEach(t => { t.unlocked = false; t.consumed = false; });
-  saberEnd();
-  player.overheal = 0;
-  if (announce && had) { showStreakLost(); sfxStreakLost(); }
-  updateStreakHUD();
-}
-// Press B / N — activate an unlocked reward (or a soft "denied" if it isn't ready).
-function streakActivate(tierId) {
-  const t = STREAK.tiers.find(x => x.id === tierId);
-  if (!t || !gameState.running || !player.alive) return;
-  if (!t.unlocked || t.consumed) { sfxStreakDenied(); return; }
-  if (tierId === 'saberjd') { t.consumed = true; equipSaberJD(); updateStreakHUD(); }
-  else if (tierId === 'rcrl') { streakDeployRC(); }   // consumed when the rocket is actually fired (see rcTryLaunch)
-}
-
-/* ---- SABER + JACK DANIELS (3-kill reward) ---- */
-function saberCreditWeapon() { return gameMode === 'gungame' ? ggLadderKey() : currentWeaponKey; }   // saber kills count as the current ladder weapon
-function syncSaberHum() { if (saberMode && currentWeaponKey === 'saber' && player.alive && gameState.running) SaberHum.start(); else SaberHum.stop(); }
-function equipSaberJD() {
-  if (!player.alive) return;
-  if (cigSmoking) cigFinish();          // the bottle replaces the cigar while saber+JD is active
-  aiming = false; saberBlocking = false;
-  saberMode = true; ggKarambit = false;
-  saberIgniteT = SABER_IGNITE;
-  ggEquip('saber');                     // mainGunKey() now resolves to the saber (keys 1/2 re-equip it)
-  if (gunMesh && gunMesh.userData.saber) gunMesh.userData.saber.bladeGrp.scale.y = 0.0001;   // start the blade collapsed so the ignition reads
-  sfxSaberIgnite(); flashSaber();
-  if (!_jdVM) _jdVM = buildJdVM();
-  _jdVM.visible = true; _jdVM.position.set(-0.42, JD_REST_Y, -0.55); _jdVM.rotation.set(0, -0.2, 0.12);
-}
-function saberEnd() {
-  if (!saberMode) return;
-  saberMode = false; saberBlocking = false; saberIgniteT = 0; saberSwingT = 0; jdDrinking = false;
-  SaberHum.stop();
-  if (_jdVM) _jdVM.visible = false;
-  if (player.alive && gameState.running && currentWeaponKey === 'saber') ggEquipCurrent();   // back to the normal gun (respawn handles death)
-}
-
-// Build the square Jack Daniels bottle held by the neck in the left hand (lower-left).
-function buildJdVM() {
-  const g = new THREE.Group();
-  const skin  = new THREE.MeshLambertMaterial({ color: 0xc98f5a, flatShading: true });
-  const glass = new THREE.MeshLambertMaterial({ color: 0x241a12, flatShading: true });   // dark square JD bottle
-  const cap   = new THREE.MeshLambertMaterial({ color: 0x111111, flatShading: true });
-  const black = new THREE.MeshLambertMaterial({ color: 0x0a0a0a, flatShading: true });
-  const gold  = new THREE.MeshBasicMaterial({ color: 0xC9A24A });
-  const white = new THREE.MeshBasicMaterial({ color: 0xeee6d2 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.34, 0.11), glass); g.add(body);
-  const shoulder = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.08), glass); shoulder.position.y = 0.19; g.add(shoulder);
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.12, 10), glass); neck.position.y = 0.27; g.add(neck);
-  const capm = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 0.05, 10), cap); capm.position.y = 0.345; g.add(capm);
-  const label = new THREE.Mesh(new THREE.BoxGeometry(0.145, 0.21, 0.006), black); label.position.set(0, -0.02, 0.058); g.add(label);   // iconic black label
-  const l1 = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.004), white); l1.position.set(0, 0.055, 0.062); g.add(l1);             // "JACK DANIEL'S"
-  const l2 = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.034, 0.004), gold);  l2.position.set(0, 0.0, 0.062); g.add(l2);              // gold "Old No. 7"
-  const l3 = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.012, 0.004), white); l3.position.set(0, -0.05, 0.062); g.add(l3);          // small print
-  const palm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.16), skin); palm.position.set(-0.02, 0.13, 0.0); g.add(palm);       // left fist on the neck
-  for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.085, 0.05), skin); f.position.set(-0.07 + i * 0.06, 0.17, 0.07); g.add(f); }
-  g.position.set(-0.42, JD_REST_Y, -0.55);
-  g.rotation.set(0, -0.2, 0.12);
-  g.visible = false; camera.add(g);
-  return g;
-}
-// Q while saber+JD active: take a swig — full HP + full overheal. Unlimited uses while active.
-function drinkJD() {
-  if (!gameState.running || !player.alive || !saberMode || jdDrinking) return;
-  jdDrinking = true; jdDrinkT = 0;
-  player.health = 100;
-  player.overheal = OVERHEAL_MAX;
-  flashJD(); sfxJDDrink();
-  updateHUD();
-}
-// Animate the bottle (raise -> tilt to mouth -> lower) and keep it shown while saber+JD is active.
-function updateJD(dt) {
-  if (!_jdVM) return;
-  if (!saberMode || !player.alive) { _jdVM.visible = false; jdDrinking = false; return; }
-  _jdVM.visible = !rcCamLive;
-  const restY = JD_REST_Y, upY = -0.16;
-  if (jdDrinking) {
-    jdDrinkT += dt;
-    const k = Math.min(1, jdDrinkT / JD_DRINK);
-    const raise = Math.min(1, k / 0.35), lower = k > 0.7 ? (k - 0.7) / 0.3 : 0;
-    const up = smoothstep(raise) * (1 - smoothstep(lower));
-    _jdVM.position.y = restY + (upY - restY) * up;
-    _jdVM.position.x = -0.42 + 0.15 * up;
-    _jdVM.rotation.x = -1.1 * up;                 // tilt up to the mouth for the swig
-    if (k >= 1) { jdDrinking = false; _jdVM.position.set(-0.42, restY, -0.55); _jdVM.rotation.set(0, -0.2, 0.12); }
-  } else {
-    _jdVM.position.x += (-0.42 - _jdVM.position.x) * Math.min(1, dt * 10);
-    _jdVM.position.y += (restY - _jdVM.position.y) * Math.min(1, dt * 10);
-    _jdVM.rotation.x += (0 - _jdVM.rotation.x) * Math.min(1, dt * 10);
-  }
-}
-
-/* ---- RC ROCKET LAUNCHER (5-kill reward) ---- */
-// Deploy the RC launcher with exactly 1 rocket. Consumed when the rocket is fired (rcTryLaunch);
-// re-pressing N before firing just re-arms the same single rocket (never grants a second).
-function streakDeployRC() {
-  if (rcActive || !player.alive || !gameState.running) return;
-  if (cigSmoking) cigFinish();
-  weaponState.rcrl.ammo = 1; weaponState.rcrl.cooldown = 0; weaponState.rcrl.reloading = 0;
-  if (currentWeaponKey !== 'rcrl') rcPrevWeapon = currentWeaponKey;   // remember what to return to (gun or saber)
-  rcEquipped = true; currentWeaponKey = 'rcrl'; aiming = false; currentSpread = 0;
-  buildGunModel('rcrl'); syncSaberHum(); updateHUD();
-}
-// After the rocket detonates, drop the launcher and return to the previous weapon (gun or saber).
-function streakRcReturnWeapon() {
-  if (!rcEquipped) return;
-  rcEquipped = false;
-  if (player.alive && gameState.running) {
-    if (saberMode) ggEquipCurrent();
-    else if (gameMode === 'gungame') ggEquipCurrent();
-    else { currentWeaponKey = rcPrevWeapon && WEAPONS[rcPrevWeapon] ? rcPrevWeapon : mainGunKey(); buildGunModel(currentWeaponKey); }
-    syncSaberHum(); updateHUD();
-  }
-}
-
-/* ---- SCORESTREAK HUD (left side) ---- */
-function updateStreakHUD() {
-  const sbar = el('streakBar');
-  if (!sbar) return;
-  if (!gameState.running) { sbar.style.display = 'none'; return; }
-  sbar.style.display = 'block';
-  el('streakCount').textContent = 'STREAK ' + STREAK.count;
-  STREAK.tiers.forEach((t, i) => {
-    const row = el('streakTier' + i); if (!row) return;
-    row.classList.toggle('locked', !t.unlocked && !t.consumed);
-    row.classList.toggle('ready', t.unlocked && !t.consumed);
-    row.classList.toggle('consumed', t.consumed);
-    const prog = row.querySelector('.stProg'); if (prog) prog.style.width = Math.max(0, Math.min(100, (STREAK.count / t.need) * 100)) + '%';
-    const ready = row.querySelector('.stReady'); if (ready) ready.textContent = t.consumed ? 'USED' : (t.unlocked ? '✓ ' + t.hint : STREAK.count + ' / ' + t.need);
-  });
-}
-function streakFlashUnlock(t) {
-  const i = STREAK.tiers.indexOf(t); const row = el('streakTier' + i); if (!row) return;
-  row.classList.remove('unlockFlash'); void row.offsetWidth; row.classList.add('unlockFlash');
-}
-let _streakLostT = null;
-function showStreakLost() {
-  const e = el('streakLost'); if (!e) return;
-  e.style.display = 'block'; requestAnimationFrame(() => e.style.opacity = '1');
-  clearTimeout(_streakLostT);
-  _streakLostT = setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.style.display = 'none', 400); }, 1100);
-}
-// Quick screen flashes: golden when drinking, blue-white on saber ignition.
-function flashJD() { const f = el('jdFlash'); if (!f) return; f.style.transition = 'none'; f.style.opacity = '0.8'; requestAnimationFrame(() => { f.style.transition = 'opacity 0.7s'; f.style.opacity = '0'; }); }
-function flashSaber() { const f = el('saberFlash'); if (!f) return; f.style.transition = 'none'; f.style.opacity = '0.7'; requestAnimationFrame(() => { f.style.transition = 'opacity 0.45s'; f.style.opacity = '0'; }); }
-
 // Ammo-box pickups: spin/bob, and refill ammo + 1 grenade when the player touches one.
 function updatePickups(dt) {
   for (const pk of pickups) {
@@ -5458,20 +5135,14 @@ function updateHUD() {
   }
   if (w.rc && magSpan) magSpan.style.display = 'none';   // RC launcher: rockets/life, no reserve to show
   el('lootInfo').style.display = 'none';                 // no loot crates in either mode
-  // Cigar self-heal availability (all modes): full when carried, dimmed once used. Hidden while
-  // saber+JD is active (the whiskey bottle replaces the cigar, and Q drinks instead).
-  if (saberMode) { el('cigarCount').style.display = 'none'; }
-  else { el('cigarCount').style.display = 'block'; el('cigarNum').textContent = player.cigar; el('cigarCount').style.opacity = player.cigar > 0 ? '1' : '0.35'; }
+  // Cigar self-heal availability (all modes): full when carried, dimmed once used.
+  el('cigarCount').style.display = 'block'; el('cigarNum').textContent = player.cigar;
+  el('cigarCount').style.opacity = player.cigar > 0 ? '1' : '0.35';
   // Health bar
   const hp = Math.max(0, player.health);
   const bar = el('healthBar');
   bar.style.width = hp + '%';
   bar.style.background = hp > 50 ? '#34d058' : hp > 25 ? '#f0b429' : '#e0392b';
-  // Whiskey overheal/shield bar (amber) — stacked above HP, shown only while it has charge.
-  const oh = Math.max(0, Math.min(OVERHEAL_MAX, player.overheal || 0));
-  const ohWrap = el('overhealBarBg');
-  if (ohWrap) { ohWrap.style.display = oh > 0 ? 'block' : 'none'; const ob = el('overhealBar'); if (ob) ob.style.width = (oh / OVERHEAL_MAX * 100) + '%'; }
-  updateStreakHUD();
 }
 
 let hitMarkerTimer = 0;
@@ -5511,13 +5182,13 @@ function ggEquip(key) {
   if (!WEAPONS[key]) return;
   rcEquipped = (key === 'rcrl');
   currentWeaponKey = key; weaponState[key].reloading = 0; currentSpread = 0;
-  buildGunModel(key); syncSaberHum(); updateHUD();
+  buildGunModel(key); updateHUD();
 }
 // The ladder weapon for the LOCAL player's current level.
 function ggLadderKey() { return GUNGAME_LADDER[ggLevel - 1]; }
 // The LOCAL player's "main gun" slot: gun-game uses the current ladder rung; FFA uses the
 // player-chosen main weapon (set via the inventory menu, default Assault Rifle).
-function mainGunKey() { return saberMode ? 'saber' : (gameMode === 'gungame' ? ggLadderKey() : ffaMain); }
+function mainGunKey() { return gameMode === 'gungame' ? ggLadderKey() : ffaMain; }
 // Equip whichever of the two slots is active (the gun, or the karambit) — both modes.
 function ggEquipCurrent() { ggEquip(ggKarambit ? KARAMBIT_KEY : mainGunKey()); }
 // Toggle / set the karambit slot (both modes — FFA also carries a permanent karambit).
@@ -5534,12 +5205,10 @@ function ggSetKarambit(use) {
 function ggSetLevel(level) {
   const prev = ggLevel;
   ggLevel = Math.max(1, Math.min(GUNGAME_MAX, level));
+  ggKarambit = false;
   const key = ggLadderKey(), ws = weaponState[key];
   ws.ammo = WEAPONS[key].mag; ws.reloading = 0; ws.cooldown = 0;
-  // While the saber scorestreak is active, the level still advances (and the underlying gun is
-  // refilled for when the saber ends) but we KEEP the saber equipped instead of swapping to the gun.
-  if (!saberMode) { ggKarambit = false; ggEquip(key); }
-  else updateHUD();
+  ggEquip(key);
   // Progression SFX for the LOCAL player: ascending chime up (fanfare at the final level), sad chime on demote.
   if (gameState.running) { if (ggLevel > prev) (ggLevel >= GUNGAME_MAX ? sfxFinalLevel() : sfxLevelUp()); else if (ggLevel < prev) sfxDemote(); }
 }
@@ -5562,8 +5231,7 @@ function ggSendLevel(id, level) { NET.route(id, { t: 'ggset', level }); }
 
 // HOST authority: process one kill for gun-game progression / demotion / win.
 function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
-  streakCredit(killerId, victimId);   // every kill (any weapon) counts toward the killer's scorestreak
-  // --- RC ROCKET: tracked separately; the killer NEVER advances / demotes / wins (Option A). ---
+  // --- SECRET RC ROCKET: tracked separately; the killer NEVER advances / demotes / wins (Option A). ---
   if (weapon === 'rcrl') {
     const killerName = (killerId && NET.scores.has(killerId)) ? NET.scores.get(killerId).name : 'A player';
     const victimName = (victimIsPlayer && victimId && NET.scores.has(victimId)) ? NET.scores.get(victimId).name : null;
@@ -5633,7 +5301,6 @@ function onBotKilled(bot, info) {
   if (NET.active && NET.isClient) return;   // clients get score/feed from the host
 
   // --- Solo ---
-  streakOnKill();   // every solo bot kill counts toward the scorestreak (both modes)
   if (gameMode === 'gungame') { ggSoloKill(info.weapon); return; }
   gameState.score += pts;
   gameState.kills++;
@@ -5648,11 +5315,6 @@ function onBotKilled(bot, info) {
 
 function hurtPlayer(dmg) {
   if (!player.alive) return;
-  if (saberBlocking) dmg *= 0.5;                  // saber block stance: 50% damage reduction
-  if (player.overheal > 0 && dmg > 0) {           // whiskey overheal/shield soaks damage before HP
-    const soak = Math.min(player.overheal, dmg);
-    player.overheal -= soak; dmg -= soak;
-  }
   player.health -= dmg;
   showHurtFlash();
   if (dmg >= 1 && player.health > 0) sfxHurt();   // grunt + thud (death sound covers the lethal hit)
@@ -5668,7 +5330,6 @@ function playerDie() {
   if (invOpen) closeInventory();                                   // close the inventory if you die while browsing
   player.alive = false;
   player.health = 0;
-  streakReset(true);                                               // dying wipes the streak + forfeits saber/JD/RC ("STREAK LOST")
   if (NET.active) {
     // tell the host who killed me so they get credit (and everyone sees the feed)
     NET.reportDeath(player.lastAttacker, player.lastAttackerHead, player.lastAttackerWeapon, player.lastAttackerMelee);
@@ -5689,10 +5350,9 @@ function playerDie() {
     player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
     player.impulseT = 0; player.impulseGrace = 0; player.onLadder = false; player.ladder = null;
     player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
-    player.overheal = 0; saberMode = false; saberBlocking = false; if (_jdVM) _jdVM.visible = false; SaberHum.stop();   // no streak rewards carry into a new life
     player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
-    weaponState.rcrl.ammo = 0; weaponState.rcrl.cooldown = 0;     // RC launcher is streak-only — no respawn ammo
+    weaponState.rcrl.ammo = RC.ammo; weaponState.rcrl.cooldown = 0;   // RC rockets refill on respawn (no regen mid-life)
     rcEquipped = false;                                 // never respawn holding the RC launcher
     // Both modes respawn onto the main gun (gun-game: current ladder rung; FFA: your chosen main).
     player.grenades = 0; player.impulses = IMPULSE.maxCarry; ggKarambit = false;
@@ -5709,7 +5369,7 @@ function endMatch(won) {
   gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); (won ? sfxWin() : sfxLose());
+  Ambient.stop(); (won ? sfxWin() : sfxLose());
   el('endTitle').textContent = won ? 'YOU WIN' : 'MATCH OVER';
   el('endSub').textContent = `Final: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
   el('endScreen').style.display = 'flex';
@@ -5725,7 +5385,6 @@ function startMatch() {
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.impulseT = 0; player.impulseGrace = 0;
   player.cigar = CIGAR.maxCarry; cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;   // fresh cigar; clear any prior smoke
-  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; streakReset(false);   // fresh scorestreak
   player.grenades = throwMaxCarry();
   yaw = Math.atan2(sp.x, sp.z); pitch = 0; recoilPitch = 0; recoilYaw = 0;   // look toward map centre
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; shakeTime = 0; shakeMag = 0;
@@ -5887,7 +5546,7 @@ function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop();
+  Ambient.stop();
   const won = winnerName && winnerName === NET.selfName;
   if (!NET.active) (winnerName === 'YOU' ? sfxWin() : sfxLose()); else (won ? sfxWin() : sfxLose());   // victory / defeat fanfare
   const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
@@ -6214,7 +5873,6 @@ const NET = {
     if (killerId && this.scores.has(killerId)) {
       const s = this.scores.get(killerId); s.score += pts; s.kills += 1; killerName = s.name;
     } else if (killerId === 'bot') killerName = 'A bot';
-    streakCredit(killerId);   // FFA: every credited kill bumps the killer's scorestreak
     const html = buildKillFeed(killerName, victimName, opts);
     addKillFeed(html); this.broadcast({ t: 'feed', html });
     this.broadcastScores(); this.applyScoresLocal();
@@ -6387,7 +6045,6 @@ const NET = {
       case 'skin': { this.onSkinChunk(msg, fromId); break; }   // a peer's painted skin (chunked PNG)
 
       case 'ggset': { ggSetLevel(msg.level); break; }    // host told me my new gun-game level
-      case 'kc': { streakOnKill(); break; }              // host credited me a kill -> bump my (local) scorestreak
 
       /* ---- both: I got shot ---- */
       case 'youhit': {
@@ -7070,46 +6727,6 @@ function animate() {
           gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);
           if (trail) trail.material.opacity = 0;
         }
-      } else if (currentWeaponKey === 'saber') {
-        // LIGHTSABER: ignition (blade grows) > slash arc > block stance / idle hum-sway, with a
-        // constant living-blade flicker on the glow + halo.
-        const S = gunMesh.userData && gunMesh.userData.saber;
-        const flick = 0.92 + Math.random() * 0.08;
-        if (S) { if (S.glow) S.glow.material.opacity = 0.50 * flick + 0.08; if (S.halo) S.halo.material.opacity = 0.20 * flick; }
-        if (saberIgniteT > 0) {
-          saberIgniteT -= dt;
-          const p = Math.min(1, 1 - Math.max(0, saberIgniteT) / SABER_IGNITE);
-          if (S) S.bladeGrp.scale.y = smoothstep(p);   // blade shoots up from the emitter
-          gunMesh.position.x += (0.32 - gunMesh.position.x) * Math.min(1, dt * 12);
-          gunMesh.position.y += (-0.28 - gunMesh.position.y) * Math.min(1, dt * 12);
-          gunMesh.position.z += (-0.6 - gunMesh.position.z) * Math.min(1, dt * 12);
-          gunMesh.rotation.set(0, 0.04, 0);
-        } else if (saberSwingT > 0) {
-          if (S) S.bladeGrp.scale.y = 1;
-          saberSwingT -= dt;
-          const s = Math.sin(Math.max(0, 1 - saberSwingT / 0.28) * Math.PI);   // 0->1->0
-          gunMesh.position.set(0.32 - saberSwingDir * 0.30 * s, -0.28 + 0.06 * s, -0.6 + 0.14 * s);
-          gunMesh.rotation.set(0.10 * s, 0.04, saberSwingDir * 1.10 * s);       // fast arcing slash
-          if (S && S.trail) S.trail.material.opacity = 0.55 * s;
-        } else {
-          if (S) { S.bladeGrp.scale.y = 1; if (S.trail) S.trail.material.opacity = 0; }
-          if (saberBlocking) {
-            // Block stance: bring the blade horizontally across the front of the view.
-            gunMesh.position.x += (0.12 - gunMesh.position.x) * Math.min(1, dt * 12);
-            gunMesh.position.y += (-0.16 - gunMesh.position.y) * Math.min(1, dt * 12);
-            gunMesh.position.z += (-0.55 - gunMesh.position.z) * Math.min(1, dt * 12);
-            gunMesh.rotation.x += (0 - gunMesh.rotation.x) * Math.min(1, dt * 12);
-            gunMesh.rotation.z += (1.35 - gunMesh.rotation.z) * Math.min(1, dt * 12);
-          } else {
-            karBob += dt * (5 + Math.hypot(player.vel.x, player.vel.z) * 1.2);
-            const bob = Math.sin(karBob) * 0.010 * Math.min(1, Math.hypot(player.vel.x, player.vel.z) / 4);
-            gunMesh.position.x += (0.32 - gunMesh.position.x) * Math.min(1, dt * 12);
-            gunMesh.position.y += (-0.28 + bob - gunMesh.position.y) * Math.min(1, dt * 12);
-            gunMesh.position.z += (-0.6 - gunMesh.position.z) * Math.min(1, dt * 12);
-            gunMesh.rotation.x += (0 - gunMesh.rotation.x) * Math.min(1, dt * 12);
-            gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);
-          }
-        }
       } else if (ggWeapon() && _ws && _ws.reloading > 0 && _w.rstyle && _w.rstyle !== 'none' && !_w.melee) {
         applyReloadPose(_w.rstyle, 1 - _ws.reloading / (_ws.reloadTotal || _w.reload || 1));
       } else if (_ironAds) {
@@ -7147,7 +6764,6 @@ function animate() {
   if (gunMesh) gunMesh.visible = scopeBlend < 0.5;
   updateSights();   // GUN GAME per-weapon sights + reload bar (overrides the above in gun game)
   updateCigar(dt);  // cigar heal: animate the left-hand viewmodel + keep the weapon holstered while smoking
-  updateJD(dt);     // Jack Daniels bottle: keep it in the left hand + animate a swig while saber+JD is active
   updateLadderPrompt();   // "Press E to climb" when standing in a watchtower-ladder zone
 
   // Effects animate continuously (so they finish even on the end screen)

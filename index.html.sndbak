@@ -373,13 +373,6 @@
   .stepper #botCountVal { font-size: 40px; font-weight: bold; min-width: 60px; }
   .stepper .smallbtn { font-size: 26px; width: 52px; padding: 6px 0; }
   #throwPick button.selected { background: #34d058; color: #fff; outline: 3px solid #fff; }
-  /* Audio settings sliders */
-  .audRow { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 14px; }
-  .audRow > span:first-child { width: 84px; text-align: right; color: #cfe0f0; }
-  .audRow input[type=range] { flex: 1; pointer-events: auto; accent-color: #34d058; }
-  .audVal { width: 36px; text-align: left; color: #ffe600; font-weight: bold; }
-  .audMute { display: block; margin-top: 10px; font-size: 14px; cursor: pointer; color: #cfe0f0; }
-  .audMute input { pointer-events: auto; transform: scale(1.3); margin-right: 6px; vertical-align: middle; }
 
   /* Game-mode picker (lobby + solo) */
   .modePick { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
@@ -665,15 +658,6 @@
       <button data-throw="tomahawk" id="throwTomahawkBtn">TOMAHAWK<small>fast • direct hit one-shot</small></button>
     </div>
     <div class="setHint">Press <b>G</b> in-game to throw your chosen weapon.</div>
-  </div>
-  <div class="setBlock" id="audioBlock">
-    <div class="setLabel">AUDIO</div>
-    <div class="audRow"><span>Master</span><input type="range" id="volmaster" min="0" max="100"><span class="audVal" id="volmasterV">50</span></div>
-    <div class="audRow"><span>Weapons</span><input type="range" id="volweapons" min="0" max="100"><span class="audVal" id="volweaponsV">100</span></div>
-    <div class="audRow"><span>Footsteps</span><input type="range" id="volfootsteps" min="0" max="100"><span class="audVal" id="volfootstepsV">85</span></div>
-    <div class="audRow"><span>UI</span><input type="range" id="volui" min="0" max="100"><span class="audVal" id="voluiV">70</span></div>
-    <div class="audRow"><span>Ambient</span><input type="range" id="volambient" min="0" max="100"><span class="audVal" id="volambientV">45</span></div>
-    <label class="audMute"><input type="checkbox" id="muteToggle"> Mute all</label>
   </div>
   <div class="menuRow">
     <button class="smallbtn" id="settingsEditSkin">🎨 EDIT SKIN</button>
@@ -1117,299 +1101,6 @@ function flatMat(color) {
 }
 
 /* ============================================================================
-   2b. AUDIO — central procedural sound engine (Web Audio API).
-   All SFX are synthesized in code (oscillators + filtered noise + envelopes) so
-   nothing needs to be hosted. Sounds route: per-sound nodes -> category gain ->
-   master gain -> destination. Gameplay sounds are 3D (distance falloff + stereo
-   pan vs the camera); UI sounds are 2D (centre, full). Polyphony is clamped per
-   sound type, and sounds past ~80 units are culled. Settings persist locally.
-   ============================================================================ */
-const SND = {
-  ctx: null, ready: false, master: null, cat: {}, delay: null,
-  CATS: ['weapons', 'footsteps', 'ui', 'ambient', 'voice'],
-  vol: { master: 0.5, weapons: 1.0, footsteps: 0.85, ui: 0.7, ambient: 0.45, voice: 1.0 },
-  muted: false,
-  poly: {}, LIM: { footstep: 6, _def: 4 },
-  lpos: new THREE.Vector3(), lright: new THREE.Vector3(1, 0, 0),
-  _noise: null, _tmp: new THREE.Vector3(), CULL: 80,
-
-  loadSettings() {
-    try { const s = JSON.parse(localStorage.getItem('blockoutAudio')); if (s) { Object.assign(this.vol, s.vol || {}); this.muted = !!s.muted; } } catch (e) {}
-  },
-  saveSettings() { try { localStorage.setItem('blockoutAudio', JSON.stringify({ vol: this.vol, muted: this.muted })); } catch (e) {} },
-  init() {
-    if (this.ready) return;
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    this.loadSettings();
-    this.ctx = new AC();
-    this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : this.vol.master;
-    this.master.connect(this.ctx.destination);
-    // Cheap shared "reverb": a feedback delay big weapons/explosions send into.
-    this.delay = this.ctx.createDelay(0.5); this.delay.delayTime.value = 0.085;
-    const fb = this.ctx.createGain(); fb.gain.value = 0.32; const wet = this.ctx.createGain(); wet.gain.value = 0.5;
-    this.delay.connect(fb); fb.connect(this.delay); this.delay.connect(wet); wet.connect(this.master); this._verb = wet; this._verbIn = this.delay;
-    this.CATS.forEach(c => { const g = this.ctx.createGain(); g.gain.value = this.vol[c]; g.connect(this.master); this.cat[c] = g; });
-    // 1s white-noise buffer (looped + windowed per sound) — reused by every noisy SFX.
-    const n = Math.floor(this.ctx.sampleRate); const buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate); const d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
-    this._noise = buf; this.ready = true;
-  },
-  resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },   // call on a user gesture
-  setMaster(v) { this.vol.master = v; if (this.master) this.master.gain.value = this.muted ? 0 : v; this.saveSettings(); },
-  setCat(c, v) { this.vol[c] = v; if (this.cat[c]) this.cat[c].gain.value = v; this.saveSettings(); },
-  setMuted(b) { this.muted = b; if (this.master) this.master.gain.value = b ? 0 : this.vol.master; this.saveSettings(); },
-  setListener(pos, right) { this.lpos.copy(pos); this.lright.copy(right); },
-  _can(type) { const k = type || '_def'; const lim = this.LIM[k] != null ? this.LIM[k] : this.LIM._def; return (this.poly[k] || 0) < lim; },
-  _bump(type, dur) { const k = type || '_def'; this.poly[k] = (this.poly[k] || 0) + 1; setTimeout(() => { this.poly[k] = Math.max(0, (this.poly[k] || 1) - 1); }, Math.max(40, (dur || 0.25) * 1000)); },
-  // 2D (UI / non-positional): full volume, centre pan.
-  play2d(build, cat, type, vol, dur) {
-    if (!this.ready || this.muted) return; if (type && !this._can(type)) return;
-    const g = this.ctx.createGain(); g.gain.value = (vol == null ? 1 : vol); g.connect(this.cat[cat] || this.master);
-    if (type) this._bump(type, dur); try { build(this.ctx, g, this.ctx.currentTime); } catch (e) {}
-  },
-  // 3D (positional): distance falloff (squared) + stereo pan relative to the camera.
-  play3d(build, pos, cat, type, vol, dur) {
-    if (!this.ready || this.muted || !pos) return;
-    const to = this._tmp.subVectors(pos, this.lpos); const dist = to.length();
-    if (dist > this.CULL) return; if (type && !this._can(type)) return;
-    const fall = Math.max(0, 1 - dist / this.CULL); const g0 = (vol == null ? 1 : vol) * fall * fall;
-    if (g0 < 0.004) return;
-    const pan = dist > 0.05 ? Math.max(-1, Math.min(1, to.multiplyScalar(1 / dist).dot(this.lright))) : 0;
-    const pn = this.ctx.createStereoPanner(); pn.pan.value = pan;
-    const g = this.ctx.createGain(); g.gain.value = g0; pn.connect(g); g.connect(this.cat[cat] || this.master);
-    if (type) this._bump(type, dur); try { build(this.ctx, pn, this.ctx.currentTime); } catch (e) {}
-  }
-};
-// --- Low-level synth helpers (kept cheap: a couple of nodes, short envelopes) ---
-function aTone(ctx, out, t, o) {
-  const osc = ctx.createOscillator(), g = ctx.createGain();
-  osc.type = o.type || 'sine'; osc.frequency.setValueAtTime(Math.max(1, o.f0), t);
-  if (o.f1 != null) osc.frequency.exponentialRampToValueAtTime(Math.max(1, o.f1), t + o.dur);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.001, o.peak || 0.5), t + (o.atk || 0.005));
-  g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
-  osc.connect(g); g.connect(out); if (o.verb && SND._verbIn) g.connect(SND._verbIn);
-  osc.start(t); osc.stop(t + o.dur + 0.03);
-}
-function aNoise(ctx, out, t, o) {
-  const src = ctx.createBufferSource(); src.buffer = SND._noise; src.loop = true; src.playbackRate.value = o.rate || 1;
-  const f = ctx.createBiquadFilter(); f.type = o.filter || 'lowpass'; f.frequency.setValueAtTime(o.freq || 2000, t);
-  if (o.freq1 != null) f.frequency.exponentialRampToValueAtTime(Math.max(40, o.freq1), t + o.dur);
-  f.Q.value = o.q || 0.7;
-  const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.001, o.peak || 0.4), t + (o.atk || 0.002));
-  g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
-  src.connect(f); f.connect(g); g.connect(out); if (o.verb && SND._verbIn) g.connect(SND._verbIn);
-  src.start(t + (o.start || 0)); src.stop(t + o.dur + 0.03);
-}
-// A small ascending/descending note sequence (used by progression + UI chimes).
-function aChime(ctx, out, t, freqs, step, dur, peak, type) {
-  freqs.forEach((f, i) => aTone(ctx, out, t + i * step, { type: type || 'triangle', f0: f, dur: dur || 0.18, peak: peak || 0.4, atk: 0.01 }));
-}
-
-/* --- Per-weapon FIRE profiles (base pitch / length / noise / tone → unique shot per gun) --- */
-const GUN_SFX = {
-  _def: { f: 200, dur: 0.09, noise: 0.6, nf: 2400, peak: 0.5 },
-  gg1:  { f: 80,  dur: 0.13, noise: 1.0, nf: 1200, peak: 0.65, verb: 0.5 },   // Heavy LMG — deep BRRT
-  gg2:  { f: 165, dur: 0.10, noise: 0.7, nf: 2600, peak: 0.55 },              // Assault Rifle
-  gg3:  { f: 240, dur: 0.07, noise: 0.6, nf: 3200, peak: 0.48 },              // SMG — snappy
-  gg4:  { f: 120, dur: 0.13, noise: 0.7, nf: 2000, peak: 0.62, verb: 0.4 },   // Battle Rifle — heavier
-  gg5:  { f: 190, dur: 0.09, noise: 0.6, nf: 2700, peak: 0.52 },              // Carbine
-  gg6:  { f: 70,  dur: 0.20, noise: 1.0, nf: 1600, peak: 0.7,  verb: 0.5 },   // Pump Shotgun — BOOM
-  gg7:  { f: 90,  dur: 0.15, noise: 0.95,nf: 1800, peak: 0.62 },              // Auto Shotgun
-  gg8:  { f: 110, dur: 0.16, noise: 0.7, nf: 2200, peak: 0.66, verb: 0.55 },  // DMR — marksman crack
-  gg9:  { f: 95,  dur: 0.26, noise: 0.85,nf: 2000, peak: 0.8,  verb: 0.8 },   // Bolt Sniper — huge THWACK
-  gg13: { f: 280, dur: 0.06, noise: 0.55,nf: 3400, peak: 0.45 },             // Machine Pistol
-  gg14: { f: 220, dur: 0.08, noise: 0.6, nf: 2800, peak: 0.52 },              // 9mm Pistol
-  gg15: { f: 130, dur: 0.16, noise: 0.7, nf: 2200, peak: 0.66, verb: 0.5, ring: 1 },  // Revolver — metallic ring
-  gg16: { f: 85,  dur: 0.18, noise: 0.85,nf: 1700, peak: 0.78, verb: 0.5 },   // Desert Eagle — deep BOOM
-  gg17: { f: 220, dur: 0.08, noise: 0.6, nf: 2800, peak: 0.52 },              // Akimbo (alternating pan handled at call site)
-  gg18: { f: 250, dur: 0.06, noise: 0.4, nf: 3000, peak: 0.4,  hp: 1200 },    // Tactical — tight suppressed-ish snap
-};
-// Build the fire SFX for a weapon (layered tone + sub + powder noise + optional tail/ring).
-function buildGunFire(key) {
-  const p = GUN_SFX[key] || GUN_SFX._def;
-  return (ctx, out, t) => {
-    aTone(ctx, out, t, { type: 'square', f0: p.f, f1: p.f * 0.42, dur: p.dur, peak: p.peak, atk: 0.003, verb: p.verb });
-    aTone(ctx, out, t, { type: 'sine', f0: p.f * 0.6, f1: p.f * 0.28, dur: p.dur * 1.3, peak: p.peak * 0.8 });
-    aNoise(ctx, out, t, { dur: p.dur * 1.15, peak: 0.55 * p.noise, filter: 'lowpass', freq: p.nf, freq1: p.nf * 0.45, verb: p.verb });
-    if (p.hp) aNoise(ctx, out, t, { dur: p.dur * 0.5, peak: 0.28, filter: 'highpass', freq: p.hp });
-    if (p.ring) aTone(ctx, out, t + 0.02, { type: 'triangle', f0: 1800, f1: 1200, dur: 0.18, peak: 0.12 });   // revolver ring
-  };
-}
-// Knife/melee whoosh (bandpass noise swept down); higher pitch = karambit.
-function buildSlash(high) {
-  return (ctx, out, t) => aNoise(ctx, out, t, { dur: 0.18, peak: 0.4, filter: 'bandpass', freq: high ? 2600 : 1800, freq1: high ? 900 : 600, q: 1.2 });
-}
-// Hollow trigger click on empty.
-function sfxEmpty(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 320, dur: 0.03, peak: 0.18 }); aNoise(ctx, out, t, { dur: 0.035, peak: 0.12, filter: 'highpass', freq: 3000 }); }, pos || playerEarPos(), 'weapons', 'empty', 0.7, 0.06); }
-
-// Convenience: where the local player "hears from" (camera world position).
-function playerEarPos() { return camera.getWorldPosition(new THREE.Vector3()); }
-// Play a weapon's fire sound at a world position (used locally + for networked remote shots).
-function sfxFire(weaponKey, pos, side) {
-  const cat = 'weapons';
-  if (weaponKey === KARAMBIT_KEY) { SND.play3d(buildSlash(true), pos, cat, 'melee', 0.7, 0.2); return; }
-  if (weaponKey === 'gg20' || (WEAPONS[weaponKey] && WEAPONS[weaponKey].melee)) { SND.play3d(buildSlash(false), pos, cat, 'melee', 0.8, 0.2); return; }
-  if (weaponKey === 'gg19') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.3, filter: 'bandpass', freq: 1700, freq1: 2600, q: 1.4 }); }, pos, cat, 'melee', 0.6, 0.13); return; }   // throwing-knife release
-  if (weaponKey === 'gg10') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.05, peak: 0.3, filter: 'lowpass', freq: 1200 }); aNoise(ctx, out, t + 0.02, { dur: 0.16, peak: 0.16, filter: 'bandpass', freq: 1800, freq1: 700, q: 0.8 }); }, pos, cat, 'fire', 0.7, 0.18); return; }   // crossbow: thunk + string whoosh
-  if (weaponKey === 'gg11') { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 320, f1: 140, dur: 0.14, peak: 0.5 }); aNoise(ctx, out, t, { dur: 0.1, peak: 0.3, filter: 'lowpass', freq: 900 }); }, pos, cat, 'fire', 0.85, 0.15); return; }   // grenade launcher: hollow thoonk
-  if (weaponKey === 'gg12' || weaponKey === 'rcrl') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.4, peak: 0.6, filter: 'lowpass', freq: 1400, freq1: 500, verb: 0.6 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 160, f1: 60, dur: 0.4, peak: 0.4 }); }, pos, cat, 'rpg', 0.95, 0.45); return; }   // RPG / RC launch: whoosh + ignition roar
-  const b = buildGunFire(weaponKey);
-  // Akimbo: pan the muzzle slightly L/R per side for the alternating-hands feel.
-  if (side && pos) { const off = SND.lright.clone().multiplyScalar(side === 'L' ? -1.5 : 1.5); pos = pos.clone().add(off); }
-  SND.play3d(b, pos, cat, 'fire' + (weaponKey || ''), 1.0, 0.3);
-}
-
-/* --- EXPLOSIONS / impulse / projectile flight + impacts --- */
-function sfxExplosion(kind, pos) {
-  SND.play3d((ctx, out, t) => {
-    aTone(ctx, out, t, { type: 'sine', f0: 90, f1: 30, dur: kind === 'big' ? 0.8 : 0.5, peak: 0.9, verb: 0.7 });   // low boom
-    aNoise(ctx, out, t, { dur: kind === 'big' ? 0.7 : 0.45, peak: 0.8, filter: 'lowpass', freq: 1200, freq1: 200, verb: 0.7 });
-    aNoise(ctx, out, t + 0.05, { dur: 0.4, peak: 0.25, filter: 'bandpass', freq: 700, q: 0.6 });                   // debris/rumble tail
-    if (kind === 'rc') aNoise(ctx, out, t + 0.04, { dur: 0.35, peak: 0.2, filter: 'highpass', freq: 5000, rate: 1.4 });  // electrical fizz
-    if (kind === 'gl') aNoise(ctx, out, t, { dur: 0.12, peak: 0.4, filter: 'highpass', freq: 2500 });               // sharp crack
-  }, pos, 'weapons', 'expl', 1.0, 0.7);
-}
-// Impulse grenade: kinetic SHWHOOM + electric crackle (NOT a fire boom).
-function sfxImpulseBoom(pos) {
-  SND.play3d((ctx, out, t) => {
-    aNoise(ctx, out, t, { dur: 0.45, peak: 0.8, filter: 'bandpass', freq: 320, freq1: 1400, q: 0.8, verb: 0.5 });   // rising kinetic whoosh
-    aTone(ctx, out, t, { type: 'sine', f0: 70, f1: 200, dur: 0.4, peak: 0.6 });
-    for (let i = 0; i < 5; i++) aTone(ctx, out, t + 0.02 + Math.random() * 0.25, { type: 'square', f0: 2000 + Math.random() * 3000, dur: 0.04, peak: 0.12 });   // electric crackle
-  }, pos, 'weapons', 'expl', 1.0, 0.5);
-}
-function sfxImpulseThrow(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.35, filter: 'bandpass', freq: 1200, freq1: 600, q: 0.9 }); aTone(ctx, out, t + 0.05, { type: 'square', f0: 220, dur: 0.05, peak: 0.12 }); }, pos, 'weapons', 'imp', 0.7, 0.2); }
-function sfxImpulseStick(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 420, f1: 120, dur: 0.09, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.05, peak: 0.25, filter: 'lowpass', freq: 1500 }); }, pos, 'weapons', 'imp', 0.7, 0.1); }
-function sfxImpulseCharge(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 500, f1: 1900, dur: 0.2, peak: 0.3 }), pos, 'weapons', 'impchg', 0.6, 0.2); }
-function sfxLaunched(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.32, peak: 0.4, filter: 'bandpass', freq: 700, freq1: 1600, q: 0.7 }), pos, 'voice', 'gust', 0.6, 0.32); }
-// Bullet impacts.
-function sfxImpact(kind, pos) {
-  const builders = {
-    wall:  (ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.06, peak: 0.4, filter: 'lowpass', freq: 1800 }); aNoise(ctx, out, t, { dur: 0.03, peak: 0.2, filter: 'highpass', freq: 4000 }); },
-    metal: (ctx, out, t) => { aTone(ctx, out, t, { type: 'triangle', f0: 3200, f1: 1400, dur: 0.14, peak: 0.3 }); aTone(ctx, out, t, { type: 'square', f0: 5200, f1: 2600, dur: 0.08, peak: 0.14 }); },
-    flesh: (ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.08, peak: 0.45, filter: 'lowpass', freq: 700 }); aTone(ctx, out, t, { type: 'sine', f0: 160, f1: 80, dur: 0.08, peak: 0.25 }); },
-    stick: (ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 240, f1: 90, dur: 0.1, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.05, peak: 0.2, filter: 'lowpass', freq: 1200 }); },
-    head:  (ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.05, peak: 0.45, filter: 'bandpass', freq: 2600, q: 2 }); aTone(ctx, out, t, { type: 'square', f0: 900, f1: 300, dur: 0.05, peak: 0.2 }); }
-  };
-  SND.play3d(builders[kind] || builders.wall, pos, 'weapons', 'impact', 0.8, 0.14);
-}
-
-/* --- FOOTSTEPS + movement --- */
-// Surface under a point: 'wood' (porch/watchtower/house floor), 'pavement' (street/driveway),
-// 'interior' (deep inside a house), else 'grass'.
-function surfaceAt(x, z, y) {
-  if (y > 0.2) return 'wood';                                                     // porch / platform / 2nd floor / roof
-  if (Math.abs(x) < 12 && (z > 30 && z < 48 || z < -30 && z > -48)) return 'interior';   // inside a house (wood/carpet)
-  if (Math.abs(x) < 10.5 && Math.abs(z) < 30) return 'pavement';                  // central street between the houses
-  return 'grass';                                                                 // lawns / yards / flanks
-}
-function buildStep(surface, loud) {
-  return (ctx, out, t) => {
-    if (surface === 'grass') aNoise(ctx, out, t, { dur: 0.07, peak: 0.28 * loud, filter: 'bandpass', freq: 2600, q: 0.8, rate: 1.2 });
-    else if (surface === 'pavement') aNoise(ctx, out, t, { dur: 0.06, peak: 0.34 * loud, filter: 'lowpass', freq: 900 });
-    else if (surface === 'wood') { aTone(ctx, out, t, { type: 'sine', f0: 180, f1: 90, dur: 0.07, peak: 0.22 * loud }); aNoise(ctx, out, t, { dur: 0.05, peak: 0.18 * loud, filter: 'lowpass', freq: 1400 }); }
-    else aNoise(ctx, out, t, { dur: 0.05, peak: 0.18 * loud, filter: 'lowpass', freq: 600 });   // interior/carpet (muffled)
-  };
-}
-function sfxFootstep(pos, loud) { SND.play3d(buildStep(surfaceAt(pos.x, pos.z, pos.y), loud == null ? 1 : loud), pos, 'footsteps', 'footstep', 1.0, 0.08); }
-function sfxJump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 260, f1: 360, dur: 0.1, peak: 0.18 }); aNoise(ctx, out, t, { dur: 0.06, peak: 0.12, filter: 'lowpass', freq: 1200 }); }, pos, 'footsteps', 'jump', 0.7, 0.1); }
-function sfxLand(pos, hard) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 150, f1: 60, dur: 0.12, peak: 0.3 * hard }); aNoise(ctx, out, t, { dur: 0.09, peak: 0.3 * hard, filter: 'lowpass', freq: 900 }); }, pos, 'footsteps', 'land', 1.0, 0.12); }
-function sfxDive(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.3, peak: 0.4, filter: 'bandpass', freq: 500, freq1: 1500, q: 0.6 }), pos, 'footsteps', 'dive', 0.8, 0.3); }
-function sfxLadderTap(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 300, f1: 180, dur: 0.04, peak: 0.16 }); aNoise(ctx, out, t, { dur: 0.03, peak: 0.1, filter: 'highpass', freq: 3000 }); }, pos, 'footsteps', 'footstep', 0.8, 0.05); }
-
-/* --- DAMAGE / HEALTH / KILL feedback --- */
-function sfxHurt(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.16, peak: 0.4, filter: 'bandpass', freq: 500, freq1: 300, q: 0.9 }); aTone(ctx, out, t, { type: 'sine', f0: 150, f1: 90, dur: 0.12, peak: 0.25 }); }, pos || playerEarPos(), 'voice', 'hurt', 0.9, 0.16); }
-function sfxDeath(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 240, f1: 70, dur: 0.6, peak: 0.4 }); aNoise(ctx, out, t + 0.3, { dur: 0.2, peak: 0.3, filter: 'lowpass', freq: 600 }); }, pos || playerEarPos(), 'voice', 'death', 1.0, 0.6); }
-function sfxKill(headshot) { SND.play2d((ctx, out, t) => { if (headshot) aChime(ctx, out, t, [1320, 1980], 0.05, 0.12, 0.32, 'sine'); else aTone(ctx, out, t, { type: 'sine', f0: 1180, dur: 0.12, peak: 0.3, atk: 0.005 }); }, 'ui', 'kill', 0.8, 0.15); }
-// Critical-health heartbeat (looping; started/stopped by the health watcher).
-function sfxHeartbeat() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 60, f1: 45, dur: 0.14, peak: 0.5 }); aTone(ctx, out, t + 0.22, { type: 'sine', f0: 55, f1: 42, dur: 0.16, peak: 0.4 }); }, 'voice', 'heart', 0.55, 0.4); }
-
-/* --- RELOAD / ADS / scope (per-weapon flavour) --- */
-function sfxReload(weaponKey, pos) {
-  const w = WEAPONS[weaponKey] || {}, rstyle = w.rstyle, P = pos || playerEarPos();
-  const clickMag = (ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 380, dur: 0.04, peak: 0.22 }); aTone(ctx, out, t + 0.18, { type: 'square', f0: 300, dur: 0.05, peak: 0.26 }); aNoise(ctx, out, t + 0.18, { dur: 0.05, peak: 0.18, filter: 'lowpass', freq: 1500 }); };
-  let b;
-  if (rstyle === 'belt') b = (ctx, out, t) => { for (let i = 0; i < 5; i++) { aNoise(ctx, out, t + i * 0.12, { dur: 0.07, peak: 0.2, filter: 'lowpass', freq: 1300 }); aTone(ctx, out, t + i * 0.12, { type: 'square', f0: 260, dur: 0.04, peak: 0.14 }); } };
-  else if (rstyle === 'shell') b = (ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 520, dur: 0.04, peak: 0.18 }); aNoise(ctx, out, t + 0.05, { dur: 0.06, peak: 0.22, filter: 'lowpass', freq: 1000 }); };
-  else if (rstyle === 'cylinder') b = (ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.08, peak: 0.16, filter: 'bandpass', freq: 900 }); for (let i = 0; i < 3; i++) aTone(ctx, out, t + 0.15 + i * 0.06, { type: 'triangle', f0: 1400, dur: 0.03, peak: 0.12 }); aTone(ctx, out, t + 0.4, { type: 'square', f0: 360, dur: 0.05, peak: 0.2 }); };
-  else if (rstyle === 'break') b = (ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 300, f1: 200, dur: 0.1, peak: 0.2 }); aNoise(ctx, out, t + 0.2, { dur: 0.06, peak: 0.18, filter: 'lowpass', freq: 1100 }); aTone(ctx, out, t + 0.4, { type: 'square', f0: 340, dur: 0.05, peak: 0.22 }); };
-  else if (rstyle === 'rpg') b = (ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.2, filter: 'lowpass', freq: 900 }); aTone(ctx, out, t + 0.25, { type: 'sine', f0: 120, dur: 0.1, peak: 0.26 }); aNoise(ctx, out, t + 0.45, { dur: 0.1, peak: 0.18, filter: 'lowpass', freq: 700 }); };
-  else b = clickMag;
-  SND.play3d(b, P, 'weapons', 'reload', 0.75, 0.6);
-}
-function sfxADS(into, scope) {
-  SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.1, peak: 0.12, filter: 'bandpass', freq: into ? 1200 : 900, freq1: into ? 2200 : 600, q: 0.8 }); if (scope) aTone(ctx, out, t + 0.04, { type: 'square', f0: 1600, dur: 0.03, peak: 0.1 }); }, 'weapons', 'ads', 0.5, 0.12);
-}
-
-/* --- CIGAR --- */
-function sfxCigarLight() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 700, dur: 0.03, peak: 0.14 }); aNoise(ctx, out, t + 0.05, { dur: 0.25, peak: 0.18, filter: 'highpass', freq: 4000 }); }, 'voice', 'cig', 0.6, 0.3); }
-function sfxCigarPuff() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.2, peak: 0.12, filter: 'bandpass', freq: 600, freq1: 900, q: 0.6 }); aNoise(ctx, out, t + 0.22, { dur: 0.25, peak: 0.1, filter: 'bandpass', freq: 800, freq1: 400, q: 0.5 }); }, 'voice', 'cig', 0.55, 0.5); }
-function sfxCigarDone() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 330, f1: 440, dur: 0.5, peak: 0.3, atk: 0.05 }), 'voice', 'cig', 0.6, 0.5); }
-function sfxCigarCancel() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.2, filter: 'highpass', freq: 5000 }); }, 'voice', 'cig', 0.5, 0.12); }
-
-/* --- GUN GAME progression + match outcome (non-positional chimes) --- */
-function sfxLevelUp() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [660, 880, 1175], 0.09, 0.16, 0.34), 'ui', 'prog', 0.8, 0.5); }
-function sfxDemote() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [620, 466, 349], 0.1, 0.18, 0.32), 'ui', 'prog', 0.8, 0.6); }
-function sfxFinalLevel() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [784, 988, 1318, 1568], 0.08, 0.2, 0.34), 'ui', 'prog', 0.9, 0.7); }
-function sfxWin() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [523, 659, 784, 1046, 1318], 0.12, 0.28, 0.36), 'ui', 'prog', 1.0, 1.5); }
-function sfxLose() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [440, 349, 262], 0.16, 0.3, 0.3), 'ui', 'prog', 0.8, 0.9); }
-
-/* --- UI / menu / lobby / notifications --- */
-function sfxHover() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 900, dur: 0.04, peak: 0.12 }), 'ui', 'hover', 0.5, 0.05); }
-function sfxClick() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 700, f1: 480, dur: 0.05, peak: 0.2 }); }, 'ui', 'click', 0.6, 0.06); }
-function sfxMenu(open) { SND.play2d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.18, peak: 0.16, filter: 'bandpass', freq: open ? 700 : 1300, freq1: open ? 1500 : 500, q: 0.7 }), 'ui', 'menu', 0.6, 0.18); }
-function sfxInvOpen() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 520, f1: 760, dur: 0.08, peak: 0.18 }); aNoise(ctx, out, t, { dur: 0.06, peak: 0.12, filter: 'highpass', freq: 2500 }); }, 'ui', 'menu', 0.6, 0.1); }
-function sfxInvSelect() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 760, dur: 0.04, peak: 0.18 }); aTone(ctx, out, t + 0.06, { type: 'square', f0: 300, dur: 0.06, peak: 0.2 }); aNoise(ctx, out, t + 0.06, { dur: 0.05, peak: 0.14, filter: 'lowpass', freq: 1400 }); }, 'ui', 'click', 0.7, 0.12); }
-function sfxSlider() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'square', f0: 1100, dur: 0.02, peak: 0.1 }), 'ui', 'tick', 0.5, 0.03); }
-function sfxNotify() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [880, 1320, 1760], 0.07, 0.16, 0.34, 'sine'), 'ui', 'notify', 0.8, 0.4); }
-function sfxJoin() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [660, 990], 0.07, 0.14, 0.3, 'sine'), 'ui', 'notify', 0.7, 0.25); }
-function sfxLeave() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [660, 440], 0.08, 0.16, 0.28, 'sine'), 'ui', 'notify', 0.7, 0.3); }
-function sfxSkinBrush() { SND.play2d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.06, peak: 0.07, filter: 'bandpass', freq: 1800, q: 0.6 }), 'ui', 'brush', 0.4, 0.06); }
-function sfxSkinSave() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [784, 1046, 1318], 0.07, 0.16, 0.3, 'sine'), 'ui', 'notify', 0.7, 0.4); }
-function sfxCountdown(step) { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'square', f0: step >= 3 ? 1320 : 440 + step * 180, dur: step >= 3 ? 0.3 : 0.14, peak: 0.34 }), 'ui', 'notify', 0.9, 0.3); }
-
-/* --- AMBIENT: suburban wind loop + occasional distant birds (very low volume) --- */
-const Ambient = {
-  on: false, src: null, g: null, lfo: null, birdT: 0,
-  start() {
-    if (!SND.ready || this.on) return; this.on = true;
-    const ctx = SND.ctx;
-    const src = ctx.createBufferSource(); src.buffer = SND._noise; src.loop = true;
-    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 430; f.Q.value = 0.5;
-    const g = ctx.createGain(); g.gain.value = 0.1;
-    src.connect(f); f.connect(g); g.connect(SND.cat.ambient); src.start();
-    const lfo = ctx.createOscillator(), la = ctx.createGain(); lfo.frequency.value = 0.08; la.gain.value = 0.05; lfo.connect(la); la.connect(g.gain); lfo.start();
-    this.src = src; this.g = g; this.lfo = lfo; this.birdT = 3 + Math.random() * 5;
-  },
-  stop() { if (!this.on) return; this.on = false; try { this.src.stop(); this.lfo.stop(); } catch (e) {} this.src = this.lfo = this.g = null; },
-  update(dt) {
-    if (!this.on) return;
-    // Windier up high (watchtower), quieter deep inside a house.
-    const indoor = surfaceAt(player.pos.x, player.pos.z, player.pos.y) === 'interior';
-    const base = player.pos.y > 5 ? 0.16 : indoor ? 0.05 : 0.1;
-    if (this.g) this.g.gain.value += (base - this.g.gain.value) * Math.min(1, dt * 2);
-    this.birdT -= dt;
-    if (this.birdT <= 0) {
-      this.birdT = 6 + Math.random() * 10;
-      const p = SND.lpos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 70, 6 + Math.random() * 12, (Math.random() - 0.5) * 70));
-      SND.play3d((ctx, out, t) => { const f0 = 2200 + Math.random() * 900; aTone(ctx, out, t, { type: 'sine', f0, f1: f0 * 1.3, dur: 0.08, peak: 0.13 }); aTone(ctx, out, t + 0.11, { type: 'sine', f0: f0 * 1.1, f1: f0 * 0.85, dur: 0.07, peak: 0.1 }); }, p, 'ambient', 'bird', 0.6, 0.2);
-    }
-  }
-};
-let _heartT = 0;
-function updateHeartbeat(dt) {
-  if (gameState.running && player.alive && player.health > 0 && player.health < 25) { _heartT -= dt; if (_heartT <= 0) { sfxHeartbeat(); _heartT = 0.85; } }
-  else _heartT = 0;
-}
-// Per-frame: tell the audio engine where the player is hearing from (camera pos + right vector).
-function updateAudioListener() {
-  if (!SND.ready) return;
-  const p = camera.getWorldPosition(SND._tmp.clone ? SND._tmp : new THREE.Vector3());   // (use a fresh vec for pos)
-  const pos = camera.getWorldPosition(new THREE.Vector3());
-  const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-  SND.setListener(pos, right);
-}
-
-/* ============================================================================
    3. MAP — Krunker-style arena (flat-colored boxes, platforms, ramps, crates)
    Collidable solids are pushed to `colliders` (meshes) for shooting + walls,
    and to `solids`/`ramps` (math boxes) for player/bot ground & wall resolution.
@@ -1427,7 +1118,6 @@ function addBox(x, y, z, w, h, d, color, opts = {}) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), flatMat(color));
   mesh.position.set(x, y + h / 2, z);   // y = bottom of the box
   mesh.castShadow = true; mesh.receiveShadow = true;
-  if (opts.mat) mesh.userData.mat = opts.mat;   // surface tag for impact SFX ('metal' on vehicles/fence)
   scene.add(mesh);
   if (!opts.noCollide) {
     colliders.push(mesh);
@@ -1597,14 +1287,14 @@ const houseS = buildHouse(0, -39, 0x5C9C8E, 0x3f6e63);   // teal  (south)
 // --- Center cover: a bus (one side of the street) + a small car (other side). Scaled ~30%
 // bigger so they stay useful cover on the larger map; box collision wraps the full body. ---
 function buildBus(x, z) {
-  addBox(x, 0, z, 5.7, 5.5, 15.6, 0xe8e0c8, { mat: 'metal' });             // body (cover)
+  addBox(x, 0, z, 5.7, 5.5, 15.6, 0xe8e0c8);                               // body (cover)
   addBox(x, 3.4, z, 5.8, 1.6, 14.3, 0x6a86a0, { noCollide: true });        // window band
   addBox(x, 0.4, z - 7.8, 5.7, 0.9, 1.3, 0x333333, { noCollide: true });   // bumper
   [[-2.7, -5.5], [-2.7, 5.5], [2.7, -5.5], [2.7, 5.5]].forEach(([wx, wz]) => cyl(x + wx, 0.9, z + wz, 0.9, 0.6, 0x161616, 'x'));
 }
 function buildCar(x, z, color) {
-  addBox(x, 0, z, 4.4, 1.8, 7.8, color, { mat: 'metal' });                 // lower body
-  addBox(x, 1.8, z + 0.3, 3.9, 1.4, 4.2, color, { mat: 'metal' });         // cabin
+  addBox(x, 0, z, 4.4, 1.8, 7.8, color);                                   // lower body
+  addBox(x, 1.8, z + 0.3, 3.9, 1.4, 4.2, color);                           // cabin
   addBox(x, 2.1, z + 0.3, 4.0, 1.1, 3.9, 0x556677, { noCollide: true });   // windows
   [[-1.9, -2.5], [-1.9, 2.5], [1.9, -2.5], [1.9, 2.5]].forEach(([wx, wz]) => cyl(x + wx, 0.7, z + wz, 0.7, 0.5, 0x111111, 'x'));
 }
@@ -1672,8 +1362,8 @@ const watchtower = buildWatchtower(-46, 0);
 // --- Perimeter: yellow chevron HAZARD FENCING ---
 const FENCE = ARENA - 1, FH = 5.5;
 function fenceSide(axis, fixed, from, to) {
-  if (axis === 'x') addBox((from + to) / 2, 0, fixed, Math.abs(to - from) + 0.5, FH, 0.5, 0xF2C61F, { mat: 'metal' });
-  else addBox(fixed, 0, (from + to) / 2, 0.5, FH, Math.abs(to - from) + 0.5, 0xF2C61F, { mat: 'metal' });
+  if (axis === 'x') addBox((from + to) / 2, 0, fixed, Math.abs(to - from) + 0.5, FH, 0.5, 0xF2C61F);
+  else addBox(fixed, 0, (from + to) / 2, 0.5, FH, Math.abs(to - from) + 0.5, 0xF2C61F);
   const n = Math.max(2, Math.floor(Math.abs(to - from) / 3));
   for (let i = 0; i < n; i++) {
     const p = from + (i + 0.5) * (to - from) / n;
@@ -1859,12 +1549,12 @@ document.addEventListener('mousedown', (e) => {
   if (e.button === 2) {
     if (akimboEquipped()) { firingL = true; tryShoot('L'); }
     else if (currentWeaponKey === KARAMBIT_KEY) meleeAttack(-1);
-    else { if (!aiming && ggAdsInfo()) { const i = ggAdsInfo(); sfxADS(true, i && i.kind === 'scope'); } aiming = true; }   // weapon-raise / scope-click on ADS in
+    else aiming = true;
   }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) firing = false;
-  if (e.button === 2) { if (aiming && ggAdsInfo()) sfxADS(false); firingL = false; aiming = false; }   // reverse swish on ADS out
+  if (e.button === 2) { firingL = false; aiming = false; }
 });
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -2194,14 +1884,12 @@ function startDive() {
   player.diving = true; player.diveAir = false; player.diveTime = MOVE.diveTime;
   player.onGround = false; player.sliding = false; player.crouching = false;
   aiming = false;                                  // a dive forces you out of ADS (re-ADS after landing)
-  sfxDive(player.pos);                             // quick whoosh
 }
 function endDive() {
   player.diving = false; player.diveAir = false; player.diveTime = 0;
   player.crouching = true;                          // land crouched
   player.diveRecover = MOVE.diveRecover;            // brief no-dive/no-slide window
   player.vel.x *= 0.3; player.vel.z *= 0.3;         // shed most forward momentum on landing
-  sfxLand(player.pos, 0.9);                         // body thump on landing
 }
 
 // Forward/right vectors on the XZ plane, derived straight from `yaw` so that
@@ -2258,12 +1946,10 @@ function updateMovement(dt) {
       player.jumpHeld = keys['Space'];
       let cv = 0; if (keys['KeyW']) cv += LADDER_SPEED; if (keys['KeyS']) cv -= LADDER_SPEED;   // A/D do nothing (no sidestep)
       player.pos.y += cv * dt; player.pos.x = L.x; player.pos.z = L.z; player.vel.set(0, 0, 0);
-      // Hand-on-rung tap each ~0.55 units climbed.
-      if (cv !== 0) { player._ladTap = (player._ladTap || 0) + Math.abs(cv) * dt; if (player._ladTap >= 0.55) { player._ladTap = 0; sfxLadderTap(player.pos.clone().setY(player.pos.y + 1)); } }
       // Auto step-off, gated by climb DIRECTION so grabbing at the very bottom/top doesn't instantly
       // detach: climbing UP into the top -> step onto the platform; climbing DOWN to the base -> step off.
-      if (cv > 0 && player.pos.y >= L.top - 0.15) { player.pos.y = L.top; player.pos.x = L.cx; player.pos.z = L.cz; player.onLadder = false; player.ladder = null; player.onGround = true; sfxLand(player.pos, 0.7); console.log('[ladder] reached TOP -> stepped onto platform at y=' + L.top.toFixed(2)); }
-      else if (cv < 0 && player.pos.y <= L.bottom + 0.05) { player.pos.y = L.bottom; player.pos.x = L.x + L.outX * 0.9; player.pos.z = L.z + L.outZ * 0.9; player.onLadder = false; player.ladder = null; player.onGround = true; sfxLand(player.pos, 0.7); console.log('[ladder] reached BOTTOM -> stepped onto the ground'); }
+      if (cv > 0 && player.pos.y >= L.top - 0.15) { player.pos.y = L.top; player.pos.x = L.cx; player.pos.z = L.cz; player.onLadder = false; player.ladder = null; player.onGround = true; console.log('[ladder] reached TOP -> stepped onto platform at y=' + L.top.toFixed(2)); }
+      else if (cv < 0 && player.pos.y <= L.bottom + 0.05) { player.pos.y = L.bottom; player.pos.x = L.x + L.outX * 0.9; player.pos.z = L.z + L.outZ * 0.9; player.onLadder = false; player.ladder = null; player.onGround = true; console.log('[ladder] reached BOTTOM -> stepped onto the ground'); }
       else { player.pos.y = Math.max(L.bottom, Math.min(L.top, player.pos.y)); }   // clamp onto the ladder while attached
       // Diagnostic: log the climb height a few times a second (not every frame).
       player._ladderLogT = (player._ladderLogT || 0) - dt;
@@ -2335,8 +2021,8 @@ function updateMovement(dt) {
   let jumpedThisFrame = false;
   const wantJump = keys['Space'];
   if (wantJump && !player.jumpHeld && !player.crouching && !player.diving) {   // jump disabled while crouched / diving
-    if (player.onGround) { player.vel.y = MOVE.jumpVel; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; sfxJump(player.pos); }
-    else if (player.jumps < 2) { player.vel.y = MOVE.jumpVel; player.jumps++; jumpedThisFrame = true; sfxJump(player.pos); }
+    if (player.onGround) { player.vel.y = MOVE.jumpVel; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; }
+    else if (player.jumps < 2) { player.vel.y = MOVE.jumpVel; player.jumps++; jumpedThisFrame = true; }
   }
   player.jumpHeld = wantJump;
 
@@ -2415,21 +2101,12 @@ function updateMovement(dt) {
   }
 
   // Ground / standing
-  const wasAir = !player.onGround;
   const gh = groundHeightAt(player.pos.x, player.pos.z, player.pos.y);
   if (player.pos.y <= gh) {
-    if (wasAir && player.vel.y < -6 && !player.diving) sfxLand(player.pos, Math.min(1.3, -player.vel.y / 13));   // thud scales with fall speed
     player.pos.y = gh;
     if (player.vel.y < 0) player.vel.y = 0;
     player.onGround = true;
     player.jumps = 0;
-    // Footstep cadence: step roughly every `stride` units travelled on the ground (quieter when crouched).
-    const sp = Math.hypot(player.vel.x, player.vel.z);
-    if (sp > 1.6 && !player.sliding) {
-      const stride = player.crouching ? 1.7 : (sp > MOVE.groundSpeed * 0.85 ? 2.6 : 2.0);
-      player._stepD = (player._stepD || 0) + sp * dt;
-      if (player._stepD >= stride) { player._stepD = 0; sfxFootstep(player.pos, player.crouching ? 0.5 : (sp > MOVE.groundSpeed * 0.85 ? 1 : 0.7)); }
-    } else player._stepD = 1.4;   // primed so the first step after you start moving plays promptly
   } else {
     player.onGround = false;
   }
@@ -2861,7 +2538,6 @@ function reload() {
   if (w.melee) return;                                           // knives don't reload
   if (ws.reloading > 0 || ws.ammo >= w.mag) return;
   if (ws.reserve !== Infinity && ws.reserve <= 0) return;        // nothing left to load
-  sfxReload(currentWeaponKey);                                   // per-weapon reload SFX (local)
   if (w.rstyle === 'shell') {                                    // pump shotgun: one shell at a time
     ws.reloading = w.reload; ws.reloadTotal = w.reload; ws.shellReload = true; return;
   }
@@ -2951,8 +2627,6 @@ function meleeAttack(swingDir) {
   const ws = weaponState[currentWeaponKey], w = WEAPONS[currentWeaponKey];
   if (ws.cooldown > 0) return;
   ws.cooldown = w.fireRate;
-  sfxFire(currentWeaponKey, playerEarPos());     // slash whoosh (karambit higher-pitched)
-  if (NET.active) NET.broadcast({ t: 'fire', id: NET.selfId, w: currentWeaponKey, x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z });
   // Distinct viewmodel motion: karambit = arcing slash (+1 forehand / -1 backhand),
   // combat knife = forward stab.
   if (gunMesh) {
@@ -2999,7 +2673,7 @@ function tryShoot(akSide) {
     if (ws.reloading > 0) return;
     const cdK = side === 'L' ? 'cdL' : 'cdR', amK = side === 'L' ? 'ammoL' : 'ammoR';
     if (ws[cdK] > 0) return;
-    if (ws[amK] <= 0) { sfxEmpty(); reload(); return; }
+    if (ws[amK] <= 0) { reload(); return; }
     ws[amK]--; ws[cdK] = w.fireRate; ws.ammo = ws.ammoL + ws.ammoR;
   } else {
     if (ws.cooldown > 0) return;
@@ -3007,7 +2681,7 @@ function tryShoot(akSide) {
       if (ws.shellReload && ws.ammo > 0) { ws.reloading = 0; ws.shellReload = false; }  // pump: firing cancels the shell reload
       else return;
     }
-    if (ws.ammo <= 0) { sfxEmpty(); reload(); return; }
+    if (ws.ammo <= 0) { reload(); return; }
     ws.ammo--;
     ws.cooldown = w.fireRate;
   }
@@ -3035,10 +2709,6 @@ function tryShoot(akSide) {
     if (gunMesh) gunMesh.position.z = -0.45;
     if (gunFlash) { gunFlash.visible = true; playerFlashTimer = 0.045; }
   }
-
-  // SFX: weapon fire (local, at the muzzle) + broadcast so peers hear the shot at our position.
-  sfxFire(currentWeaponKey, akimbo ? akimboMuzzleWorld(side) : gunMuzzleWorld(), akimbo ? side : null);
-  if (NET.active) NET.broadcast({ t: 'fire', id: NET.selfId, w: currentWeaponKey, sd: side || null, x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z });
 
   const origin = camera.getWorldPosition(new THREE.Vector3());
   const baseDir = camera.getWorldDirection(new THREE.Vector3());
@@ -3074,7 +2744,7 @@ function tryShoot(akSide) {
   // Other players' in-flight RC missiles can be shot down (any direct bullet hit detonates them).
   rcRemote.forEach(o => o.grp.children.forEach(c => { if (c.isMesh) targets.push(c); }));
 
-  let hitSomething = false, killedSomeone = false, killedHead = false;
+  let hitSomething = false, killedSomeone = false;
   for (let p = 0; p < w.pellets; p++) {
     const dir = baseDir.clone();
     // Apply random spread cone
@@ -3104,7 +2774,7 @@ function tryShoot(akSide) {
           if (NET.isHost) NET.botCredit = NET.selfId;
           const dead = damageBot(bot, dmg, dir, part, { weapon: currentWeaponKey, dist: hit.distance, headshot: isHead });
           if (NET.isHost) NET.botCredit = null;
-          if (dead) { killedSomeone = true; if (isHead) killedHead = true; spawnBlood(hit.point, 14); }
+          if (dead) { killedSomeone = true; spawnBlood(hit.point, 14); }
         }
       }
       else if (ud.remote && ud.remote.alive) {
@@ -3122,11 +2792,6 @@ function tryShoot(akSide) {
         NET.route(ud.rcRemoteOwner, { t: 'rcshot', id: ud.rcRemoteOwner, byId: NET.selfId });
         rcRemoteCleanup(ud.rcRemoteOwner);          // remove our local copy immediately
       }
-      // Impact SFX (first pellet only): flesh/headshot on a body, metal on vehicles/fence, else wall.
-      if (p === 0) {
-        if ((ud.bot && ud.bot.alive) || (ud.remote && ud.remote.alive)) sfxImpact(ud.part === 'head' ? 'head' : 'flesh', hit.point);
-        else if (!ud.rcRemoteOwner) sfxImpact(ud.mat === 'metal' ? 'metal' : 'wall', hit.point);
-      }
     }
     // Tracer per pellet for the shotgun fan; otherwise one per shot.
     if (currentWeaponKey === 'shotgun' || p === 0) {
@@ -3140,7 +2805,7 @@ function tryShoot(akSide) {
   else if (ws.ammo <= 0) reload();
 
   if (hitSomething) showHitMarker();
-  if (killedSomeone) showKillFlash(killedHead);
+  if (killedSomeone) showKillFlash();
   updateHUD();
 }
 
@@ -4046,7 +3711,6 @@ function spawnExplosionFX(center, radius, color) {
 
 function explodeGrenade(g) {
   spawnExplosionFX(g.pos, GRENADE.blastRadius, 0xffa520);
-  sfxExplosion('gl', g.pos);
   spawnBlood(g.pos, 8);
   applyBlast(g.pos, GRENADE.blastRadius, GRENADE.maxDamage, 'grenade', {});
 }
@@ -4112,7 +3776,6 @@ function updateRockets(dt) {
 
 function explodeRocket(center, directBot, dir) {
   spawnExplosionFX(center, ROCKET.blastRadius, 0xffb030);
-  sfxExplosion('big', center);
   spawnBlood(center, 10);
   // Direct hit = guaranteed kill on that bot
   if (directBot && directBot.alive) damageBot(directBot, 99999, dir, null, { weapon: 'rocket' });
@@ -4197,7 +3860,6 @@ function fireGGProjectile(type, origin, dir) {
 }
 function ggProjExplode(p, center) {
   spawnExplosionFX(center, p.cfg.blastR, 0xffb030); spawnBlood(center, 10);
-  sfxExplosion(p.type === 'rocket' ? 'big' : 'gl', center);   // everyone hears it (owned + network copies)
   if (!p.owned) return;                                     // network copies are visual-only
   // Bots in radius (host applies; clients report each hit) — credited to this weapon.
   for (const bot of bots) {
@@ -4245,14 +3907,6 @@ function updateGGProjectiles(dt) {
       else if (p.type === 'grenade') { spawnSmokePuff(p.pos, cfg.smoke, 0.3, 0.4); p.trailT = 0.05; }
       else p.trailT = 1;
     }
-    // Flight audio (positional, clamped): RPG engine hum / grenade whistle / knife spin / bolt whoosh.
-    p.sfxT = (p.sfxT || 0) - dt;
-    if (p.sfxT <= 0) {
-      if (p.type === 'rocket') { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 180, f1: 200, dur: 0.16, peak: 0.2 }); aNoise(ctx, out, t, { dur: 0.12, peak: 0.12, filter: 'lowpass', freq: 1400 }); }, p.pos, 'weapons', 'projfly', 0.5, 0.16); p.sfxT = 0.12; }
-      else if (p.type === 'grenade') { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 1300, f1: 1000, dur: 0.16, peak: 0.1 }), p.pos, 'weapons', 'projfly', 0.4, 0.16); p.sfxT = 0.18; }
-      else if (p.type === 'knife') { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 2400, f1: 3000, dur: 0.08, peak: 0.1 }), p.pos, 'weapons', 'projfly', 0.4, 0.08); p.sfxT = 0.1; }
-      else { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.1, peak: 0.1, filter: 'bandpass', freq: 1600, q: 0.8 }), p.pos, 'weapons', 'projfly', 0.4, 0.1); p.sfxT = 0.16; }   // bolt whoosh
-    }
 
     // --- Hit detection (owned only) — bots, then remote players ---
     let hitPoint = null;
@@ -4293,7 +3947,7 @@ function updateGGProjectiles(dt) {
         ggProjExplode(p, impact || p.pos);
         scene.remove(p.mesh); disposeGroup(p.mesh); ggProjectiles.splice(i, 1);
       } else if (hitPoint || world) {                        // bolt / knife → stick for a moment
-        p.stuck = true; p.life = cfg.stick; p.mesh.position.copy(p.pos); sfxImpact('stick', p.pos);   // solid thunk
+        p.stuck = true; p.life = cfg.stick; p.mesh.position.copy(p.pos);
       } else {                                               // lifetime ran out mid-air
         scene.remove(p.mesh); disposeGroup(p.mesh); ggProjectiles.splice(i, 1);
       }
@@ -4332,8 +3986,24 @@ const rc8 = [];                   // timestamps of recent "8" presses (the 8888 
 const rcRemote = new Map();       // ownerId -> network render-only missile copy
 const rcCam = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 scene.add(rcCam);
+let _rcActx = null;
 
-// Unlock (only for the local player who typed the code) — toast + chime, persists this match.
+// Small high-tech unlock chirp (best-effort; silent if WebAudio is unavailable).
+function rcBeep() {
+  try {
+    _rcActx = _rcActx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = _rcActx.currentTime;
+    [880, 1320].forEach((f, i) => {
+      const o = _rcActx.createOscillator(), g = _rcActx.createGain();
+      o.type = 'square'; o.frequency.value = f; o.connect(g); g.connect(_rcActx.destination);
+      const s = t + i * 0.08;
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.10, s + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, s + 0.12);
+      o.start(s); o.stop(s + 0.13);
+    });
+  } catch (e) {}
+}
+// Unlock (only for the local player who typed the code) — toast + chirp, persists this match.
 function rcUnlock() {
   if (rcUnlocked) return;
   rcUnlocked = true;
@@ -4341,7 +4011,7 @@ function rcUnlock() {
   requestAnimationFrame(() => m.style.opacity = '1');
   clearTimeout(rcUnlockMsgT);
   rcUnlockMsgT = setTimeout(() => { m.style.opacity = '0'; setTimeout(() => m.style.display = 'none', 400); }, 2600);
-  sfxNotify();   // attention-getting unlock chime
+  rcBeep();
 }
 // "0" toggles the hidden RC slot in/out (gated on unlock; can't swap mid-flight).
 function rcToggleEquip() {
@@ -4436,7 +4106,6 @@ function rcDetonate(center, directBot, directRemote, immediate) {
   center = center || rcMissile.pos.clone();
   spawnExplosionFX(center, RC.blastR, 0x7ad8ff);
   spawnExplosionFX(center, RC.blastR * 0.6, 0xffb030);
-  sfxExplosion('rc', center);   // big boom + electrical fizz tail
   spawnBlood(center, 10);
   rcApplyDamage(center, directBot, directRemote);
   if (NET.active) NET.broadcast({ t: 'rc', s: 'boom', id: NET.selfId, x: center.x, y: center.y, z: center.z });
@@ -4511,7 +4180,6 @@ function rcUpdate(dt) {
   m.grp.visible = !rcCamLive;
   if (m.flameMat) m.flameMat.opacity = 0.6 + Math.random() * 0.4;
   m.trailT -= dt; if (m.trailT <= 0) { spawnSmokePuff(m.pos, 0xb8c0c8, 0.35, 0.5); m.trailT = 0.04; }
-  m.sfxT = (m.sfxT || 0) - dt; if (m.sfxT <= 0) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 540, f1: 580, dur: 0.18, peak: 0.16 }), m.pos, 'weapons', 'rcfly', 0.5, 0.18); m.sfxT = 0.13; }   // engine whine
 
   // Nose cam: sit just ahead of the missile's nose looking down its heading (clean forward view).
   if (rcCamLive) {
@@ -4553,7 +4221,6 @@ function updateRcRemote(dt) {
     o.grp.position.copy(o.pos); o.grp.lookAt(o.pos.clone().add(o.dir));
     if (o.flameMat) o.flameMat.opacity = 0.6 + Math.random() * 0.4;
     o.trailT -= dt; if (o.trailT <= 0) { spawnSmokePuff(o.pos, 0xb8c0c8, 0.3, 0.45); o.trailT = 0.05; }
-    o.sfxT = (o.sfxT || 0) - dt; if (o.sfxT <= 0) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 540, f1: 580, dur: 0.18, peak: 0.16 }), o.pos, 'weapons', 'rcfly', 0.5, 0.18); o.sfxT = 0.13; }   // engine whine
   });
 }
 
@@ -4588,6 +4255,21 @@ const IMPULSE = { maxCarry: 2, throwVel: 30, upArc: 6.5, gravity: 30,
 const liveImpulses = [];      // thrown canisters (owned = I simulate physics; else network render copy)
 let impulseThrowT = 0;        // brief throw animation / re-throw guard
 const impulseRingGeo = new THREE.TorusGeometry(1, 0.12, 8, 24);   // expanding shockwave ring (scaled up)
+let _impActx = null;
+
+// Rising "whine" charge cue (best-effort; silent if WebAudio is unavailable).
+function impulseWhine() {
+  try {
+    _impActx = _impActx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = _impActx.currentTime, o = _impActx.createOscillator(), g = _impActx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.3);
+    o.connect(g); g.connect(_impActx.destination);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+    o.start(t); o.stop(t + 0.35);
+  } catch (e) {}
+}
+
 function throwImpulse() {
   if (!gameState.running || !player.alive || player.impulses <= 0 || impulseThrowT > 0 || player.onLadder) return;
   cigCancel();                                                  // throwing cancels (and consumes) a cigar in progress
@@ -4596,7 +4278,6 @@ function throwImpulse() {
   const dir = camera.getWorldDirection(new THREE.Vector3());
   const vel = dir.multiplyScalar(IMPULSE.throwVel); vel.y += IMPULSE.upArc;   // slight forward arc (easy throw-at-feet)
   spawnImpulse(origin, vel, true, NET.selfId);
-  sfxImpulseThrow(origin);                                      // whoosh + cylinder rattle
   if (gunMesh) gunMesh.position.z = -0.35;                      // little throw pop on the viewmodel
   if (NET.active) NET.broadcast({ t: 'imp', s: 'spawn', id: NET.selfId, x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
   updateHUD();
@@ -4636,7 +4317,6 @@ function impulseOrient(mesh, normal) { mesh.quaternion.setFromUnitVectors(new TH
 // Stick the canister in place against `normal`, optionally following a moving entity.
 function impulseStick(c, point, normal, follow) {
   c.stuck = true; c.pos.copy(point); c.vel.set(0, 0, 0); c.fuse = IMPULSE.settleFuse;
-  sfxImpulseStick(point);   // solid magnetic CLUNK
   impulseOrient(c.mesh, normal); c.mesh.position.copy(point);
   if (follow) { c.follow = follow; c.followId = follow.id; const a = impulseFollowPos(follow); if (a) c.followOff.copy(point).sub(a); }
   if (c.owned && NET.active) NET.broadcast({ t: 'imp', s: 'stick', id: c.ownerId, x: point.x, y: point.y, z: point.z, nx: normal.x, ny: normal.y, nz: normal.z, fid: c.followId || null });
@@ -4696,7 +4376,7 @@ function updateImpulses(dt) {
       if (c.stuck && c.fuse <= IMPULSE.charge) {                // final 0.2s: ramp to white + swell
         const k = Math.max(0, Math.min(1, 1 - c.fuse / IMPULSE.charge));
         g.color.setRGB(0.196 + 0.804 * k, 0.878 + 0.122 * k, 1.0); c.mesh.scale.setScalar(1 + 0.5 * k);
-        if (!c.whined) { c.whined = true; sfxImpulseCharge(c.pos); }   // rising electronic charge-up whine (positional)
+        if (!c.whined) { c.whined = true; if (c.owned) impulseWhine(); }
       } else if (c.stuck) {                                     // stuck & armed: flashing beacon
         const f = 0.5 + 0.5 * Math.sin(c.air * 18);
         g.color.setRGB(0.10 + 0.10 * f, 0.55 + 0.33 * f, 1.0); c.mesh.scale.setScalar(1);
@@ -4746,12 +4426,10 @@ function applyImpulseVec(v) {
   player.onGround = false; player.jumps = 1; player.sliding = false; player.diving = false;
   player.impulseT = 1.2;                // don't speed-clamp the (now stronger) launch for ~1.2s
   player.impulseGrace = IMPULSE.grace;  // suppress impulse-fall damage for 4s (no fall-damage system yet, but future-proof)
-  sfxLaunched(playerEarPos());          // gust/whoosh as you're flung through the air
 }
 // Detonate: spawn the shockwave VFX everywhere; the AUTHORITY (host/solo) launches each player in radius.
 function impulseDetonate(center, doLaunches) {
   spawnImpulseFX(center);
-  sfxImpulseBoom(center);   // kinetic SHWHOOM + electric crackle (everyone hears it positionally)
   const pe = new THREE.Vector3(player.pos.x, player.pos.y + 0.9, player.pos.z);
   const pdist = pe.distanceTo(center);
   if (pdist < IMPULSE.radius * 1.5) addShake(0.12 * (1 - pdist / (IMPULSE.radius * 1.5)), 0.35);
@@ -4777,7 +4455,7 @@ function impulseDetonate(center, doLaunches) {
 const CIGAR = { maxCarry: 1, dur: 3.0, raise: 0.4, lowerFast: 0.25 };
 let cigSmoking = false;        // a cigar use is in progress (raise→light→hold→lower)
 let cigCanceling = false;      // an interrupt triggered: quick-lower then finish
-let cigT = 0, cigLowerT = 0, cigPuffT = 0, _cigAudioPuffT = 0;
+let cigT = 0, cigLowerT = 0, cigPuffT = 0;
 let _cigVM = null;
 
 // Build the first-person left-hand + cigar viewmodel (lower-left), attached to the camera.
@@ -4810,8 +4488,7 @@ function buildCigarVM() {
 function useCigar() {
   if (!gameState.running || !player.alive || cigSmoking || player.cigar <= 0) return;
   player.cigar--;
-  sfxCigarLight();                             // lighter click + flame hiss
-  cigSmoking = true; cigCanceling = false; cigT = 0; cigLowerT = 0; cigPuffT = 0; _cigAudioPuffT = 1.0;
+  cigSmoking = true; cigCanceling = false; cigT = 0; cigLowerT = 0; cigPuffT = 0;
   aiming = false;                              // drop ADS — the main weapon holsters
   if (!_cigVM) _cigVM = buildCigarVM();
   _cigVM.visible = true; _cigVM.userData.ember.visible = false; _cigVM.position.set(-0.34, -0.95, -0.5);
@@ -4819,7 +4496,7 @@ function useCigar() {
   updateHUD();
 }
 // Interrupt: quick-lower and stop healing (the cigar is already consumed for this life).
-function cigCancel() { if (cigSmoking && !cigCanceling) { cigCanceling = true; cigLowerT = 0; sfxCigarCancel(); } }
+function cigCancel() { if (cigSmoking && !cigCanceling) { cigCanceling = true; cigLowerT = 0; } }
 function cigFinish() { cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false; updateHUD(); }
 // Per-frame: heal, animate the viewmodel (raise → light → hold+puff → lower), keep the gun holstered.
 function updateCigar(dt) {
@@ -4850,10 +4527,8 @@ function updateCigar(dt) {
   if (cigT >= 0.6 && cigT < lowerStart) {      // periodic smoke wisps from the lit tip
     cigPuffT -= dt;
     if (cigPuffT <= 0) { spawnSmokePuff(vm.userData.tip.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.12, 0.7); cigPuffT = 0.35; }
-    _cigAudioPuffT -= dt;
-    if (_cigAudioPuffT <= 0) { sfxCigarPuff(); _cigAudioPuffT = 1.0; }   // inhale/exhale ~1/s
   }
-  if (cigT >= CIGAR.dur) { sfxCigarDone(); cigFinish(); }   // warm satisfaction tone at full heal
+  if (cigT >= CIGAR.dur) cigFinish();
 }
 
 // Ammo-box pickups: spin/bob, and refill ammo + 1 grenade when the player touches one.
@@ -5020,10 +4695,9 @@ function updateHUD() {
 
 let hitMarkerTimer = 0;
 function showHitMarker() { el('hitmarker').style.opacity = 1; hitMarkerTimer = 0.12; }
-function showKillFlash(headshot) {
+function showKillFlash() {
   el('killFlash').style.opacity = 0.35;
   setTimeout(() => el('killFlash').style.opacity = 0, 90);
-  sfxKill(!!headshot);   // satisfying kill ding (higher chime on a headshot kill)
 }
 function showHurtFlash() {
   el('hurtFlash').style.opacity = 1;
@@ -5076,14 +4750,11 @@ function ggSetKarambit(use) {
 // Set the LOCAL player's level: refill + instantly swap to that ladder weapon
 // (advancing always pulls you off the karambit and onto the new gun).
 function ggSetLevel(level) {
-  const prev = ggLevel;
   ggLevel = Math.max(1, Math.min(GUNGAME_MAX, level));
   ggKarambit = false;
   const key = ggLadderKey(), ws = weaponState[key];
   ws.ammo = WEAPONS[key].mag; ws.reloading = 0; ws.cooldown = 0;
   ggEquip(key);
-  // Progression SFX for the LOCAL player: ascending chime up (fanfare at the final level), sad chime on demote.
-  if (gameState.running) { if (ggLevel > prev) (ggLevel >= GUNGAME_MAX ? sfxFinalLevel() : sfxLevelUp()); else if (ggLevel < prev) sfxDemote(); }
 }
 const ggMeOrName = (name) => (name === NET.selfName ? '<b>YOU</b>' : name);
 // Kill-feed line for a level-up (broadcast by the host).
@@ -5190,13 +4861,11 @@ function hurtPlayer(dmg) {
   if (!player.alive) return;
   player.health -= dmg;
   showHurtFlash();
-  if (dmg >= 1 && player.health > 0) sfxHurt();   // grunt + thud (death sound covers the lethal hit)
   updateHUD();
   if (player.health <= 0) playerDie();
 }
 
 function playerDie() {
-  sfxDeath();                                                      // agonized grunt + body drop
   if (rcActive || rcMissile) rcDetonate(null, null, null, true);   // piloting an RC missile? auto-detonate, then die normally
   if (cigSmoking) cigFinish();                                     // dying ends any cigar in progress
   player.onLadder = false; player.ladder = null;                   // drop off any ladder on death
@@ -5242,7 +4911,6 @@ function endMatch(won) {
   gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
-  Ambient.stop(); (won ? sfxWin() : sfxLose());
   el('endTitle').textContent = won ? 'YOU WIN' : 'MATCH OVER';
   el('endSub').textContent = `Final: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
   el('endScreen').style.display = 'flex';
@@ -5322,7 +4990,6 @@ function startMatch() {
   invOpen = false; el('invMenu').classList.add('hidden');   // ensure the inventory menu is closed at match start
   showScreen('__none__');                 // hide every overlay
   el('endScreen').style.display = 'none';
-  SND.init(); SND.resume(); Ambient.start(); sfxCountdown(3);   // start the audio engine + ambience + a "GO" chime
   lockPointer();
 }
 
@@ -5381,7 +5048,6 @@ function selectInvWeapon(key) {
   if (key === 'gg17') { ws.ammoL = ws.ammoR = null; }
   ggKarambit = false;
   ggEquip(key);                                      // draws the new weapon immediately
-  sfxInvSelect();                                    // confirmation + gun-load
   closeInventory();
 }
 function toggleInventory() {
@@ -5391,22 +5057,15 @@ function toggleInventory() {
     cigCancel();
     refreshInventory();
     el('invMenu').classList.remove('hidden');
-    sfxInvOpen();                                            // tactical tab-open
     document.exitPointerLock && document.exitPointerLock();   // free the cursor (game keeps running)
   } else {
     el('invMenu').classList.add('hidden');
-    sfxMenu(false);
     if (gameState.running && player.alive) lockPointer();
   }
 }
 function closeInventory() { if (invOpen) { invOpen = false; el('invMenu').classList.add('hidden'); if (gameState.running && player.alive) lockPointer(); } }
 buildInventory();
 document.addEventListener('keydown', (e) => { if (e.code === 'Escape' && invOpen) closeInventory(); });
-
-// --- Audio: unlock the engine on the first user gesture (browser policy) + delegated UI sounds ---
-['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { SND.init(); SND.resume(); }));
-document.addEventListener('mouseover', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && !b.disabled) sfxHover(); });
-document.addEventListener('mousedown', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && !b.disabled && !b.classList.contains('invCard')) sfxClick(); });
 
 /* --- Multiplayer match flow --- */
 function beginMatch() { startMatch(); }                 // clients enter here on the host's "start"
@@ -5419,9 +5078,6 @@ function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
-  Ambient.stop();
-  const won = winnerName && winnerName === NET.selfName;
-  if (!NET.active) (winnerName === 'YOU' ? sfxWin() : sfxLose()); else (won ? sfxWin() : sfxLose());   // victory / defeat fanfare
   const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
   if (gameMode === 'gungame') {
     el('endTitle').textContent = who ? `GUN GAME WINNER: ${who}` : 'GUN GAME OVER';
@@ -5496,7 +5152,7 @@ function refreshSettingsUI() {
   el('throwGrenadeBtn').classList.toggle('selected', throwableType === 'grenade');
   el('throwTomahawkBtn').classList.toggle('selected', throwableType === 'tomahawk');
 }
-function openSettings(from) { settingsReturn = from; refreshSettingsUI(); if (window._refreshAudioSettings) window._refreshAudioSettings(); showScreen('settingsScreen'); }
+function openSettings(from) { settingsReturn = from; refreshSettingsUI(); showScreen('settingsScreen'); }
 el('menuSettings').onclick = () => openSettings('mainMenu');
 el('lobbySettings').onclick = () => openSettings('lobbyScreen');
 el('settingsBack').onclick = () => showScreen(settingsReturn);
@@ -5519,23 +5175,6 @@ el('botPlus').onclick = () => setBotCount(botCount + 1);
   };
 });
 refreshSettingsUI();
-
-// --- AUDIO settings: master + per-category volume sliders + mute (persisted in localStorage) ---
-(function setupAudioSettings() {
-  SND.loadSettings();   // pull persisted volumes even before the engine is unlocked
-  const rows = [['volmaster', 'master'], ['volweapons', 'weapons'], ['volfootsteps', 'footsteps'], ['volui', 'ui'], ['volambient', 'ambient']];
-  function refresh() {
-    rows.forEach(([id, cat]) => { const v = Math.round((SND.vol[cat] != null ? SND.vol[cat] : 1) * 100); el(id).value = v; el(id + 'V').textContent = v; });
-    el('muteToggle').checked = SND.muted;
-  }
-  rows.forEach(([id, cat]) => el(id).addEventListener('input', () => {
-    const v = parseInt(el(id).value, 10) / 100; el(id + 'V').textContent = el(id).value;
-    if (cat === 'master') SND.setMaster(v); else SND.setCat(cat, v);
-    sfxSlider();
-  }));
-  el('muteToggle').addEventListener('change', () => { SND.setMuted(el('muteToggle').checked); });
-  window._refreshAudioSettings = refresh; refresh();
-})();
 
 // Start / restart
 el('startButton').onclick = () => startMatch();         // solo
@@ -5680,7 +5319,6 @@ const NET = {
     this.players.delete(id);
     if (this.conns[id]) { delete this.conns[id]; }
     this.scores.delete(id);
-    if (rp) sfxLeave();   // "doot" when a player leaves
     if (this.isHost) { this.broadcastRoster(); this.broadcastScores(); renderRoster(); refreshScoreboard(); }
   },
 
@@ -5805,7 +5443,6 @@ const NET = {
       case 'hello': {                                  // a client joined
         this.scores.set(msg.id, { name: (msg.name || 'Player').slice(0, 14), score: 0, kills: 0, level: 1 });
         const rp = this.ensurePlayer(msg.id, msg.name); rp.color = rp.color || this.nextColor();
-        sfxJoin();   // friendly "ding" when a player joins the lobby
         this.broadcastRoster(); renderRoster();
         // Serve every skin we've cached (host's own + other clients') to the newcomer.
         if (conn) for (const sid in skinDataCache) this.sendSkin((m) => conn.send(m), sid, skinDataCache[sid]);
@@ -5864,10 +5501,9 @@ const NET = {
       }
       case 'rc': {                                     // a peer's RC missile (render-only exterior + trail)
         if (msg.id !== this.selfId) {
-          const rp = new THREE.Vector3(msg.x, msg.y, msg.z);
-          if (msg.s === 'spawn') { rcRemoteSpawn(msg.id, rp, new THREE.Vector3(msg.dx, msg.dy, msg.dz)); sfxFire('rcrl', rp); }   // launch whoosh
-          else if (msg.s === 'move') rcRemoteMove(msg.id, rp, new THREE.Vector3(msg.dx, msg.dy, msg.dz));
-          else if (msg.s === 'boom') { rcRemoteBoom(msg.id, rp); sfxExplosion('rc', rp); }
+          if (msg.s === 'spawn') rcRemoteSpawn(msg.id, new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.dx, msg.dy, msg.dz));
+          else if (msg.s === 'move') rcRemoteMove(msg.id, new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.dx, msg.dy, msg.dz));
+          else if (msg.s === 'boom') rcRemoteBoom(msg.id, new THREE.Vector3(msg.x, msg.y, msg.z));
         }
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay
         break;
@@ -5878,14 +5514,14 @@ const NET = {
       }
       case 'imp': {                                    // a peer's impulse grenade (throw / stick / detonation)
         if (msg.s === 'spawn') {
-          if (msg.id !== this.selfId) { spawnImpulse(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false, msg.id); sfxImpulseThrow(new THREE.Vector3(msg.x, msg.y, msg.z)); }
+          if (msg.id !== this.selfId) spawnImpulse(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false, msg.id);
         } else if (msg.s === 'stick') {                                          // snap the network copy to the owner's stuck surface
           for (let k = 0; k < liveImpulses.length; k++) {
             const c = liveImpulses[k];
             if (!c.owned && c.ownerId === msg.id) {
               impulseOrient(c.mesh, new THREE.Vector3(msg.nx, msg.ny, msg.nz));
               c.stuck = true; c.fuse = IMPULSE.settleFuse; c.vel.set(0, 0, 0);
-              c.pos.set(msg.x, msg.y, msg.z); c.mesh.position.copy(c.pos); sfxImpulseStick(c.pos);
+              c.pos.set(msg.x, msg.y, msg.z); c.mesh.position.copy(c.pos);
               const f = msg.fid ? impulseResolveFollow(msg.fid) : null;
               if (f) { c.follow = f; c.followId = msg.fid; const a = impulseFollowPos(f); if (a) c.followOff.copy(c.pos).sub(a); }
               break;
@@ -5902,11 +5538,6 @@ const NET = {
       }
       case 'impulse': {                                // host launched me — apply the impulse to my velocity
         applyImpulseVec(new THREE.Vector3(msg.vx, msg.vy, msg.vz));
-        break;
-      }
-      case 'fire': {                                   // a peer fired — play their weapon's shot at their position
-        if (msg.id !== this.selfId) sfxFire(msg.w, new THREE.Vector3(msg.x, msg.y, msg.z), msg.sd || null);
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
         break;
       }
       case 'skin': { this.onSkinChunk(msg, fromId); break; }   // a peer's painted skin (chunked PNG)
@@ -6108,15 +5739,6 @@ function lerpRemotePlayers(dt) {
     if (!rp.avatar) buildRemoteAvatar(rp);
     rp.avatar.visible = true;
     const t = Math.min(1, dt * 14);
-    // Spatial footsteps for remote players: accumulate ground distance moved and step periodically.
-    if (!rp.dv && !rp.clm) {
-      const moved = Math.hypot(rp.pos.x - rp.renderPos.x, rp.pos.z - rp.renderPos.z);
-      if (moved > 0.02 && Math.abs(rp.pos.y - rp.renderPos.y) < 0.4) {
-        rp._stepD = (rp._stepD || 0) + moved;
-        const stride = (rp.cr || 0) > 0.5 ? 1.7 : 2.3;
-        if (rp._stepD >= stride) { rp._stepD = 0; sfxFootstep(rp.pos, (rp.cr || 0) > 0.5 ? 0.5 : 0.85); }
-      }
-    }
     rp.renderPos.lerp(rp.pos, t);
     rp.renderYaw = lerpAngle(rp.renderYaw, rp.yaw, t);
     rp.avatar.position.copy(rp.renderPos);
@@ -6248,12 +5870,10 @@ function setNetStatus(id, text, isErr) {
 function showScreen(id) {
   ['mainMenu', 'joinScreen', 'lobbyScreen', 'startScreen', 'settingsScreen'].forEach(s => el(s).classList.toggle('hidden', s !== id));
   el('endScreen').style.display = 'none';
-  if (id !== '__none__') sfxMenu(true);   // soft swoosh on opening a menu (silent until audio is unlocked)
   if (typeof refreshModeUI === 'function') refreshModeUI();
 }
 function leaveToMenu() {
   NET.reset();
-  Ambient.stop();   // silence the in-match ambience back at the menu
   rcResetMatch();   // lock the RC launcher + clear any missiles when leaving to the lobby
   cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;
   invOpen = false; el('invMenu').classList.add('hidden');
@@ -6363,10 +5983,8 @@ const SkinCreator = (() => {
       ctx.beginPath(); ctx.arc(px, py, size, 0, 6.283); ctx.fill();
     }
   }
-  let _brushT = 0;
   function paint(e) {
     const h = hitUV(e); if (!h) { lastUV = null; return; }
-    const now = performance.now(); if (now - _brushT > 90) { _brushT = now; sfxSkinBrush(); }   // soft brush whisper (throttled)
     const px = h.uv.x * SKIN_RES, py = (1 - h.uv.y) * SKIN_RES;
     if (lastUV && Math.abs(h.uv.x - lastUV.x) < 0.1 && Math.abs(h.uv.y - lastUV.y) < 0.1) {
       const lpx = lastUV.x * SKIN_RES, lpy = (1 - lastUV.y) * SKIN_RES, steps = Math.ceil(Math.hypot(px - lpx, py - lpy) / 3);
@@ -6437,7 +6055,6 @@ const SkinCreator = (() => {
     store.slots[selSlot] = { name: (el('skName').value || ('Skin ' + (selSlot + 1))).slice(0, 16), data: url };
     store.active = selSlot; saveSkinStore(store);
     dirty = false; el('skStatus').textContent = 'Saved & active ✓';
-    sfxSkinSave();   // confirmation chime
     // Make it our live skin + push to peers.
     if (NET.active) { skinDataCache[NET.selfId] = url; NET.broadcastSkin(); }
     renderSlots();
@@ -6514,10 +6131,6 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);  // clamp for stability
-
-  updateAudioListener();   // keep the audio listener at the camera (pos + right vector)
-  Ambient.update(dt);      // wind swell + occasional bird
-  updateHeartbeat(dt);     // critical-health heartbeat loop
 
   if (gameState.running) {
     updateMovement(dt);

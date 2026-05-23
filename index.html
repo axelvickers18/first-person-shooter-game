@@ -121,9 +121,9 @@
 
   /* Ammo + weapon (bottom-right) */
   #ammoWrap { position: absolute; bottom: 22px; right: 26px; text-align: right; }
-  #weaponName { font-size: 20px; font-weight: bold; color: #ffe600; letter-spacing: 1px; }
-  #ammo { font-size: 40px; font-weight: bold; line-height: 1; }
-  #ammo .mag { color: #aaa; font-size: 24px; }
+  #weaponName { font-size: 30px; font-weight: bold; color: #ffe600; letter-spacing: 1px; }
+  #ammo { font-size: 64px; font-weight: bold; line-height: 1; }
+  #ammo .mag { color: #aaa; font-size: 38px; }
   #reloading { color: #ff8c00; font-size: 16px; height: 18px; }
 
   /* Red kill flash */
@@ -308,6 +308,29 @@
   .bigbtn { font-size: 22px; padding: 16px 40px; background: #34d058; color: #fff; }
   #endScreen { display: none; }
   .hidden { display: none !important; }
+
+  /* ---- FFA inventory (press I) — matches the lobby/overlay style; game keeps running ---- */
+  #invMenu {
+    position: fixed; inset: 0; z-index: 22; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; pointer-events: auto;
+    background: linear-gradient(160deg, rgba(45,155,240,0.92), rgba(21,89,176,0.94));
+  }
+  #invMenu h2 { font-size: 34px; letter-spacing: 4px; text-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+  #invMenu .invHint { font-size: 13px; opacity: .9; margin-top: -6px; }
+  .invGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 1000px; padding: 6px; }
+  .invCard {
+    pointer-events: auto; cursor: pointer; border: 3px solid #000; border-radius: 8px;
+    background: #ffe600; color: #15314f; font-weight: bold; font-family: inherit;
+    padding: 10px 12px; font-size: 14px; text-align: left; transition: transform .08s; position: relative;
+    display: flex; flex-direction: column; gap: 2px; min-width: 150px;
+  }
+  .invCard:hover { transform: translateY(-2px); }
+  .invCard .ic { display: block; width: 100%; height: 18px; border: 2px solid #000; border-radius: 3px; margin-bottom: 4px; }
+  .invCard small { display: block; font-weight: normal; font-size: 10px; color: #444; }
+  .invCard .eqTag { display: none; position: absolute; top: 6px; right: 6px; font-size: 9px; background: #15314f; color: #fff; padding: 1px 5px; border-radius: 3px; letter-spacing: 1px; }
+  .invCard.equipped { background: #34d058; color: #fff; outline: 3px solid #fff; }
+  .invCard.equipped small { color: #eafff0; }
+  .invCard.equipped .eqTag { display: block; }
   .controls-hint { font-size: 13px; opacity: .85; }
 
   /* ---- Multiplayer lobby UI ---- */
@@ -436,6 +459,13 @@
 
 <!-- Floating combat text (improvement #5): "+100" / "+140 HEADSHOT!" -->
 <div id="floatLayer"></div>
+
+<!-- FFA weapon inventory (press I) — pick your main weapon; game keeps running -->
+<div id="invMenu" class="hidden">
+  <h2>WEAPON INVENTORY</h2>
+  <div class="invHint">Click a weapon to equip it as your main (keys 1 / 2) • full ammo on swap • press I or ESC to close</div>
+  <div id="invGrid" class="invGrid"></div>
+</div>
 
 <!-- Multiplayer scoreboard (hold TAB) -->
 <div id="scoreboard">
@@ -830,6 +860,7 @@ const KARAMBIT_KEY = "karambit";
 let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame'
 let ggLevel  = 1;       // the LOCAL player's current gun-game level (1..20)
 let ggKarambit = false; // is the LOCAL player currently holding the karambit (vs their gun)?
+let ffaMain  = 'gg2';   // FFA: the player's chosen main weapon (default Assault Rifle); kept across respawns
 
 /* --- GUN GAME polish spec (movement / sights / reload feel per weapon) -------
    Overlaid onto the WEAPONS entries above so the shared weapon code picks it up:
@@ -1071,6 +1102,7 @@ function flatMat(color) {
 const colliders = [];     // meshes used for raycast blocking (walls/crates/platforms)
 const solids    = [];     // {min,max} AABBs for collision + standing surfaces
 const ramps     = [];     // {minX,maxX,minZ,maxZ, axis,'x'|'z', lowAt,highAt,lowH,highH}
+const ladders   = [];     // {x,z, bottom,top, nx,nz} climbable ladders (watchtower etc.)
 const spawnPoints = [];   // where players/bots can spawn
 const STEP = 0.7;         // ledge auto-step height — declared here so groundHeightAt() works
                           // while the map is being built (launch pads / spawn points use it)
@@ -1136,18 +1168,18 @@ function addLaunchPad(x, z, color) {
    (left flank / street / right flank), ringed by yellow chevron hazard fence.
    Built entirely from flat-shaded primitives; collision via solids/ramps.
    =========================================================================== */
-const ARENA = 40;   // compact: ~80×80 playspace (cross the street in ~6-8s)
+const ARENA = 56;   // ~112×112 playspace (was 40 — scaled up ~40% in each dimension)
 
 // Washed-out 1950s nuclear-test daylight (overrides the earlier sky/fog/sun tone).
 scene.background = new THREE.Color(0xbcd6e4);
-scene.fog = new THREE.Fog(0xcfd9cf, 75, 230);
+scene.fog = new THREE.Fog(0xcfd9cf, 95, 280);
 sun.color.setHex(0xfff1d4); sun.intensity = 1.0; sun.position.set(40, 90, 30);
 
-// --- Lawn floor + central asphalt street ---
+// --- Lawn floor + central asphalt street (wider street + more spacing for the bigger map) ---
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 2, ARENA * 2), flatMat(0x7BAE6C));
 floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-addBox(0, -0.02, 0, 13, 0.05, 70, 0x8A8A8A, { noCollide: true });   // street down the long (Z) axis
-addBox(0, -0.02, 0, 1.2, 0.06, 66, 0xd8d49a, { noCollide: true });  // faded centre line
+addBox(0, -0.02, 0, 20, 0.05, 100, 0x8A8A8A, { noCollide: true });  // street down the long (Z) axis
+addBox(0, -0.02, 0, 1.6, 0.06, 94, 0xd8d49a, { noCollide: true });  // faded centre line
 
 // --- Wall builders: panelWall cuts door/window holes out of a wall plane ---
 function wallSeg(axis, fixed, a0, a1, y0, y1, t, color) {
@@ -1176,71 +1208,94 @@ function cyl(x, y, z, r, h, color, rotAxis) {
   m.castShadow = true; scene.add(m); return m;
 }
 
-// --- A two-story enterable suburban house (front faces map centre) ---
+// --- A substantial two-story enterable suburban home (front faces map centre).
+// Both houses share this layout, mirrored across the central axis via `fdir`.
+// Scaled ~60% bigger than the original so rooms, halls, stairs + headroom feel roomy.
 function buildHouse(cx, cz, wallC, roofC) {
-  const W = 15, D = 11, t = 0.3, H = 7.6, F2 = 3.8;
-  const fdir = cz > 0 ? -1 : 1;                      // direction from this house toward centre
+  const W = 24, D = 18, t = 0.4, H = 12.4, F2 = 6.2;   // wider/deeper/taller; thicker walls; tall floors
+  const fdir = cz > 0 ? -1 : 1;                        // direction from this house toward centre
   const frontZ = cz + fdir * (D / 2), backZ = cz - fdir * (D / 2);
   const xl = cx - W / 2, xr = cx + W / 2;
-  addBox(cx, 0, cz, W - 0.4, 0.06, D - 0.4, 0x6b5333, { noCollide: true });   // wood floor
-  // FRONT wall: door + 2 ground windows + big upper window (the iconic sniper peek)
-  panelWall('x', frontZ, xl, xr, 0, H, t, wallC, [
-    { a0: cx - 1.5, a1: cx + 1.5, y0: 0, y1: 2.8 },
-    { a0: xl + 1.4, a1: xl + 3.4, y0: 1.0, y1: 2.5 },
-    { a0: xr - 3.4, a1: xr - 1.4, y0: 1.0, y1: 2.5 },
-    { a0: cx - 3, a1: cx + 3, y0: 4.4, y1: 6.3 }
-  ]);
-  // BACK wall: back door (to side yard) + upper window
-  panelWall('x', backZ, xl, xr, 0, H, t, wallC, [
-    { a0: cx - 1.5, a1: cx + 1.5, y0: 0, y1: 2.8 },
-    { a0: cx - 3, a1: cx + 3, y0: 4.4, y1: 6.3 }
-  ]);
-  // SIDE walls: ground + upper windows each side
   const z0 = Math.min(frontZ, backZ), z1 = Math.max(frontZ, backZ);
+  addBox(cx, 0, cz, W - 0.5, 0.06, D - 0.5, 0x6b5333, { noCollide: true });   // wood floor (stand on world y=0)
+  // FRONT wall: big door + 2 large ground windows + a wide upper window (the iconic sniper peek)
+  panelWall('x', frontZ, xl, xr, 0, H, t, wallC, [
+    { a0: cx - 2.2, a1: cx + 2.2, y0: 0,       y1: 4.4 },
+    { a0: xl + 2.4, a1: xl + 6.4, y0: 1.4,     y1: 4.2 },
+    { a0: xr - 6.4, a1: xr - 2.4, y0: 1.4,     y1: 4.2 },
+    { a0: cx - 5,   a1: cx + 5,   y0: F2 + 1.0, y1: H - 1.6 }
+  ]);
+  // BACK wall: back door (to side yard) + wide upper window
+  panelWall('x', backZ, xl, xr, 0, H, t, wallC, [
+    { a0: cx - 2.2, a1: cx + 2.2, y0: 0,       y1: 4.4 },
+    { a0: cx - 5,   a1: cx + 5,   y0: F2 + 1.0, y1: H - 1.6 }
+  ]);
+  // SIDE walls: a big ground window + a big upper window each side
   [xl, xr].forEach(sx => panelWall('z', sx, z0, z1, 0, H, t, wallC, [
-    { a0: cz - 1.5, a1: cz + 0.5, y0: 1.0, y1: 2.5 },
-    { a0: cz - 1.5, a1: cz + 0.5, y0: 4.4, y1: 6.0 }
+    { a0: cz - 4, a1: cz - 0.4, y0: 1.4,     y1: 4.2 },
+    { a0: cz + 0.4, a1: cz + 4, y0: F2 + 1.0, y1: H - 1.8 }
   ]));
-  addBox(cx, H, cz, W, 0.3, D, roofC);                                   // roof cap
-  // 2nd-floor slab — front portion; ~3.5 left open at the back as a stairwell
-  const sBackO = -D / 2 + 3.5, sFrontO = D / 2 - 0.3;
-  addBox(cx, F2 - 0.2, cz + fdir * (sBackO + sFrontO) / 2, W - 0.8, 0.2, sFrontO - sBackO, 0x7a6a4a);
-  // Stairs against the +X wall: ground -> 2nd floor at the slab edge
-  const stairCz = cz + fdir * (-D / 2 + 1.75);
-  if (fdir > 0) addRamp(cx + W / 2 - 2, 0, stairCz, 2.6, 3.5, 0, F2, 'z', 0x5a4a2a);
-  else addRamp(cx + W / 2 - 2, 0, stairCz, 2.6, 3.5, F2, 0, 'z', 0x5a4a2a);
-  // Interior partition (ground floor) + doorway -> two rooms for CQB
-  panelWall('x', cz + fdir * 0.5, xl + 1, xr - 5, 0, F2 - 0.2, t, 0xcfc4a8, [{ a0: cx - 3, a1: cx - 1, y0: 0, y1: 2.6 }]);
-  // Porch (overhang + posts + step) + driveway to one side (decor, no collision)
-  const porchZ = frontZ + fdir * 1.6;
-  addBox(cx, 0, porchZ, W - 2, 0.18, 3, 0xbdb39a, { noCollide: true });
-  addBox(cx - W / 2 + 1.5, 1.5, porchZ + fdir * 1.2, 0.3, 3.0, 0.3, roofC, { noCollide: true });
-  addBox(cx + W / 2 - 1.5, 1.5, porchZ + fdir * 1.2, 0.3, 3.0, 0.3, roofC, { noCollide: true });
-  addBox(cx, 3.0, porchZ, W - 1.5, 0.22, 3.4, roofC, { noCollide: true });
-  addBox(cx - W / 2 - 4.5, -0.02, cz, 7, 0.05, 9, 0x8A8A8A, { noCollide: true });   // driveway
+  addBox(cx, H, cz, W, 0.4, D, roofC);                                   // roof cap (solid — standable)
+  // --- 2nd-floor slab: covers the front portion; a ~6.5-deep stairwell stays open at the back ---
+  const stairOpen = 6.5, stairW = 4.0;
+  const slabFrontO = D / 2 - 0.2, slabBackO = -D / 2 + stairOpen;
+  addBox(cx, F2 - 0.2, cz + fdir * (slabBackO + slabFrontO) / 2, W - 0.8, 0.2, slabFrontO - slabBackO, 0x7a6a4a);
+  // Wide stairwell (ground -> 2nd floor) centred in the back-open region.
+  const stairCz = cz + fdir * (-D / 2 + stairOpen / 2);
+  if (fdir > 0) addRamp(cx, 0, stairCz, stairW, stairOpen, 0, F2, 'z', 0x5a4a2a);
+  else          addRamp(cx, 0, stairCz, stairW, stairOpen, F2, 0, 'z', 0x5a4a2a);
+  // Banister posts flanking the stairwell so the opening reads (decor).
+  [cx - stairW / 2, cx + stairW / 2].forEach(px => addBox(px, F2, cz + fdir * slabBackO, 0.18, 1.1, 0.18, 0x5a4a2a, { noCollide: true }));
+  // --- Interior partitions: GROUND FLOOR -> left room | central hall (stairs) | right room ---
+  [cx - 5, cx + 5].forEach(px => panelWall('z', px, z0 + t, z1 - t, 0, F2 - 0.2, t, 0xcfc4a8, [
+    { a0: cz - 1.5, a1: cz + 1.5, y0: 0, y1: 3.4 }                       // doorway hall <-> room
+  ]));
+  // --- Interior partitions: 2ND FLOOR -> two bedrooms off the landing (only over the slab) ---
+  const upBack = cz + fdir * slabBackO;
+  [cx - 5, cx + 5].forEach(px => panelWall('z', px, Math.min(upBack, z1 - t), Math.max(upBack, z1 - t), F2, H - 0.4, t, 0xcfc4a8, [
+    { a0: cz + fdir * 2 - 1.4, a1: cz + fdir * 2 + 1.4, y0: F2, y1: F2 + 3.2 }
+  ]));
+  // --- Interior cover / furniture (low-poly flat-shaded; solid so they're real cover) ---
+  addBox(cx - 8.5, 0,  cz + fdir * 3.5, 3.6, 1.0, 1.4, 0x8a5a3a);        // living-room couch (left room)
+  addBox(cx - 10.6, 0, cz - fdir * 4.5, 1.0, 2.6, 2.8, 0x5a3f24);        // tall bookshelf (left room)
+  addBox(cx - 6.5, 0,  cz - fdir * 5,   1.8, 0.9, 1.0, 0x7a5a3a);        // side table
+  addBox(cx + 8.5, 0,  cz - fdir * 3.5, 3.8, 1.1, 2.6, 0x9aa0ad);        // bed (right room)
+  addBox(cx + 10.6, 0, cz + fdir * 4.5, 1.3, 1.3, 1.3, 0x6a4a2a);        // dresser (right room)
+  addBox(cx, 0,        cz + fdir * 6.4, 2.4, 1.0, 1.2, 0x7a5a3a);        // hall console table (near front door)
+  addBox(cx - 7, F2,   cz + fdir * 2,   3.6, 1.0, 2.4, 0x9aa0ad);        // upstairs bed
+  addBox(cx + 7, F2,   cz + fdir * 2,   2.0, 0.9, 1.0, 0x7a5a3a);        // upstairs table
+  addBox(cx + 9.5, F2, cz - fdir * 4,   1.0, 2.4, 2.4, 0x5a3f24);        // upstairs bookshelf
+  // --- Porch (overhang + posts + step) + driveway (decor, no collision) ---
+  const porchZ = frontZ + fdir * 2.4;
+  addBox(cx, 0, porchZ, W - 3, 0.2, 4.4, 0xbdb39a, { noCollide: true });
+  addBox(cx - W / 2 + 2, 2.4, porchZ + fdir * 1.8, 0.4, 4.8, 0.4, roofC, { noCollide: true });
+  addBox(cx + W / 2 - 2, 2.4, porchZ + fdir * 1.8, 0.4, 4.8, 0.4, roofC, { noCollide: true });
+  addBox(cx, 4.8, porchZ, W - 2, 0.3, 5, roofC, { noCollide: true });
+  addBox(cx - W / 2 - 7, -0.02, cz, 11, 0.05, 13, 0x8A8A8A, { noCollide: true });   // driveway
   return { cx, cz, frontZ, fdir };
 }
-const houseN = buildHouse(0,  28, 0xE8D27A, 0xb89a4a);   // yellow (north)
-const houseS = buildHouse(0, -28, 0x5C9C8E, 0x3f6e63);   // teal  (south)
+const houseN = buildHouse(0,  39, 0xE8D27A, 0xb89a4a);   // yellow (north)
+const houseS = buildHouse(0, -39, 0x5C9C8E, 0x3f6e63);   // teal  (south)
 
-// --- Center cover: a bus (one side of the street) + a small car (other side) ---
+// --- Center cover: a bus (one side of the street) + a small car (other side). Scaled ~30%
+// bigger so they stay useful cover on the larger map; box collision wraps the full body. ---
 function buildBus(x, z) {
-  addBox(x, 0, z, 4.4, 4.2, 12, 0xe8e0c8);                                 // body (cover)
-  addBox(x, 2.6, z, 4.5, 1.2, 11, 0x6a86a0, { noCollide: true });          // window band
-  addBox(x, 0.3, z - 6, 4.4, 0.7, 1.0, 0x333333, { noCollide: true });     // bumper
-  [[-2.05, -4.2], [-2.05, 4.2], [2.05, -4.2], [2.05, 4.2]].forEach(([wx, wz]) => cyl(x + wx, 0.7, z + wz, 0.7, 0.5, 0x161616, 'x'));
+  addBox(x, 0, z, 5.7, 5.5, 15.6, 0xe8e0c8);                               // body (cover)
+  addBox(x, 3.4, z, 5.8, 1.6, 14.3, 0x6a86a0, { noCollide: true });        // window band
+  addBox(x, 0.4, z - 7.8, 5.7, 0.9, 1.3, 0x333333, { noCollide: true });   // bumper
+  [[-2.7, -5.5], [-2.7, 5.5], [2.7, -5.5], [2.7, 5.5]].forEach(([wx, wz]) => cyl(x + wx, 0.9, z + wz, 0.9, 0.6, 0x161616, 'x'));
 }
 function buildCar(x, z, color) {
-  addBox(x, 0, z, 3.4, 1.4, 6, color);                                     // lower body
-  addBox(x, 1.4, z + 0.2, 3.0, 1.1, 3.2, color);                           // cabin
-  addBox(x, 1.6, z + 0.2, 3.1, 0.85, 3.0, 0x556677, { noCollide: true });  // windows
-  [[-1.45, -1.9], [-1.45, 1.9], [1.45, -1.9], [1.45, 1.9]].forEach(([wx, wz]) => cyl(x + wx, 0.55, z + wz, 0.55, 0.4, 0x111111, 'x'));
+  addBox(x, 0, z, 4.4, 1.8, 7.8, color);                                   // lower body
+  addBox(x, 1.8, z + 0.3, 3.9, 1.4, 4.2, color);                           // cabin
+  addBox(x, 2.1, z + 0.3, 4.0, 1.1, 3.9, 0x556677, { noCollide: true });   // windows
+  [[-1.9, -2.5], [-1.9, 2.5], [1.9, -2.5], [1.9, 2.5]].forEach(([wx, wz]) => cyl(x + wx, 0.7, z + wz, 0.7, 0.5, 0x111111, 'x'));
 }
-buildBus(-5.5, 3);                  // bus, left of street centre
-buildCar(5.5, -4, 0xb55a4a);        // faded-red sedan, right of street centre
+buildBus(-7, 4);                    // bus, left of street centre
+buildCar(7, -5, 0xb55a4a);          // faded-red sedan, right of street centre
 // Central bus-stop sign post (cosmetic)
-cyl(8.5, 1.4, 1, 0.12, 2.8, 0x6b5333);
-addBox(8.5, 2.4, 1, 1.2, 0.7, 0.12, 0xddddcc, { noCollide: true });
+cyl(11, 1.4, 1.5, 0.12, 2.8, 0x6b5333);
+addBox(11, 2.4, 1.5, 1.2, 0.7, 0.12, 0xddddcc, { noCollide: true });
 
 // --- Mannequins (cream, no collision — bullets pass through) ---
 function mannequin(x, z, ry, sitting) {
@@ -1250,25 +1305,52 @@ function mannequin(x, z, ry, sitting) {
   else { b(0, 0.5, 0, 0.45, 1.0, 0.45); b(0, 1.45, 0, 0.85, 0.8, 0.5); b(-0.5, 1.45, 0, 0.18, 0.7, 0.18); b(0.5, 1.45, 0, 0.18, 0.7, 0.18); b(0, 2.1, 0, 0.42, 0.42, 0.42); }
   scene.add(g);
 }
-// lawn chairs + 2 sitting mannequins on the yellow porch
-addBox(-3, 0.3, 21.2, 1.0, 0.6, 1.0, 0x9a3b3b, { noCollide: true });
-addBox(3, 0.3, 21.2, 1.0, 0.6, 1.0, 0x3b5a9a, { noCollide: true });
-mannequin(-3, 21.2, Math.PI, true); mannequin(3, 21.2, Math.PI, true);
-mannequin(-9, 18, 0.4);                 // standing in the yellow front yard
-mannequin(9.5, 1, -1.6);                // near the bus stop
-mannequin(0, -33, 0);                   // visible through the teal back window
-mannequin(-3, 26, 0.2);                 // inside the yellow house
+// lawn chairs + 2 sitting mannequins on the yellow porch (mannequins stay realistic player-scale)
+addBox(-4, 0.3, 31.5, 1.0, 0.6, 1.0, 0x9a3b3b, { noCollide: true });
+addBox(4, 0.3, 31.5, 1.0, 0.6, 1.0, 0x3b5a9a, { noCollide: true });
+mannequin(-4, 31.5, Math.PI, true); mannequin(4, 31.5, Math.PI, true);
+mannequin(-13, 25, 0.4);                // standing in the yellow front yard
+mannequin(13, 1.5, -1.6);               // near the bus stop
+mannequin(0, -46, 0);                   // visible through the teal back window
+mannequin(-5, 37, 0.2);                 // inside the yellow house
 
-// --- Lawn props (mailboxes, picnic table, tricycle) ---
-addBox(-11, 0, 33, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(-11, 1.2, 33, 0.7, 0.5, 0.5, 0x444444);   // yellow mailbox
-addBox(11, 0, -33, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(11, 1.2, -33, 0.7, 0.5, 0.5, 0x444444);   // teal mailbox
-addBox(8, 0, -20, 3, 1.0, 1.6, 0x9c7a4a);                       // picnic table (cover)
-addBox(-7, 0.25, -19, 0.8, 0.5, 1.4, 0x9a9a3b, { noCollide: true });   // tricycle-ish
-addBox(7, 0.2, 19, 1.2, 0.4, 0.7, 0xcc8844, { noCollide: true });      // tipped lawn chair
+// --- Lawn props (mailboxes, picnic table, tricycle) — realistic scale relative to mannequins ---
+addBox(-16, 0, 46, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(-16, 1.2, 46, 0.7, 0.5, 0.5, 0x444444);   // yellow mailbox
+addBox(16, 0, -46, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(16, 1.2, -46, 0.7, 0.5, 0.5, 0x444444);   // teal mailbox
+addBox(12, 0, -28, 3, 1.0, 1.6, 0x9c7a4a);                      // picnic table (cover)
+addBox(-10, 0.25, -27, 0.8, 0.5, 1.4, 0x9a9a3b, { noCollide: true });  // tricycle-ish
+addBox(10, 0.2, 27, 1.2, 0.4, 0.7, 0xcc8844, { noCollide: true });     // tipped lawn chair
 
-// --- Flank cover (left/right alleys alongside the houses) ---
-[[-24, 8], [-24, -8], [24, 6], [24, -6], [-22, 0], [22, 0]].forEach(([cx, cz], i) =>
-  addBox(cx, 0, cz, 2.6, 2.6, 2.6, i % 2 ? 0x8a5a2b : 0x6a7a4a));      // prop crates / shrubs
+// --- Flank cover (left/right alleys alongside the houses) — spread out for the wider lanes ---
+[[-34, 12], [-34, -12], [34, 10], [34, -10], [-31, 0], [31, 0]].forEach(([cx, cz], i) =>
+  addBox(cx, 0, cz, 2.8, 2.8, 2.8, i % 2 ? 0x8a5a2b : 0x6a7a4a));      // prop crates / shrubs
+
+// --- WATCHTOWER (left flank): weathered-wood high-ground sniper perch with a climbable ladder.
+// Tall enough to see over the houses' second floors; tucked near the -X fence with clearance
+// so players can still run past it on either side. Ladder faces map centre (+X). ---
+function buildWatchtower(cx, cz) {
+  const wood = 0x9a7a4a, woodDk = 0x6f5733, metal = 0x707070, half = 2.0, platY = 9.0;
+  [[-half, -half], [-half, half], [half, -half], [half, half]].forEach(([lx, lz]) =>
+    addBox(cx + lx, 0, cz + lz, 0.5, platY, 0.5, woodDk));              // 4 support legs (solid)
+  addBox(cx, 1.8, cz - half, half * 2, 0.25, 0.22, wood, { noCollide: true });   // cross-braces (decor)
+  addBox(cx, 4.4, cz + half, half * 2, 0.25, 0.22, wood, { noCollide: true });
+  addBox(cx - half, 3.2, cz, 0.22, 0.25, half * 2, wood, { noCollide: true });
+  addBox(cx, platY - 0.3, cz, half * 2 + 0.7, 0.3, half * 2 + 0.7, wood);        // platform floor (solid; top = platY)
+  // Low perimeter walls (crouch cover) with a shooting window centred on each side.
+  const wallH = 1.4, wTop = platY + wallH, gw = 1.7;
+  [cx - half - 0.25, cx + half + 0.25].forEach(px =>
+    panelWall('z', px, cz - half - 0.35, cz + half + 0.35, platY, wTop, 0.25, wood, [{ a0: cz - gw / 2, a1: cz + gw / 2, y0: platY + 0.45, y1: wTop }]));
+  [cz - half - 0.25, cz + half + 0.25].forEach(pz =>
+    panelWall('x', pz, cx - half - 0.35, cx + half + 0.35, platY, wTop, 0.25, wood, [{ a0: cx - gw / 2, a1: cx + gw / 2, y0: platY + 0.45, y1: wTop }]));
+  // Ladder on the +X face (toward map centre): rails + metal rungs (visual; no collision so the
+  // climb zone is enterable). Registered in `ladders` for the E-to-climb mechanic.
+  const lx = cx + half + 0.45;
+  [cz - 0.55, cz + 0.55].forEach(rz => addBox(lx, 0, rz, 0.12, platY, 0.12, woodDk, { noCollide: true }));   // 2 rails
+  for (let y = 0.5; y < platY; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.1, 0.1), flatMat(metal)); m.position.set(lx, y, cz); scene.add(m); }
+  ladders.push({ x: lx, z: cz, bottom: 0, top: platY, cx, cz, outX: 1, outZ: 0 });   // step onto platform (toward cx) at the top; step out (+X) at the bottom
+  return { cx, cz, platY };
+}
+const watchtower = buildWatchtower(-46, 0);
 
 // --- Perimeter: yellow chevron HAZARD FENCING ---
 const FENCE = ARENA - 1, FH = 5.5;
@@ -1305,7 +1387,7 @@ desert.rotation.x = -Math.PI / 2; desert.position.y = -0.12; scene.add(desert);
 });
 
 // --- Cover positions bots hide behind (vehicles + flank props) ---
-const cratePositions = [[-5.5, 3], [5.5, -4], [-24, 8], [24, 6], [-22, 0], [22, 0], [8, -20]];
+const cratePositions = [[-7, 4], [7, -5], [-34, 12], [34, 10], [-31, 0], [31, 0], [12, -28]];
 // (Nuketown has no launch pads — `launchPads` declared above stays empty.)
 
 // --- Ammo boxes: one in each house + on each flank ---
@@ -1317,17 +1399,17 @@ function addAmmoBox(x, z) {
   mesh.position.set(x, y + 0.8, z); mesh.castShadow = true; scene.add(mesh);
   pickups.push({ mesh, pos: new THREE.Vector3(x, y + 0.8, z), active: true, respawn: 0 });
 }
-[[5, 30], [-5, -30], [-26, 0], [26, 0]].forEach(([x, z]) => addAmmoBox(x, z));
+[[8, 41], [-8, -41], [-36, 0], [36, 0]].forEach(([x, z]) => addAmmoBox(x, z));
 
 // --- Spawn points: around each house (interior + yard) + the flanks; NONE in the street ---
-[[-4, 31], [4, 31], [0, 26], [-5, 22], [5, 22],                  // yellow house + yard
- [-4, -31], [4, -31], [0, -26], [-5, -22], [5, -22],             // teal house + yard
- [-26, 14], [-26, -14], [26, 14], [26, -14], [-26, 0], [26, 0]   // flanks
+[[-6, 42], [6, 42], [0, 36], [-9, 32], [9, 32],                  // yellow house + yard
+ [-6, -42], [6, -42], [0, -36], [-9, -32], [9, -32],             // teal house + yard
+ [-36, 20], [-36, -20], [36, 20], [36, -20], [-37, 0], [37, 0]   // flanks
 ].forEach(([sx, sz]) => spawnPoints.push(new THREE.Vector3(sx, groundHeightAt(sx, sz, 0.5), sz)));
 
 // --- Patrol waypoints (bots roam houses, yards, flanks, street) ---
-[[0, 28], [0, -28], [-5, 24], [5, -24], [0, 4], [0, -4],
- [-25, 10], [25, -10], [-25, -10], [25, 10], [-8, 0], [8, 0], [0, 16], [0, -16]
+[[0, 39], [0, -39], [-8, 34], [8, -34], [0, 6], [0, -6],
+ [-35, 14], [35, -14], [-35, -14], [35, 14], [-12, 0], [12, 0], [0, 22], [0, -22], [-41, 7], [-41, -7]
 ].forEach(([px, pz]) => patrolPoints.push(new THREE.Vector3(px, groundHeightAt(px, pz, 0.5), pz)));
 
 /* ============================================================================
@@ -1409,6 +1491,7 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (!gameState.running) return;
+  if (invOpen) { if (e.code === 'KeyI' && !e.repeat) toggleInventory(); return; }   // inventory open: only I closes it (ESC handled separately)
   // SECRET: typing "8888" within a 2s window unlocks the RC Rocket Launcher (per-match, this player only).
   if ((e.code === 'Digit8' || e.code === 'Numpad8') && !e.repeat) {
     const now = performance.now();
@@ -1423,20 +1506,15 @@ document.addEventListener('keydown', (e) => {
   if (e.code === 'KeyC' && !e.repeat) crouchKey();
   if (player.diving) return;                                            // no reload / swap / grenade / jump mid-dive
   if (e.code === 'KeyQ' && !e.repeat) useCigar();                       // light up a self-heal cigar
+  if (e.code === 'KeyE' && !e.repeat) tryGrabLadder();                  // grab a watchtower ladder
   if (e.code === 'KeyR') { cigCancel(); reload(); }                     // reloading cancels a cigar in progress
-  if (e.code.startsWith('Digit')) {
-    if (cigSmoking) cigCancel();                                        // switching weapons cancels a cigar in progress
-    if (gameMode === 'gungame') {
-      if (e.code === 'Digit3') ggSetKarambit(!ggKarambit);             // "3" toggles karambit <-> your gun
-    } else {                                                            // other modes: pick a weapon slot
-      const n = parseInt(e.code.slice(5), 10);
-      if (n >= 1 && n <= 4) switchWeapon(WEAPON_ORDER[n - 1]);          // base weapons
-      else if (n >= 5 && n <= 7) switchWeapon(SPECIAL_ORDER[n - 5]);    // specials (if owned)
-    }
-  }
+  if (e.code === 'KeyI' && !e.repeat && gameMode !== 'gungame') { toggleInventory(); return; }   // FFA: weapon inventory
+  // Two-slot loadout (both modes): 1/2 = main weapon, 3 = karambit. (FFA picks its main via "I".)
+  if (e.code === 'Digit1' || e.code === 'Digit2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
+  else if (e.code === 'Digit3') { if (cigSmoking) cigCancel(); ggSetKarambit(!ggKarambit); }
   // SHIFT slides — unless you're scoped through the heavy sniper, where it holds breath instead.
   if (e.code === 'ShiftLeft' && !ggHeavyScopedNow()) startSlide();
-  if (e.code === 'KeyG') { if (gameMode === 'gungame') throwImpulse(); else throwGrenade(); }   // impulse (gun game) / frag (other modes)
+  if (e.code === 'KeyG') throwImpulse();   // impulse grenades are the G equipment (both modes)
 });
 document.addEventListener('keyup', (e) => {
   keys[e.code] = false;
@@ -1450,11 +1528,12 @@ function clearInput() { for (const k in keys) keys[k] = false; firing = false; f
 window.addEventListener('blur', clearInput);
 
 let firing = false, firingL = false;   // firing = LMB; firingL = RMB (akimbo left pistol only)
-function akimboEquipped() { return gameMode === 'gungame' && WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo; }
+function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo); }
 document.addEventListener('mousedown', (e) => {
   if (!gameState.running || !pointerLocked) return;
   if (rcActive) { if (e.button === 0 && rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: LMB = manual detonate
   if (cigSmoking) { if (e.button === 0) cigCancel(); return; }   // smoking: LMB cancels (weapon holstered); RMB/ADS blocked
+  if (player.onLadder) return;   // climbing: hands occupied — no fire / ADS / melee
   if (e.button === 0) { firing = true; tryShoot(akimboEquipped() ? 'R' : undefined); }
   // Right-click: akimbo fires the LEFT pistol; karambit does a backhand slash; else ADS.
   if (e.button === 2) {
@@ -1473,11 +1552,7 @@ document.addEventListener('contextmenu', (e) => e.preventDefault());
 document.addEventListener('wheel', (e) => {
   if (!gameState.running || player.diving) return;                      // no weapon swap mid-dive
   cigCancel();                                                          // switching weapons cancels a cigar in progress
-  if (gameMode === 'gungame') { ggSetKarambit(!ggKarambit); return; }   // only two slots: gun <-> karambit
-  const order = cycleKeys();                       // base weapons + owned specials
-  let idx = order.indexOf(currentWeaponKey); if (idx < 0) idx = 0;
-  idx = (idx + (e.deltaY > 0 ? 1 : -1) + order.length) % order.length;
-  switchWeapon(order[idx]);
+  ggSetKarambit(!ggKarambit);                                          // both modes: two slots — main gun <-> karambit
 });
 
 window.addEventListener('resize', () => {
@@ -1516,8 +1591,10 @@ const player = {
   impulses: 0,                           // impulse grenades carried this life (gun-game equipment)
   impulseT: 0,                           // brief window where an impulse launch isn't speed-clamped
   impulseGrace: 0,                       // window where impulse-launch fall damage is suppressed
-  cigar: 1                               // self-heal cigars carried this life (1, refills on respawn)
+  cigar: 1,                              // self-heal cigars carried this life (1, refills on respawn)
+  onLadder: false, ladder: null          // climbing a watchtower ladder (E to grab, W/S to climb, Space to drop)
 };
+const LADDER_SPEED = 4;                  // climb speed (units/sec) up or down
 let aiming = false;
 
 // Scope / juice state (improvements #1 and #2)
@@ -1571,8 +1648,13 @@ function isScoping() {
 //   'iron'                = model sights, no overlay; 'dot'/'minidot' = tiny dot, clean view;
 //   'holo'                = EOTech reticle, clean view; 'scope' (+style) = black-bordered scope.
 // `fov` is the FOV multiplier while sighted; `sway` is breath drift (scopes only).
+// A weapon "uses the gun-game feature set" (custom view model, sights, per-weapon move-speed,
+// reload poses, projectiles, akimbo) when it has a baseModel — i.e. the gg ladder weapons,
+// karambit, and the RC launcher. The plain pistol/smg/shotgun/sniper + loot specials don't.
+// In FFA the player's main weapon is one of these too, so the same look & feel applies in BOTH
+// modes; only progression/level logic stays gun-game-only.
+function ggWeapon(key) { const w = WEAPONS[key || currentWeaponKey]; return !!(w && w.baseModel); }
 function ggAdsInfo() {
-  if (gameMode !== 'gungame') return null;
   const k = currentWeaponKey, w = WEAPONS[k];
   if (!w || w.noads || w.melee) return null;
   if (GG_IRON[k])   return { key: k, kind: 'iron',                 anchor: GG_IRON[k].ads,   fov: 0.85, sway: 0 };
@@ -1663,7 +1745,7 @@ function updateSights() {
   const clear = el('redDotSight'), dmr = el('dmrScope'), jav = el('javelinScope'), scope = el('scopeOverlay');
   akimbo.style.display = 'none';
   legacy.style.opacity = 0; legacy.querySelectorAll('.ret').forEach(r => r.classList.remove('on'));
-  if (gameMode !== 'gungame') { clear.style.opacity = 0; dmr.style.opacity = 0; jav.style.opacity = 0; el('thermalScope').style.opacity = 0; renderer.domElement.style.filter = ''; hideThermalBlobs(); rl.style.display = 'none'; return; }
+  if (!ggWeapon()) { clear.style.opacity = 0; dmr.style.opacity = 0; jav.style.opacity = 0; el('thermalScope').style.opacity = 0; renderer.domElement.style.filter = ''; hideThermalBlobs(); rl.style.display = 'none'; return; }
 
   const w = WEAPONS[currentWeaponKey], ws = weaponState[currentWeaponKey], info = ggAdsInfo();
   const b = adsBlend, kind = info ? info.kind : null;
@@ -1742,6 +1824,19 @@ function canStand() {
   }
   return true;
 }
+// E pressed near a ladder: grab it (snap to the ladder line; climb with W/S, drop with Space).
+function tryGrabLadder() {
+  if (!gameState.running || !player.alive || player.onLadder || player.diving || rcActive || cigSmoking) return;
+  for (const L of ladders) {
+    if (Math.hypot(player.pos.x - L.x, player.pos.z - L.z) < 1.7 && player.pos.y >= L.bottom - 0.5 && player.pos.y <= L.top + 0.6) {
+      player.onLadder = true; player.ladder = L;
+      player.pos.x = L.x; player.pos.z = L.z;
+      player.pos.y = Math.max(L.bottom, Math.min(L.top - 0.1, player.pos.y));
+      player.vel.set(0, 0, 0); player.sliding = false; player.crouching = false; aiming = false;
+      return;
+    }
+  }
+}
 // C pressed: dive if sprinting fast enough. Otherwise crouch is purely HOLD-based and is
 // resolved every frame in updateMovement (crouched while C is held), so there's nothing to do here.
 function crouchKey() {
@@ -1794,9 +1889,8 @@ function accelerate(wishDir, wishSpeed, accel, dt) {
 
 // GUN GAME: per-weapon run-speed multiplier while equipped (karambit = 110%).
 function ggSpeedMult() {
-  if (gameMode !== 'gungame') return 1;
   const w = WEAPONS[currentWeaponKey];
-  return (w && w.speed) ? w.speed : 1;     // karambit.speed is 1.10 → 110% while holstered
+  return (w && w.speed) ? w.speed : 1;     // per-weapon move-speed (both modes); karambit is 1.10
 }
 
 function updateMovement(dt) {
@@ -1810,6 +1904,30 @@ function updateMovement(dt) {
     camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
     if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
     return;
+  }
+
+  // Climbing a ladder: pinned to the ladder line, W/S move up/down, Space drops off. No normal
+  // physics (you can't fire/ADS/grenade while climbing — handled at the input sites).
+  if (player.onLadder) {
+    const L = player.ladder;
+    if (keys['Space'] && !player.jumpHeld) {                 // jump off the ladder
+      player.onLadder = false; player.ladder = null; player.jumpHeld = true;
+      player.vel.set(-L.outX * 3.5, MOVE.jumpVel * 0.55, -L.outZ * 3.5); player.onGround = false;
+      // fall through to normal movement this frame with the hop velocity
+    } else {
+      player.jumpHeld = keys['Space'];
+      let cv = 0; if (keys['KeyW']) cv += LADDER_SPEED; if (keys['KeyS']) cv -= LADDER_SPEED;
+      player.pos.y += cv * dt; player.pos.x = L.x; player.pos.z = L.z; player.vel.set(0, 0, 0);
+      if (player.pos.y >= L.top - 0.05) { player.pos.y = L.top; player.pos.x = L.cx; player.pos.z = L.cz; player.onLadder = false; player.ladder = null; player.onGround = true; }   // step onto platform
+      else if (player.pos.y <= L.bottom + 0.02) { player.pos.y = L.bottom; player.pos.x = L.x + L.outX * 0.9; player.pos.z = L.z + L.outZ * 0.9; player.onLadder = false; player.ladder = null; player.onGround = true; }   // step off at the ground
+      player.crouching = false; player.crouchBlend = 0;
+      player.eye += (MOVE.eyeHeight - player.eye) * Math.min(1, dt * 14);
+      recoilPitch += (0 - recoilPitch) * Math.min(1, dt * 10); recoilYaw += (0 - recoilYaw) * Math.min(1, dt * 10);
+      camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
+      camera.rotation.order = 'YXZ'; camera.rotation.y = yaw + recoilYaw; camera.rotation.x = pitch + recoilPitch;
+      if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
+      return;
+    }
   }
 
   // --- GUN GAME aim-down-sights state (computed up-front so move speed can use it) ---
@@ -1846,13 +1964,15 @@ function updateMovement(dt) {
   const effMaxSpeed = MOVE.maxSpeed * moveScale;
   if (player.launchCd > 0) player.launchCd -= dt;
 
-  // Desired direction from WASD
+  // Desired direction from WASD (ignored while the inventory menu is open — pointer is unlocked).
   const f = horizontalForward(), r = horizontalRight();
   let wx = 0, wz = 0;
-  if (keys['KeyW']) { wx += f.x; wz += f.z; }
-  if (keys['KeyS']) { wx -= f.x; wz -= f.z; }
-  if (keys['KeyD']) { wx += r.x; wz += r.z; }
-  if (keys['KeyA']) { wx -= r.x; wz -= r.z; }
+  if (!invOpen) {
+    if (keys['KeyW']) { wx += f.x; wz += f.z; }
+    if (keys['KeyS']) { wx -= f.x; wz -= f.z; }
+    if (keys['KeyD']) { wx += r.x; wz += r.z; }
+    if (keys['KeyA']) { wx -= r.x; wz -= r.z; }
+  }
   const wishDir = new THREE.Vector3(wx, 0, wz);
   const hasInput = wishDir.lengthSq() > 0;
   if (hasInput) wishDir.normalize();
@@ -1894,7 +2014,8 @@ function updateMovement(dt) {
     player.vel.x *= s; player.vel.z *= s;
   }
 
-  // Gravity + integrate
+  // Gravity + integrate (remember the pre-move position for swept collision below)
+  const px0 = player.pos.x, py0 = player.pos.y, pz0 = player.pos.z;
   player.vel.y -= MOVE.gravity * dt;
   player.pos.x += player.vel.x * dt;
   player.pos.z += player.vel.z * dt;
@@ -1904,6 +2025,37 @@ function updateMovement(dt) {
   const lim = ARENA - 1.2;
   player.pos.x = Math.max(-lim, Math.min(lim, player.pos.x));
   player.pos.z = Math.max(-lim, Math.min(lim, player.pos.z));
+
+  // --- SWEPT (continuous) horizontal collision for FAST movement (sprint / dive / impulse-launch).
+  // A big per-frame step can skip past a thin wall before resolveHorizontal sees an overlap, so we
+  // raycast from the previous position to the new one and stop at the first solid surface hit. ---
+  const horizSpeed = Math.hypot(player.vel.x, player.vel.z);
+  if (horizSpeed > MOVE.maxSpeed * 0.85 || player.impulseT > 0 || player.diving) {
+    const dx = player.pos.x - px0, dz = player.pos.z - pz0, moveLen = Math.hypot(dx, dz);
+    if (moveLen > 0.05) {
+      const dir = new THREE.Vector3(dx / moveLen, 0, dz / moveLen);
+      const from = new THREE.Vector3(px0, player.pos.y + 0.6, pz0);   // sweep at knee/chest height
+      const ray = new THREE.Raycaster(from, dir, 0, moveLen + MOVE.radius);
+      const hits = ray.intersectObjects(colliders, false);
+      if (hits.length) {
+        const stop = Math.max(0, hits[0].distance - MOVE.radius - 0.1);
+        player.pos.x = px0 + dir.x * stop; player.pos.z = pz0 + dir.z * stop;
+        let n = hits[0].face ? hits[0].face.normal.clone().transformDirection(hits[0].object.matrixWorld) : dir.clone().negate();
+        n.y = 0; if (n.lengthSq() > 1e-4) n.normalize(); else n.copy(dir).negate();
+        const vd = player.vel.x * n.x + player.vel.z * n.z;
+        if (vd < 0) { player.vel.x -= vd * n.x; player.vel.z -= vd * n.z; }   // cancel velocity into the wall
+        if (player.diving) { player.vel.x *= 0.2; player.vel.z *= 0.2; endDive(); }
+      }
+    }
+  }
+  // --- Upward CEILING check: moving up fast (impulse / launch) shouldn't punch through a slab/roof. ---
+  if (player.vel.y > 0) {
+    const headPrev = py0 + 1.7, headNew = player.pos.y + 1.7;
+    for (const s of solids) {
+      if (player.pos.x > s.min.x && player.pos.x < s.max.x && player.pos.z > s.min.z && player.pos.z < s.max.z &&
+          s.min.y >= headPrev - 0.02 && s.min.y <= headNew) { player.pos.y = s.min.y - 1.7; player.vel.y = 0; break; }
+    }
+  }
 
   // Horizontal collisions (walls/crates). Crouching/diving uses a shorter body so you
   // can move under low cover. A dive that slams a wall cancels into a crouch.
@@ -1993,11 +2145,11 @@ function updateMovement(dt) {
     camera.rotation.x += Math.sin(ggSwayClock * 1.5 + 1) * 0.004 * sw;
   }
 
-  // Smooth FOV: FFA scoped sniper zooms hard; gun game uses each sight's own FOV multiplier.
+  // Smooth FOV: gun-game-style sights use each sight's own FOV multiplier (both modes);
+  // the legacy FFA sniper scope / generic ADS only apply to non-gg weapons.
   let targetFov = DEFAULT_FOV;
-  if (gameMode === 'gungame') {
-    if (ggAdsActive) targetFov = DEFAULT_FOV * ggAds.fov;
-  } else if (scopeTarget) targetFov = SCOPE.fov;
+  if (ggAdsActive) targetFov = DEFAULT_FOV * ggAds.fov;
+  else if (scopeTarget) targetFov = SCOPE.fov;
   else if (aiming) targetFov = ADS_FOV;
   camera.fov += (targetFov - camera.fov) * Math.min(1, dt * SCOPE.blendSpeed);
   camera.updateProjectionMatrix();
@@ -2208,6 +2360,15 @@ function buildGunModel(key) {
     body(0,-0.02,0.04,0.15,0.15,0.16,0x6a6a6a);    // CYLINDER (fat, visible)
     body(0,-0.16,0.12,0.09,0.20,0.12,0x2a1a0a);    // wood grip
     muzzleZ = -0.30;
+  } else if (model === 'tactical') {
+    // High-end tactical pistol: slim matte-black slide (slimmer than the 9mm + Desert Eagle),
+    // threaded barrel, with a slide-mounted RMR mini red dot (added by addRedDotOptic on top).
+    body(0,0.0,-0.05,0.085,0.10,0.46,0x202028);    // slim slide (dark gunmetal)
+    body(0,-0.05,-0.05,0.075,0.05,0.42,0x14141a);  // frame rail under the slide
+    body(0,-0.15,0.11,0.075,0.20,0.12,0x101015);   // grip
+    body(0,0.0,-0.30,0.034,0.034,0.14,0x0c0c0c);   // threaded barrel tip
+    body(0,0.075,0.02,0.05,0.03,0.12,0x0a0a0e);    // RMR mounting plate on the slide
+    muzzleZ = -0.32;
   } else if (model === 'akimbo') {
     // Two pistols held in opposite hands: far apart across the screen, angled inward,
     // each with its own muzzle anchor + flash for independent fire/recoil.
@@ -2290,6 +2451,14 @@ function buildGunModel(key) {
   g.rotation.y = 0.04;
   viewModel.add(g);
   gunMesh = g;
+  // One-time diagnostic for the Tactical Pistol model fix: confirm the body now exists, is
+  // visible, and sits at the normal lower-right hipfire anchor (not off-screen / hidden).
+  if (key === 'gg18' && !window._tacLogged) {
+    window._tacLogged = true;
+    const bodyMeshes = g.children.filter(c => c.isMesh).length;
+    console.log('[tactical pistol] model exists:', bodyMeshes > 0, '| body meshes:', bodyMeshes,
+      '| visible:', g.visible, '| local pos:', g.position.toArray().map(n => n.toFixed(2)).join(','));
+  }
 }
 buildGunModel(currentWeaponKey);
 
@@ -2338,8 +2507,8 @@ function reload() {
   if (w.rstyle === 'shell') {                                    // pump shotgun: one shell at a time
     ws.reloading = w.reload; ws.reloadTotal = w.reload; ws.shellReload = true; return;
   }
-  // Gun game: empty-mag reloads run a touch longer. Other modes keep their exact reload time.
-  const empty = (gameMode === 'gungame') && ws.ammo <= 0;
+  // Gun-game-style weapons: empty-mag reloads run a touch longer (both modes).
+  const empty = ggWeapon() && ws.ammo <= 0;
   ws.reloading = w.reload * (empty ? 1.12 : 1);
   ws.reloadTotal = ws.reloading; ws.shellReload = false;
 }
@@ -2457,7 +2626,7 @@ function meleeAttack(swingDir) {
 }
 
 function tryShoot(akSide) {
-  if (!gameState.running || !player.alive || cigSmoking) return;   // weapon holstered while smoking
+  if (!gameState.running || !player.alive || cigSmoking || player.onLadder) return;   // holstered while smoking / climbing
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
   if (w.rc) { rcTryLaunch(); return; }                 // SECRET RC launcher: fire = launch a guided missile
@@ -2482,8 +2651,8 @@ function tryShoot(akSide) {
     ws.ammo--;
     ws.cooldown = w.fireRate;
   }
-  // Bolt-cycle / pump animation after the shot (bolt sniper, pump shotgun)
-  if (gameMode === 'gungame') {
+  // Bolt-cycle / pump animation after the shot (bolt sniper, pump shotgun) — both modes
+  if (ggWeapon()) {
     if (w.boltShot)            ggStartCycle('bolt', 0.5);
     else if (w.rstyle === 'shell') ggStartCycle('pump', Math.min(0.45, w.fireRate * 0.7));
   }
@@ -4068,7 +4237,7 @@ function impulseWhine() {
 }
 
 function throwImpulse() {
-  if (!gameState.running || !player.alive || player.impulses <= 0 || impulseThrowT > 0) return;
+  if (!gameState.running || !player.alive || player.impulses <= 0 || impulseThrowT > 0 || player.onLadder) return;
   cigCancel();                                                  // throwing cancels (and consumes) a cigar in progress
   player.impulses--; impulseThrowT = 0.4;                       // quick throw, ~400ms anim/guard
   const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
@@ -4469,17 +4638,19 @@ function updateHUD() {
     el('ggLevel').style.display = '';
     el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">KARAMBIT</span>` : ``);
     el('killCounter').style.display = 'none'; el('grenades').style.display = 'none'; el('lootInfo').style.display = 'none';
-    el('impulseCount').style.display = ''; el('impulseNum').textContent = player.impulses;
+    el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
     else if (magSpan) magSpan.style.display = '';
-  } else {
-    el('ggLevel').style.display = 'none'; el('killCounter').style.display = ''; el('grenades').style.display = '';
-    el('impulseCount').style.display = 'none';
-    if (magSpan) magSpan.style.display = '';
+  } else {   // FFA: score/kills + impulse grenades (same equipment as gun game), no frag grenades
+    el('ggLevel').style.display = 'none'; el('killCounter').style.display = ''; el('grenades').style.display = 'none';
+    el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
+    if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
+    else if (magSpan) magSpan.style.display = '';
   }
   if (w.rc && magSpan) magSpan.style.display = 'none';   // RC launcher: rockets/life, no reserve to show
+  el('lootInfo').style.display = 'none';                 // no loot crates in either mode
   // Cigar self-heal availability (all modes): full when carried, dimmed once used.
-  el('cigarCount').style.display = ''; el('cigarNum').textContent = player.cigar;
+  el('cigarCount').style.display = 'block'; el('cigarNum').textContent = player.cigar;
   el('cigarCount').style.opacity = player.cigar > 0 ? '1' : '0.35';
   // Health bar
   const hp = Math.max(0, player.health);
@@ -4528,11 +4699,13 @@ function ggEquip(key) {
 }
 // The ladder weapon for the LOCAL player's current level.
 function ggLadderKey() { return GUNGAME_LADDER[ggLevel - 1]; }
-// Equip whichever of the two gun-game slots is active (the gun, or the karambit).
-function ggEquipCurrent() { ggEquip(ggKarambit ? KARAMBIT_KEY : ggLadderKey()); }
-// Toggle / set the karambit slot (gun game only).
+// The LOCAL player's "main gun" slot: gun-game uses the current ladder rung; FFA uses the
+// player-chosen main weapon (set via the inventory menu, default Assault Rifle).
+function mainGunKey() { return gameMode === 'gungame' ? ggLadderKey() : ffaMain; }
+// Equip whichever of the two slots is active (the gun, or the karambit) — both modes.
+function ggEquipCurrent() { ggEquip(ggKarambit ? KARAMBIT_KEY : mainGunKey()); }
+// Toggle / set the karambit slot (both modes — FFA also carries a permanent karambit).
 function ggSetKarambit(use) {
-  if (gameMode !== 'gungame') return;
   // Switching slots CANCELS an in-progress reload (you have to start over later).
   const ws = weaponState[currentWeaponKey];
   if (ws) { ws.reloading = 0; ws.shellReload = false; }
@@ -4661,6 +4834,8 @@ function hurtPlayer(dmg) {
 function playerDie() {
   if (rcActive || rcMissile) rcDetonate(null, null, null, true);   // piloting an RC missile? auto-detonate, then die normally
   if (cigSmoking) cigFinish();                                     // dying ends any cigar in progress
+  player.onLadder = false; player.ladder = null;                   // drop off any ladder on death
+  if (invOpen) closeInventory();                                   // close the inventory if you die while browsing
   player.alive = false;
   player.health = 0;
   if (NET.active) {
@@ -4681,20 +4856,18 @@ function playerDie() {
     player.vel.set(0, 0, 0);
     player.health = 100; player.alive = true;
     player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
-    player.impulseT = 0; player.impulseGrace = 0;
+    player.impulseT = 0; player.impulseGrace = 0; player.onLadder = false; player.ladder = null;
     player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
     player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
     weaponState.rcrl.ammo = RC.ammo; weaponState.rcrl.cooldown = 0;   // RC rockets refill on respawn (no regen mid-life)
-    if (rcEquipped && gameMode !== 'gungame') { rcEquipped = false; currentWeaponKey = 'pistol'; buildGunModel('pistol'); }
-    else rcEquipped = false;
-    if (gameMode === 'gungame') {                       // respawn with your current ladder weapon (back to the gun)
-      player.grenades = 0; player.impulses = IMPULSE.maxCarry; ggKarambit = false;
-      const key = GUNGAME_LADDER[ggLevel - 1];
-      weaponState[key].ammo = WEAPONS[key].mag; weaponState[key].cooldown = 0; weaponState[key].reloading = 0;
-      weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
-      ggEquip(key);
-    }
+    rcEquipped = false;                                 // never respawn holding the RC launcher
+    // Both modes respawn onto the main gun (gun-game: current ladder rung; FFA: your chosen main).
+    player.grenades = 0; player.impulses = IMPULSE.maxCarry; ggKarambit = false;
+    GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].cooldown = 0; weaponState[k].reloading = 0; });
+    weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
+    if (gameMode !== 'gungame' && !WEAPONS[ffaMain]) ffaMain = 'gg2';
+    ggEquip(mainGunKey());
     updateHUD();
   }, 1400);
 }
@@ -4762,23 +4935,25 @@ function startMatch() {
     el('lobbyTag').textContent = '';
   }
 
-  // --- Loadout: GUN GAME starts everyone at level 1; FFA uses the chosen weapon ---
+  // --- Loadout: both modes use the same gun-game arsenal + karambit/cigar/impulse/RC.
+  // GUN GAME auto-progresses from level 1; FFA lets the player pick a main weapon (key I).
+  ggKarambit = false;
+  GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
+  weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
+  weaponState[KARAMBIT_KEY].cooldown = 0; weaponState[KARAMBIT_KEY].reloading = 0;
+  player.grenades = 0; player.impulses = IMPULSE.maxCarry;  // impulse grenades are the G equipment (both modes)
   if (gameMode === 'gungame') {
-    ggLevel = 1; ggKarambit = false;
-    GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
-    weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
-    weaponState[KARAMBIT_KEY].cooldown = 0; weaponState[KARAMBIT_KEY].reloading = 0;
-    player.grenades = 0; player.impulses = IMPULSE.maxCarry;   // impulse grenades are the gun-game equipment
+    ggLevel = 1;
     ggEquip('gg1');                                  // start on the level-1 gun
   } else {
-    switchWeapon(selectedStartWeapon);
-    buildGunModel(currentWeaponKey);
+    if (!WEAPONS[ffaMain]) ffaMain = 'gg2';
+    ggEquip(ffaMain);                                // FFA: start on the chosen main weapon (default Assault Rifle)
   }
   if (NET.active && NET.isHost) NET.broadcastScores();
   if (NET.active) NET.applyScoresLocal();
-  if ((!NET.active || NET.isHost) && gameMode !== 'gungame') spawnLootCrate();   // no loot in gun game
   updateHUD();
   refreshScoreboard();
+  invOpen = false; el('invMenu').classList.add('hidden');   // ensure the inventory menu is closed at match start
   showScreen('__none__');                 // hide every overlay
   el('endScreen').style.display = 'none';
   lockPointer();
@@ -4805,6 +4980,58 @@ function mountWeaponPicker(containerId) {
 }
 mountWeaponPicker('weaponPick');
 mountWeaponPicker('lobbyWeaponPick');
+
+/* --- FFA weapon inventory (press I): pick any of the 20 ladder weapons as your main --- */
+let invOpen = false;
+function buildInventory() {
+  const grid = el('invGrid'); if (!grid) return;
+  grid.innerHTML = '';
+  GUNGAME_LADDER.forEach(key => {
+    const w = WEAPONS[key];
+    const card = document.createElement('button');
+    card.className = 'invCard'; card.dataset.key = key;
+    const rps = (1 / w.fireRate).toFixed(1);
+    const spd = Math.round((w.speed || 1) * 100);
+    const dmg = w.melee ? 'MELEE' : ((w.explosive || w.damage >= 9999) ? 'EXPLOSIVE' : w.damage);
+    const sight = (w.sight && w.sight !== 'none') ? w.sight.replace('scope_', '').toUpperCase() : 'NONE';
+    card.innerHTML = `<span class="ic" style="background:#${w.color.toString(16).padStart(6, '0')}"></span>`
+      + `<b>${w.name}</b>`
+      + `<small>DMG ${dmg} • ${rps}/s</small>`
+      + `<small>SIGHT ${sight} • SPD ${spd}%</small>`
+      + `<span class="eqTag">EQUIPPED</span>`;
+    card.onclick = () => selectInvWeapon(key);
+    grid.appendChild(card);
+  });
+}
+function refreshInventory() {
+  [...el('invGrid').children].forEach(c => c.classList.toggle('equipped', c.dataset.key === ffaMain));
+}
+function selectInvWeapon(key) {
+  if (!WEAPONS[key]) return;
+  ffaMain = key;
+  const ws = weaponState[key];                       // full ammo loadout for the new main (reserve is already Infinite)
+  ws.ammo = WEAPONS[key].mag; ws.reloading = 0; ws.cooldown = 0;
+  if (key === 'gg17') { ws.ammoL = ws.ammoR = null; }
+  ggKarambit = false;
+  ggEquip(key);                                      // draws the new weapon immediately
+  closeInventory();
+}
+function toggleInventory() {
+  if (gameMode === 'gungame' || !gameState.running) return;
+  invOpen = !invOpen;
+  if (invOpen) {
+    cigCancel();
+    refreshInventory();
+    el('invMenu').classList.remove('hidden');
+    document.exitPointerLock && document.exitPointerLock();   // free the cursor (game keeps running)
+  } else {
+    el('invMenu').classList.add('hidden');
+    if (gameState.running && player.alive) lockPointer();
+  }
+}
+function closeInventory() { if (invOpen) { invOpen = false; el('invMenu').classList.add('hidden'); if (gameState.running && player.alive) lockPointer(); } }
+buildInventory();
+document.addEventListener('keydown', (e) => { if (e.code === 'Escape' && invOpen) closeInventory(); });
 
 /* --- Multiplayer match flow --- */
 function beginMatch() { startMatch(); }                 // clients enter here on the host's "start"
@@ -5152,16 +5379,17 @@ const NET = {
     const rl = (ws && ws.reloading > 0) ? Math.max(0, Math.min(1, 1 - ws.reloading / (ws.reloadTotal || 1))) : 0;
     return { id: this.selfId, name: this.selfName, x: player.pos.x, y: player.pos.y, z: player.pos.z,
              yaw, pitch, weapon: currentWeaponKey, health: Math.max(0, player.health), alive: player.alive,
-             ads: (gameMode === 'gungame' && adsBlend > 0.5), rl,            // aim + reload state for others to see
+             ads: (adsBlend > 0.5), rl,            // aim + reload state for others to see
              cr: player.crouchBlend, dv: player.diving,                      // crouch amount + dive (shorter hitbox)
-             cig: cigSmoking && !cigCanceling };                             // smoking a cigar (third-person tell)
+             cig: cigSmoking && !cigCanceling,                               // smoking a cigar (third-person tell)
+             clm: player.onLadder };                                         // climbing a ladder (third-person)
   },
   // host -> all: positions of every human (host builds from its own state + clients' last pmove)
   broadcastPlayers() {
     const list = [this.selfSnapshot()];
     this.players.forEach((rp) => list.push({ id: rp.id, name: rp.name, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
       yaw: rp.yaw, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
-      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig }));
+      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, clm: !!rp.clm }));
     this.broadcast({ t: 'players', list });
   },
   broadcastBots() {
@@ -5389,7 +5617,7 @@ function textureFromDataURL(id, url, cb) {
 function makeRemotePlayer(id, name, color) {
   return {
     id, name: (name || 'Player').slice(0, 14), color, alive: true, health: 100, weapon: 'pistol',
-    pos: new THREE.Vector3(0, 0, 0), yaw: 0, ads: false, rl: 0, cr: 0, dv: false, cig: false, crShown: 0, _cigPuffT: 0,
+    pos: new THREE.Vector3(0, 0, 0), yaw: 0, ads: false, rl: 0, cr: 0, dv: false, cig: false, clm: false, crShown: 0, _cigPuffT: 0,
     renderPos: new THREE.Vector3(0, 0, 0), renderYaw: 0,
     avatar: null, head: null, gun: null, nameSprite: null, _hadAvatar: false, _lastNameHp: -1,
     apply(d) {
@@ -5404,6 +5632,7 @@ function makeRemotePlayer(id, name, color) {
       if (d.cr != null) this.cr = d.cr;
       if (d.dv != null) this.dv = d.dv;
       if (d.cig != null) this.cig = d.cig;
+      if (d.clm != null) this.clm = d.clm;
     }
   };
 }
@@ -5491,8 +5720,9 @@ function lerpRemotePlayers(dt) {
     // Pose the held gun so others can see you aiming (raised to center) or reloading (dipped).
     if (rp.gun) {
       let tx = 0.45, ty = 1.25, rotx = 0;
-      if (rp.ads) { tx = 0.12; ty = 1.5; }
-      if (rp.rl > 0) { ty = 1.05; rotx = 0.6; }
+      if (rp.clm) { tx = 0.3; ty = 0.95; rotx = 0.4; }       // climbing: gun lowered (one hand on the ladder)
+      else if (rp.ads) { tx = 0.12; ty = 1.5; }
+      else if (rp.rl > 0) { ty = 1.05; rotx = 0.6; }
       rp.gun.position.x += (tx - rp.gun.position.x) * t;
       rp.gun.position.y += (ty - rp.gun.position.y) * t;
       rp.gun.rotation.x += (rotx - rp.gun.rotation.x) * t;
@@ -5612,6 +5842,7 @@ function leaveToMenu() {
   NET.reset();
   rcResetMatch();   // lock the RC launcher + clear any missiles when leaving to the lobby
   cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;
+  invOpen = false; el('invMenu').classList.add('hidden');
   // wipe remote/client-bot state and any in-progress match
   bots.forEach(b => { if (b.group) { scene.remove(b.group); disposeGroup(b.group); } });
   bots.length = 0;
@@ -5881,10 +6112,8 @@ function animate() {
     rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles
     updateImpulses(dt);   // impulse-grenade canisters (bounce + fast activation + kinetic launch)
     if (impulseThrowT > 0) impulseThrowT -= dt;
-    updatePickups(dt);    // ammo boxes (refill + grenade)
-    if (gameMode === 'gungame') { /* no loot crates in gun game */ }
-    else if (!NET.active || NET.isHost) updateLoot(dt);   // loot crates are host-driven in MP
-    else if (NET.isClient) updateClientLoot(dt);          // clients see + can grab the crate
+    updatePickups(dt);    // ammo boxes (refill)
+    // No loot crates in either mode now — both use the shared gun-game arsenal (FFA picks via inventory).
 
     // Weapon cooldowns / reloads (all weapons incl. specials + gun-game ladder)
     for (const key in weaponState) {
@@ -5903,7 +6132,7 @@ function animate() {
     } else if (firing && WEAPONS[currentWeaponKey].auto) tryShoot();
 
     // Throwing knives passively regenerate (refill over ~2s when idle).
-    if (gameMode === 'gungame' && WEAPONS[currentWeaponKey].rstyle === 'regen') {
+    if (WEAPONS[currentWeaponKey].rstyle === 'regen') {
       const ws = weaponState[currentWeaponKey];
       if (ws.ammo < WEAPONS[currentWeaponKey].mag && ws.reloading <= 0 && !firing) reload();
     }
@@ -5917,7 +6146,7 @@ function animate() {
     // Viewmodel animation: reload pose > iron-sight raise (ADS) > bolt/pump cycle > rest recovery.
     if (gunMesh) {
       const _ws = weaponState[currentWeaponKey], _w = WEAPONS[currentWeaponKey];
-      const _ironAds = (gameMode === 'gungame' && adsBlend > 0.001 && ggAnchorFor(currentWeaponKey));
+      const _ironAds = (ggWeapon() && adsBlend > 0.001 && ggAnchorFor(currentWeaponKey));
       if (currentWeaponKey === KARAMBIT_KEY) {
         // Karambit: equip flourish (twirl up) > slash arc > idle bob.
         const trail = gunMesh.userData && gunMesh.userData.karTrail;
@@ -5943,7 +6172,7 @@ function animate() {
           gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);
           if (trail) trail.material.opacity = 0;
         }
-      } else if (gameMode === 'gungame' && _ws && _ws.reloading > 0 && _w.rstyle && _w.rstyle !== 'none' && !_w.melee) {
+      } else if (ggWeapon() && _ws && _ws.reloading > 0 && _w.rstyle && _w.rstyle !== 'none' && !_w.melee) {
         applyReloadPose(_w.rstyle, 1 - _ws.reloading / (_ws.reloadTotal || _w.reload || 1));
       } else if (_ironAds) {
         applyRaiseAdsPose(currentWeaponKey, smoothstep(adsBlend));   // raise to centered sight picture (iron or red dot)

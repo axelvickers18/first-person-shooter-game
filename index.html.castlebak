@@ -1387,11 +1387,6 @@ const Ambient = {
     const indoor = surfaceAt(player.pos.x, player.pos.z, player.pos.y) === 'interior';
     const base = player.pos.y > 5 ? 0.16 : indoor ? 0.05 : 0.1;
     if (this.g) this.g.gain.value += (base - this.g.gain.value) * Math.min(1, dt * 2);
-    // Castle: a low, hollow stone drone when you're near/inside the keep.
-    if (typeof castle !== 'undefined' && Math.hypot(player.pos.x - castle.cx, player.pos.z - castle.cz) < 16) {
-      this.castleT = (this.castleT || 0) - dt;
-      if (this.castleT <= 0) { this.castleT = 3 + Math.random() * 2; SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 70, dur: 1.6, peak: 0.12, atk: 0.4, verb: 0.5 }); aNoise(ctx, out, t, { dur: 1.4, peak: 0.04, filter: 'lowpass', freq: 280 }); }, new THREE.Vector3(castle.cx, 3, castle.cz), 'ambient', 'castle', 0.7, 1.6); }
-    }
     this.birdT -= dt;
     if (this.birdT <= 0) {
       this.birdT = 6 + Math.random() * 10;
@@ -1489,7 +1484,7 @@ function addLaunchPad(x, z, color) {
    (left flank / street / right flank), ringed by yellow chevron hazard fence.
    Built entirely from flat-shaded primitives; collision via solids/ramps.
    =========================================================================== */
-const ARENA = 84;   // ~168×168 playspace (scaled up another 50% — houses/vehicles/tower keep size, just spread apart)
+const ARENA = 56;   // ~112×112 playspace (was 40 — scaled up ~40% in each dimension)
 
 // Washed-out 1950s nuclear-test daylight (overrides the earlier sky/fog/sun tone).
 scene.background = new THREE.Color(0xbcd6e4);
@@ -1499,8 +1494,8 @@ sun.color.setHex(0xfff1d4); sun.intensity = 1.0; sun.position.set(40, 90, 30);
 // --- Lawn floor + central asphalt street (wider street + more spacing for the bigger map) ---
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 2, ARENA * 2), flatMat(0x7BAE6C));
 floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-addBox(0, -0.02, 0, 30, 0.05, 150, 0x8A8A8A, { noCollide: true });  // street down the long (Z) axis
-addBox(0, -0.02, 0, 2.4, 0.06, 140, 0xd8d49a, { noCollide: true }); // faded centre line
+addBox(0, -0.02, 0, 20, 0.05, 100, 0x8A8A8A, { noCollide: true });  // street down the long (Z) axis
+addBox(0, -0.02, 0, 1.6, 0.06, 94, 0xd8d49a, { noCollide: true });  // faded centre line
 
 // --- Wall builders: panelWall cuts door/window holes out of a wall plane ---
 function wallSeg(axis, fixed, a0, a1, y0, y1, t, color) {
@@ -1596,8 +1591,8 @@ function buildHouse(cx, cz, wallC, roofC) {
   addBox(cx - W / 2 - 7, -0.02, cz, 11, 0.05, 13, 0x8A8A8A, { noCollide: true });    // driveway (flat ground decor)
   return { cx, cz, frontZ, fdir };
 }
-const houseN = buildHouse(0,  58, 0xE8D27A, 0xb89a4a);   // yellow (north) — same size, spread farther out
-const houseS = buildHouse(0, -58, 0x5C9C8E, 0x3f6e63);   // teal  (south)
+const houseN = buildHouse(0,  39, 0xE8D27A, 0xb89a4a);   // yellow (north)
+const houseS = buildHouse(0, -39, 0x5C9C8E, 0x3f6e63);   // teal  (south)
 
 // --- Center cover: a bus (one side of the street) + a small car (other side). Scaled ~30%
 // bigger so they stay useful cover on the larger map; box collision wraps the full body. ---
@@ -1613,8 +1608,8 @@ function buildCar(x, z, color) {
   addBox(x, 2.1, z + 0.3, 4.0, 1.1, 3.9, 0x556677, { noCollide: true });   // windows
   [[-1.9, -2.5], [-1.9, 2.5], [1.9, -2.5], [1.9, 2.5]].forEach(([wx, wz]) => cyl(x + wx, 0.7, z + wz, 0.7, 0.5, 0x111111, 'x'));
 }
-buildBus(-10, 8);                   // bus, left of street centre (same size — spread apart on the bigger street)
-buildCar(10, -9, 0xb55a4a);         // faded-red sedan, right of street centre
+buildBus(-7, 4);                    // bus, left of street centre
+buildCar(7, -5, 0xb55a4a);          // faded-red sedan, right of street centre
 // Central bus-stop sign post (cosmetic)
 cyl(11, 1.4, 1.5, 0.12, 2.8, 0x6b5333);
 addBox(11, 2.4, 1.5, 1.2, 0.7, 0.12, 0xddddcc, { noCollide: true });
@@ -1628,23 +1623,23 @@ function mannequin(x, z, ry, sitting) {
   scene.add(g);
 }
 // lawn chairs + 2 sitting mannequins on the yellow porch (mannequins stay realistic player-scale)
-addBox(-4, 0.3, 47, 1.0, 0.6, 1.0, 0x9a3b3b, { noCollide: true });
-addBox(4, 0.3, 47, 1.0, 0.6, 1.0, 0x3b5a9a, { noCollide: true });
-mannequin(-4, 47, Math.PI, true); mannequin(4, 47, Math.PI, true);
-mannequin(-19, 38, 0.4);                // standing in the yellow front yard
-mannequin(16, 2, -1.6);                 // near the bus stop
-mannequin(0, -66, 0);                   // visible through the teal back window
-mannequin(-7, 55, 0.2);                 // inside the yellow house
+addBox(-4, 0.3, 31.5, 1.0, 0.6, 1.0, 0x9a3b3b, { noCollide: true });
+addBox(4, 0.3, 31.5, 1.0, 0.6, 1.0, 0x3b5a9a, { noCollide: true });
+mannequin(-4, 31.5, Math.PI, true); mannequin(4, 31.5, Math.PI, true);
+mannequin(-13, 25, 0.4);                // standing in the yellow front yard
+mannequin(13, 1.5, -1.6);               // near the bus stop
+mannequin(0, -46, 0);                   // visible through the teal back window
+mannequin(-5, 37, 0.2);                 // inside the yellow house
 
 // --- Lawn props (mailboxes, picnic table, tricycle) — realistic scale relative to mannequins ---
-addBox(-24, 0, 66, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(-24, 1.2, 66, 0.7, 0.5, 0.5, 0x444444);   // yellow mailbox
-addBox(24, 0, -66, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(24, 1.2, -66, 0.7, 0.5, 0.5, 0x444444);   // teal mailbox
-addBox(18, 0, -42, 3, 1.0, 1.6, 0x9c7a4a);                      // picnic table (cover)
-addBox(-15, 0.25, -40, 0.8, 0.5, 1.4, 0x9a9a3b, { noCollide: true });  // tricycle-ish
-addBox(15, 0.2, 40, 1.2, 0.4, 0.7, 0xcc8844, { noCollide: true });     // tipped lawn chair
+addBox(-16, 0, 46, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(-16, 1.2, 46, 0.7, 0.5, 0.5, 0x444444);   // yellow mailbox
+addBox(16, 0, -46, 0.4, 1.1, 0.4, 0x7a5a3a); addBox(16, 1.2, -46, 0.7, 0.5, 0.5, 0x444444);   // teal mailbox
+addBox(12, 0, -28, 3, 1.0, 1.6, 0x9c7a4a);                      // picnic table (cover)
+addBox(-10, 0.25, -27, 0.8, 0.5, 1.4, 0x9a9a3b, { noCollide: true });  // tricycle-ish
+addBox(10, 0.2, 27, 1.2, 0.4, 0.7, 0xcc8844, { noCollide: true });     // tipped lawn chair
 
 // --- Flank cover (left/right alleys alongside the houses) — spread out for the wider lanes ---
-[[-48, 20], [-48, -20], [48, 16], [48, -16], [-44, 0], [44, 0]].forEach(([cx, cz], i) =>
+[[-34, 12], [-34, -12], [34, 10], [34, -10], [-31, 0], [31, 0]].forEach(([cx, cz], i) =>
   addBox(cx, 0, cz, 2.8, 2.8, 2.8, i % 2 ? 0x8a5a2b : 0x6a7a4a));      // prop crates / shrubs
 
 // --- WATCHTOWER (left flank): weathered-wood high-ground sniper perch with a climbable ladder.
@@ -1672,129 +1667,7 @@ function buildWatchtower(cx, cz) {
   ladders.push({ x: lx, z: cz, bottom: 0, top: platY, cx, cz, outX: 1, outZ: 0 });   // step onto platform (toward cx) at the top; step out (+X) at the bottom
   return { cx, cz, platY };
 }
-const watchtower = buildWatchtower(-69, 0);   // same size — shifted to keep its proportional spot on the (bigger) left flank
-
-/* --- BOOST PADS: glowing kinetic launch pads. Step on one to get flung high upward while
-   keeping your horizontal momentum (arc forward) or straight up if standing still. Per-pad
-   cooldown; fall-damage immunity on launch; aerial control is fully free. --- */
-const BOOST = { launch: 45, radius: 1.6, cooldown: 0.5, grace: 4.0, humR: 10 };
-const boostPads = [];
-function addBoostPad(x, z) {
-  const y = groundHeightAt(x, z, 0.5);
-  const grp = new THREE.Group(); grp.position.set(x, y, z);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(BOOST.radius + 0.25, BOOST.radius + 0.4, 0.18, 18), new THREE.MeshLambertMaterial({ color: 0x10222e, flatShading: true }));
-  base.position.y = 0.09; grp.add(base);
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x32e0ff, transparent: true, opacity: 0.85 });
-  const ring = new THREE.Mesh(new THREE.CylinderGeometry(BOOST.radius, BOOST.radius, 0.06, 18), glowMat); ring.position.y = 0.2; grp.add(ring);
-  const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.9, 4), glowMat); arrow.position.y = 0.7; grp.add(arrow);   // up-pointing chevron/arrow
-  const parts = [];
-  for (let i = 0; i < 9; i++) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 5), new THREE.MeshBasicMaterial({ color: 0x9cf2ff, transparent: true, opacity: 0.9 }));
-    m.position.set((Math.random() - 0.5) * BOOST.radius * 1.5, Math.random() * 3.2, (Math.random() - 0.5) * BOOST.radius * 1.5); grp.add(m); parts.push(m);
-  }
-  scene.add(grp);
-  boostPads.push({ x, z, y, grp, glowMat, arrow, parts, cd: 0, humT: Math.random() * 0.5, t: 0 });
-}
-// 6 pads: a front yard of each house (roof access), the contested centre, both flank lanes, the watchtower base.
-[[0, 47], [0, -47], [0, 0], [-45, 26], [50, 0], [-62, 0]].forEach(([x, z]) => addBoostPad(x, z));
-
-// Boost-pad SFX: a low positional hum when you're near a ready pad + a whoosh/charge on launch.
-function sfxBoostHum(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 110, dur: 0.5, peak: 0.12 }); aTone(ctx, out, t, { type: 'sine', f0: 165, dur: 0.5, peak: 0.05 }); }, pos, 'ambient', 'boosthum', 0.6, 0.5); }
-function sfxBoostLaunch(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.4, peak: 0.6, filter: 'bandpass', freq: 400, freq1: 1800, q: 0.8, verb: 0.4 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 300, f1: 1400, dur: 0.35, peak: 0.3 }); for (let i = 0; i < 4; i++) aTone(ctx, out, t + 0.02 + Math.random() * 0.2, { type: 'square', f0: 2200 + Math.random() * 2500, dur: 0.04, peak: 0.1 }); }, pos, 'weapons', 'boost', 1.0, 0.4); }
-
-// Fling the local player upward off a pad (keeps horizontal momentum; cancels ADS/reload/cigar).
-function boostLaunch(pad) {
-  player.vel.y = BOOST.launch;                       // strong, fresh upward launch (stacking-friendly)
-  player.onGround = false; player.jumps = 1; player.sliding = false; player.diving = false;
-  player.impulseT = 1.2; player.impulseGrace = BOOST.grace;   // un-clamped horizontal + fall-damage immunity
-  aiming = false;
-  const ws = weaponState[currentWeaponKey]; if (ws) ws.reloading = 0;   // launching cancels a reload
-  cigCancel();                                       // ...and a cigar heal
-  pad.cd = BOOST.cooldown;
-  addShake(0.06, 0.3);
-  el('boostFlash').style.opacity = 0.9; setTimeout(() => el('boostFlash').style.opacity = 0, 130);
-  const p = new THREE.Vector3(pad.x, pad.y, pad.z);
-  sfxBoostLaunch(p); sfxLaunched(playerEarPos());
-  if (NET.active) NET.broadcast({ t: 'boost', i: boostPads.indexOf(pad) });
-}
-// Per-frame: pulse glow, rise particles (paused on cooldown), proximity hum, and the launch test.
-function updateBoostPads(dt) {
-  for (let k = 0; k < boostPads.length; k++) {
-    const pad = boostPads[k];
-    if (pad.cd > 0) pad.cd -= dt;
-    pad.t += dt;
-    const ready = pad.cd <= 0;
-    const pulse = ready ? 0.6 + 0.3 * Math.sin(pad.t * 4) : 0.22;   // dim while on cooldown
-    pad.glowMat.opacity = pulse;
-    pad.arrow.position.y = 0.7 + (ready ? Math.sin(pad.t * 4) * 0.08 : 0);
-    for (const m of pad.parts) {                       // rising glow dots (frozen during cooldown)
-      if (ready) { m.position.y += dt * 1.4; if (m.position.y > 3.2) { m.position.y = 0; } }
-      m.material.opacity = ready ? Math.max(0, 0.9 * (1 - m.position.y / 3.2)) : 0.15;
-    }
-    if (!gameState.running || !player.alive) continue;
-    const dx = player.pos.x - pad.x, dz = player.pos.z - pad.z, d = Math.hypot(dx, dz);
-    // Proximity hum when near a ready pad.
-    if (ready && d < BOOST.humR) { pad.humT -= dt; if (pad.humT <= 0) { sfxBoostHum(new THREE.Vector3(pad.x, pad.y + 0.5, pad.z)); pad.humT = 0.55; } }
-    // Step-on launch (player on/near the pad surface).
-    if (ready && d < BOOST.radius + MOVE.radius && player.pos.y <= pad.y + 1.3) boostLaunch(pad);
-  }
-}
-
-/* --- CASTLE (right flank, opposite the watchtower): a stone keep with a battlement walkway,
-   crenellations, two taller corner sniper towers (arrow slits + ladder), an open great hall,
-   and a stone staircase up to the walls. Flat-shaded, washed-out stone; full solid collision. --- */
-function buildCastle(cx, cz) {
-  const stone = 0x8f8d86, stoneDk = 0x5e5d58, wood = 0x6f5733;
-  const W = 16, D = 16, t = 0.9, H = 8, TH = 11.5;                       // footprint, wall thickness/height, tower height
-  const xl = cx - W / 2, xr = cx + W / 2, zl = cz - D / 2, zr = cz + D / 2;
-  addBox(cx, -0.4, cz, W + 1.4, 0.5, D + 1.4, stoneDk);                  // foundation (darker stone)
-  addBox(cx, 0, cz, W - 1.2, 0.12, D - 1.2, 0x6f6a60, { noCollide: true });   // great-hall stone floor (stand on world y=0)
-  // FRONT wall faces map centre (-X side): tall arched doorway (no door) + two high arrow slits.
-  panelWall('z', xl, zl, zr, 0, H, t, stone, [
-    { a0: cz - 1.8, a1: cz + 1.8, y0: 0, y1: 5.2 },
-    { a0: cz - 5.2, a1: cz - 4.2, y0: 5.4, y1: 6.9 }, { a0: cz + 4.2, a1: cz + 5.2, y0: 5.4, y1: 6.9 }
-  ]);
-  addBox(xl, 5.2, cz, t + 0.1, 0.6, 4.2, stoneDk, { noCollide: true });   // arch lintel accent over the doorway
-  panelWall('z', xr, zl, zr, 0, H, t, stone, [{ a0: cz - 4, a1: cz - 3, y0: 3.8, y1: 5.6 }, { a0: cz + 3, a1: cz + 4, y0: 3.8, y1: 5.6 }]);   // back wall slits
-  [zl, zr].forEach(sz => panelWall('x', sz, xl, xr, 0, H, t, stone, [{ a0: cx - 4, a1: cx - 3, y0: 3.8, y1: 5.6 }, { a0: cx + 3, a1: cx + 4, y0: 3.8, y1: 5.6 }]));   // side-wall slits
-  // Battlement walkway: an inner ledge ring at wall-top height (walk it + crouch behind crenellations).
-  const ww = 1.8;
-  addBox(xl + t / 2 + ww / 2, H - 0.2, cz, ww, 0.2, D - 2 * t, wood);
-  addBox(xr - t / 2 - ww / 2, H - 0.2, cz, ww, 0.2, D - 2 * t, wood);
-  addBox(cx, H - 0.2, zl + t / 2 + ww / 2, W - 2 * t, 0.2, ww, wood);
-  addBox(cx, H - 0.2, zr - t / 2 - ww / 2, W - 2 * t, 0.2, ww, wood);
-  // Crenellations (merlons) on top of each wall — alternating raised blocks for cover.
-  function crenellate(axis, fixed, a0, a1) {
-    const step = 1.7, n = Math.floor((a1 - a0) / step);
-    for (let i = 0; i < n; i += 2) { const c0 = a0 + i * step, c1 = Math.min(a1, c0 + step), cm = (c0 + c1) / 2;
-      if (axis === 'z') addBox(fixed, H, cm, t, 1.3, c1 - c0, stone); else addBox(cm, H, fixed, c1 - c0, 1.3, t, stone); }
-  }
-  crenellate('z', xl, zl, zr); crenellate('z', xr, zl, zr); crenellate('x', zl, xl, xr); crenellate('x', zr, xl, xr);
-  // Staircase up to the battlements (against the -X front wall, climbing along z; clear of the towers).
-  addRamp(xl + 2, 0, cz - 2.5, 3, 9, 0, H, 'z', wood);
-  // Two taller corner sniper towers (diagonally opposite): solid stone body + crenellated top +
-  // arrow slits + a ladder up the inner face to the platform.
-  function castleTower(tx, tz, inX, inZ) {
-    const ts = 3.8;
-    addBox(tx, 0, tz, ts, TH, ts, stone);                                // solid body (top at TH = standable platform)
-    // low crenellated parapet around the platform top with arrow-slit gaps
-    crenTower(tx, tz, ts);
-    // ladder on the inner face (toward the keep) from ground to the platform
-    const lx = tx + inX * (ts / 2 + 0.4), lz = tz + inZ * (ts / 2 + 0.4);
-    [[-0.55, 0], [0.55, 0]].forEach(([ox, oz]) => addBox(lx + (inZ ? ox : 0), 0, lz + (inX ? ox : 0), inZ ? 0.12 : 0.12, TH, inZ ? 0.12 : 0.12, stoneDk, { noCollide: true }));
-    for (let y = 0.5; y < TH; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(inZ ? 1.2 : 0.1, 0.1, inZ ? 0.1 : 1.2), flatMat(0x707070)); m.position.set(lx, y, lz); scene.add(m); }
-    ladders.push({ x: lx, z: lz, bottom: 0, top: TH, cx: tx, cz: tz, outX: inX, outZ: inZ });
-  }
-  function crenTower(tx, tz, ts) {
-    const h2 = ts / 2;
-    [[tx - h2, 'z'], [tx + h2, 'z']].forEach(([fx]) => { for (let z = tz - h2; z < tz + h2; z += 1.3) addBox(fx, TH, z + 0.65, 0.3, 1.2, 0.6, 0x8f8d86); });
-    [[tz - h2, 'x'], [tz + h2, 'x']].forEach(([fz]) => { for (let x = tx - h2; x < tx + h2; x += 1.3) addBox(x + 0.65, TH, fz, 0.6, 1.2, 0.3, 0x8f8d86); });
-  }
-  castleTower(xl + 2.6, zr - 2.6, 1, 0);    // front-left tower (just inside the corner) — ladder faces +X into the keep
-  castleTower(xr - 2.6, zl + 2.6, -1, 0);   // back-right tower — ladder faces -X into the keep
-  return { cx, cz, W, D, H };
-}
-const castle = buildCastle(60, 0);
+const watchtower = buildWatchtower(-46, 0);
 
 // --- Perimeter: yellow chevron HAZARD FENCING ---
 const FENCE = ARENA - 1, FH = 5.5;
@@ -1831,7 +1704,7 @@ desert.rotation.x = -Math.PI / 2; desert.position.y = -0.12; scene.add(desert);
 });
 
 // --- Cover positions bots hide behind (vehicles + flank props) ---
-const cratePositions = [[-10, 8], [10, -9], [-48, 20], [48, 16], [-44, 0], [44, 0], [18, -42]];
+const cratePositions = [[-7, 4], [7, -5], [-34, 12], [34, 10], [-31, 0], [31, 0], [12, -28]];
 // (Nuketown has no launch pads — `launchPads` declared above stays empty.)
 
 // --- Ammo boxes: one in each house + on each flank ---
@@ -1843,17 +1716,17 @@ function addAmmoBox(x, z) {
   mesh.position.set(x, y + 0.8, z); mesh.castShadow = true; scene.add(mesh);
   pickups.push({ mesh, pos: new THREE.Vector3(x, y + 0.8, z), active: true, respawn: 0 });
 }
-[[8, 60], [-8, -60], [-54, 0], [50, 0]].forEach(([x, z]) => addAmmoBox(x, z));
+[[8, 41], [-8, -41], [-36, 0], [36, 0]].forEach(([x, z]) => addAmmoBox(x, z));
 
 // --- Spawn points: around each house (interior + yard) + the flanks; NONE in the street ---
-[[-6, 62], [6, 62], [0, 54], [-9, 48], [9, 48],                  // yellow house + yard
- [-6, -62], [6, -62], [0, -54], [-9, -48], [9, -48],             // teal house + yard
- [-54, 30], [-54, -30], [50, 30], [50, -30], [-58, 0], [40, 0]   // flanks (clear of watchtower + castle)
+[[-6, 42], [6, 42], [0, 36], [-9, 32], [9, 32],                  // yellow house + yard
+ [-6, -42], [6, -42], [0, -36], [-9, -32], [9, -32],             // teal house + yard
+ [-36, 20], [-36, -20], [36, 20], [36, -20], [-37, 0], [37, 0]   // flanks
 ].forEach(([sx, sz]) => spawnPoints.push(new THREE.Vector3(sx, groundHeightAt(sx, sz, 0.5), sz)));
 
-// --- Patrol waypoints (bots roam houses, yards, flanks, street, landmarks) ---
-[[0, 58], [0, -58], [-8, 52], [8, -52], [0, 8], [0, -8],
- [-50, 22], [50, -22], [-50, -22], [50, 22], [-18, 0], [18, 0], [0, 32], [0, -32], [-62, 8], [-62, -8], [52, 8], [52, -8]
+// --- Patrol waypoints (bots roam houses, yards, flanks, street) ---
+[[0, 39], [0, -39], [-8, 34], [8, -34], [0, 6], [0, -6],
+ [-35, 14], [35, -14], [-35, -14], [35, 14], [-12, 0], [12, 0], [0, 22], [0, -22], [-41, 7], [-41, -7]
 ].forEach(([px, pz]) => patrolPoints.push(new THREE.Vector3(px, groundHeightAt(px, pz, 0.5), pz)));
 
 /* ============================================================================
@@ -6036,12 +5909,6 @@ const NET = {
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
         break;
       }
-      case 'boost': {                                  // a peer triggered a boost pad — dim it + whoosh (their flight syncs via pmove)
-        const pad = boostPads[msg.i];
-        if (pad) { pad.cd = BOOST.cooldown; sfxBoostLaunch(new THREE.Vector3(pad.x, pad.y, pad.z)); }
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
-        break;
-      }
       case 'skin': { this.onSkinChunk(msg, fromId); break; }   // a peer's painted skin (chunked PNG)
 
       case 'ggset': { ggSetLevel(msg.level); break; }    // host told me my new gun-game level
@@ -6665,7 +6532,6 @@ function animate() {
     updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails
     rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles
     updateImpulses(dt);   // impulse-grenade canisters (bounce + fast activation + kinetic launch)
-    updateBoostPads(dt);  // boost pads: glow/particles + step-on launch
     if (impulseThrowT > 0) impulseThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill)
     // No loot crates in either mode now — both use the shared gun-game arsenal (FFA picks via inventory).

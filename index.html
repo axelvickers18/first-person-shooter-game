@@ -45,6 +45,8 @@
   /* Grenade count (bottom-right, under ammo) */
   #grenades { font-size: 15px; font-weight: bold; color: #c8f56b; margin-top: 4px; }
   #grenades span { color: #fff; }
+  /* Subtle crouch indicator near the ammo counter */
+  #crouchInd { font-size: 13px; font-weight: bold; letter-spacing: 1px; color: #8fd0ff; margin-top: 3px; opacity: 0; transition: opacity .12s; }
 
   /* Floating combat text */
   #floatLayer { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
@@ -113,6 +115,94 @@
   #scopeReticle .sv { left: 50%; top: 0; height: 100%; width: 1px; transform: translateX(-50%); }
   #scopeReticle .sdot { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; background: #ff2b2b; border-radius: 50%; transform: translate(-50%,-50%); }
   #scopeReticle .mildot { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; background: rgba(0,0,0,0.85); border-radius: 50%; transform: translate(-50%,-50%); }
+
+  /* ---- GUN GAME per-weapon ADS sights ---- */
+  #ggSights { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
+  #ggSights .ret { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); display: none; }
+  #ggSights .ret.on { display: block; }
+  /* iron sights: front post + rear notch */
+  #ggSights .iron .post { position:absolute; left:50%; top:calc(50% + 6px); width:4px; height:16px; background:#111; box-shadow:0 0 2px #fff; transform:translateX(-50%); }
+  #ggSights .iron .ear  { position:absolute; top:calc(50% + 8px); width:5px; height:12px; background:#111; box-shadow:0 0 2px #fff; }
+  #ggSights .iron .earL { left:calc(50% - 16px); } #ggSights .iron .earR { left:calc(50% + 11px); }
+  /* red dot */
+  #ggSights .reddot .ring { width:54px; height:54px; border:2px solid rgba(255,40,40,.55); border-radius:50%; }
+  #ggSights .reddot .dot, #ggSights .minidot .dot { position:absolute; left:50%; top:50%; width:7px; height:7px; background:#ff2b2b; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 6px #ff2b2b; }
+  #ggSights .minidot .dot { width:5px; height:5px; }
+  #ggSights .minidot .ring { width:30px; height:30px; border:1px solid rgba(255,255,255,.25); border-radius:50%; }
+  /* holographic: circle + center diamond */
+  #ggSights .holo .ring { width:62px; height:62px; border:2px solid rgba(40,255,120,.5); border-radius:50%; }
+  #ggSights .holo .dia { position:absolute; left:50%; top:50%; width:12px; height:12px; background:rgba(40,255,120,.9); transform:translate(-50%,-50%) rotate(45deg); }
+  /* ACOG 3x: chevron */
+  #ggSights .acog .chev { position:absolute; left:50%; top:50%; width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-bottom:16px solid #ff2b2b; transform:translate(-50%,-30%); }
+  #ggSights .acog .vline { position:absolute; left:50%; top:50%; width:1px; height:120px; background:rgba(0,0,0,.6); transform:translate(-50%,0); }
+  /* bead (pump shotgun): single front bead */
+  #ggSights .bead .b { position:absolute; left:50%; top:50%; width:9px; height:9px; background:#ffcf3a; border:1px solid #000; border-radius:50%; transform:translate(-50%,-50%); }
+  /* crossbow: crosshair + range ticks */
+  #ggSights .xbow .h, #ggSights .xbow .v, #ggSights .arc .v { position:absolute; background:rgba(0,0,0,.7); box-shadow:0 0 2px rgba(255,255,255,.4); }
+  #ggSights .xbow .h { left:50%; top:50%; width:80px; height:2px; transform:translate(-50%,-50%); }
+  #ggSights .xbow .v { left:50%; top:50%; width:2px; height:80px; transform:translate(-50%,-50%); }
+  #ggSights .xbow .tick { position:absolute; left:50%; width:14px; height:2px; background:rgba(0,0,0,.7); transform:translateX(-50%); }
+  /* arc (grenade launcher): ladder of range marks below center */
+  #ggSights .arc .v { left:50%; top:50%; width:2px; height:90px; transform:translate(-50%,0); }
+  #ggSights .arc .rung { position:absolute; left:50%; height:2px; background:rgba(255,200,60,.8); transform:translateX(-50%); }
+  /* akimbo: dual hipfire crosshairs (always on while equipped) */
+  #akimboCH { position:fixed; inset:0; z-index:10; pointer-events:none; display:none; }
+  #akimboCH .ch { position:absolute; top:50%; width:18px; height:18px; transform:translateY(-50%); }
+  #akimboCH .ch .l { position:absolute; background:#fff; box-shadow:0 0 2px #000; }
+  #akimboCH .ch .lh { top:50%; left:0; width:100%; height:2px; transform:translateY(-50%); }
+  #akimboCH .ch .lv { left:50%; top:0; height:100%; width:2px; transform:translateX(-50%); }
+  #akimboCH .chL { left:calc(50% - 130px); } #akimboCH .chR { left:calc(50% + 112px); }
+
+  /* Reload progress bar (HUD, center-bottom) */
+  #reloadWrap { position:fixed; left:50%; top:62%; transform:translateX(-50%); width:220px; z-index:12; display:none; pointer-events:none; text-align:center; }
+  #reloadWrap .lbl { font-size:13px; font-weight:bold; letter-spacing:2px; color:#ffe600; text-shadow:0 2px 0 rgba(0,0,0,.5); margin-bottom:4px; }
+  #reloadBarBg { width:100%; height:10px; background:rgba(0,0,0,0.5); border:2px solid #000; border-radius:5px; }
+  #reloadBar { height:100%; width:0%; background:#ffe600; border-radius:3px; transition:width .05s linear; }
+
+  /* Red-dot "look through the optic" overlay (lighter than a scope — a tube, not full black) */
+  /* Clear-optic reticle layer: NO border/occlusion — a tiny dot (or holo reticle) on a clean view */
+  #redDotSight { position:fixed; inset:0; z-index:11; pointer-events:none; opacity:0; }
+  /* Grain-of-rice red dot: 1px solid core (minimum renderable) with a tight bright bloom
+     (~15% of the previous halo footprint) so it stays visible without an outline. */
+  #redDotDot { position:absolute; left:50%; top:50%; width:1px; height:1px; transform:translate(-50%,-50%);
+    border-radius:50%; background:#ff2b2b; box-shadow: 0 0 1px 0 rgba(255,55,55,1), 0 0 2px 0.5px rgba(255,0,0,0.7); }
+  #redDotDot.mini { width:1px; height:1px; box-shadow: 0 0 1px 0 rgba(255,55,55,1), 0 0 1.5px 0.5px rgba(255,0,0,0.65); }
+  /* Holographic (EOTech-style): tiny tight reticle (~10px total) — thin ring + 1px dot + small chevron */
+  #ggHolo { position:absolute; left:50%; top:50%; width:10px; height:10px; transform:translate(-50%,-50%); }
+  #ggHolo .ring { position:absolute; inset:0; border:1px solid rgba(255,40,40,0.85); border-radius:50%; box-shadow:0 0 3px rgba(255,0,0,0.55); }
+  #ggHolo .cdot { position:absolute; left:50%; top:50%; width:1px; height:1px; transform:translate(-50%,-50%); border-radius:50%; background:#ff2b2b; box-shadow:0 0 1px 0 rgba(255,55,55,1), 0 0 2px 0.5px rgba(255,0,0,0.65); }
+  #ggHolo .chev { position:absolute; left:50%; top:18%; width:0; height:0; transform:translate(-50%,-50%);
+    border-left:2px solid transparent; border-right:2px solid transparent; border-top:3px solid rgba(255,40,40,0.95); }
+
+  /* DMR scope: circular black border (thinner than the heavy sniper) + thin crosshair + mil-dots */
+  #dmrScope { position:fixed; inset:0; z-index:11; pointer-events:none; opacity:0; }
+  #dmrScope .vig { position:absolute; inset:0; background: radial-gradient(circle at 50% 50%,
+      rgba(0,0,0,0) 0, rgba(0,0,0,0) 34vh, rgba(0,0,0,0.5) 35vh, #000 40vh, #000 100%); }
+  #dmrScope .ret { position:absolute; left:50%; top:50%; width:68vh; height:68vh; transform:translate(-50%,-50%); }
+  #dmrScope .ln { position:absolute; background:rgba(0,0,0,0.85); }
+  #dmrScope .lh { top:50%; left:0; width:100%; height:1px; transform:translateY(-50%); }
+  #dmrScope .lv { left:50%; top:0; height:100%; width:1px; transform:translateX(-50%); }
+  #dmrScope .md { position:absolute; left:50%; top:50%; width:3px; height:3px; background:rgba(0,0,0,0.85); border-radius:50%; transform:translate(-50%,-50%); }
+
+  /* Javelin digital targeting scope: green thermal tint + corner brackets + HUD readouts */
+  #javelinScope { position:fixed; inset:0; z-index:11; pointer-events:none; opacity:0; }
+  #javelinScope .frame { position:absolute; inset:0; background:
+      linear-gradient(rgba(8,40,20,0.10), rgba(8,40,20,0.10)),
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,20,8,0.55) 100%);
+      box-shadow: inset 0 0 0 14px rgba(4,18,8,0.9), inset 0 0 60px rgba(0,40,16,0.5); }
+  #javelinScope .scan { position:absolute; inset:14px; background: repeating-linear-gradient(
+      to bottom, rgba(70,255,140,0.05) 0px, rgba(70,255,140,0.05) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px); }
+  #javelinScope .box { position:absolute; left:50%; top:50%; width:120px; height:120px; transform:translate(-50%,-50%); }
+  #javelinScope .br { position:absolute; width:22px; height:22px; border:2px solid #6dff9e; }
+  #javelinScope .tl { top:0; left:0; border-right:0; border-bottom:0; }
+  #javelinScope .tr { top:0; right:0; border-left:0; border-bottom:0; }
+  #javelinScope .bl { bottom:0; left:0; border-right:0; border-top:0; }
+  #javelinScope .brr{ bottom:0; right:0; border-left:0; border-top:0; }
+  #javelinScope .cx { position:absolute; left:50%; top:50%; width:18px; height:2px; background:#6dff9e; transform:translate(-50%,-50%); box-shadow:0 0 4px #2bff88; }
+  #javelinScope .cy { position:absolute; left:50%; top:50%; width:2px; height:18px; background:#6dff9e; transform:translate(-50%,-50%); box-shadow:0 0 4px #2bff88; }
+  #javelinScope .hud { position:absolute; color:#9dffb0; font-family:"Courier New",monospace; font-size:15px; font-weight:bold; letter-spacing:1px; text-shadow:0 0 6px rgba(0,255,90,0.6); }
+  #javelinScope .h-tl { top:6%; left:7%; } #javelinScope .h-tr { top:6%; right:7%; }
+  #javelinScope .h-bl { bottom:6%; left:7%; } #javelinScope .h-br { bottom:6%; right:7%; }
 
   /* Overlays (start + end screens) */
   .overlay {
@@ -240,6 +330,7 @@
     <div id="ammo"><span id="ammoCur">12</span><span class="mag"> / <span id="ammoMag">12</span></span></div>
     <div id="reloading"></div>
     <div id="grenades"><span id="grenadeLabel">GRENADES</span> <span id="grenadeCount">2</span></div>
+    <div id="crouchInd">▼ CROUCHED</div>
   </div>
 </div>
 
@@ -273,6 +364,51 @@
     <div class="mildot" style="left:38%"></div><div class="mildot" style="left:62%"></div>
   </div>
 </div>
+
+<!-- GUN GAME per-weapon ADS sight reticles (one shown at a time, faded by adsBlend) -->
+<div id="ggSights">
+  <div class="ret iron"     data-sight="iron"><div class="post"></div><div class="ear earL"></div><div class="ear earR"></div></div>
+  <div class="ret reddot"   data-sight="reddot"><div class="ring"></div><div class="dot"></div></div>
+  <div class="ret minidot"  data-sight="minidot"><div class="ring"></div><div class="dot"></div></div>
+  <div class="ret holo"     data-sight="holo"><div class="ring"></div><div class="dia"></div></div>
+  <div class="ret acog"     data-sight="acog"><div class="vline"></div><div class="chev"></div></div>
+  <div class="ret bead"     data-sight="bead"><div class="b"></div></div>
+  <div class="ret xbow"     data-sight="crossbow"><div class="h"></div><div class="v"></div><div class="tick" style="top:calc(50% + 26px)"></div><div class="tick" style="top:calc(50% + 44px)"></div></div>
+  <div class="ret arc"      data-sight="arc"><div class="v"></div><div class="rung" style="top:calc(50% + 24px);width:18px"></div><div class="rung" style="top:calc(50% + 44px);width:26px"></div><div class="rung" style="top:calc(50% + 64px);width:34px"></div></div>
+</div>
+<!-- Clear-optic reticle (red dot / mini dot / holographic) — NO border, just a small reticle on a clean view -->
+<div id="redDotSight">
+  <div id="redDotDot"></div>
+  <div id="ggHolo"><div class="ring"></div><div class="cdot"></div><div class="chev"></div></div>
+</div>
+<!-- DMR scope (medium zoom): circular black border + thin crosshair + mil-dots -->
+<div id="dmrScope">
+  <div class="vig"></div>
+  <div class="ret">
+    <div class="ln lh"></div><div class="ln lv"></div>
+    <div class="md" style="top:35%"></div><div class="md" style="top:40%"></div><div class="md" style="top:44%"></div><div class="md" style="top:47%"></div>
+    <div class="md" style="top:53%"></div><div class="md" style="top:56%"></div><div class="md" style="top:60%"></div><div class="md" style="top:65%"></div>
+    <div class="md" style="left:35%"></div><div class="md" style="left:40%"></div><div class="md" style="left:44%"></div><div class="md" style="left:47%"></div>
+    <div class="md" style="left:53%"></div><div class="md" style="left:56%"></div><div class="md" style="left:60%"></div><div class="md" style="left:65%"></div>
+  </div>
+</div>
+<!-- Javelin digital targeting scope (RPG): green thermal HUD + corner brackets -->
+<div id="javelinScope">
+  <div class="frame"></div><div class="scan"></div>
+  <div class="box"><div class="br tl"></div><div class="br tr"></div><div class="br bl"></div><div class="br brr"></div></div>
+  <div class="cx"></div><div class="cy"></div>
+  <div class="hud h-tl">TGT</div>
+  <div class="hud h-tr" id="javRng">RNG: ----m</div>
+  <div class="hud h-bl">MODE: DIR</div>
+  <div class="hud h-br" id="javLock">SCAN</div>
+</div>
+<!-- Akimbo dual hipfire crosshairs (shown while akimbo equipped) -->
+<div id="akimboCH">
+  <div class="ch chL"><div class="l lh"></div><div class="l lv"></div></div>
+  <div class="ch chR"><div class="l lh"></div><div class="l lv"></div></div>
+</div>
+<!-- Reload progress bar -->
+<div id="reloadWrap"><div class="lbl">RELOADING</div><div id="reloadBarBg"><div id="reloadBar"></div></div></div>
 
 <!-- ============================================================
      MAIN MENU — solo / host / join
@@ -517,6 +653,82 @@ let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gung
 let ggLevel  = 1;       // the LOCAL player's current gun-game level (1..20)
 let ggKarambit = false; // is the LOCAL player currently holding the karambit (vs their gun)?
 
+/* --- GUN GAME polish spec (movement / sights / reload feel per weapon) -------
+   Overlaid onto the WEAPONS entries above so the shared weapon code picks it up:
+     speed  = run-speed multiplier while this weapon is equipped
+     sight  = ADS overlay type ('none' = can't ADS); zoom = ADS magnification
+     reload = seconds; rstyle = reload animation/mechanic; model = view silhouette
+   Karambit forces 110% speed regardless of the holstered gun (handled below).      */
+const GG_SPEC = {
+  gg1:  { speed:0.60, sight:'iron',     zoom:1.2, reload:6.0, rstyle:'belt',     model:'lmg' },
+  gg2:  { speed:0.90, sight:'reddot',   zoom:1.5, reload:2.4, rstyle:'mag',      model:'ar' },
+  gg3:  { speed:1.00, sight:'reddot',   zoom:1.5, reload:2.0, rstyle:'mag',      model:'smg' },
+  gg4:  { speed:0.85, sight:'holo',     zoom:1.5, reload:2.6, rstyle:'mag',      model:'battle' },
+  gg5:  { speed:0.92, sight:'reddot',   zoom:1.5, reload:2.3, rstyle:'mag',      model:'carbine' },
+  gg6:  { speed:0.82, sight:'bead',     zoom:1.2, reload:0.6, rstyle:'shell',    model:'pumpsg' },   // 0.6s/shell, 1-by-1
+  gg7:  { speed:0.84, sight:'reddot',   zoom:1.5, reload:2.8, rstyle:'mag',      model:'autosg' },
+  gg8:  { speed:0.85, sight:'scope_dmr',     zoom:2.2, reload:2.5, rstyle:'mag',    model:'dmr' },
+  gg9:  { speed:0.75, sight:'scope_heavy',   zoom:5.5, reload:3.2, rstyle:'bolt',   model:'sniper', boltShot:true },
+  gg10: { speed:0.88, sight:'iron',          zoom:1.2, reload:2.0, rstyle:'single', model:'crossbow' },
+  gg11: { speed:0.78, sight:'arc',           zoom:1.2, reload:3.5, rstyle:'break',  model:'gl' },
+  gg12: { speed:0.65, sight:'scope_javelin', zoom:1.4, reload:4.0, rstyle:'rpg',    model:'rpg' },
+  gg13: { speed:1.00, sight:'iron',     zoom:1.2, reload:1.8, rstyle:'mag',      model:'mpistol' },
+  gg14: { speed:1.00, sight:'iron',     zoom:1.2, reload:1.6, rstyle:'mag',      model:'pistol' },
+  gg15: { speed:0.95, sight:'iron',     zoom:1.2, reload:3.0, rstyle:'cylinder', model:'revolver' },
+  gg16: { speed:0.92, sight:'iron',     zoom:1.2, reload:2.2, rstyle:'mag',      model:'deagle' },
+  gg17: { speed:0.98, sight:'none',     zoom:1.0, reload:2.4, rstyle:'mag',      model:'akimbo',   noads:true, akimbo:true },
+  gg18: { speed:1.00, sight:'minidot',  zoom:1.18, reload:1.8, rstyle:'mag',     model:'tactical' },
+  gg19: { speed:1.05, sight:'cross',    zoom:1.0, reload:2.0, rstyle:'regen',    model:'tknife',   noads:true, pumpFire:false },
+  gg20: { speed:1.10, sight:'none',     zoom:1.0, reload:1.0, rstyle:'none',     model:'knife',    noads:true }
+};
+for (const k in GG_SPEC) {
+  const s = GG_SPEC[k], w = WEAPONS[k];
+  w.reload = s.reload; w.speed = s.speed; w.sight = s.sight; w.adsZoom = s.zoom;
+  w.rstyle = s.rstyle; w.baseModel = s.model;
+  if (s.sway) w.sway = true; if (s.boltShot) w.boltShot = true;
+  if (s.noads) w.noads = true; if (s.akimbo) w.akimbo = true;
+}
+WEAPONS.karambit.speed = 1.10;   // karambit itself is fast (also forced when holstered, below)
+
+/* --- Iron-sight ADS geometry + anchors (CoD-style raise-to-center) ---------
+   Per weapon: sy = local height the rear/front sights sit at (their tops); the
+   ADS anchor `ads` raises/centers the model so those sights land on screen center
+   (ads.y = -sy puts y=sy at the camera centre, ads.x=0 centres, ads.z pulls it in).
+   `rearZ`/`frontZ` place the rear notch (near eye) and front post (near muzzle).   */
+const GG_IRON = {
+  // ads.y = -sy (raises the gun so the sights, placed at local y=sy, land on screen centre);
+  // ads.z ≈ -0.32 - rearZ keeps the rear notch a comfortable ~0.3u in front of the eye.
+  gg1:  { sy:0.15, rearZ:0.06,  frontZ:-0.74, ads:{ x:0, y:-0.15, z:-0.38 } },                 // Heavy LMG
+  gg6:  { sy:0.15, rearZ:0.04,  frontZ:-0.56, ads:{ x:0, y:-0.15, z:-0.36 }, bead:true },      // Pump shotgun (bead)
+  gg10: { sy:0.12, rearZ:0.02,  frontZ:-0.42, ads:{ x:0, y:-0.12, z:-0.40 }, ladder:true },    // Crossbow (arc post)
+  gg11: { sy:0.17, rearZ:0.08,  frontZ:-0.40, ads:{ x:0, y:-0.17, z:-0.40 }, ladder:true },    // Grenade launcher (arc)
+  gg13: { sy:0.13, rearZ:0.08,  frontZ:-0.30, ads:{ x:0, y:-0.13, z:-0.40 } },                 // Machine pistol
+  gg14: { sy:0.13, rearZ:0.12,  frontZ:-0.26, ads:{ x:0, y:-0.13, z:-0.44 } },                 // 9mm pistol
+  gg15: { sy:0.14, rearZ:0.10,  frontZ:-0.28, ads:{ x:0, y:-0.14, z:-0.42 } },                 // Revolver
+  gg16: { sy:0.15, rearZ:0.10,  frontZ:-0.32, ads:{ x:0, y:-0.15, z:-0.42 } }                  // Desert Eagle
+};
+
+/* --- Clear-optic ADS (raise-to-centre, look through a mounted optic, NO black
+   border — just a small reticle floating on a clean view). `style` picks the
+   reticle + optic housing: 'dot' (red dot), 'holo' (EOTech), 'minidot' (RMR).    */
+const GG_REDDOT = {
+  gg2:  { sy:0.18, optZ:0.00,  ads:{ x:0, y:-0.18, z:-0.40 }, style:'dot' },     // Assault Rifle
+  gg3:  { sy:0.16, optZ:0.02,  ads:{ x:0, y:-0.16, z:-0.40 }, style:'dot' },     // SMG
+  gg5:  { sy:0.16, optZ:0.00,  ads:{ x:0, y:-0.16, z:-0.40 }, style:'dot' },     // Carbine
+  gg7:  { sy:0.18, optZ:-0.02, ads:{ x:0, y:-0.18, z:-0.40 }, style:'dot' },     // Semi-auto Shotgun
+  gg4:  { sy:0.17, optZ:0.00,  ads:{ x:0, y:-0.17, z:-0.40 }, style:'holo' },    // Battle Rifle (holographic)
+  gg18: { sy:0.12, optZ:-0.04, ads:{ x:0, y:-0.12, z:-0.42 }, style:'minidot' }  // Tactical Pistol (slide RMR)
+};
+
+/* --- Scope ADS (raise-to-centre, THEN a black-bordered scope overlay fades in).
+   Only these get the circular black border + zoom. `style` picks the overlay +
+   reticle; `fov` is the FOV multiplier; `sway` is the breath-drift amount.        */
+const GG_SCOPE = {
+  gg8:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'dmr',     fov:0.45, sway:0.5 },   // DMR (medium scope)
+  gg9:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'heavy',   fov:0.18, sway:1.0 },   // Bolt sniper (heavy scope)
+  gg12: { ads:{ x:0, y:-0.16, z:-0.42 }, style:'javelin', fov:0.70, sway:0.0 }    // RPG (digital targeting)
+};
+
 const WEAPON_ORDER  = ["pistol", "smg", "shotgun", "sniper"]; // base weapons, keys 1..4
 const SPECIAL_ORDER = ["rocket", "laser", "deagle"];          // specials, keys 5..7 (if owned)
 const ALL_KEYS      = WEAPON_ORDER.concat(SPECIAL_ORDER);
@@ -536,7 +748,17 @@ const MOVE = {
   slideTime: 0.45,
   eyeHeight: 1.6,
   slideEye: 0.9,
-  radius: 0.4
+  radius: 0.4,
+  // --- Crouch / dive tuning ---
+  crouchEye: 0.95,    // camera eye height while crouched (~60% standing)
+  diveEye: 0.5,       // very low (prone-ish) eye height mid-dive
+  crouchSpeed: 0.5,   // move-speed multiplier while crouched (on top of weapon mult)
+  diveTrigger: 0.9,   // dive needs horizontal speed >= this fraction of max
+  diveBoost: 1.5,     // forward burst = current speed × this
+  diveUp: 5.5,        // small upward hop on dive launch
+  diveTime: 0.75,     // nominal dive duration (s) — but you stay diving until you land
+  diveTilt: 0.22,     // forward camera pitch (rad ~12.6°) during a dive
+  diveRecover: 0.25   // post-landing window where you can't dive/slide again
 };
 
 // --- Sniper scope tuning (improvement #1) ---
@@ -875,16 +1097,26 @@ document.addEventListener('pointerlockchange', () => {
 });
 document.addEventListener('mousemove', (e) => {
   if (!pointerLocked) return;
-  // Scope lowers sensitivity (improvement #1): blend toward SCOPE.sensMult
-  const s = SENS * (1 - scopeBlend * (1 - SCOPE.sensMult));
+  // Scope lowers sensitivity (improvement #1); gun-game ADS scales it by zoom (aimSensMult).
+  const s = SENS * (1 - scopeBlend * (1 - SCOPE.sensMult)) * aimSensMult;
   yaw   -= e.movementX * s;
   pitch -= e.movementY * s;
   pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
+  // Red-dot parallax: the dot lags a fast turn by a few px (clamped), then re-centers.
+  rdParX = Math.max(-5, Math.min(5, rdParX - e.movementX * 0.03));
+  rdParY = Math.max(-5, Math.min(5, rdParY - e.movementY * 0.03));
 });
 
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (!gameState.running) return;
+  // C: tap toggles crouch (or dives if moving fast); hold = momentary crouch (handled on keyup).
+  if (e.code === 'KeyC' && !e.repeat) {
+    const wasCrouch = player.crouching;
+    player.cHeld = 0; crouchKey();
+    player.cTapCrouched = (!wasCrouch && player.crouching && !player.diving);   // crouched FROM standing this press
+  }
+  if (player.diving) return;                                            // no reload / swap / grenade / jump mid-dive
   if (e.code === 'KeyR') reload();
   if (e.code.startsWith('Digit')) {
     if (gameMode === 'gungame') {
@@ -895,31 +1127,44 @@ document.addEventListener('keydown', (e) => {
       else if (n >= 5 && n <= 7) switchWeapon(SPECIAL_ORDER[n - 5]);    // specials (if owned)
     }
   }
-  if (e.code === 'ShiftLeft') startSlide();
+  // SHIFT slides — unless you're scoped through the heavy sniper, where it holds breath instead.
+  if (e.code === 'ShiftLeft' && !ggHeavyScopedNow()) startSlide();
   if (e.code === 'KeyG' && gameMode !== 'gungame') throwGrenade();      // frag grenade (disabled in gun game)
 });
-document.addEventListener('keyup', (e) => { keys[e.code] = false; });
+document.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+  // Hold-to-crouch: if C was held (not a quick tap) after crouching from standing, stand on release.
+  if (e.code === 'KeyC' && player.cTapCrouched && player.cHeld > 0.25 && player.crouching && !player.diving) {
+    player.crouching = false; player.cTapCrouched = false;
+  }
+});
 
 // Clear all input when focus is lost / pointer lock drops, so keys never get
 // "stuck" after alt-tab, window blur, or pressing ESC. (WASD fix robustness.)
-function clearInput() { for (const k in keys) keys[k] = false; firing = false; aiming = false; }
+function clearInput() { for (const k in keys) keys[k] = false; firing = false; firingL = false; aiming = false; }
 window.addEventListener('blur', clearInput);
 
-let firing = false;
+let firing = false, firingL = false;   // firing = LMB; firingL = RMB (akimbo left pistol only)
+function akimboEquipped() { return gameMode === 'gungame' && WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo; }
 document.addEventListener('mousedown', (e) => {
   if (!gameState.running || !pointerLocked) return;
-  if (e.button === 0) { firing = true; tryShoot(); }
-  if (e.button === 2) { aiming = true; }
+  if (e.button === 0) { firing = true; tryShoot(akimboEquipped() ? 'R' : undefined); }
+  // Right-click: akimbo fires the LEFT pistol; karambit does a backhand slash; else ADS.
+  if (e.button === 2) {
+    if (akimboEquipped()) { firingL = true; tryShoot('L'); }
+    else if (currentWeaponKey === KARAMBIT_KEY) meleeAttack(-1);
+    else aiming = true;
+  }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) firing = false;
-  if (e.button === 2) aiming = false;
+  if (e.button === 2) { firingL = false; aiming = false; }
 });
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // Mouse-wheel weapon switch
 document.addEventListener('wheel', (e) => {
-  if (!gameState.running) return;
+  if (!gameState.running || player.diving) return;                      // no weapon swap mid-dive
   if (gameMode === 'gungame') { ggSetKarambit(!ggKarambit); return; }   // only two slots: gun <-> karambit
   const order = cycleKeys();                       // base weapons + owned specials
   let idx = order.indexOf(currentWeaponKey); if (idx < 0) idx = 0;
@@ -951,30 +1196,212 @@ const player = {
   lastAttackerHead: false,
   lastAttackerName: null,
   lastAttackerWeapon: null,              // gun-game: weapon they killed me with
-  lastAttackerMelee: false               // gun-game: was it a knife (melee) kill?
+  lastAttackerMelee: false,              // gun-game: was it a knife (melee) kill?
+  // --- Crouch / dive (all modes) ---
+  crouching: false,                      // toggle state
+  crouchBlend: 0,                        // 0 standing .. 1 fully crouched/prone (drives hitbox + net)
+  eye: 1.6,                              // smoothed camera eye height
+  diving: false, diveAir: false,         // dive in progress / has left the ground
+  diveTime: 0, diveRecover: 0,           // dive duration + post-landing recovery
+  diveTilt: 0,                           // smoothed forward camera tilt during a dive
+  cHeld: 0, cTapCrouched: false          // C-key hold tracking (tap = toggle, hold = momentary)
 };
 let aiming = false;
 
 // Scope / juice state (improvements #1 and #2)
-let scopeBlend = 0;     // 0..1 how scoped we currently are (sniper only, smoothed)
+let scopeBlend = 0;     // 0..1 how scoped we currently are (FFA sniper only, smoothed)
 let scopePunch = 0;     // brief un-scope timer after firing while scoped
 let shakeTime = 0;      // remaining screen-shake time
 let shakeMag = 0;       // screen-shake magnitude
 
-// True only when we should be visually scoped right now.
+// GUN GAME aim-down-sights state (per-weapon zoom + sight overlays).
+let adsBlend = 0;       // 0..1 how aimed-in we are with the current gun-game weapon
+let aimSensMult = 1;    // mouse-sensitivity multiplier from ADS zoom
+let ggSwayClock = 0;    // breath-sway phase for the 8x sniper scope
+let rdParX = 0, rdParY = 0;   // red-dot reticle parallax offset (px), lags fast turns then re-centers
+const GG_BREATH_MAX = 3;      // seconds of steady "held breath" available on the heavy sniper scope
+let ggBreath = GG_BREATH_MAX, ggBreathHeld = false;
+// Karambit viewmodel animation: equip flourish, swing arc, idle bob.
+let karEquipT = 0, karSwingT = 0, karSwingDir = 1, karBob = 0;
+// Per-shot cycle animation (bolt/pump) state.
+let ggCycleT = 0, ggCycleDur = 0, ggCycleStyle = '';
+function ggStartCycle(style, dur) { ggCycleStyle = style; ggCycleDur = dur; ggCycleT = dur; }
+// Viewmodel pose during a reload (drives a distinct animation per reload style).
+function applyReloadPose(style, p) {
+  const g = gunMesh; if (!g) return;
+  const s = Math.sin(Math.max(0, Math.min(1, p)) * Math.PI);   // 0 -> 1 -> 0 hump
+  g.position.set(0.32, -0.28, -0.6); g.rotation.x = 0; g.rotation.z = 0;
+  switch (style) {
+    case 'belt':     g.position.y = -0.28 - 0.42 * s; g.rotation.z = 0.45 * Math.sin(p * Math.PI * 3); g.rotation.x = 0.3 * s; break; // open cover, feed belt
+    case 'bolt':     g.position.z = -0.6 + 0.22 * Math.sin(p * Math.PI * 2); g.rotation.z = 0.18 * s; break;                          // work the bolt
+    case 'shell':    g.position.z = -0.6 + 0.16 * s; g.position.y = -0.28 - 0.10 * s; break;                                          // thumb a shell in
+    case 'single':   g.position.z = -0.6 + 0.26 * s; g.position.y = -0.28 - 0.16 * s; g.rotation.x = 0.25 * s; break;                 // draw + nock a bolt
+    case 'break':    g.rotation.x = 0.95 * s; g.position.y = -0.28 - 0.12 * s; break;                                                 // break-action open
+    case 'rpg':      g.position.y = -0.28 - 0.40 * s; g.rotation.z = -0.30 * s; break;                                                // shoulder a new rocket
+    case 'cylinder': g.rotation.z = -0.70 * s; g.position.x = 0.32 - 0.12 * s; break;                                                 // swing the cylinder out
+    case 'regen':    g.position.y = -0.28 - 0.05 * s; break;                                                                          // knives regen (subtle)
+    default:         g.position.y = -0.28 - 0.32 * s; g.rotation.x = 0.40 * s; break;                                                 // 'mag' swap dip
+  }
+}
+function applyCyclePose(style, p) {
+  const g = gunMesh; if (!g) return;
+  const s = Math.sin(Math.max(0, Math.min(1, p)) * Math.PI);
+  if (style === 'bolt') { g.position.z = -0.6 + 0.12 * s; g.rotation.z = 0.25 * s; }
+  else { g.position.z = -0.6 + 0.16 * s; }    // pump
+}
+
+// True only when we should be visually scoped right now (FFA sniper).
 function isScoping() {
   return aiming && currentWeaponKey === 'sniper' && scopePunch <= 0 && player.alive;
+}
+// GUN GAME: the equipped weapon's ADS config, or null if it can't aim down sights.
+// EVERY sight raises the gun to centre (~150ms). `kind` selects the reticle/overlay:
+//   'iron'                = model sights, no overlay; 'dot'/'minidot' = tiny dot, clean view;
+//   'holo'                = EOTech reticle, clean view; 'scope' (+style) = black-bordered scope.
+// `fov` is the FOV multiplier while sighted; `sway` is breath drift (scopes only).
+function ggAdsInfo() {
+  if (gameMode !== 'gungame') return null;
+  const k = currentWeaponKey, w = WEAPONS[k];
+  if (!w || w.noads || w.melee) return null;
+  if (GG_IRON[k])   return { key: k, kind: 'iron',                 anchor: GG_IRON[k].ads,   fov: 0.85, sway: 0 };
+  if (GG_REDDOT[k]) return { key: k, kind: GG_REDDOT[k].style,     anchor: GG_REDDOT[k].ads, fov: 0.85, sway: 0 };
+  if (GG_SCOPE[k])  return { key: k, kind: 'scope', style: GG_SCOPE[k].style, anchor: GG_SCOPE[k].ads, fov: GG_SCOPE[k].fov, sway: GG_SCOPE[k].sway || 0 };
+  return null;
+}
+// The ADS anchor for any sight weapon (iron / clear optic / scope), or null.
+function ggAnchorFor(key) {
+  if (GG_IRON[key])   return GG_IRON[key].ads;
+  if (GG_REDDOT[key]) return GG_REDDOT[key].ads;
+  if (GG_SCOPE[key])  return GG_SCOPE[key].ads;
+  return null;
+}
+// True while actually scoped through the heavy sniper (so SHIFT holds breath, not slide).
+function ggHeavyScopedNow() {
+  const i = ggAdsInfo();
+  return !!(i && i.kind === 'scope' && i.style === 'heavy' && aiming && player.alive);
+}
+// Javelin digital scope HUD: range = distance to whatever the centre is pointing at.
+function updateJavelinHud() {
+  const origin = camera.getWorldPosition(new THREE.Vector3());
+  const dir = camera.getWorldDirection(new THREE.Vector3());
+  const ray = new THREE.Raycaster(origin, dir, 0, 600);
+  const hits = ray.intersectObjects(colliders.concat(botMeshes()), false);
+  const rng = hits.length ? hits[0].distance : null;
+  const locked = !!(hits.length && hits[0].object.userData && hits[0].object.userData.bot);
+  el('javRng').textContent = 'RNG: ' + (rng != null ? String(Math.round(rng * 2)).padStart(4, '0') + 'm' : '----m');
+  el('javLock').textContent = locked ? 'LOCK' : 'SCAN';
+  el('javLock').style.color = locked ? '#ff5b5b' : '#9dffb0';
+}
+const smoothstep = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };   // ease-in-out
+// Lerp the held weapon between its hip-fire rest and its per-weapon ADS anchor by `e` (0..1).
+function applyRaiseAdsPose(key, e) {
+  const a = ggAnchorFor(key); const g = gunMesh; if (!a || !g) return;
+  g.position.x = 0.32 + (a.x  - 0.32 ) * e;
+  g.position.y = -0.28 + (a.y - (-0.28)) * e;
+  g.position.z = -0.6  + (a.z - (-0.6 )) * e;
+  g.rotation.x = (a.rx || 0) * e;
+  g.rotation.y = 0.04 + ((a.ry || 0) - 0.04) * e;
+  g.rotation.z = (a.rz || 0) * e;
+}
+// Show the right sight reticle / scope overlay / reload bar for the current gun-game weapon.
+// (Called every frame AFTER the FFA scope-overlay block so it can override it.)
+function updateSights() {
+  const akimbo = el('akimboCH'), rl = el('reloadWrap'), legacy = el('ggSights');
+  const clear = el('redDotSight'), dmr = el('dmrScope'), jav = el('javelinScope'), scope = el('scopeOverlay');
+  akimbo.style.display = 'none';
+  legacy.style.opacity = 0; legacy.querySelectorAll('.ret').forEach(r => r.classList.remove('on'));
+  if (gameMode !== 'gungame') { clear.style.opacity = 0; dmr.style.opacity = 0; jav.style.opacity = 0; rl.style.display = 'none'; return; }
+
+  const w = WEAPONS[currentWeaponKey], ws = weaponState[currentWeaponKey], info = ggAdsInfo();
+  const b = adsBlend, kind = info ? info.kind : null;
+  const isDot = kind === 'dot' || kind === 'minidot', isHolo = kind === 'holo', isScope = kind === 'scope';
+  const sStyle = isScope ? info.style : null;
+
+  // Clear reticle (red dot / mini dot / holo) — floats on an unobstructed view, NO border.
+  clear.style.opacity = (isDot || isHolo) ? b : 0;
+  el('redDotDot').style.display = isDot ? 'block' : 'none';
+  el('redDotDot').classList.toggle('mini', kind === 'minidot');
+  el('ggHolo').style.display = isHolo ? 'block' : 'none';
+  if (isDot && b > 0.01) {                                // tiny parallax lag on the dot
+    rdParX *= 0.82; rdParY *= 0.82;
+    el('redDotDot').style.transform = `translate(calc(-50% + ${rdParX.toFixed(1)}px), calc(-50% + ${rdParY.toFixed(1)}px))`;
+  } else { rdParX = rdParY = 0; }
+
+  // Scopes — circular/rect black-bordered overlays (the only sights that occlude the view).
+  dmr.style.opacity = (sStyle === 'dmr') ? b : 0;
+  jav.style.opacity = (sStyle === 'javelin') ? b : 0;
+  if (sStyle === 'heavy') scope.style.opacity = b;        // reuse the big sniper scope overlay
+  if (gunMesh) gunMesh.visible = isScope ? (b < 0.6) : true;   // gun hides once you're looking down the scope
+  el('hud').style.opacity = isScope ? (1 - 0.35 * b) : 1;
+  if (sStyle === 'javelin' && b > 0.05) updateJavelinHud();
+
+  // Crosshair: scopes hide it; iron/dot/holo fade it out as you ADS; melee hides it; else show.
+  let cross = 1;
+  if (w && w.melee) cross = 0;
+  else if (isScope) cross = 0;
+  else if (info) cross = 1 - b;
+  el('crosshair').style.opacity = cross;
+
+  // Reload progress bar
+  if (ws && ws.reloading > 0 && w && w.rstyle !== 'none') {
+    rl.style.display = 'block';
+    const tot = ws.reloadTotal || w.reload || 1;
+    el('reloadBar').style.width = Math.max(0, Math.min(1, 1 - ws.reloading / tot)) * 100 + '%';
+  } else rl.style.display = 'none';
 }
 // Kick off a short screen shake (used by the launch pad).
 function addShake(mag, time) { shakeMag = Math.max(shakeMag, mag); shakeTime = Math.max(shakeTime, time); }
 
 function startSlide() {
-  if (!player.onGround || player.sliding) return;
+  if (!player.onGround || player.sliding || player.crouching || player.diving) return;
   // boost forward in look direction, lower the camera
   const fwd = horizontalForward();
   player.vel.x = fwd.x * MOVE.slideSpeed;
   player.vel.z = fwd.z * MOVE.slideSpeed;
   player.sliding = true; player.slideTimer = MOVE.slideTime;
+}
+
+/* ============================================================================
+   5b. CROUCH + DIVE (all modes)
+   ============================================================================ */
+// Is there room to stand up? (no solid in the band between crouch-head and stand-head)
+function canStand() {
+  const r = MOVE.radius, headStand = player.pos.y + MOVE.eyeHeight + 0.15, headCrouch = player.pos.y + MOVE.crouchEye;
+  for (const s of solids) {
+    if (s.min.y < headStand && s.max.y > headCrouch &&
+        player.pos.x > s.min.x - r && player.pos.x < s.max.x + r &&
+        player.pos.z > s.min.z - r && player.pos.z < s.max.z + r) return false;
+  }
+  return true;
+}
+// C pressed: dive if moving fast enough, otherwise toggle crouch.
+function crouchKey() {
+  if (!player.alive || player.diving) return;
+  const spd = Math.hypot(player.vel.x, player.vel.z);
+  const runNow = MOVE.groundSpeed * Math.max(0.4, ggSpeedMult());   // weapon's max WALK/RUN speed
+  if (player.onGround && player.diveRecover <= 0 && spd >= MOVE.diveTrigger * runNow) {
+    startDive();
+  } else {
+    player.crouching = !player.crouching;        // toggle (canStand re-checked each frame while standing)
+    player.cTapCrouched = player.crouching;
+  }
+}
+function startDive() {
+  const spd = Math.hypot(player.vel.x, player.vel.z);
+  let dx = player.vel.x, dz = player.vel.z;
+  if (spd < 0.01) { const f = horizontalForward(); dx = f.x; dz = f.z; }
+  else { dx /= spd; dz /= spd; }
+  const boost = Math.max(spd * MOVE.diveBoost, MOVE.maxSpeed * 1.1);
+  player.vel.x = dx * boost; player.vel.z = dz * boost; player.vel.y = MOVE.diveUp;
+  player.diving = true; player.diveAir = false; player.diveTime = MOVE.diveTime;
+  player.onGround = false; player.sliding = false; player.crouching = false;
+  aiming = false;                                  // a dive forces you out of ADS (re-ADS after landing)
+}
+function endDive() {
+  player.diving = false; player.diveAir = false; player.diveTime = 0;
+  player.crouching = true;                          // land crouched
+  player.diveRecover = MOVE.diveRecover;            // brief no-dive/no-slide window
+  player.vel.x *= 0.3; player.vel.z *= 0.3;         // shed most forward momentum on landing
 }
 
 // Forward/right vectors on the XZ plane, derived straight from `yaw` so that
@@ -1000,11 +1427,40 @@ function accelerate(wishDir, wishSpeed, accel, dt) {
   player.vel.z += wishDir.z * accelSpeed;
 }
 
+// GUN GAME: per-weapon run-speed multiplier while equipped (karambit = 110%).
+function ggSpeedMult() {
+  if (gameMode !== 'gungame') return 1;
+  const w = WEAPONS[currentWeaponKey];
+  return (w && w.speed) ? w.speed : 1;     // karambit.speed is 1.10 → 110% while holstered
+}
+
 function updateMovement(dt) {
   if (!player.alive) return;
 
-  // Movement is slowed while scoped (improvement #1)
-  const moveScale = 1 - scopeBlend * (1 - SCOPE.moveMult);
+  // --- GUN GAME aim-down-sights state (computed up-front so move speed can use it) ---
+  // Every gun-game sight raises the weapon to centre; reloading interrupts ADS. Move 70%
+  // and sensitivity 60% while ADS'd (any sight). Scopes additionally zoom + sway.
+  const ggAds = ggAdsInfo();
+  const ggWs = weaponState[currentWeaponKey];
+  const reloadingNow = !!(ggWs && ggWs.reloading > 0);
+  const ggAdsActive = !!(ggAds && aiming && player.alive && !reloadingNow);
+  const adsScopedHeavy = !!(ggAdsActive && ggAds.kind === 'scope' && ggAds.style === 'heavy');
+
+  // --- Crouch / dive bookkeeping ---
+  if (player.diveRecover > 0) player.diveRecover -= dt;
+  if (keys['KeyC']) player.cHeld += dt;
+  if (player.diving) player.diveTime -= dt;
+  // Can't stay standing under a low ceiling — stay crouched until there's room.
+  if (!player.crouching && !player.diving && player.crouchBlend > 0.05 && !canStand()) player.crouching = true;
+  // Smooth crouch amount (drives eye height, body height, and the networked hitbox). ~150ms.
+  const crouchTarget = (player.crouching || player.diving) ? 1 : 0;
+  player.crouchBlend += (crouchTarget - player.crouchBlend) * Math.min(1, dt * 14);
+  if (player.crouchBlend < 0.001) player.crouchBlend = 0;
+  const crouchedNow = player.crouching && !player.diving;
+
+  // Movement: scoped slow (FFA) × per-weapon mult × 70% ADS × 50% crouched (not while diving).
+  const moveScale = (1 - scopeBlend * (1 - SCOPE.moveMult)) * ggSpeedMult()
+                  * (ggAdsActive ? 0.70 : 1) * (crouchedNow ? MOVE.crouchSpeed : 1);
   const effGroundSpeed = MOVE.groundSpeed * moveScale;
   const effMaxSpeed = MOVE.maxSpeed * moveScale;
   if (player.launchCd > 0) player.launchCd -= dt;
@@ -1029,7 +1485,7 @@ function updateMovement(dt) {
   // Jump (with double jump). Bunny hop: jumping skips this frame's friction.
   let jumpedThisFrame = false;
   const wantJump = keys['Space'];
-  if (wantJump && !player.jumpHeld) {
+  if (wantJump && !player.jumpHeld && !player.crouching && !player.diving) {   // jump disabled while crouched / diving
     if (player.onGround) { player.vel.y = MOVE.jumpVel; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; }
     else if (player.jumps < 2) { player.vel.y = MOVE.jumpVel; player.jumps++; jumpedThisFrame = true; }
   }
@@ -1050,9 +1506,9 @@ function updateMovement(dt) {
     accelerate(wishDir, MOVE.airSpeed, MOVE.airAccel, dt);
   }
 
-  // Hard speed cap so bunny hopping never spirals out of control
+  // Hard speed cap so bunny hopping never spirals out of control (dive burst is exempt).
   const hs = Math.hypot(player.vel.x, player.vel.z);
-  if (hs > effMaxSpeed && !player.launchCd) {       // don't clamp away launch-pad horizontal carry
+  if (hs > effMaxSpeed && !player.launchCd && !player.diving) {   // don't clamp launch-pad / dive momentum
     const s = effMaxSpeed / hs;
     player.vel.x *= s; player.vel.z *= s;
   }
@@ -1068,8 +1524,14 @@ function updateMovement(dt) {
   player.pos.x = Math.max(-lim, Math.min(lim, player.pos.x));
   player.pos.z = Math.max(-lim, Math.min(lim, player.pos.z));
 
-  // Horizontal collisions (walls/crates)
-  resolveHorizontal(player.pos, MOVE.eyeHeight);
+  // Horizontal collisions (walls/crates). Crouching/diving uses a shorter body so you
+  // can move under low cover. A dive that slams a wall cancels into a crouch.
+  const ix = player.pos.x, iz = player.pos.z;
+  const bodyH = player.diving ? MOVE.diveEye : (MOVE.eyeHeight - (MOVE.eyeHeight - MOVE.crouchEye) * player.crouchBlend);
+  resolveHorizontal(player.pos, bodyH);
+  if (player.diving && Math.hypot(player.pos.x - ix, player.pos.z - iz) > 0.2) {
+    player.vel.x = 0; player.vel.z = 0; endDive();    // dove into a wall -> drop crouched
+  }
 
   // Ground / standing
   const gh = groundHeightAt(player.pos.x, player.pos.z, player.pos.y);
@@ -1080,6 +1542,11 @@ function updateMovement(dt) {
     player.jumps = 0;
   } else {
     player.onGround = false;
+  }
+  // Dive: mark airborne once we leave the ground, then land (crouched) when we touch down again.
+  if (player.diving) {
+    if (!player.onGround) player.diveAir = true;
+    else if (player.diveAir || player.diveTime < -0.05) endDive();
   }
 
   // Launch pads (improvement #2): standing on a pad flings you straight up.
@@ -1102,14 +1569,29 @@ function updateMovement(dt) {
     }
   }
 
-  // Place camera at eye height (lower while sliding)
-  const eye = player.sliding ? MOVE.slideEye : MOVE.eyeHeight;
-  camera.position.set(player.pos.x, player.pos.y + eye, player.pos.z);
+  // Place camera at a smoothly-blended eye height (dive < slide < crouch < stand). ~150ms.
+  const eyeTarget = player.diving ? MOVE.diveEye
+                  : player.sliding ? MOVE.slideEye
+                  : player.crouching ? MOVE.crouchEye : MOVE.eyeHeight;
+  player.eye += (eyeTarget - player.eye) * Math.min(1, dt * 14);
+  camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
+  // Forward camera tilt during a dive (eases back to neutral on landing).
+  player.diveTilt += ((player.diving ? -MOVE.diveTilt : 0) - player.diveTilt) * Math.min(1, dt * 12);
 
-  // Blend the scope amount toward its target (smooth scope in/out)
+  // Blend the FFA sniper scope amount toward its target (smooth scope in/out)
   const scopeTarget = isScoping() ? 1 : 0;
   scopeBlend += (scopeTarget - scopeBlend) * Math.min(1, dt * SCOPE.blendSpeed);
   if (scopeBlend < 0.001) scopeBlend = 0;
+
+  // Blend the gun-game ADS amount (drives model raise, FOV, overlays). ~150ms in/out.
+  adsBlend += ((ggAdsActive ? 1 : 0) - adsBlend) * Math.min(1, dt * 13);
+  if (adsBlend < 0.001) adsBlend = 0;
+  // Sensitivity: all gun-game ADS snaps to 60% (instant on, instant off).
+  aimSensMult = ggAdsActive ? 0.60 : 1;
+
+  // Hold-breath (heavy sniper): SHIFT steadies the scope for ~3s, then must recover ~3s.
+  if (adsScopedHeavy && keys['ShiftLeft'] && ggBreath > 0) { ggBreathHeld = true; ggBreath = Math.max(0, ggBreath - dt); }
+  else { ggBreathHeld = false; ggBreath = Math.min(GG_BREATH_MAX, ggBreath + dt); }
 
   // Apply look + recoil (+ screen shake)
   recoilPitch += (0 - recoilPitch) * Math.min(1, dt * 10);   // recover recoil smoothly
@@ -1121,14 +1603,28 @@ function updateMovement(dt) {
   }
   camera.rotation.order = 'YXZ';
   camera.rotation.y = yaw + recoilYaw + shakeX;
-  camera.rotation.x = pitch + recoilPitch + shakeY;
+  camera.rotation.x = pitch + recoilPitch + shakeY + player.diveTilt;   // dive tips the view forward
+  // Breath sway while scoped (DMR subtle, heavy sniper pronounced; suppressed while holding breath).
+  if (ggAdsActive && ggAds.sway > 0 && adsBlend > 0.01 && !(adsScopedHeavy && ggBreathHeld)) {
+    ggSwayClock += dt;
+    const sw = ggAds.sway * adsBlend;
+    camera.rotation.y += Math.sin(ggSwayClock * 0.8) * 0.006 * sw;
+    camera.rotation.x += Math.sin(ggSwayClock * 1.5 + 1) * 0.004 * sw;
+  }
 
-  // Smooth FOV: scoped sniper zooms hard; otherwise hipfire / generic ADS
+  // Smooth FOV: FFA scoped sniper zooms hard; gun game uses each sight's own FOV multiplier.
   let targetFov = DEFAULT_FOV;
-  if (scopeTarget) targetFov = SCOPE.fov;
+  if (gameMode === 'gungame') {
+    if (ggAdsActive) targetFov = DEFAULT_FOV * ggAds.fov;
+  } else if (scopeTarget) targetFov = SCOPE.fov;
   else if (aiming) targetFov = ADS_FOV;
   camera.fov += (targetFov - camera.fov) * Math.min(1, dt * SCOPE.blendSpeed);
   camera.updateProjectionMatrix();
+
+  // Subtle HUD crouch/dive indicator
+  const ci = el('crouchInd');
+  ci.style.opacity = (player.crouching || player.diving) ? 1 : 0;
+  ci.textContent = player.diving ? '▼ DIVING' : '▼ CROUCHED';
 }
 
 /* ============================================================================
@@ -1155,6 +1651,60 @@ const viewModel = new THREE.Group();
 camera.add(viewModel);
 scene.add(camera);
 let gunMesh = null, gunMuzzle = null, gunFlash = null;
+
+// Add simple but readable iron sights to a weapon group: a rear notch (two uprights
+// with a gap) near the eye and a smaller front post/bead near the muzzle so it nests
+// inside the notch when sighted. `cfg` comes from GG_IRON.
+function addIronSights(g, cfg) {
+  const metal = flatMat(0x0a0a0a), topY = cfg.sy, rh = 0.10;
+  [-0.036, 0.036].forEach(x => {                           // rear notch uprights (gap ~0.05 between them)
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.022, rh, 0.03), metal);
+    m.position.set(x, topY - rh / 2, cfg.rearZ); g.add(m);
+  });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.022, 0.04), metal);
+  base.position.set(0, topY - rh, cfg.rearZ); g.add(base);  // rear sight base
+  if (cfg.bead) {                                           // shotgun bead: single small front dot
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), flatMat(0xffcf3a));
+    b.position.set(0, topY - 0.01, cfg.frontZ); g.add(b);
+  } else {                                                  // front post (thinner than the rear gap) + hood ears
+    const fh = 0.10;
+    const f = new THREE.Mesh(new THREE.BoxGeometry(0.014, fh, 0.022), metal);
+    f.position.set(0, topY - fh / 2, cfg.frontZ); g.add(f);
+    [-0.032, 0.032].forEach(x => {
+      const e = new THREE.Mesh(new THREE.BoxGeometry(0.013, fh * 0.85, 0.02), metal);
+      e.position.set(x, topY - fh * 0.45, cfg.frontZ); g.add(e);
+    });
+  }
+  if (cfg.ladder) {                                         // grenade-launcher arc ladder above the rear
+    for (let i = 0; i < 3; i++) {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(0.06 - 0.012 * i, 0.012, 0.02), metal);
+      t.position.set(0, topY + 0.05 + i * 0.045, cfg.rearZ - 0.02); g.add(t);
+    }
+  }
+}
+
+// Mount an optic ON the weapon (visible even at hipfire). Shape depends on cfg.style:
+//   'dot'    = square red-dot housing,  'holo' = wide flat EOTech housing,
+//   'minidot'= tiny slide-mounted RMR.  The crisp aiming reticle is the DOM overlay;
+// this is just the physical attachment. `cfg` from GG_REDDOT.
+function addRedDotOptic(g, cfg) {
+  const dark = flatMat(0x0c0c0c), y = cfg.sy, z = cfg.optZ || 0, style = cfg.style || 'dot';
+  // housing dimensions per style: [width, height, depth, frame thickness, glass tint]
+  let gw = 0.14, gh = 0.14, gd = 0.11, t = 0.022, riserW = 0.10, riserD = 0.16, glassTint = 0x0c241a;
+  if (style === 'holo')    { gw = 0.22; gh = 0.13; gd = 0.16; t = 0.020; riserW = 0.18; riserD = 0.18; }   // wide + flat
+  if (style === 'minidot') { gw = 0.075; gh = 0.085; gd = 0.07; t = 0.014; riserW = 0.06; riserD = 0.09; } // tiny RMR
+  const halfW = gw / 2, halfH = gh / 2;
+  const base = new THREE.Mesh(new THREE.BoxGeometry(riserW, 0.06, riserD), dark);   // mount riser
+  base.position.set(0, y - halfH - 0.02, z); g.add(base);
+  const edge = (w, h, px, py) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, gd), dark); m.position.set(px, y + py, z); g.add(m); };
+  edge(gw, t, 0, halfH); edge(gw, t, 0, -halfH); edge(t, gh, -halfW, 0); edge(t, gh, halfW, 0);   // housing frame
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(gw - 2 * t, gh - 2 * t, 0.012),
+    new THREE.MeshBasicMaterial({ color: glassTint, transparent: true, opacity: 0.30 }));
+  glass.position.set(0, y, z); g.add(glass);                                       // faintly tinted glass
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(style === 'minidot' ? 0.007 : 0.010, 8, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff2222 }));
+  dot.position.set(0, y, z + 0.006); g.add(dot);                                   // faint on-glass dot
+}
 
 function buildGunModel(key) {
   if (gunMesh) viewModel.remove(gunMesh);
@@ -1200,24 +1750,138 @@ function buildGunModel(key) {
     body(0,-0.13,0.14,0.08,0.20,0.12,0x1a1a22); // grip
     muzzleZ = -0.66;
   } else if (model === 'deagle') {
-    body(0,0,-0.06,0.12,0.13,0.46,w.color, true); // shiny slide
-    body(0,-0.15,0.11,0.10,0.22,0.13,0x3a2e00);    // grip
+    body(0,0,-0.06,0.16,0.15,0.52,w.color, true); // OVERSIZED slide (hand cannon)
+    body(0,-0.16,0.12,0.11,0.24,0.14,0x3a2e00);    // chunky grip
+    muzzleZ = -0.34;
+  } else if (model === 'lmg') {
+    body(0,0,-0.18,0.16,0.18,1.05,w.color);        // big receiver
+    body(0,0.0,-0.55,0.07,0.07,0.55,0x111111);     // long barrel
+    body(0,-0.22,0.06,0.22,0.20,0.34,0x2a2a2a);    // ammo box / belt drum
+    body(0.18,-0.20,0.10,0.05,0.05,0.30,0xcaa15a); // visible belt feed
+    body(0,-0.18,0.26,0.10,0.20,0.14,0x222222);    // grip
+    muzzleZ = -0.78;
+  } else if (model === 'ar') {
+    body(0,0,-0.12,0.11,0.13,0.78,w.color);        // receiver
+    body(0,0.02,-0.52,0.05,0.05,0.40,0x111111);    // barrel
+    body(0,-0.07,0.20,0.07,0.12,0.24,0x333333);    // mag
+    body(0,-0.05,0.40,0.10,0.16,0.16,0x222222);    // stock
+    muzzleZ = -0.66;
+  } else if (model === 'battle') {
+    body(0,0,-0.14,0.12,0.14,0.92,w.color);        // long heavy receiver
+    body(0,0.10,-0.34,0.05,0.05,0.34,0x111111);    // optic rail
+    body(0,-0.08,0.22,0.07,0.14,0.26,0x333333);    // mag
+    body(0,-0.04,0.44,0.11,0.17,0.18,0x222222);    // stock
+    muzzleZ = -0.72;
+  } else if (model === 'carbine') {
+    body(0,0,-0.10,0.10,0.12,0.66,w.color);        // compact receiver
+    body(0,0.01,-0.46,0.05,0.05,0.34,0x111111);    // barrel
+    body(0,-0.07,0.16,0.07,0.12,0.20,0x333333);    // mag
+    body(0,-0.03,0.34,0.09,0.14,0.14,0x222222);    // stock
+    muzzleZ = -0.60;
+  } else if (model === 'pumpsg') {
+    body(0,0,-0.16,0.13,0.13,0.82,w.color);        // receiver/barrel
+    body(0,-0.07,-0.18,0.11,0.09,0.40,0x5a3010);   // FOREGRIP SLIDE (pump)
+    body(0,-0.16,0.24,0.10,0.18,0.16,0x3a1f0a);    // stock
+    muzzleZ = -0.58;
+  } else if (model === 'autosg') {
+    body(0,0,-0.12,0.14,0.14,0.62,w.color);        // shorter receiver
+    body(0,0.02,-0.40,0.06,0.06,0.34,0x111111);    // barrel
+    body(0,-0.08,0.16,0.09,0.16,0.18,0x333333);    // box mag
+    body(0,-0.14,0.30,0.09,0.16,0.14,0x222222);    // grip
+    muzzleZ = -0.52;
+  } else if (model === 'dmr') {
+    body(0,0,-0.16,0.10,0.11,0.96,w.color);        // long thin receiver
+    body(0,0.10,-0.26,0.07,0.08,0.34,0x111111);    // ACOG-ish optic
+    body(0,-0.07,0.22,0.06,0.12,0.22,0x333333);    // mag
+    body(0,-0.04,0.42,0.10,0.15,0.16,0x222222);    // stock
+    muzzleZ = -0.74;
+  } else if (model === 'crossbow') {
+    body(0,0,-0.10,0.06,0.06,0.70,w.color);        // rail/stock
+    body(0,0,-0.42,0.62,0.04,0.06,0x3a2a1a);       // LIMBS (wide crossbar)
+    body(0,0.02,-0.30,0.03,0.03,0.40,0xdddddd);    // loaded bolt
+    body(0,-0.12,0.18,0.07,0.16,0.12,0x222222);    // grip
+    muzzleZ = -0.60;
+  } else if (model === 'gl') {
+    body(0,0,-0.10,0.20,0.20,0.52,w.color);        // STUBBY thick barrel
+    body(0,0.0,-0.40,0.22,0.22,0.10,0x222222);     // fat muzzle
+    body(0,-0.16,0.16,0.10,0.20,0.16,0x222222);    // grip
+    body(0,0.14,-0.04,0.05,0.05,0.30,0x111111);    // arc sight rail
+    muzzleZ = -0.46;
+  } else if (model === 'rpg') {
+    body(0,0,-0.10,0.22,0.22,1.10,w.color);        // long shoulder TUBE
+    body(0,0.05,-0.66,0.30,0.30,0.12,0x222222);    // muzzle cone
+    body(0,0.20,0.30,0.30,0.10,0.10,0x3a3a3a);     // rear venturi
+    body(0,-0.18,0.16,0.10,0.22,0.16,0x222222);    // grip
+    muzzleZ = -0.78;
+  } else if (model === 'mpistol') {
+    body(0,0,-0.06,0.10,0.11,0.46,w.color);        // slide
+    body(0,-0.10,0.14,0.07,0.16,0.22,0x333333);    // extended mag
+    body(0,0.0,-0.30,0.04,0.04,0.16,0x111111);     // stubby barrel
+    muzzleZ = -0.32;
+  } else if (model === 'revolver') {
+    body(0,0,-0.06,0.09,0.10,0.46,w.color);        // frame/barrel
+    body(0,-0.02,0.04,0.15,0.15,0.16,0x6a6a6a);    // CYLINDER (fat, visible)
+    body(0,-0.16,0.12,0.09,0.20,0.12,0x2a1a0a);    // wood grip
     muzzleZ = -0.30;
+  } else if (model === 'akimbo') {
+    // Two pistols held in opposite hands: far apart across the screen, angled inward,
+    // each with its own muzzle anchor + flash for independent fire/recoil.
+    const mkPistol = () => {
+      const p = new THREE.Group();
+      const pb = (x, y, z, sx, sy, sz, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), flatMat(c)); m.position.set(x, y, z); p.add(m); return m; };
+      pb(0, 0, -0.05, 0.09, 0.10, 0.38, w.color);     // slide
+      pb(0, -0.13, 0.10, 0.08, 0.18, 0.11, 0x222222); // grip
+      const mz = new THREE.Object3D(); mz.position.set(0, 0, -0.28); p.add(mz);
+      const fl = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.10), new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: 0.95 }));
+      fl.position.set(0, 0, -0.32); fl.visible = false; p.add(fl);
+      return { p, mz, fl, flT: 0 };
+    };
+    const R = mkPistol(), L = mkPistol();
+    // Local x offsets account for the group's +0.32 base so the pair sits wide and symmetric
+    // (each pistol ~toward its own side of the screen).
+    R.p.position.set(0.22, 0.0, 0.0);  R.p.rotation.y = 0.16;   // right side, muzzle angled inward
+    L.p.position.set(-0.86, 0.0, 0.0); L.p.rotation.y = -0.16;  // left side, muzzle angled inward
+    g.add(R.p); g.add(L.p);
+    g.userData.akimbo = { R, L };
+    muzzleZ = -0.28;
+  } else if (model === 'tknife') {
+    body(0,-0.04,0.10,0.04,0.05,0.20,0x2a2a2a);    // small handle (held to throw)
+    body(0,0.04,-0.08,0.04,0.10,0.30,w.color);     // slim throwing blade
+    muzzleZ = -0.26;
   } else if (model === 'knife') {
     body(0,-0.10,0.06,0.05,0.06,0.34,0x3a2a1a);    // handle
     body(0,0.02,-0.18,0.05,0.16,0.42,w.color);     // straight blade
     muzzleZ = -0.34;
   } else if (model === 'karambit') {
-    // Reverse-grip karambit: handle gripped, hooked blade curving DOWN-forward,
-    // plus the signature finger ring at the pommel. Built from angled segments.
-    body(0, 0.02, 0.14, 0.05, 0.07, 0.26, 0x141414);            // handle (held)
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.018, 8, 14), flatMat(0x2a2a2a));
-    ring.position.set(0, 0.02, 0.30); ring.rotation.y = Math.PI / 2; g.add(ring);   // finger ring
-    body(0, -0.08, 0.00, 0.045, 0.12, 0.10, w.color).rotation.x =  0.55;            // hooked blade,
-    body(0, -0.20, -0.06, 0.04, 0.13, 0.10, w.color).rotation.x = 1.05;             //   curving down
-    body(0.0, -0.31, -0.14, 0.035, 0.13, 0.09, w.color).rotation.x = 1.55;          //   and forward (the hook tip)
+    // CS:GO-style karambit — REVERSE GRIP: ergonomic handle held in a fist with the
+    // signature finger ring at the pommel, and a curved tiger-claw blade hooking DOWN
+    // and forward to a sharp tip. Metallic (specular) blade, dark textured handle.
+    const bladeMat = new THREE.MeshPhongMaterial({ color: 0xc2ccd6, specular: 0xffffff, shininess: 100, flatShading: true });
+    const edgeMat  = new THREE.MeshPhongMaterial({ color: 0xeef4fa, specular: 0xffffff, shininess: 120, flatShading: true });
+    const gripMat  = new THREE.MeshPhongMaterial({ color: 0x16161a, specular: 0x444444, shininess: 24, flatShading: true });
+    const seg = (x, y, z, sx, sy, sz, mat, rx) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; g.add(m); return m; };
+    seg(0, 0.07, 0.15, 0.065, 0.085, 0.30, gripMat, 0.22);                          // handle (gripped)
+    seg(0, 0.10, 0.02, 0.05, 0.05, 0.10, gripMat, 0.22);                            // bolster
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.066, 0.016, 10, 18), gripMat);
+    ring.position.set(0, 0.05, 0.33); ring.rotation.y = Math.PI / 2; g.add(ring);   // finger ring (signature)
+    // curved blade: tapering segments rotated progressively to form the down-forward hook
+    seg(0, -0.05, 0.03, 0.05,  0.13, 0.085, bladeMat, 0.50);
+    seg(0, -0.16, -0.03, 0.045, 0.13, 0.08,  bladeMat, 0.90);
+    seg(0, -0.26, -0.12, 0.04,  0.12, 0.07,  bladeMat, 1.25);
+    seg(0, -0.33, -0.23, 0.032, 0.11, 0.06,  bladeMat, 1.60);
+    seg(0, -0.35, -0.33, 0.022, 0.085,0.045, edgeMat,  1.90);                       // sharp tapered tip
+    seg(0.024, -0.18, -0.04, 0.010, 0.13, 0.085, edgeMat, 0.90);                    // bright honed edge (specular)
+    seg(-0.022, -0.18, -0.04, 0.010, 0.13, 0.085, gripMat, 0.90);                   // swedge / false edge on the spine
+    // faint swing trail (toggled during a slash)
+    const trail = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+    trail.position.set(-0.1, -0.2, -0.12); trail.rotation.y = Math.PI / 2; g.add(trail); g.userData.karTrail = trail;
     muzzleZ = -0.22;
   }
+  // Iron-sight weapons get a visible rear notch + front post so the ADS picture reads.
+  if (GG_IRON[key]) addIronSights(g, GG_IRON[key]);
+  // Red-dot weapons get a mounted optic housing on top of the receiver.
+  if (GG_REDDOT[key]) addRedDotOptic(g, GG_REDDOT[key]);
   // Muzzle anchor (tracers/flash originate here) + a hidden muzzle-flash sprite
   gunMuzzle = new THREE.Object3D(); gunMuzzle.position.set(0, 0, muzzleZ); g.add(gunMuzzle);
   gunFlash = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.12),
@@ -1237,6 +1901,25 @@ function gunMuzzleWorld() {
   return camera.getWorldPosition(new THREE.Vector3());
 }
 
+// --- Akimbo pistols: per-pistol ammo, muzzle, flash + kick ---
+const AKIMBO_SPREAD = 0.12;   // ~3.5° random spread cone per shot (rapid akimbo fire)
+function akimboRig() { return gunMesh && gunMesh.userData ? gunMesh.userData.akimbo : null; }
+function akimboEnsure(ws, w) {                     // lazily split the mag into two pistols (12 + 12)
+  if (ws.ammoL == null || ws.ammoR == null) { ws.ammoL = Math.ceil(w.mag / 2); ws.ammoR = Math.floor(w.mag / 2); }
+  if (ws.cdL == null) ws.cdL = 0; if (ws.cdR == null) ws.cdR = 0;
+  ws.ammo = ws.ammoL + ws.ammoR;
+}
+function akimboMuzzleWorld(side) {
+  const rig = akimboRig(); const p = rig && (side === 'L' ? rig.L : rig.R);
+  return p ? p.mz.getWorldPosition(new THREE.Vector3()) : gunMuzzleWorld();
+}
+function akimboKick(side) {                         // recoil + flash on whichever pistol fired
+  const rig = akimboRig(); if (!rig) return;
+  const p = side === 'L' ? rig.L : rig.R;
+  p.p.rotation.x = 0.40; p.p.position.z = 0.06;     // kick up + back (recovered in the loop)
+  p.fl.visible = true; p.flT = 0.045;
+}
+
 function switchWeapon(key) {
   if (key === currentWeaponKey || !WEAPONS[key]) return;
   if (WEAPONS[key].special && !ownedSpecials.has(key)) return;   // can't select an un-owned special
@@ -1250,15 +1933,29 @@ function switchWeapon(key) {
 function reload() {
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
+  if (w.melee) return;                                           // knives don't reload
   if (ws.reloading > 0 || ws.ammo >= w.mag) return;
   if (ws.reserve !== Infinity && ws.reserve <= 0) return;        // nothing left to load
-  ws.reloading = w.reload;
+  if (w.rstyle === 'shell') {                                    // pump shotgun: one shell at a time
+    ws.reloading = w.reload; ws.reloadTotal = w.reload; ws.shellReload = true; return;
+  }
+  // Gun game: empty-mag reloads run a touch longer. Other modes keep their exact reload time.
+  const empty = (gameMode === 'gungame') && ws.ammo <= 0;
+  ws.reloading = w.reload * (empty ? 1.12 : 1);
+  ws.reloadTotal = ws.reloading; ws.shellReload = false;
 }
 
 // Move ammo from reserve into the magazine when a reload completes.
 function finishReload(key) {
   const ws = weaponState[key], w = WEAPONS[key];
-  if (ws.reserve === Infinity) { ws.ammo = w.mag; return; }      // base weapons: infinite
+  if (w.akimbo) { ws.ammoL = Math.ceil(w.mag / 2); ws.ammoR = Math.floor(w.mag / 2); ws.ammo = w.mag; return; }  // both pistols
+  if (ws.shellReload) {                                          // pump shotgun: load 1, keep going until full
+    ws.ammo = Math.min(w.mag, ws.ammo + 1);
+    if (ws.ammo < w.mag) { ws.reloading = w.reload; ws.reloadTotal = w.reload; }
+    else ws.shellReload = false;
+    return;
+  }
+  if (ws.reserve === Infinity) { ws.ammo = w.mag; return; }      // base + gun-game weapons: infinite reserve
   const take = Math.min(w.mag - ws.ammo, ws.reserve);
   ws.ammo += take; ws.reserve -= take;
 }
@@ -1323,13 +2020,15 @@ function updateTracers(dt) {
 // Melee swing — used by the combat knife (lvl 20) AND the karambit. Short-range
 // instant kill in front. The karambit demotes its victim (the host applies it on
 // the kill report); the combat knife is the win weapon.
-function meleeAttack() {
+function meleeAttack(swingDir) {
+  if (!gameState.running || !player.alive) return;
   const ws = weaponState[currentWeaponKey], w = WEAPONS[currentWeaponKey];
   if (ws.cooldown > 0) return;
   ws.cooldown = w.fireRate;
-  // Distinct viewmodel motion: karambit = sideways hooked slash, combat knife = forward stab.
+  // Distinct viewmodel motion: karambit = arcing slash (+1 forehand / -1 backhand),
+  // combat knife = forward stab.
   if (gunMesh) {
-    if (w.karambit) { gunMesh.rotation.z = -1.15; gunMesh.position.x = 0.10; }
+    if (w.karambit) { karSwingT = 0.35; karSwingDir = (swingDir === -1) ? -1 : 1; }
     else gunMesh.position.z = -0.2;
   }
   alertBots(player.pos);
@@ -1358,16 +2057,36 @@ function meleeAttack() {
   updateHUD();
 }
 
-function tryShoot() {
+function tryShoot(akSide) {
   if (!gameState.running || !player.alive) return;
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
   if (w.melee) { meleeAttack(); return; }
-  if (ws.cooldown > 0 || ws.reloading > 0) return;
-  if (ws.ammo <= 0) { reload(); return; }
 
-  ws.ammo--;
-  ws.cooldown = w.fireRate;
+  // Akimbo: each pistol has its own ammo + cooldown. LMB fires right ('R'), RMB fires left ('L').
+  const akimbo = !!w.akimbo, side = akimbo ? (akSide || 'R') : null;
+  if (akimbo) {
+    akimboEnsure(ws, w);
+    if (ws.reloading > 0) return;
+    const cdK = side === 'L' ? 'cdL' : 'cdR', amK = side === 'L' ? 'ammoL' : 'ammoR';
+    if (ws[cdK] > 0) return;
+    if (ws[amK] <= 0) { reload(); return; }
+    ws[amK]--; ws[cdK] = w.fireRate; ws.ammo = ws.ammoL + ws.ammoR;
+  } else {
+    if (ws.cooldown > 0) return;
+    if (ws.reloading > 0) {
+      if (ws.shellReload && ws.ammo > 0) { ws.reloading = 0; ws.shellReload = false; }  // pump: firing cancels the shell reload
+      else return;
+    }
+    if (ws.ammo <= 0) { reload(); return; }
+    ws.ammo--;
+    ws.cooldown = w.fireRate;
+  }
+  // Bolt-cycle / pump animation after the shot (bolt sniper, pump shotgun)
+  if (gameMode === 'gungame') {
+    if (w.boltShot)            ggStartCycle('bolt', 0.5);
+    else if (w.rstyle === 'shell') ggStartCycle('pump', Math.min(0.45, w.fireRate * 0.7));
+  }
 
   // Recoil kick (camera) + grow spread with sustained fire
   recoilPitch += w.recoil;
@@ -1380,9 +2099,13 @@ function tryShoot() {
   // Bots can "hear" the gunshot and go investigate
   alertBots(player.pos);
 
-  // Gun "kickback" pop + muzzle flash on the viewmodel
-  if (gunMesh) gunMesh.position.z = -0.45;
-  if (gunFlash) { gunFlash.visible = true; playerFlashTimer = 0.045; }
+  // Gun "kickback" pop + muzzle flash on the viewmodel (akimbo: only the firing pistol kicks)
+  if (akimbo) {
+    akimboKick(side);
+  } else {
+    if (gunMesh) gunMesh.position.z = -0.45;
+    if (gunFlash) { gunFlash.visible = true; playerFlashTimer = 0.045; }
+  }
 
   const origin = camera.getWorldPosition(new THREE.Vector3());
   const baseDir = camera.getWorldDirection(new THREE.Vector3());
@@ -1396,8 +2119,8 @@ function tryShoot() {
     return;
   }
 
-  const effSpread = aiming ? currentSpread * 0.4 : currentSpread;
-  const muzzle = gunMuzzleWorld();
+  const effSpread = (aiming ? currentSpread * 0.4 : currentSpread) + (akimbo ? AKIMBO_SPREAD : 0);
+  const muzzle = akimbo ? akimboMuzzleWorld(side) : gunMuzzleWorld();
   // Explosive gun-game tiers get a fat orange beam (and a blast FX on impact below).
   const tColor = w.explosive ? 0xffb030 : (TRACER.color[currentWeaponKey] != null ? TRACER.color[currentWeaponKey] : TRACER.color.def);
   const tLife  = TRACER.life[currentWeaponKey]  != null ? TRACER.life[currentWeaponKey]  : TRACER.life.def;
@@ -2609,8 +3332,12 @@ function ggEquipCurrent() { ggEquip(ggKarambit ? KARAMBIT_KEY : ggLadderKey()); 
 // Toggle / set the karambit slot (gun game only).
 function ggSetKarambit(use) {
   if (gameMode !== 'gungame') return;
+  // Switching slots CANCELS an in-progress reload (you have to start over later).
+  const ws = weaponState[currentWeaponKey];
+  if (ws) { ws.reloading = 0; ws.shellReload = false; }
   ggKarambit = !!use;
   ggEquipCurrent();
+  if (ggKarambit) { karEquipT = 0.25; karSwingT = 0; }   // equip flourish (twirl up from below)
 }
 // Set the LOCAL player's level: refill + instantly swap to that ladder weapon
 // (advancing always pulls you off the karambit and onto the new gun).
@@ -2739,12 +3466,14 @@ function playerDie() {
     player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 50), sp.z);
     player.vel.set(0, 0, 0);
     player.health = 100; player.alive = true;
+    player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
     player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
     if (gameMode === 'gungame') {                       // respawn with your current ladder weapon (back to the gun)
       player.grenades = 0; ggKarambit = false;
       const key = GUNGAME_LADDER[ggLevel - 1];
       weaponState[key].ammo = WEAPONS[key].mag; weaponState[key].cooldown = 0; weaponState[key].reloading = 0;
+      weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
       ggEquip(key);
     }
     updateHUD();
@@ -2754,7 +3483,7 @@ function playerDie() {
 function endMatch(won) {
   gameState.over = true;
   gameState.running = false;
-  aiming = false; scopeBlend = 0; scopePunch = 0;   // clear scope so the end screen isn't dimmed
+  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
   el('endTitle').textContent = won ? 'YOU WIN' : 'MATCH OVER';
   el('endSub').textContent = `Final: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
@@ -2768,9 +3497,10 @@ function startMatch() {
   else player.pos.set(0, 0, 45);
   player.vel.set(0, 0, 0);
   player.health = 100; player.alive = true; player.sliding = false; player.launchCd = 0;
+  player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.grenades = throwMaxCarry();
   yaw = NET.active ? Math.random() * Math.PI * 2 : Math.PI; pitch = 0; recoilPitch = 0; recoilYaw = 0;
-  aiming = false; scopeBlend = 0; scopePunch = 0; shakeTime = 0; shakeMag = 0;
+  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; shakeTime = 0; shakeMag = 0;
   // Clear any leftover thrown grenades / tomahawks / explosion FX from a previous match
   liveGrenades.forEach(g => scene.remove(g.mesh)); liveGrenades.length = 0;
   liveTomahawks.forEach(t => { scene.remove(t.mesh); disposeGroup(t.mesh); }); liveTomahawks.length = 0;
@@ -2811,6 +3541,7 @@ function startMatch() {
   if (gameMode === 'gungame') {
     ggLevel = 1; ggKarambit = false;
     GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
+    weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
     weaponState[KARAMBIT_KEY].cooldown = 0; weaponState[KARAMBIT_KEY].reloading = 0;
     player.grenades = 0;                              // no throwables in gun game
     ggEquip('gg1');                                  // start on the level-1 gun
@@ -2859,7 +3590,7 @@ function hostStartMatch() {                              // host (lobby START or
 }
 function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
-  aiming = false; scopeBlend = 0; scopePunch = 0;
+  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
   const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
   if (gameMode === 'gungame') {
@@ -3160,14 +3891,19 @@ const NET = {
 
   /* ---------------- SNAPSHOTS ---------------- */
   selfSnapshot() {
+    const ws = weaponState[currentWeaponKey];
+    const rl = (ws && ws.reloading > 0) ? Math.max(0, Math.min(1, 1 - ws.reloading / (ws.reloadTotal || 1))) : 0;
     return { id: this.selfId, name: this.selfName, x: player.pos.x, y: player.pos.y, z: player.pos.z,
-             yaw, pitch, weapon: currentWeaponKey, health: Math.max(0, player.health), alive: player.alive };
+             yaw, pitch, weapon: currentWeaponKey, health: Math.max(0, player.health), alive: player.alive,
+             ads: (gameMode === 'gungame' && adsBlend > 0.5), rl,            // aim + reload state for others to see
+             cr: player.crouchBlend, dv: player.diving };                    // crouch amount + dive (shorter hitbox)
   },
   // host -> all: positions of every human (host builds from its own state + clients' last pmove)
   broadcastPlayers() {
     const list = [this.selfSnapshot()];
     this.players.forEach((rp) => list.push({ id: rp.id, name: rp.name, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
-      yaw: rp.yaw, weapon: rp.weapon, health: rp.health, alive: rp.alive }));
+      yaw: rp.yaw, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
+      cr: rp.cr || 0, dv: !!rp.dv }));
     this.broadcast({ t: 'players', list });
   },
   broadcastBots() {
@@ -3279,7 +4015,7 @@ const NET = {
 function makeRemotePlayer(id, name, color) {
   return {
     id, name: (name || 'Player').slice(0, 14), color, alive: true, health: 100, weapon: 'pistol',
-    pos: new THREE.Vector3(0, 0, 0), yaw: 0,
+    pos: new THREE.Vector3(0, 0, 0), yaw: 0, ads: false, rl: 0, cr: 0, dv: false, crShown: 0,
     renderPos: new THREE.Vector3(0, 0, 0), renderYaw: 0,
     avatar: null, head: null, gun: null, nameSprite: null, _hadAvatar: false, _lastNameHp: -1,
     apply(d) {
@@ -3289,6 +4025,10 @@ function makeRemotePlayer(id, name, color) {
       if (d.weapon) this.weapon = d.weapon;
       if (d.health != null) this.health = d.health;
       if (d.alive != null) this.alive = d.alive;
+      if (d.ads != null) this.ads = d.ads;
+      if (d.rl != null) this.rl = d.rl;
+      if (d.cr != null) this.cr = d.cr;
+      if (d.dv != null) this.dv = d.dv;
     }
   };
 }
@@ -3345,7 +4085,23 @@ function lerpRemotePlayers(dt) {
     rp.renderYaw = lerpAngle(rp.renderYaw, rp.yaw, t);
     rp.avatar.position.copy(rp.renderPos);
     rp.avatar.rotation.y = rp.renderYaw;
+    // Crouch / dive: squash the avatar toward its feet so it's shorter — the raycast hitbox
+    // follows, so shooting where a standing head would be MISSES a crouched player.
+    const lowAmt = Math.max(rp.cr || 0, rp.dv ? 1 : 0);
+    rp.crShown += (lowAmt - rp.crShown) * t;
+    rp.avatar.scale.y = 1 - 0.40 * rp.crShown;            // ~60% height when fully crouched/prone
+    rp.avatar.rotation.x = (rp.dv ? 0.45 : 0) * rp.crShown;  // slight forward (prone) lean while diving
+    if (rp.nameSprite) { const sy = rp.avatar.scale.y || 1; rp.nameSprite.scale.set(2.2, 0.7 / sy, 1); rp.nameSprite.position.y = 2.55 / sy; }   // keep tag upright + above head
     if (rp.gun && WEAPONS[rp.weapon]) rp.gun.material.color.setHex(WEAPONS[rp.weapon].color);
+    // Pose the held gun so others can see you aiming (raised to center) or reloading (dipped).
+    if (rp.gun) {
+      let tx = 0.45, ty = 1.25, rotx = 0;
+      if (rp.ads) { tx = 0.12; ty = 1.5; }
+      if (rp.rl > 0) { ty = 1.05; rotx = 0.6; }
+      rp.gun.position.x += (tx - rp.gun.position.x) * t;
+      rp.gun.position.y += (ty - rp.gun.position.y) * t;
+      rp.gun.rotation.x += (rotx - rp.gun.rotation.x) * t;
+    }
     if (Math.round(rp.health) !== rp._lastNameHp) drawNameSprite(rp);
   });
 }
@@ -3510,12 +4266,23 @@ function animate() {
     for (const key in weaponState) {
       const ws = weaponState[key];
       if (ws.cooldown > 0) ws.cooldown -= dt;
+      if (ws.cdL > 0) ws.cdL -= dt; if (ws.cdR > 0) ws.cdR -= dt;   // akimbo per-pistol cooldowns
       if (ws.reloading > 0) {
         ws.reloading -= dt;
         if (ws.reloading <= 0) { finishReload(key); updateHUD(); }
       }
     }
-    if (firing && WEAPONS[currentWeaponKey].auto) tryShoot();
+    // Firing: akimbo fires each held button's pistol; other autos fire on hold.
+    if (akimboEquipped()) {
+      if (firing)  tryShoot('R');
+      if (firingL) tryShoot('L');
+    } else if (firing && WEAPONS[currentWeaponKey].auto) tryShoot();
+
+    // Throwing knives passively regenerate (refill over ~2s when idle).
+    if (gameMode === 'gungame' && WEAPONS[currentWeaponKey].rstyle === 'regen') {
+      const ws = weaponState[currentWeaponKey];
+      if (ws.ammo < WEAPONS[currentWeaponKey].mag && ws.reloading <= 0 && !firing) reload();
+    }
 
     // Player muzzle-flash fade
     if (playerFlashTimer > 0) { playerFlashTimer -= dt; if (playerFlashTimer <= 0 && gunFlash) gunFlash.visible = false; }
@@ -3523,11 +4290,55 @@ function animate() {
     // Spread decay when not firing
     if (!firing) currentSpread = Math.max(0, currentSpread - dt * 0.20);
 
-    // Viewmodel recoil recovery (slide back to rest) + melee-swing recovery (rotation/side).
+    // Viewmodel animation: reload pose > iron-sight raise (ADS) > bolt/pump cycle > rest recovery.
     if (gunMesh) {
-      gunMesh.position.z += (-0.6 - gunMesh.position.z) * Math.min(1, dt * 14);
-      gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);      // unwind a karambit slash
-      gunMesh.position.x += (0.32 - gunMesh.position.x) * Math.min(1, dt * 12);
+      const _ws = weaponState[currentWeaponKey], _w = WEAPONS[currentWeaponKey];
+      const _ironAds = (gameMode === 'gungame' && adsBlend > 0.001 && ggAnchorFor(currentWeaponKey));
+      if (currentWeaponKey === KARAMBIT_KEY) {
+        // Karambit: equip flourish (twirl up) > slash arc > idle bob.
+        const trail = gunMesh.userData && gunMesh.userData.karTrail;
+        if (karEquipT > 0) {
+          karEquipT -= dt;
+          const e = smoothstep(1 - karEquipT / 0.25);
+          gunMesh.position.set(0.32, -0.28 - (1 - e) * 0.55, -0.6);
+          gunMesh.rotation.set(0, 0.04, (1 - e) * -Math.PI * 2);    // one quick twirl
+          if (trail) trail.material.opacity = 0;
+        } else if (karSwingT > 0) {
+          karSwingT -= dt;
+          const s = Math.sin(Math.max(0, 1 - karSwingT / 0.35) * Math.PI);   // 0->1->0
+          gunMesh.position.set(0.32 - karSwingDir * 0.34 * s, -0.28 + 0.10 * s, -0.6 + 0.12 * s);
+          gunMesh.rotation.set(0.30 * s, 0.04, karSwingDir * 1.30 * s);      // arcing reverse-grip slash
+          if (trail) trail.material.opacity = 0.4 * s;
+        } else {
+          karBob += dt * (5 + Math.hypot(player.vel.x, player.vel.z) * 1.2);
+          const bob = Math.sin(karBob) * 0.012 * Math.min(1, Math.hypot(player.vel.x, player.vel.z) / 4);
+          gunMesh.position.x += (0.32 - gunMesh.position.x) * Math.min(1, dt * 12);
+          gunMesh.position.y += (-0.28 + bob - gunMesh.position.y) * Math.min(1, dt * 12);
+          gunMesh.position.z += (-0.6 - gunMesh.position.z) * Math.min(1, dt * 12);
+          gunMesh.rotation.x += (0 - gunMesh.rotation.x) * Math.min(1, dt * 12);
+          gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);
+          if (trail) trail.material.opacity = 0;
+        }
+      } else if (gameMode === 'gungame' && _ws && _ws.reloading > 0 && _w.rstyle && _w.rstyle !== 'none' && !_w.melee) {
+        applyReloadPose(_w.rstyle, 1 - _ws.reloading / (_ws.reloadTotal || _w.reload || 1));
+      } else if (_ironAds) {
+        applyRaiseAdsPose(currentWeaponKey, smoothstep(adsBlend));   // raise to centered sight picture (iron or red dot)
+      } else if (ggCycleT > 0) {
+        ggCycleT -= dt; applyCyclePose(ggCycleStyle, 1 - ggCycleT / ggCycleDur);
+      } else {
+        gunMesh.position.z += (-0.6 - gunMesh.position.z) * Math.min(1, dt * 14);
+        gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);      // unwind a karambit slash
+        gunMesh.position.x += (0.32 - gunMesh.position.x) * Math.min(1, dt * 12);
+        gunMesh.position.y += (-0.28 - gunMesh.position.y) * Math.min(1, dt * 12);  // unwind a reload dip
+        gunMesh.rotation.x += (0 - gunMesh.rotation.x) * Math.min(1, dt * 12);
+      }
+      // Akimbo: each pistol recovers its own recoil + fades its own muzzle flash.
+      const rig = gunMesh.userData && gunMesh.userData.akimbo;
+      if (rig) [rig.R, rig.L].forEach(P => {
+        P.p.rotation.x += (0 - P.p.rotation.x) * Math.min(1, dt * 12);
+        P.p.position.z += (0 - P.p.position.z) * Math.min(1, dt * 12);
+        if (P.flT > 0) { P.flT -= dt; if (P.flT <= 0) P.fl.visible = false; }
+      });
     }
 
     // Hit marker fade
@@ -3543,6 +4354,7 @@ function animate() {
   el('crosshair').style.opacity = 1 - scopeBlend;
   el('hud').style.opacity = 1 - 0.4 * scopeBlend;
   if (gunMesh) gunMesh.visible = scopeBlend < 0.5;
+  updateSights();   // GUN GAME per-weapon sights + reload bar (overrides the above in gun game)
 
   // Effects animate continuously (so they finish even on the end screen)
   updateBlood(dt);

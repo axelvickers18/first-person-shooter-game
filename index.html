@@ -53,6 +53,11 @@
   /* Cigar self-heal availability near the ammo counter (all modes) */
   #cigarCount { font-size: 14px; font-weight: bold; color: #e0c08a; margin-top: 3px; display: none; transition: opacity .15s; }
   #cigarCount span { color: #fff; }
+  /* "Press E to climb" interaction prompt (watchtower ladder) */
+  #ladderPrompt { position: fixed; left: 50%; bottom: 32%; transform: translateX(-50%); z-index: 14; display: none;
+    font: 700 20px 'Segoe UI', sans-serif; color: #fff; background: rgba(0,0,0,0.45); padding: 8px 18px; border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.5); letter-spacing: 1px; pointer-events: none; text-shadow: 0 2px 3px #000; }
+  #ladderPrompt b { color: #ffe600; }
 
   /* ---- Skin creator ---- */
   #skinCreator { position: fixed; inset: 0; z-index: 30; background: #14181f; display: flex; flex-direction: column; color: #e8eef5; }
@@ -425,6 +430,7 @@
 
   <div id="crosshair"><div class="line h"></div><div class="line v"></div></div>
   <div id="hitmarker"><div class="line h"></div><div class="line v"></div></div>
+  <div id="ladderPrompt">Press <b>E</b> to climb</div>
 
   <div id="healthWrap">
     <div id="healthLabel">HEALTH</div>
@@ -1265,13 +1271,14 @@ function buildHouse(cx, cz, wallC, roofC) {
   addBox(cx - 7, F2,   cz + fdir * 2,   3.6, 1.0, 2.4, 0x9aa0ad);        // upstairs bed
   addBox(cx + 7, F2,   cz + fdir * 2,   2.0, 0.9, 1.0, 0x7a5a3a);        // upstairs table
   addBox(cx + 9.5, F2, cz - fdir * 4,   1.0, 2.4, 2.4, 0x5a3f24);        // upstairs bookshelf
-  // --- Porch (overhang + posts + step) + driveway (decor, no collision) ---
+  // --- Porch: SOLID floor (stand/walk on it) + posts + overhang + a low step up from the lawn ---
   const porchZ = frontZ + fdir * 2.4;
-  addBox(cx, 0, porchZ, W - 3, 0.2, 4.4, 0xbdb39a, { noCollide: true });
-  addBox(cx - W / 2 + 2, 2.4, porchZ + fdir * 1.8, 0.4, 4.8, 0.4, roofC, { noCollide: true });
-  addBox(cx + W / 2 - 2, 2.4, porchZ + fdir * 1.8, 0.4, 4.8, 0.4, roofC, { noCollide: true });
-  addBox(cx, 4.8, porchZ, W - 2, 0.3, 5, roofC, { noCollide: true });
-  addBox(cx - W / 2 - 7, -0.02, cz, 11, 0.05, 13, 0x8A8A8A, { noCollide: true });   // driveway
+  addBox(cx, 0, porchZ, W - 3, 0.3, 4.6, 0xbdb39a);                                  // porch FLOOR (solid; top ~0.3)
+  addBox(cx, 0, porchZ + fdir * 2.7, W - 4, 0.15, 0.9, 0xb0a690);                    // step up from the lawn (solid; auto-stepped)
+  addBox(cx - W / 2 + 2, 2.6, porchZ + fdir * 1.8, 0.4, 5.2, 0.4, roofC);            // support post (solid)
+  addBox(cx + W / 2 - 2, 2.6, porchZ + fdir * 1.8, 0.4, 5.2, 0.4, roofC);            // support post (solid)
+  addBox(cx, 5.0, porchZ, W - 2, 0.3, 5, roofC);                                     // overhang roof (solid)
+  addBox(cx - W / 2 - 7, -0.02, cz, 11, 0.05, 13, 0x8A8A8A, { noCollide: true });    // driveway (flat ground decor)
   return { cx, cz, frontZ, fdir };
 }
 const houseN = buildHouse(0,  39, 0xE8D27A, 0xb89a4a);   // yellow (north)
@@ -1443,7 +1450,10 @@ function resolveHorizontal(pos, bodyHeight) {
   const r = MOVE.radius;
   for (const s of solids) {
     const top = s.max.y, bot = s.min.y;
-    if (pos.y >= top - 0.05) continue;            // standing on / above it
+    // Don't push out of a surface you're standing ON or can step ONTO (top within STEP of the
+    // feet). This matches groundHeightAt's step rule, so the per-frame gravity dip while standing
+    // on an elevated surface (2nd floor, crate, watchtower platform) never shoves you off the edge.
+    if (pos.y >= top - STEP) continue;            // standing on / stepping onto / above it
     if (pos.y + bodyHeight <= bot) continue;      // entirely below it
     if (pos.x > s.min.x - r && pos.x < s.max.x + r &&
         pos.z > s.min.z - r && pos.z < s.max.z + r) {
@@ -1824,18 +1834,36 @@ function canStand() {
   }
   return true;
 }
-// E pressed near a ladder: grab it (snap to the ladder line; climb with W/S, drop with Space).
-function tryGrabLadder() {
-  if (!gameState.running || !player.alive || player.onLadder || player.diving || rcActive || cigSmoking) return;
+// Nearest ladder within the (generous) interact cylinder, or null. The zone spans the FULL
+// ladder height with a ~2-unit radius so you can grab from the base or anywhere along it.
+function nearestLadder() {
   for (const L of ladders) {
-    if (Math.hypot(player.pos.x - L.x, player.pos.z - L.z) < 1.7 && player.pos.y >= L.bottom - 0.5 && player.pos.y <= L.top + 0.6) {
-      player.onLadder = true; player.ladder = L;
-      player.pos.x = L.x; player.pos.z = L.z;
-      player.pos.y = Math.max(L.bottom, Math.min(L.top - 0.1, player.pos.y));
-      player.vel.set(0, 0, 0); player.sliding = false; player.crouching = false; aiming = false;
-      return;
-    }
+    if (Math.hypot(player.pos.x - L.x, player.pos.z - L.z) <= 2.0 && player.pos.y >= L.bottom - 1.0 && player.pos.y <= L.top + 0.8) return L;
   }
+  return null;
+}
+// E pressed near a ladder: grab it (snap to the ladder line; climb with W/S, drop with Space/E).
+function tryGrabLadder() {
+  if (!gameState.running || !player.alive || player.diving || rcActive || cigSmoking) return;
+  if (player.onLadder) { player.onLadder = false; player.ladder = null; console.log('[ladder] E pressed -> detached at y=' + player.pos.y.toFixed(2)); return; }   // E again disengages
+  const L = nearestLadder();
+  console.log('[ladder] E pressed, near ladder=' + !!L + (L ? ' dist=' + Math.hypot(player.pos.x - L.x, player.pos.z - L.z).toFixed(2) : ''));
+  if (!L) return;
+  player.onLadder = true; player.ladder = L;
+  player.pos.x = L.x; player.pos.z = L.z;
+  player.pos.y = Math.max(L.bottom + 0.05, Math.min(L.top - 0.2, player.pos.y));   // attach at the closest height (off the very ends)
+  player.vel.set(0, 0, 0); player.sliding = false; player.crouching = false; aiming = false;
+  player._ladderLogT = 0;
+  console.log('[ladder] ATTACHED — climbing mode start at y=' + player.pos.y.toFixed(2) + ' (W=up, S=down, Space/E=off)');
+}
+// Show/hide the "Press E to climb" prompt while standing in a ladder's interact zone.
+let _nearLadderPrev = false;
+function updateLadderPrompt() {
+  const p = el('ladderPrompt'); if (!p) return;
+  const near = !!(gameState.running && player.alive && !player.onLadder && !player.diving && !rcActive && !cigSmoking && nearestLadder());
+  if (near && !_nearLadderPrev) console.log('[ladder] entered interact zone (press E to climb)');
+  _nearLadderPrev = near;
+  p.style.display = near ? 'block' : 'none';
 }
 // C pressed: dive if sprinting fast enough. Otherwise crouch is purely HOLD-based and is
 // resolved every frame in updateMovement (crouched while C is held), so there's nothing to do here.
@@ -1916,10 +1944,16 @@ function updateMovement(dt) {
       // fall through to normal movement this frame with the hop velocity
     } else {
       player.jumpHeld = keys['Space'];
-      let cv = 0; if (keys['KeyW']) cv += LADDER_SPEED; if (keys['KeyS']) cv -= LADDER_SPEED;
+      let cv = 0; if (keys['KeyW']) cv += LADDER_SPEED; if (keys['KeyS']) cv -= LADDER_SPEED;   // A/D do nothing (no sidestep)
       player.pos.y += cv * dt; player.pos.x = L.x; player.pos.z = L.z; player.vel.set(0, 0, 0);
-      if (player.pos.y >= L.top - 0.05) { player.pos.y = L.top; player.pos.x = L.cx; player.pos.z = L.cz; player.onLadder = false; player.ladder = null; player.onGround = true; }   // step onto platform
-      else if (player.pos.y <= L.bottom + 0.02) { player.pos.y = L.bottom; player.pos.x = L.x + L.outX * 0.9; player.pos.z = L.z + L.outZ * 0.9; player.onLadder = false; player.ladder = null; player.onGround = true; }   // step off at the ground
+      // Auto step-off, gated by climb DIRECTION so grabbing at the very bottom/top doesn't instantly
+      // detach: climbing UP into the top -> step onto the platform; climbing DOWN to the base -> step off.
+      if (cv > 0 && player.pos.y >= L.top - 0.15) { player.pos.y = L.top; player.pos.x = L.cx; player.pos.z = L.cz; player.onLadder = false; player.ladder = null; player.onGround = true; console.log('[ladder] reached TOP -> stepped onto platform at y=' + L.top.toFixed(2)); }
+      else if (cv < 0 && player.pos.y <= L.bottom + 0.05) { player.pos.y = L.bottom; player.pos.x = L.x + L.outX * 0.9; player.pos.z = L.z + L.outZ * 0.9; player.onLadder = false; player.ladder = null; player.onGround = true; console.log('[ladder] reached BOTTOM -> stepped onto the ground'); }
+      else { player.pos.y = Math.max(L.bottom, Math.min(L.top, player.pos.y)); }   // clamp onto the ladder while attached
+      // Diagnostic: log the climb height a few times a second (not every frame).
+      player._ladderLogT = (player._ladderLogT || 0) - dt;
+      if (player.onLadder && cv !== 0 && player._ladderLogT <= 0) { console.log('[ladder] climbing y=' + player.pos.y.toFixed(2) + ' (' + (cv > 0 ? 'up' : 'down') + ')'); player._ladderLogT = 0.2; }
       player.crouching = false; player.crouchBlend = 0;
       player.eye += (MOVE.eyeHeight - player.eye) * Math.min(1, dt * 14);
       recoilPitch += (0 - recoilPitch) * Math.min(1, dt * 10); recoilYaw += (0 - recoilYaw) * Math.min(1, dt * 10);
@@ -6209,6 +6243,7 @@ function animate() {
   if (gunMesh) gunMesh.visible = scopeBlend < 0.5;
   updateSights();   // GUN GAME per-weapon sights + reload bar (overrides the above in gun game)
   updateCigar(dt);  // cigar heal: animate the left-hand viewmodel + keep the weapon holstered while smoking
+  updateLadderPrompt();   // "Press E to climb" when standing in a watchtower-ladder zone
 
   // Effects animate continuously (so they finish even on the end screen)
   updateBlood(dt);

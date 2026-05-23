@@ -47,12 +47,12 @@
   #grenades span { color: #fff; }
   /* Subtle crouch indicator near the ammo counter */
   #crouchInd { font-size: 13px; font-weight: bold; letter-spacing: 1px; color: #8fd0ff; margin-top: 3px; opacity: 0; transition: opacity .12s; }
-  /* Impulse-grenade count near the ammo counter (gun game) */
-  #impulseCount { font-size: 14px; font-weight: bold; color: #8fe9ff; margin-top: 3px; display: none; }
-  #impulseCount span { color: #fff; }
-  /* Cigar self-heal availability near the ammo counter (all modes) */
-  #cigarCount { font-size: 14px; font-weight: bold; color: #e0c08a; margin-top: 3px; display: none; transition: opacity .15s; }
-  #cigarCount span { color: #fff; }
+  /* Smoke-grenade count near the ammo counter (gun game) */
+  #smokeCount { font-size: 14px; font-weight: bold; color: #cdd6e0; margin-top: 3px; display: none; }
+  #smokeCount span { color: #fff; }
+  /* In-cloud fog: a near-opaque light-gray wash over the whole view while inside smoke */
+  #smokeView { position: fixed; inset: 0; z-index: 13; pointer-events: none; opacity: 0; transition: opacity .18s;
+    background: radial-gradient(circle at 50% 45%, rgba(232,236,240,0.96), rgba(212,218,224,0.99)); }
 
   /* ---- Skin creator ---- */
   #skinCreator { position: fixed; inset: 0; z-index: 30; background: #14181f; display: flex; flex-direction: column; color: #e8eef5; }
@@ -132,35 +132,6 @@
   #hurtFlash { position: fixed; inset: 0; background: radial-gradient(circle, transparent 55%, rgba(180,0,0,0.65) 100%); opacity: 0; pointer-events: none; z-index: 8; transition: opacity .15s; }
   /* Launch-pad boost flash (improvement #2) */
   #boostFlash { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,247,0.45) 0%, transparent 65%); opacity: 0; pointer-events: none; z-index: 8; transition: opacity .12s; }
-
-  /* SECRET RC ROCKET LAUNCHER overlays */
-  #rcUnlockMsg { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); z-index: 20; display: none; opacity: 0;
-    transition: opacity .35s; font: 700 22px/1 'Segoe UI', sans-serif; color: #7af0ff; letter-spacing: 2px; pointer-events: none;
-    text-shadow: 0 0 12px rgba(60,220,255,.85), 0 2px 4px #000; }
-  #rcFade { position: fixed; inset: 0; background: #000; opacity: 0; z-index: 18; pointer-events: none; }
-  #rcHud { position: fixed; inset: 0; z-index: 14; display: none; pointer-events: none; font-family: 'Consolas','Courier New',monospace; color: #9affc0; }
-  #rcHud.on { display: block; }
-  #rcTint { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(40,255,140,.05) 0%, rgba(20,80,40,.15) 70%, rgba(255,170,40,.18) 100%); mix-blend-mode: screen; }
-  #rcScan { position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,40,20,.22) 3px, rgba(0,0,0,0) 4px); }
-  #rcHud::before, #rcHud::after { content: ''; position: absolute; left: 8px; right: 8px; height: 2px; background: rgba(150,255,190,.45); }
-  #rcHud::before { top: 8px; } #rcHud::after { bottom: 8px; }
-  #rcCross { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; transform: translate(-50%,-50%); }
-  #rcCross .rh { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(150,255,190,.7); }
-  #rcCross .rv { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(150,255,190,.7); }
-  #rcCross .rb { position: absolute; width: 18px; height: 18px; border: 2px solid rgba(150,255,190,.8); }
-  #rcCross .tl { left: 0; top: 0; border-right: none; border-bottom: none; }
-  #rcCross .tr { right: 0; top: 0; border-left: none; border-bottom: none; }
-  #rcCross .bl { left: 0; bottom: 0; border-right: none; border-top: none; }
-  #rcCross .br { right: 0; bottom: 0; border-left: none; border-top: none; }
-  #rcLabel { position: absolute; left: 50%; top: calc(50% + 78px); transform: translateX(-50%); font-size: 14px; letter-spacing: 3px; color: #aef7c8; text-shadow: 0 0 8px rgba(60,255,160,.7); }
-  #rcReadout { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); font-size: 15px; line-height: 1.9; text-shadow: 0 0 6px rgba(60,255,160,.6); }
-  #rcFuelWrap { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); width: 240px; text-align: center; }
-  #rcFuelLabel { font-size: 11px; letter-spacing: 3px; margin-bottom: 4px; }
-  #rcFuelBg { height: 8px; background: rgba(0,40,20,.6); border: 1px solid rgba(150,255,190,.5); }
-  #rcFuelBar { height: 100%; width: 100%; background: linear-gradient(to right,#ffae28,#9affc0); transition: width .08s linear; }
-  #rcHint { position: absolute; left: 50%; bottom: calc(9% - 24px); transform: translateX(-50%); font-size: 11px; opacity: .7; letter-spacing: 1px; }
-  #rcPipFrame { position: absolute; width: 24vw; height: 24vh; right: 16px; bottom: 16px; border: 2px solid rgba(150,255,190,.5); box-shadow: 0 0 14px rgba(0,0,0,.6) inset; }
-  #rcPipFrame span { position: absolute; top: 2px; left: 6px; font-size: 10px; letter-spacing: 2px; color: rgba(180,255,210,.85); }
 
   /* Sniper scope overlay (improvement #1) */
   #scopeOverlay { position: fixed; inset: 0; z-index: 11; pointer-events: none; opacity: 0; transition: opacity .08s; }
@@ -365,7 +336,6 @@
   #killFeed .gg-up { color: #2bff88; font-weight: bold; }
   #killFeed .gg-demote { color: #ff6b6b; font-weight: bold; }
   #killFeed .gg-karambit, #ggLevel .gg-karambit { color: #15314f; background: #7fe9ff; padding: 1px 6px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: none; }
-  #killFeed .gg-rc { color: #04303a; background: #6cf0ff; padding: 1px 6px; border-radius: 3px; font-size: 12px; font-weight: bold; text-shadow: none; }
 
   /* In-game scoreboard (hold TAB) */
   #scoreboard {
@@ -415,24 +385,12 @@
     <div id="reloading"></div>
     <div id="grenades"><span id="grenadeLabel">GRENADES</span> <span id="grenadeCount">2</span></div>
     <div id="crouchInd">▼ CROUCHED</div>
-    <div id="impulseCount">💥 IMPULSE <span id="impulseNum">2</span></div>
-    <div id="cigarCount">🚬 <span id="cigarNum">1</span></div>
+    <div id="smokeCount">🔵 SMOKE <span id="smokeNum">2</span></div>
   </div>
 </div>
 
-<!-- SECRET RC ROCKET LAUNCHER: unlock toast, camera-handoff fade, nose-cam HUD -->
-<div id="rcUnlockMsg">🚀 RC ROCKET LAUNCHER UNLOCKED</div>
-<div id="rcFade"></div>
-<div id="rcHud">
-  <div id="rcTint"></div>
-  <div id="rcScan"></div>
-  <div id="rcCross"><div class="rh"></div><div class="rv"></div><div class="rb tl"></div><div class="rb tr"></div><div class="rb bl"></div><div class="rb br"></div></div>
-  <div id="rcLabel">RC GUIDED</div>
-  <div id="rcReadout"><div>ALT <span id="rcAlt">0</span> m</div><div>SPD <span id="rcSpd">0</span> u/s</div></div>
-  <div id="rcFuelWrap"><div id="rcFuelLabel">FUEL</div><div id="rcFuelBg"><div id="rcFuelBar"></div></div></div>
-  <div id="rcHint">MOUSE steer &nbsp;•&nbsp; SHIFT boost &nbsp;•&nbsp; CTRL brake &nbsp;•&nbsp; LMB detonate</div>
-  <div id="rcPipFrame"><span>BODY CAM</span></div>
-</div>
+<!-- Heavy fog drawn over the screen while the camera is inside a smoke cloud -->
+<div id="smokeView"></div>
 
 <!-- Floating combat text (improvement #5): "+100" / "+140 HEADSHOT!" -->
 <div id="floatLayer"></div>
@@ -874,12 +832,6 @@ WEAPONS.gg11.projType = 'grenade';   // Grenade Launcher
 WEAPONS.gg12.projType = 'rocket';    // RPG
 WEAPONS.gg19.projType = 'knife';     // Throwing Knives
 
-// SECRET easter-egg weapon (NOT on the gun-game ladder). Unlocked mid-match by a hidden
-// code, equipped with "0". Firing launches a steerable guided missile (see the RC system).
-WEAPONS.rcrl = { name:"RC ROCKET LAUNCHER", baseModel:"rcrl", color:0x23272e, damage:8, fireRate:0.6,
-  mag:2, reload:0, spreadBase:0, spreadGrow:0, spreadMax:0, recoil:0, pellets:1, range:0,
-  headMult:1.0, auto:false, rc:true, speed:0.78, sight:'none', noads:true };
-
 /* --- Iron-sight ADS geometry + anchors (CoD-style raise-to-center) ---------
    Per weapon: sy = local height the rear/front sights sit at (their tops); the
    ADS anchor `ads` raises/centers the model so those sights land on screen center
@@ -1025,7 +977,7 @@ const LOOT = {
 const WEAPON_TAGS = {
   rocket: { label: 'ROCKET' }, laser: { label: 'LASER' },
   deagle: { label: 'LEGENDARY', gold: true }, grenade: { label: 'GRENADE' },
-  tomahawk: { label: 'TOMAHAWK' }, rcrl: { label: '🚀 RC', rc: true }
+  tomahawk: { label: 'TOMAHAWK' }
 };
 
 /* ============================================================================
@@ -1395,7 +1347,6 @@ document.addEventListener('pointerlockchange', () => {
 });
 document.addEventListener('mousemove', (e) => {
   if (!pointerLocked) return;
-  if (rcActive) { rcSteerX += e.movementX; rcSteerY += e.movementY; return; }   // piloting: mouse steers the missile
   // Scope lowers sensitivity (improvement #1); gun-game ADS scales it by zoom (aimSensMult).
   const s = SENS * (1 - scopeBlend * (1 - SCOPE.sensMult)) * aimSensMult;
   yaw   -= e.movementX * s;
@@ -1409,23 +1360,15 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (!gameState.running) return;
-  // SECRET: typing "8888" within a 2s window unlocks the RC Rocket Launcher (per-match, this player only).
-  if ((e.code === 'Digit8' || e.code === 'Numpad8') && !e.repeat) {
-    const now = performance.now();
-    rc8.push(now); while (rc8.length && now - rc8[0] > 2000) rc8.shift();
-    if (rc8.length >= 4) { rcUnlock(); rc8.length = 0; }
+  // C: tap toggles crouch (or dives if moving fast); hold = momentary crouch (handled on keyup).
+  if (e.code === 'KeyC' && !e.repeat) {
+    const wasCrouch = player.crouching;
+    player.cHeld = 0; crouchKey();
+    player.cTapCrouched = (!wasCrouch && player.crouching && !player.diving);   // crouched FROM standing this press
   }
-  if (rcActive) return;   // piloting a missile: keys stay tracked (boost/brake) but no body actions fire
-  // "0" equips / un-equips the unlocked RC launcher (1-3 are already bound).
-  if ((e.code === 'Digit0' || e.code === 'Numpad0') && !e.repeat) { cigCancel(); rcToggleEquip(); return; }
-  // C: HOLD to crouch (released => stand; handled each frame in updateMovement). A press
-  // while sprinting still triggers a DIVE.
-  if (e.code === 'KeyC' && !e.repeat) crouchKey();
   if (player.diving) return;                                            // no reload / swap / grenade / jump mid-dive
-  if (e.code === 'KeyQ' && !e.repeat) useCigar();                       // light up a self-heal cigar
-  if (e.code === 'KeyR') { cigCancel(); reload(); }                     // reloading cancels a cigar in progress
+  if (e.code === 'KeyR') reload();
   if (e.code.startsWith('Digit')) {
-    if (cigSmoking) cigCancel();                                        // switching weapons cancels a cigar in progress
     if (gameMode === 'gungame') {
       if (e.code === 'Digit3') ggSetKarambit(!ggKarambit);             // "3" toggles karambit <-> your gun
     } else {                                                            // other modes: pick a weapon slot
@@ -1436,12 +1379,14 @@ document.addEventListener('keydown', (e) => {
   }
   // SHIFT slides — unless you're scoped through the heavy sniper, where it holds breath instead.
   if (e.code === 'ShiftLeft' && !ggHeavyScopedNow()) startSlide();
-  if (e.code === 'KeyG') { if (gameMode === 'gungame') throwImpulse(); else throwGrenade(); }   // impulse (gun game) / frag (other modes)
+  if (e.code === 'KeyG') { if (gameMode === 'gungame') throwSmoke(); else throwGrenade(); }   // smoke (gun game) / frag (other modes)
 });
 document.addEventListener('keyup', (e) => {
   keys[e.code] = false;
-  // Releasing C stands you back up automatically (handled in updateMovement; subject to the
-  // ceiling check + post-dive recovery), so nothing special is needed here.
+  // Hold-to-crouch: if C was held (not a quick tap) after crouching from standing, stand on release.
+  if (e.code === 'KeyC' && player.cTapCrouched && player.cHeld > 0.25 && player.crouching && !player.diving) {
+    player.crouching = false; player.cTapCrouched = false;
+  }
 });
 
 // Clear all input when focus is lost / pointer lock drops, so keys never get
@@ -1453,8 +1398,6 @@ let firing = false, firingL = false;   // firing = LMB; firingL = RMB (akimbo le
 function akimboEquipped() { return gameMode === 'gungame' && WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo; }
 document.addEventListener('mousedown', (e) => {
   if (!gameState.running || !pointerLocked) return;
-  if (rcActive) { if (e.button === 0 && rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: LMB = manual detonate
-  if (cigSmoking) { if (e.button === 0) cigCancel(); return; }   // smoking: LMB cancels (weapon holstered); RMB/ADS blocked
   if (e.button === 0) { firing = true; tryShoot(akimboEquipped() ? 'R' : undefined); }
   // Right-click: akimbo fires the LEFT pistol; karambit does a backhand slash; else ADS.
   if (e.button === 2) {
@@ -1472,7 +1415,6 @@ document.addEventListener('contextmenu', (e) => e.preventDefault());
 // Mouse-wheel weapon switch
 document.addEventListener('wheel', (e) => {
   if (!gameState.running || player.diving) return;                      // no weapon swap mid-dive
-  cigCancel();                                                          // switching weapons cancels a cigar in progress
   if (gameMode === 'gungame') { ggSetKarambit(!ggKarambit); return; }   // only two slots: gun <-> karambit
   const order = cycleKeys();                       // base weapons + owned specials
   let idx = order.indexOf(currentWeaponKey); if (idx < 0) idx = 0;
@@ -1483,7 +1425,6 @@ document.addEventListener('wheel', (e) => {
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  if (typeof rcCam !== 'undefined') { rcCam.aspect = window.innerWidth / window.innerHeight; rcCam.updateProjectionMatrix(); }
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
@@ -1507,16 +1448,14 @@ const player = {
   lastAttackerWeapon: null,              // gun-game: weapon they killed me with
   lastAttackerMelee: false,              // gun-game: was it a knife (melee) kill?
   // --- Crouch / dive (all modes) ---
-  crouching: false,                      // effective crouched state (HOLD-based: true while C held)
+  crouching: false,                      // toggle state
   crouchBlend: 0,                        // 0 standing .. 1 fully crouched/prone (drives hitbox + net)
   eye: 1.6,                              // smoothed camera eye height
   diving: false, diveAir: false,         // dive in progress / has left the ground
   diveTime: 0, diveRecover: 0,           // dive duration + post-landing recovery
   diveTilt: 0,                           // smoothed forward camera tilt during a dive
-  impulses: 0,                           // impulse grenades carried this life (gun-game equipment)
-  impulseT: 0,                           // brief window where an impulse launch isn't speed-clamped
-  impulseGrace: 0,                       // window where impulse-launch fall damage is suppressed
-  cigar: 1                               // self-heal cigars carried this life (1, refills on respawn)
+  cHeld: 0, cTapCrouched: false,         // C-key hold tracking (tap = toggle, hold = momentary)
+  smokes: 0                              // gun-game smoke grenades carried this life
 };
 let aiming = false;
 
@@ -1605,7 +1544,7 @@ function updateJavelinHud() {
   el('javLock').style.color = locked ? '#ff5b5b' : '#9dffb0';
 }
 
-/* --- THERMAL scope heat signatures (line-of-sight; walls block them) --- */
+/* --- THERMAL scope heat signatures (line-of-sight; walls AND smoke block them) --- */
 const _thBlobs = [];                                 // pooled DOM heat-blob elements
 function thermalBlobPool() {
   if (_thBlobs.length) return _thBlobs;
@@ -1614,6 +1553,16 @@ function thermalBlobPool() {
   return _thBlobs;
 }
 function hideThermalBlobs() { for (const b of _thBlobs) b.style.display = 'none'; }
+// Does a smoke cloud sit on the segment a->b? (option A: smoke disrupts the IR sensor)
+function smokeBlocks(a, b) {
+  for (const c of smokeClouds) {
+    if (c.opacity < 0.25) continue;
+    const ab = b.clone().sub(a), t = Math.max(0, Math.min(1, c.center.clone().sub(a).dot(ab) / Math.max(1e-4, ab.lengthSq())));
+    const closest = a.clone().addScaledVector(ab, t);
+    if (closest.distanceTo(c.center) < c.radius * 0.92) return true;
+  }
+  return false;
+}
 // Draw a hot blob for each living bot / remote player that has a CLEAR line of sight to the scope.
 function updateThermal() {
   const pool = thermalBlobPool();
@@ -1630,6 +1579,7 @@ function updateThermal() {
     if (dist > 1.2) {                                          // skip self-overlap; check occlusion
       const ray = new THREE.Raycaster(camPos, toE, 0, dist - 0.4);
       if (ray.intersectObjects(colliders, false).length) continue;   // wall / structure blocks heat
+      if (smokeBlocks(camPos, chest)) continue;                      // smoke blocks heat (option A)
     }
     const p = chest.clone().project(camera);
     if (p.z > 1) continue;                                     // behind the camera
@@ -1742,16 +1692,19 @@ function canStand() {
   }
   return true;
 }
-// C pressed: dive if sprinting fast enough. Otherwise crouch is purely HOLD-based and is
-// resolved every frame in updateMovement (crouched while C is held), so there's nothing to do here.
+// C pressed: dive if moving fast enough, otherwise toggle crouch.
 function crouchKey() {
   if (!player.alive || player.diving) return;
   const spd = Math.hypot(player.vel.x, player.vel.z);
   const runNow = MOVE.groundSpeed * Math.max(0.4, ggSpeedMult());   // weapon's max WALK/RUN speed
-  if (player.onGround && player.diveRecover <= 0 && spd >= MOVE.diveTrigger * runNow) startDive();
+  if (player.onGround && player.diveRecover <= 0 && spd >= MOVE.diveTrigger * runNow) {
+    startDive();
+  } else {
+    player.crouching = !player.crouching;        // toggle (canStand re-checked each frame while standing)
+    player.cTapCrouched = player.crouching;
+  }
 }
 function startDive() {
-  cigCancel();                                     // diving cancels a cigar in progress
   const spd = Math.hypot(player.vel.x, player.vel.z);
   let dx = player.vel.x, dz = player.vel.z;
   if (spd < 0.01) { const f = horizontalForward(); dx = f.x; dz = f.z; }
@@ -1802,16 +1755,6 @@ function ggSpeedMult() {
 function updateMovement(dt) {
   if (!player.alive) return;
 
-  // Piloting an RC missile: the body stands still (fully shootable). Keep its camera pinned
-  // so the picture-in-picture still shows the body's view, but take no movement input.
-  if (rcActive) {
-    player.vel.set(0, 0, 0);
-    camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
-    camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
-    if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
-    return;
-  }
-
   // --- GUN GAME aim-down-sights state (computed up-front so move speed can use it) ---
   // Every gun-game sight raises the weapon to centre; reloading interrupts ADS. Move 70%
   // and sensitivity 60% while ADS'd (any sight). Scopes additionally zoom + sway.
@@ -1823,25 +1766,19 @@ function updateMovement(dt) {
 
   // --- Crouch / dive bookkeeping ---
   if (player.diveRecover > 0) player.diveRecover -= dt;
-  if (player.impulseT > 0) player.impulseT -= dt;          // window where the impulse velocity isn't speed-clamped
-  if (player.impulseGrace > 0) player.impulseGrace -= dt;  // window where impulse-fall damage is suppressed
+  if (keys['KeyC']) player.cHeld += dt;
   if (player.diving) player.diveTime -= dt;
-  // Crouch is HOLD-based: crouched while C is held. The brief post-dive recovery keeps you
-  // crouched (so a dive lands low), then you auto-stand unless C is still held. A low ceiling
-  // forces you to stay crouched until you move clear (prevents clipping).
-  if (!player.diving) {
-    player.crouching = (player.diveRecover > 0) ? true : !!keys['KeyC'];
-    if (!player.crouching && player.crouchBlend > 0.05 && !canStand()) player.crouching = true;
-  }
+  // Can't stay standing under a low ceiling — stay crouched until there's room.
+  if (!player.crouching && !player.diving && player.crouchBlend > 0.05 && !canStand()) player.crouching = true;
   // Smooth crouch amount (drives eye height, body height, and the networked hitbox). ~150ms.
   const crouchTarget = (player.crouching || player.diving) ? 1 : 0;
   player.crouchBlend += (crouchTarget - player.crouchBlend) * Math.min(1, dt * 14);
   if (player.crouchBlend < 0.001) player.crouchBlend = 0;
   const crouchedNow = player.crouching && !player.diving;
 
-  // Movement: scoped slow (FFA) × per-weapon mult × 70% ADS × 50% crouched (not while diving) × 80% smoking.
+  // Movement: scoped slow (FFA) × per-weapon mult × 70% ADS × 50% crouched (not while diving).
   const moveScale = (1 - scopeBlend * (1 - SCOPE.moveMult)) * ggSpeedMult()
-                  * (ggAdsActive ? 0.70 : 1) * (crouchedNow ? MOVE.crouchSpeed : 1) * (cigSmoking ? 0.80 : 1);
+                  * (ggAdsActive ? 0.70 : 1) * (crouchedNow ? MOVE.crouchSpeed : 1);
   const effGroundSpeed = MOVE.groundSpeed * moveScale;
   const effMaxSpeed = MOVE.maxSpeed * moveScale;
   if (player.launchCd > 0) player.launchCd -= dt;
@@ -1889,7 +1826,7 @@ function updateMovement(dt) {
 
   // Hard speed cap so bunny hopping never spirals out of control (dive burst is exempt).
   const hs = Math.hypot(player.vel.x, player.vel.z);
-  if (hs > effMaxSpeed && !player.launchCd && !player.diving && player.impulseT <= 0) {   // don't clamp launch-pad / dive / impulse momentum
+  if (hs > effMaxSpeed && !player.launchCd && !player.diving) {   // don't clamp launch-pad / dive momentum
     const s = effMaxSpeed / hs;
     player.vel.x *= s; player.vel.z *= s;
   }
@@ -2024,7 +1961,6 @@ GUNGAME_LADDER.forEach(k => {
   weaponState[k] = { ammo: WEAPONS[k].mag, cooldown: 0, reloading: 0, reserve: Infinity };
 });
 weaponState[KARAMBIT_KEY] = { ammo: 1, cooldown: 0, reloading: 0, reserve: Infinity };   // permanent gun-game melee
-weaponState.rcrl = { ammo: 2, cooldown: 0, reloading: 0, reserve: 0 };                    // SECRET RC launcher: 2 rockets/life, no reload
 let currentSpread = 0;
 let playerFlashTimer = 0;   // hides the viewmodel muzzle flash shortly after firing
 
@@ -2262,19 +2198,6 @@ function buildGunModel(key) {
       new THREE.MeshBasicMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
     trail.position.set(-0.1, -0.2, -0.12); trail.rotation.y = Math.PI / 2; g.add(trail); g.userData.karTrail = trail;
     muzzleZ = -0.22;
-  } else if (model === 'rcrl') {
-    // SECRET RC ROCKET LAUNCHER — sleek black/gray high-tech tube with a camera/sensor
-    // module + antennas (visually distinct from the olive gg12 RPG).
-    body(0,0,-0.10,0.18,0.18,0.92,0x23272e);          // sleek dark launch tube
-    body(0,0.04,-0.62,0.22,0.22,0.12,0x16181d);        // muzzle ring
-    body(0,0.12,-0.50,0.22,0.08,0.18,0x14161b);        // top camera/sensor module
-    body(0,0.12,-0.60,0.05,0.05,0.05,0x12d0f0, true);  // glowing sensor lens
-    body(0,0.24,-0.30,0.012,0.22,0.012,0x9aa0a8);      // antenna
-    body(0.06,0.20,-0.16,0.012,0.16,0.012,0x9aa0a8);   // antenna 2
-    body(0,-0.16,0.16,0.10,0.20,0.16,0x111317);        // pistol grip
-    body(0,0.12,0.34,0.22,0.06,0.12,0x16181d);         // rear shoulder venturi
-    body(0.11,0.0,-0.04,0.035,0.035,0.5,0x2f343c);     // side data rail
-    muzzleZ = -0.66;
   }
   // Iron-sight weapons get a visible rear notch + front post so the ADS picture reads.
   if (GG_IRON[key]) addIronSights(g, GG_IRON[key]);
@@ -2321,7 +2244,6 @@ function akimboKick(side) {                         // recoil + flash on whichev
 function switchWeapon(key) {
   if (key === currentWeaponKey || !WEAPONS[key]) return;
   if (WEAPONS[key].special && !ownedSpecials.has(key)) return;   // can't select an un-owned special
-  rcEquipped = (key === 'rcrl');
   currentWeaponKey = key;
   weaponState[key].reloading = 0;
   currentSpread = 0;
@@ -2457,10 +2379,9 @@ function meleeAttack(swingDir) {
 }
 
 function tryShoot(akSide) {
-  if (!gameState.running || !player.alive || cigSmoking) return;   // weapon holstered while smoking
+  if (!gameState.running || !player.alive) return;
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
-  if (w.rc) { rcTryLaunch(); return; }                 // SECRET RC launcher: fire = launch a guided missile
   if (w.melee) { meleeAttack(); return; }
 
   // Akimbo: each pistol has its own ammo + cooldown. LMB fires right ('R'), RMB fires left ('L').
@@ -2538,8 +2459,6 @@ function tryShoot(akSide) {
   // Raycast against bots' part-meshes, remote-player avatars, AND world colliders.
   const targets = colliders.concat(botMeshes());
   if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
-  // Other players' in-flight RC missiles can be shot down (any direct bullet hit detonates them).
-  rcRemote.forEach(o => o.grp.children.forEach(c => { if (c.isMesh) targets.push(c); }));
 
   let hitSomething = false, killedSomeone = false;
   for (let p = 0; p < w.pellets; p++) {
@@ -2581,13 +2500,6 @@ function tryShoot(akSide) {
         const dmg = w.damage * (isHead ? w.headMult : 1);
         spawnBlood(hit.point, isHead ? 16 : 9);
         NET.damageRemote(ud.remote, dmg, isHead, currentWeaponKey, false);
-      }
-      else if (ud.rcRemoteOwner) {
-        // Shot down someone's RC missile: pop a flash here + tell the owner to detonate it.
-        hitSomething = true;
-        spawnExplosionFX(end, RC.blastR * 0.5, 0x7ad8ff);
-        NET.route(ud.rcRemoteOwner, { t: 'rcshot', id: ud.rcRemoteOwner, byId: NET.selfId });
-        rcRemoteCleanup(ud.rcRemoteOwner);          // remove our local copy immediately
       }
     }
     // Tracer per pellet for the shotgun fan; otherwise one per shot.
@@ -3424,7 +3336,6 @@ function throwMaxCarry() { return throwableType === 'tomahawk' ? TOMAHAWK.maxCar
 
 function throwGrenade() {
   if (!gameState.running || !player.alive || player.grenades <= 0) return;
-  cigCancel();                                     // throwing cancels a cigar in progress
   player.grenades--;
   const origin = camera.getWorldPosition(new THREE.Vector3());
   const dir = camera.getWorldDirection(new THREE.Vector3());
@@ -3753,579 +3664,107 @@ function updateGGProjectiles(dt) {
 }
 
 /* ============================================================================
-   7f. SECRET RC ROCKET LAUNCHER — a hidden easter-egg guided missile.
-   Unlocked mid-match by typing "8888"; equipped with "0". Firing launches a
-   steerable missile and hands the camera to its nose cam (the body stays put,
-   fully vulnerable). Mouse steers; SHIFT boosts, CTRL brakes; LMB / contact /
-   fuel-out detonates. Other peers see the exterior + flame trail and can shoot
-   it down. Kills are tagged 🚀[RC] but do NOT advance gun-game level (Option A).
+   7f. SMOKE GRENADES (gun-game tactical equipment) — bouncing canister + cloud
    ============================================================================ */
-const RC = {
-  launchSpeed: 10, cruiseSpeed: 20, boostSpeed: 30, brakeSpeed: 6,
-  rampTime: 5,            // seconds to ramp launch -> cruise
-  turnRate: 2.1,          // rad/s (~180° in ~1.5s)
-  steerSens: 0.0016,      // mouse px -> turn
-  maxFlight: 12,          // seconds of fuel
-  boostDrain: 2,          // fuel multiplier while boosting
-  killR: 4, blastR: 8, blastDmg: 60,   // explosion (lethal within killR; splash to blastR)
-  ammo: 2
-};
-let rcUnlocked = false;   // per-match: has the local player typed 8888 this match?
-let rcEquipped = false;   // is the RC launcher the currently-held weapon?
-let rcPrevWeapon = null;  // weapon to restore when un-equipping
-let rcActive = false;     // currently piloting a missile (body frozen + vulnerable)
-let rcMissile = null;     // the local controlled missile
-let rcCamLive = false;    // is the nose cam currently the rendered view?
-let rcFade = 0, rcFadeMode = null, rcFadePeak = null;   // black-fade transition (in/out)
-let rcSteerX = 0, rcSteerY = 0;   // accumulated mouse delta while piloting
-let rcUnlockMsgT = 0;
-const rc8 = [];                   // timestamps of recent "8" presses (the 8888 code)
-const rcRemote = new Map();       // ownerId -> network render-only missile copy
-const rcCam = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
-scene.add(rcCam);
-let _rcActx = null;
+const SMOKE = { maxCarry: 2, throwVel: 24, upArc: 7, gravity: 30, bounce: 0.4, settle: 1.6,
+                fuse: 1.0, radius: 9, rise: 2.0, full: 15.0, fade: 3.0 };
+const liveSmokeCans = [];     // thrown canisters (bounce, then erupt)
+const smokeClouds = [];       // active clouds (referenced by the thermal occlusion check)
+let smokeThrowT = 0;          // brief throw animation / re-throw guard
 
-// Small high-tech unlock chirp (best-effort; silent if WebAudio is unavailable).
-function rcBeep() {
-  try {
-    _rcActx = _rcActx || new (window.AudioContext || window.webkitAudioContext)();
-    const t = _rcActx.currentTime;
-    [880, 1320].forEach((f, i) => {
-      const o = _rcActx.createOscillator(), g = _rcActx.createGain();
-      o.type = 'square'; o.frequency.value = f; o.connect(g); g.connect(_rcActx.destination);
-      const s = t + i * 0.08;
-      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.10, s + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, s + 0.12);
-      o.start(s); o.stop(s + 0.13);
-    });
-  } catch (e) {}
-}
-// Unlock (only for the local player who typed the code) — toast + chirp, persists this match.
-function rcUnlock() {
-  if (rcUnlocked) return;
-  rcUnlocked = true;
-  const m = el('rcUnlockMsg'); m.style.display = 'block';
-  requestAnimationFrame(() => m.style.opacity = '1');
-  clearTimeout(rcUnlockMsgT);
-  rcUnlockMsgT = setTimeout(() => { m.style.opacity = '0'; setTimeout(() => m.style.display = 'none', 400); }, 2600);
-  rcBeep();
-}
-// "0" toggles the hidden RC slot in/out (gated on unlock; can't swap mid-flight).
-function rcToggleEquip() {
-  if (!rcUnlocked || rcActive || !player.alive) return;
-  if (!rcEquipped) {
-    rcPrevWeapon = currentWeaponKey;
-    rcEquipped = true;
-    currentWeaponKey = 'rcrl'; weaponState.rcrl.reloading = 0; currentSpread = 0;
-    buildGunModel('rcrl'); updateHUD();
-  } else {
-    rcEquipped = false;
-    if (gameMode === 'gungame') ggEquipCurrent();
-    else { currentWeaponKey = rcPrevWeapon || 'pistol'; buildGunModel(currentWeaponKey); updateHUD(); }
-  }
-}
-
-// Build the distinct sleek black/gray missile (local +Z = forward). Has a glowing nose
-// camera lens, antennas, fins, a thruster flame, and a blinking light.
-function buildRcMissileMesh() {
-  const g = new THREE.Group();
-  const box = (x, y, z, sx, sy, sz, c, emi) => {
-    const mat = emi ? new THREE.MeshBasicMaterial({ color: c }) : new THREE.MeshLambertMaterial({ color: c, flatShading: true });
-    const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); g.add(m); return m;
-  };
-  box(0, 0, 0, 0.16, 0.16, 0.72, 0x2b2f36);            // sleek gunmetal body
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.26, 10), new THREE.MeshLambertMaterial({ color: 0x4a505a, flatShading: true }));
-  nose.rotation.x = Math.PI / 2; nose.position.z = 0.48; g.add(nose);   // nose
-  box(0, 0.02, 0.42, 0.07, 0.05, 0.06, 0x12d0f0, true); // glowing nose camera lens
-  box(0.05, 0.11, -0.2, 0.012, 0.2, 0.012, 0x9aa0a8);   // antennas
-  box(-0.05, 0.11, -0.2, 0.012, 0.2, 0.012, 0x9aa0a8);
-  [[0.12, 0], [-0.12, 0], [0, 0.12], [0, -0.12]].forEach(([fx, fy]) => box(fx, fy, -0.3, 0.03, 0.03, 0.18, 0x1a1d22));  // fins
-  box(0, 0.09, 0.0, 0.03, 0.03, 0.03, 0xff3030, true);  // blinking light
-  const flameMat = new THREE.MeshBasicMaterial({ color: 0x6cf0ff, transparent: true, opacity: 0.9 });
-  const flame = new THREE.Mesh(flameGeo, flameMat); flame.position.z = -0.58; g.add(flame);
-  g.userData.flameMat = flameMat;
-  return g;
-}
-
-// Fire: consume a rocket, spawn the controlled missile, freeze the body, begin the
-// fade-to-nose-cam handoff, and tell peers.
-function rcTryLaunch() {
-  if (!gameState.running || !player.alive || rcActive || rcFadeMode) return;
-  const ws = weaponState.rcrl;
-  if (ws.cooldown > 0 || ws.ammo <= 0) return;
-  ws.ammo--; ws.cooldown = WEAPONS.rcrl.fireRate;
-  const origin = gunMuzzleWorld();
-  const dir = camera.getWorldDirection(new THREE.Vector3()).normalize();
-  const grp = buildRcMissileMesh(); grp.position.copy(origin);
-  grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone());
-  scene.add(grp);
-  rcMissile = { grp, pos: origin.clone(), dir: dir.clone(), quat: grp.quaternion.clone(), speed: RC.launchSpeed,
-                fuel: RC.maxFlight, flameMat: grp.userData.flameMat, age: 0, trailT: 0, netAcc: 0 };
-  if (gunMesh) gunMesh.position.z = -0.5;
-  alertBots(player.pos);
-  rcActive = true; rcSteerX = rcSteerY = 0;          // body freezes immediately (vulnerable)
-  rcFade = 0; rcFadeMode = 'in'; rcFadePeak = () => { rcCamLive = true; };   // fade to black, then into the nose cam
-  if (NET.active) NET.broadcast({ t: 'rc', s: 'spawn', id: NET.selfId, x: origin.x, y: origin.y, z: origin.z, dx: dir.x, dy: dir.y, dz: dir.z });
-  updateHUD();
-}
-
-// Apply the missile blast (host-authoritative, weapon 'rcrl'). Direct hits = instant kill.
-function rcApplyDamage(center, directBot, directRemote) {
-  const wkey = 'rcrl', up = new THREE.Vector3(0, 0, 1);
-  if (directBot && directBot.alive) {
-    if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: directBot.id, dmg: 99999, head: false, weapon: wkey, fromId: NET.selfId });
-    else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(directBot, 99999, up, null, { weapon: wkey }); if (NET.isHost) NET.botCredit = null; }
-  }
-  if (directRemote && directRemote.alive) NET.damageRemote(directRemote, 99999, false, wkey, false);
-  for (const bot of bots) {
-    if (!bot.alive || bot === directBot) continue;
-    const d = Math.hypot(bot.pos.x - center.x, bot.pos.y + 1 - center.y, bot.pos.z - center.z);
-    if (d >= RC.blastR) continue;
-    let dmg = RC.blastDmg * (1 - d / RC.blastR); if (d < RC.killR) dmg = Math.max(dmg, 120);
-    if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg, head: false, weapon: wkey, fromId: NET.selfId });
-    else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, dmg, up, null, { weapon: wkey, blast: true, dist: d }); if (NET.isHost) NET.botCredit = null; }
-  }
-  if (NET.active) NET.players.forEach(rp => {
-    if (!rp.alive || rp === directRemote) return;
-    const d = Math.hypot(rp.pos.x - center.x, rp.pos.y + 1 - center.y, rp.pos.z - center.z);
-    if (d >= RC.blastR) return;
-    let dmg = RC.blastDmg * (1 - d / RC.blastR); if (d < RC.killR) dmg = Math.max(dmg, 120);
-    NET.damageRemote(rp, dmg, false, wkey, false);
-  });
-  const pd = Math.hypot(player.pos.x - center.x, player.pos.y + 1 - center.y, player.pos.z - center.z);
-  if (player.alive && pd < RC.blastR) hurtPlayer(RC.blastDmg * (1 - pd / RC.blastR));
-  addShake(0.2 * Math.max(0, 1 - pd / (RC.blastR * 2)), 0.4);
-}
-
-// Detonate the local controlled missile. `immediate` skips the fade (used on death).
-function rcDetonate(center, directBot, directRemote, immediate) {
-  if (!rcMissile) return;
-  center = center || rcMissile.pos.clone();
-  spawnExplosionFX(center, RC.blastR, 0x7ad8ff);
-  spawnExplosionFX(center, RC.blastR * 0.6, 0xffb030);
-  spawnBlood(center, 10);
-  rcApplyDamage(center, directBot, directRemote);
-  if (NET.active) NET.broadcast({ t: 'rc', s: 'boom', id: NET.selfId, x: center.x, y: center.y, z: center.z });
-  scene.remove(rcMissile.grp); disposeGroup(rcMissile.grp); rcMissile = null;
-  if (immediate) { rcActive = false; rcCamLive = false; rcFade = 0; rcFadeMode = null; el('rcFade').style.opacity = 0; }
-  else { rcFadeMode = 'in'; rcFadePeak = () => { rcCamLive = false; rcActive = false; }; }   // fade to black then back to the body
-  updateHUD();
-}
-
-// Per-frame: fade transitions, flight, steering, collision, nose-cam follow, HUD readout.
-function rcUpdate(dt) {
-  if (rcFadeMode === 'in') {
-    rcFade = Math.min(1, rcFade + dt / 0.1);
-    if (rcFade >= 1) { rcFade = 1; if (rcFadePeak) rcFadePeak(); rcFadePeak = null; rcFadeMode = 'out'; }
-  } else if (rcFadeMode === 'out') {
-    rcFade = Math.max(0, rcFade - dt / 0.1);
-    if (rcFade <= 0) { rcFade = 0; rcFadeMode = null; }
-  }
-  el('rcFade').style.opacity = rcFade;
-
-  if (!rcMissile) return;
-  const m = rcMissile, lim = ARENA - 1;
-  m.age += dt;
-
-  // Steering (only once the nose cam is live): mouse pitches/yaws in the MISSILE'S OWN frame,
-  // clamped by the turn rate. Frame-relative rotation never gimbal-locks (even flying straight up).
-  if (rcCamLive) {
-    let dyaw = -rcSteerX * RC.steerSens, dpitch = rcSteerY * RC.steerSens;   // mouse UP -> climb (standard FPS, not inverted)
-    const maxTurn = RC.turnRate * dt;
-    dyaw = Math.max(-maxTurn, Math.min(maxTurn, dyaw));
-    dpitch = Math.max(-maxTurn, Math.min(maxTurn, dpitch));
-    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), dyaw);    // local up (yaw)
-    const qp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), dpitch);  // local right (pitch)
-    m.quat.multiply(qy).multiply(qp);
-    m.dir.set(0, 0, 1).applyQuaternion(m.quat).normalize();
-  }
-  rcSteerX = rcSteerY = 0;
-
-  // Speed: ramp launch -> cruise; SHIFT boosts (2x fuel drain), CTRL brakes.
-  let targetSpeed = RC.launchSpeed + (RC.cruiseSpeed - RC.launchSpeed) * Math.min(1, m.age / RC.rampTime);
-  let drain = dt;
-  if (rcCamLive && keys['ShiftLeft']) { targetSpeed = RC.boostSpeed; drain = dt * RC.boostDrain; }
-  else if (rcCamLive && keys['ControlLeft']) { targetSpeed = RC.brakeSpeed; }
-  m.speed += (targetSpeed - m.speed) * Math.min(1, dt * 3);
-  m.fuel -= drain;
-
-  // Move + collision look-ahead (world + bots + remote players).
-  const stepLen = m.speed * dt;
-  const targets = colliders.concat(botMeshes());
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
-  const ray = new THREE.Raycaster(m.pos, m.dir, 0, stepLen + 0.4);
-  const hits = ray.intersectObjects(targets, false);
-  let detonate = false, point = null, directBot = null, directRemote = null;
-  if (hits.length) {
-    detonate = true; point = hits[0].point.clone();
-    const ud = hits[0].object.userData || {};
-    directBot = ud.bot || null; directRemote = (ud.remote && ud.remote.alive) ? ud.remote : null;
-  }
-  m.pos.addScaledVector(m.dir, stepLen);
-  if (!detonate) {
-    const gh = groundHeightAt(m.pos.x, m.pos.z, m.pos.y);
-    if (m.pos.y < gh + 0.15 || Math.abs(m.pos.x) > lim || Math.abs(m.pos.z) > lim) { detonate = true; point = m.pos.clone(); }
-  }
-  if (!detonate) for (const s of solids) {
-    if (m.pos.y < s.max.y && m.pos.y > s.min.y && m.pos.x > s.min.x && m.pos.x < s.max.x && m.pos.z > s.min.z && m.pos.z < s.max.z) { detonate = true; point = m.pos.clone(); break; }
-  }
-
-  m.grp.position.copy(point || m.pos);
-  m.grp.quaternion.copy(m.quat);
-  // Hide the missile's own geometry from the OPERATOR once the nose cam is live, so nothing
-  // (body, nose cone, flame) blocks the view. Other players still see their own exterior copy.
-  m.grp.visible = !rcCamLive;
-  if (m.flameMat) m.flameMat.opacity = 0.6 + Math.random() * 0.4;
-  m.trailT -= dt; if (m.trailT <= 0) { spawnSmokePuff(m.pos, 0xb8c0c8, 0.35, 0.5); m.trailT = 0.04; }
-
-  // Nose cam: sit just ahead of the missile's nose looking down its heading (clean forward view).
-  if (rcCamLive) {
-    rcCam.position.copy(m.pos).addScaledVector(m.dir, 0.7);
-    rcCam.lookAt(m.pos.clone().add(m.dir));
-    el('rcAlt').textContent = Math.max(0, Math.round(m.pos.y));
-    el('rcSpd').textContent = Math.round(m.speed);
-    el('rcFuelBar').style.width = Math.max(0, m.fuel / RC.maxFlight * 100) + '%';
-  }
-
-  m.netAcc += dt;
-  if (NET.active && m.netAcc >= 0.05) { m.netAcc = 0; NET.broadcast({ t: 'rc', s: 'move', id: NET.selfId, x: m.pos.x, y: m.pos.y, z: m.pos.z, dx: m.dir.x, dy: m.dir.y, dz: m.dir.z }); }
-
-  if (detonate || m.fuel <= 0) rcDetonate(point || m.pos, directBot, directRemote, false);
-}
-
-// --- Network render-only copies of OTHER players' missiles (smoothed) ---
-function rcRemoteSpawn(id, pos, dir) {
-  rcRemoteCleanup(id);
-  const grp = buildRcMissileMesh(); grp.position.copy(pos);
-  grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone().normalize());
-  grp.userData.rcRemoteOwner = id;
-  grp.traverse(o => { if (o.isMesh) o.userData.rcRemoteOwner = id; });   // so bullets can resolve a hit
-  scene.add(grp);
-  rcRemote.set(id, { grp, pos: pos.clone(), dir: dir.clone(), tpos: pos.clone(), tdir: dir.clone(), flameMat: grp.userData.flameMat, trailT: 0 });
-}
-function rcRemoteMove(id, pos, dir) {
-  const o = rcRemote.get(id); if (!o) { rcRemoteSpawn(id, pos, dir); return; }
-  o.tpos.copy(pos); o.tdir.copy(dir);
-}
-function rcRemoteBoom(id, center) {
-  spawnExplosionFX(center, RC.blastR, 0x7ad8ff); spawnExplosionFX(center, RC.blastR * 0.6, 0xffb030); spawnBlood(center, 8);
-  rcRemoteCleanup(id);
-}
-function rcRemoteCleanup(id) { const o = rcRemote.get(id); if (o) { scene.remove(o.grp); disposeGroup(o.grp); rcRemote.delete(id); } }
-function updateRcRemote(dt) {
-  rcRemote.forEach(o => {
-    o.pos.lerp(o.tpos, Math.min(1, dt * 14)); o.dir.lerp(o.tdir, Math.min(1, dt * 14)); o.dir.normalize();
-    o.grp.position.copy(o.pos); o.grp.lookAt(o.pos.clone().add(o.dir));
-    if (o.flameMat) o.flameMat.opacity = 0.6 + Math.random() * 0.4;
-    o.trailT -= dt; if (o.trailT <= 0) { spawnSmokePuff(o.pos, 0xb8c0c8, 0.3, 0.45); o.trailT = 0.05; }
-  });
-}
-
-// Reset all RC state for a fresh match / leaving to the menu (unlock is per-match).
-function rcResetMatch() {
-  rcUnlocked = false; rcEquipped = false; rcActive = false; rcCamLive = false;
-  rcFade = 0; rcFadeMode = null; rcFadePeak = null; rcPrevWeapon = null; rcSteerX = rcSteerY = 0;
-  if (rcMissile) { scene.remove(rcMissile.grp); disposeGroup(rcMissile.grp); rcMissile = null; }
-  rcRemote.forEach(o => { scene.remove(o.grp); disposeGroup(o.grp); }); rcRemote.clear();
-  weaponState.rcrl.ammo = RC.ammo; weaponState.rcrl.cooldown = 0;
-  rc8.length = 0;
-  el('rcHud').classList.remove('on'); el('rcFade').style.opacity = 0;
-  const um = el('rcUnlockMsg'); um.style.display = 'none'; um.style.opacity = 0;
-}
-
-/* ============================================================================
-   7f. IMPULSE GRENADES (gun-game tactical equipment) — Fortnite-style kinetic
-   launcher. A bright cyan canister STICKS to the first surface it touches (wall,
-   floor, ceiling, fence, or a player), activates FAST, then violently launches
-   every nearby player (incl. the thrower) away from its center for mobility.
-   Deals NO direct damage. The host validates who's in radius and routes each
-   affected player an impulse vector to apply to their own velocity.
-   ============================================================================ */
-const IMPULSE = { maxCarry: 2, throwVel: 30, upArc: 6.5, gravity: 30,
-                  settleFuse: 0.3,   // detonate 0.3s after STICKING
-                  maxAir: 1.5,       // ...or auto-detonate 1.5s after the throw if it never sticks (edge case)
-                  charge: 0.2,       // glow brightens over the final 0.2s
-                  radius: 6,         // launch radius
-                  velNear: 50, velMid: 35, velEdge: 18,   // launch speed by distance band (0-1u / 3u / 6u)
-                  upFrac: 0.6,       // upward component = 60% of the horizontal launch speed
-                  grace: 4.0 };      // post-launch fall-damage immunity window
-const liveImpulses = [];      // thrown canisters (owned = I simulate physics; else network render copy)
-let impulseThrowT = 0;        // brief throw animation / re-throw guard
-const impulseRingGeo = new THREE.TorusGeometry(1, 0.12, 8, 24);   // expanding shockwave ring (scaled up)
-let _impActx = null;
-
-// Rising "whine" charge cue (best-effort; silent if WebAudio is unavailable).
-function impulseWhine() {
-  try {
-    _impActx = _impActx || new (window.AudioContext || window.webkitAudioContext)();
-    const t = _impActx.currentTime, o = _impActx.createOscillator(), g = _impActx.createGain();
-    o.type = 'sawtooth'; o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.3);
-    o.connect(g); g.connect(_impActx.destination);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.06);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
-    o.start(t); o.stop(t + 0.35);
-  } catch (e) {}
-}
-
-function throwImpulse() {
-  if (!gameState.running || !player.alive || player.impulses <= 0 || impulseThrowT > 0) return;
-  cigCancel();                                                  // throwing cancels (and consumes) a cigar in progress
-  player.impulses--; impulseThrowT = 0.4;                       // quick throw, ~400ms anim/guard
+function throwSmoke() {
+  if (!gameState.running || !player.alive || player.smokes <= 0 || smokeThrowT > 0) return;
+  player.smokes--; smokeThrowT = 0.4;
   const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
   const dir = camera.getWorldDirection(new THREE.Vector3());
-  const vel = dir.multiplyScalar(IMPULSE.throwVel); vel.y += IMPULSE.upArc;   // slight forward arc (easy throw-at-feet)
-  spawnImpulse(origin, vel, true, NET.selfId);
-  if (gunMesh) gunMesh.position.z = -0.35;                      // little throw pop on the viewmodel
-  if (NET.active) NET.broadcast({ t: 'imp', s: 'spawn', id: NET.selfId, x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
+  const vel = dir.multiplyScalar(SMOKE.throwVel); vel.y += SMOKE.upArc;
+  spawnSmokeCan(origin, vel, true);
+  if (NET.active) NET.broadcast({ t: 'smoke', x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
   updateHUD();
 }
-// Bright cyan canister with glowing accent rings (kept distinct from any frag grenade).
-function buildImpulseCan() {
+function buildSmokeCan() {
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.34, 10), new THREE.MeshLambertMaterial({ color: 0x0e2a3a, flatShading: true })));
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x32e0ff });
-  const r1 = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.115, 0.08, 10), glowMat); r1.position.y = 0.05; g.add(r1);
-  const r2 = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.115, 0.05, 10), glowMat); r2.position.y = -0.09; g.add(r2);
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 10), new THREE.MeshLambertMaterial({ color: 0xbfeaff, flatShading: true })); cap.position.y = 0.19; g.add(cap);
-  g.userData.glow = glowMat;
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.34, 8), new THREE.MeshLambertMaterial({ color: 0x2a2e26, flatShading: true })));
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.05, 8), new THREE.MeshLambertMaterial({ color: 0xb0b6b0, flatShading: true }));
+  cap.position.y = 0.18; g.add(cap);
   return g;
 }
-function spawnImpulse(pos, vel, owned, ownerId) {
-  const mesh = buildImpulseCan(); mesh.position.copy(pos); scene.add(mesh);
-  liveImpulses.push({ mesh, pos: pos.clone(), vel: vel.clone(), owned: !!owned, ownerId: ownerId || null,
-                      stuck: false, fuse: IMPULSE.settleFuse, air: 0, spin: 0, whined: false,
-                      follow: null, followId: null, followOff: new THREE.Vector3() });
+function spawnSmokeCan(pos, vel, owned) {
+  const mesh = buildSmokeCan(); mesh.position.copy(pos); scene.add(mesh);
+  liveSmokeCans.push({ mesh, pos: pos.clone(), vel: vel.clone(), owned: !!owned, settled: false, fuse: SMOKE.fuse, life: owned ? 99 : 1.8, spin: 0 });
 }
-// Reference position of a follow target (entity the grenade is stuck to), or null if gone.
-function impulseFollowPos(f) {
-  if (!f || !f.ref) return null;
-  if (f.kind === 'self') return player.alive ? player.pos : null;
-  return f.ref.alive ? f.ref.pos : null;
-}
-// Resolve a follow id received over the network to a local entity (bot / remote / self).
-function impulseResolveFollow(fid) {
-  if (!fid) return null;
-  if (fid === NET.selfId) return { kind: 'self', ref: player, id: fid };
-  if (fid.indexOf('bot') === 0) { const b = bots.find(x => ('bot' + x.id) === fid); return b ? { kind: 'bot', ref: b, id: fid } : null; }
-  const rp = NET.players.get(fid); return rp ? { kind: 'remote', ref: rp, id: fid } : null;
-}
-// Orient the canister so its long (local +Y) axis aligns with the surface normal (sits flush).
-function impulseOrient(mesh, normal) { mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal); }
-// Stick the canister in place against `normal`, optionally following a moving entity.
-function impulseStick(c, point, normal, follow) {
-  c.stuck = true; c.pos.copy(point); c.vel.set(0, 0, 0); c.fuse = IMPULSE.settleFuse;
-  impulseOrient(c.mesh, normal); c.mesh.position.copy(point);
-  if (follow) { c.follow = follow; c.followId = follow.id; const a = impulseFollowPos(follow); if (a) c.followOff.copy(point).sub(a); }
-  if (c.owned && NET.active) NET.broadcast({ t: 'imp', s: 'stick', id: c.ownerId, x: point.x, y: point.y, z: point.z, nx: normal.x, ny: normal.y, nz: normal.z, fid: c.followId || null });
-  return true;
-}
-// First-contact test: stick to a player (follow), then ground / fence / solids (6 faces).
-function impulseTryStick(c, r, lim) {
-  for (const bot of bots) {                        // bots
-    if (!bot.alive) continue;
-    if (Math.hypot(c.pos.x - bot.pos.x, c.pos.y - (bot.pos.y + 1.0), c.pos.z - bot.pos.z) < 1.0) {
-      const n = new THREE.Vector3(c.pos.x - bot.pos.x, 0, c.pos.z - bot.pos.z); if (n.lengthSq() < 1e-4) n.set(0, 0, 1); n.normalize();
-      return impulseStick(c, c.pos.clone(), n, { kind: 'bot', ref: bot, id: 'bot' + bot.id });
-    }
-  }
-  if (NET.active) for (const rp of NET.players.values()) {   // remote players
-    if (!rp.alive) continue;
-    if (Math.hypot(c.pos.x - rp.pos.x, c.pos.y - (rp.pos.y + 1.0), c.pos.z - rp.pos.z) < 1.0) {
-      const n = new THREE.Vector3(c.pos.x - rp.pos.x, 0, c.pos.z - rp.pos.z); if (n.lengthSq() < 1e-4) n.set(0, 0, 1); n.normalize();
-      return impulseStick(c, c.pos.clone(), n, { kind: 'remote', ref: rp, id: rp.id });
-    }
-  }
-  const gh = groundHeightAt(c.pos.x, c.pos.z, c.pos.y);         // floor
-  if (c.pos.y <= gh + r) return impulseStick(c, new THREE.Vector3(c.pos.x, gh + r, c.pos.z), new THREE.Vector3(0, 1, 0), null);
-  if (c.pos.x <= -lim) return impulseStick(c, new THREE.Vector3(-lim, c.pos.y, c.pos.z), new THREE.Vector3(1, 0, 0), null);   // arena fence
-  if (c.pos.x >= lim)  return impulseStick(c, new THREE.Vector3(lim, c.pos.y, c.pos.z),  new THREE.Vector3(-1, 0, 0), null);
-  if (c.pos.z <= -lim) return impulseStick(c, new THREE.Vector3(c.pos.x, c.pos.y, -lim), new THREE.Vector3(0, 0, 1), null);
-  if (c.pos.z >= lim)  return impulseStick(c, new THREE.Vector3(c.pos.x, c.pos.y, lim),  new THREE.Vector3(0, 0, -1), null);
-  for (const s of solids) {                                    // walls / crates / roofs / ceilings (closest face)
-    if (c.pos.x > s.min.x - r && c.pos.x < s.max.x + r && c.pos.y > s.min.y - r && c.pos.y < s.max.y + r && c.pos.z > s.min.z - r && c.pos.z < s.max.z + r) {
-      const dxn = c.pos.x - (s.min.x - r), dxp = (s.max.x + r) - c.pos.x, dyn = c.pos.y - (s.min.y - r), dyp = (s.max.y + r) - c.pos.y, dzn = c.pos.z - (s.min.z - r), dzp = (s.max.z + r) - c.pos.z;
-      const m = Math.min(dxn, dxp, dyn, dyp, dzn, dzp);
-      const p = c.pos.clone(), n = new THREE.Vector3();
-      if (m === dxn) { p.x = s.min.x - r; n.set(-1, 0, 0); } else if (m === dxp) { p.x = s.max.x + r; n.set(1, 0, 0); }
-      else if (m === dyn) { p.y = s.min.y - r; n.set(0, -1, 0); } else if (m === dyp) { p.y = s.max.y + r; n.set(0, 1, 0); }
-      else if (m === dzn) { p.z = s.min.z - r; n.set(0, 0, -1); } else { p.z = s.max.z + r; n.set(0, 0, 1); }
-      return impulseStick(c, p, n, null);
-    }
-  }
-  return false;
-}
-function updateImpulses(dt) {
-  const lim = ARENA - 1, r = 0.16;
-  for (let i = liveImpulses.length - 1; i >= 0; i--) {
-    const c = liveImpulses[i]; c.air += dt;
-    if (!c.stuck) {
-      c.vel.y -= IMPULSE.gravity * dt;
-      c.pos.addScaledVector(c.vel, dt); c.spin += dt * 7;
+function updateSmokeCans(dt) {
+  const lim = ARENA - 1, r = 0.18, damp = SMOKE.bounce;
+  for (let i = liveSmokeCans.length - 1; i >= 0; i--) {
+    const c = liveSmokeCans[i]; c.life -= dt;
+    if (!c.settled) {
+      c.vel.y -= SMOKE.gravity * dt;
+      c.pos.addScaledVector(c.vel, dt); c.spin += dt * 6;
+      const gh = groundHeightAt(c.pos.x, c.pos.z, c.pos.y);
+      if (c.pos.y < gh + r) { c.pos.y = gh + r; if (c.vel.y < 0) { c.vel.y = -c.vel.y * damp; c.vel.x *= 0.7; c.vel.z *= 0.7; } }
+      for (const s of solids) {           // bounce off walls/crates
+        if (c.pos.y >= s.max.y - 0.02 || c.pos.y <= s.min.y) continue;
+        if (c.pos.x > s.min.x - r && c.pos.x < s.max.x + r && c.pos.z > s.min.z - r && c.pos.z < s.max.z + r) {
+          const pL = c.pos.x - (s.min.x - r), pR = (s.max.x + r) - c.pos.x, pB = c.pos.z - (s.min.z - r), pF = (s.max.z + r) - c.pos.z;
+          if (Math.min(pL, pR) < Math.min(pB, pF)) { c.pos.x += pL < pR ? -pL : pR; c.vel.x = -c.vel.x * damp; }
+          else { c.pos.z += pB < pF ? -pB : pF; c.vel.z = -c.vel.z * damp; }
+        }
+      }
+      if (c.pos.x < -lim) { c.pos.x = -lim; c.vel.x *= -damp; } if (c.pos.x > lim) { c.pos.x = lim; c.vel.x *= -damp; }
+      if (c.pos.z < -lim) { c.pos.z = -lim; c.vel.z *= -damp; } if (c.pos.z > lim) { c.pos.z = lim; c.vel.z *= -damp; }
       c.mesh.position.copy(c.pos); c.mesh.rotation.set(c.spin, 0, c.spin * 0.7);
-      if (c.owned) impulseTryStick(c, r, lim);   // owned canister is authoritative; copies snap on the 'stick' message
+      const onGround = c.pos.y <= gh + r + 0.02;
+      if (onGround && Math.hypot(c.vel.x, c.vel.z) < SMOKE.settle) c.settled = true;
     } else {
-      if (c.follow) { const a = impulseFollowPos(c.follow); if (a) { c.pos.copy(a).add(c.followOff); c.mesh.position.copy(c.pos); } }   // follow a moving body
       c.fuse -= dt;
     }
-    // Charge / flashing cue on the glow rings.
-    if (c.mesh.userData.glow) {
-      const g = c.mesh.userData.glow;
-      if (c.stuck && c.fuse <= IMPULSE.charge) {                // final 0.2s: ramp to white + swell
-        const k = Math.max(0, Math.min(1, 1 - c.fuse / IMPULSE.charge));
-        g.color.setRGB(0.196 + 0.804 * k, 0.878 + 0.122 * k, 1.0); c.mesh.scale.setScalar(1 + 0.5 * k);
-        if (!c.whined) { c.whined = true; if (c.owned) impulseWhine(); }
-      } else if (c.stuck) {                                     // stuck & armed: flashing beacon
-        const f = 0.5 + 0.5 * Math.sin(c.air * 18);
-        g.color.setRGB(0.10 + 0.10 * f, 0.55 + 0.33 * f, 1.0); c.mesh.scale.setScalar(1);
+    // Owned canister erupts into a cloud when its fuse runs out (then everyone sees it via NET).
+    if ((c.settled && c.fuse <= 0) || (!c.owned && c.life <= 0)) {
+      if (c.owned) {
+        spawnSmokeCloud(c.pos.clone());
+        if (NET.active) NET.broadcast({ t: 'smokecloud', x: c.pos.x, y: c.pos.y, z: c.pos.z });
       }
-    }
-    const boom = (c.stuck && c.fuse <= 0) || (c.air >= IMPULSE.maxAir);
-    if (c.owned && boom) {
-      const center = c.pos.clone();
-      if (NET.active && !NET.isHost) { impulseDetonate(center, false); NET.route(NET.hostId, { t: 'imp', s: 'boom', id: NET.selfId, x: center.x, y: center.y, z: center.z }); }
-      else { impulseDetonate(center, true); if (NET.active) NET.broadcast({ t: 'imp', s: 'boom', id: NET.selfId, x: center.x, y: center.y, z: center.z }); }
-      scene.remove(c.mesh); disposeGroup(c.mesh); liveImpulses.splice(i, 1);
-    } else if (!c.owned && c.air > IMPULSE.maxAir + 2) {   // safety: drop a network copy if its boom message was lost
-      scene.remove(c.mesh); disposeGroup(c.mesh); liveImpulses.splice(i, 1);
+      scene.remove(c.mesh); disposeGroup(c.mesh); liveSmokeCans.splice(i, 1);
     }
   }
 }
-// Bright cyan kinetic shockwave VFX (no fire — visually distinct from RPG/GL explosions).
-function spawnImpulseFX(center) {
-  const sph = new THREE.Mesh(explGeo, new THREE.MeshBasicMaterial({ color: 0x4fe3ff, transparent: true, opacity: 0.8 }));
-  sph.position.copy(center); scene.add(sph);
-  explosions.push({ mesh: sph, life: 0.4, maxLife: 0.4, radius: IMPULSE.radius });
-  const ring = new THREE.Mesh(impulseRingGeo, new THREE.MeshBasicMaterial({ color: 0x9cf2ff, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
-  ring.position.copy(center); ring.rotation.x = Math.PI / 2; scene.add(ring);
-  explosions.push({ mesh: ring, life: 0.5, maxLife: 0.5, radius: IMPULSE.radius * 1.3 });
-}
-// Launch speed by distance band: 50 (≤1u) → 35 (3u) → 18 (edge 6u).
-function impulseSpeedAt(d) {
-  if (d <= 1) return IMPULSE.velNear;
-  if (d <= 3) return IMPULSE.velNear + (IMPULSE.velMid - IMPULSE.velNear) * (d - 1) / 2;
-  return Math.max(IMPULSE.velEdge, IMPULSE.velMid + (IMPULSE.velEdge - IMPULSE.velMid) * (d - 3) / 3);
-}
-// Velocity to fling a body at (px,py,pz) away from the grenade center (+60% upward).
-function impulseVecFor(px, py, pz, center) {
-  const dx = px - center.x, dz = pz - center.z;
-  const d3 = Math.hypot(dx, py - center.y, dz);
-  const sp = impulseSpeedAt(Math.min(IMPULSE.radius, d3));
-  const horiz = new THREE.Vector3(dx, 0, dz); const hl = horiz.length();
-  if (hl < 0.4) return new THREE.Vector3(0, sp, 0);   // ~directly above the grenade (feet self-throw) -> straight up
-  horiz.divideScalar(hl);
-  return new THREE.Vector3(horiz.x * sp, sp * IMPULSE.upFrac, horiz.z * sp);
-}
-// Apply an impulse velocity to the LOCAL player (keeps look/fire control; carries through the air).
-function applyImpulseVec(v) {
-  if (!player.alive) return;
-  player.vel.x += v.x; player.vel.z += v.z;
-  player.vel.y = Math.max(player.vel.y, 0) + v.y;
-  player.onGround = false; player.jumps = 1; player.sliding = false; player.diving = false;
-  player.impulseT = 1.2;                // don't speed-clamp the (now stronger) launch for ~1.2s
-  player.impulseGrace = IMPULSE.grace;  // suppress impulse-fall damage for 4s (no fall-damage system yet, but future-proof)
-}
-// Detonate: spawn the shockwave VFX everywhere; the AUTHORITY (host/solo) launches each player in radius.
-function impulseDetonate(center, doLaunches) {
-  spawnImpulseFX(center);
-  const pe = new THREE.Vector3(player.pos.x, player.pos.y + 0.9, player.pos.z);
-  const pdist = pe.distanceTo(center);
-  if (pdist < IMPULSE.radius * 1.5) addShake(0.12 * (1 - pdist / (IMPULSE.radius * 1.5)), 0.35);
-  if (!doLaunches) return;
-  // Local player in radius -> launch (no damage).
-  if (player.alive && pdist <= IMPULSE.radius) applyImpulseVec(impulseVecFor(player.pos.x, player.pos.y + 0.9, player.pos.z, center));
-  // Remote players in radius -> route each an impulse vector (they apply it to their own velocity).
-  if (NET.active && NET.isHost) NET.players.forEach(rp => {
-    if (!rp.alive) return;
-    const d = Math.hypot(rp.pos.x - center.x, rp.pos.y + 0.9 - center.y, rp.pos.z - center.z);
-    if (d > IMPULSE.radius) return;
-    const v = impulseVecFor(rp.pos.x, rp.pos.y + 0.9, rp.pos.z, center);
-    NET.route(rp.id, { t: 'impulse', vx: v.x, vy: v.y, vz: v.z });
-  });
-}
-
-/* ============================================================================
-   7g. CIGAR HEAL (press Q) — light up a fat cigar held in the left hand to recover
-   HP smoothly over ~3s (~33%/s). Holsters the weapon (can't fire/ADS/melee), 80%
-   move speed, and CANCELS (and is consumed) on fire / weapon-switch / reload /
-   grenade / dive. Other players see the smoking tell on the third-person avatar.
-   ============================================================================ */
-const CIGAR = { maxCarry: 1, dur: 3.0, raise: 0.4, lowerFast: 0.25 };
-let cigSmoking = false;        // a cigar use is in progress (raise→light→hold→lower)
-let cigCanceling = false;      // an interrupt triggered: quick-lower then finish
-let cigT = 0, cigLowerT = 0, cigPuffT = 0;
-let _cigVM = null;
-
-// Build the first-person left-hand + cigar viewmodel (lower-left), attached to the camera.
-function buildCigarVM() {
-  const g = new THREE.Group();
-  const skin = new THREE.MeshLambertMaterial({ color: 0xc98f5a, flatShading: true });   // default skin-tone hand
-  // Left hand: palm + fingers curled to hold the cigar between index & middle.
-  const palm = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 0.30), skin); palm.position.set(0, 0, 0); g.add(palm);
-  for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.10, 0.20), skin); f.position.set(-0.08 + i * 0.075, 0.03, -0.18); f.rotation.x = -0.5; g.add(f); }
-  const thumb = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.10, 0.13), skin); thumb.position.set(0.14, 0.04, -0.04); thumb.rotation.z = 0.4; g.add(thumb);
-  const wrist = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.16, 0.26), skin); wrist.position.set(0.02, -0.06, 0.22); g.add(wrist);
-  // The cigar itself (large), held angled up toward the camera "mouth"; lit ember at the far tip.
-  const cigar = new THREE.Group();
-  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2a, flatShading: true });
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.052, 0.52, 10), bodyMat); body.rotation.z = Math.PI / 2; cigar.add(body);
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.054, 0.054, 0.07, 10), new THREE.MeshLambertMaterial({ color: 0xd8c69a, flatShading: true })); band.rotation.z = Math.PI / 2; band.position.x = -0.17; cigar.add(band);
-  const gold = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 10), new THREE.MeshBasicMaterial({ color: 0xc8a23a })); gold.rotation.z = Math.PI / 2; gold.position.x = -0.13; cigar.add(gold);
-  const red  = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.015, 10), new THREE.MeshBasicMaterial({ color: 0x9a2b2b })); red.rotation.z = Math.PI / 2; red.position.x = -0.20; cigar.add(red);
-  const emberMat = new THREE.MeshBasicMaterial({ color: 0xff5a1a });
-  const ember = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), emberMat); ember.position.x = 0.28; ember.visible = false; cigar.add(ember);
-  const tip = new THREE.Object3D(); tip.position.x = 0.31; cigar.add(tip);
-  cigar.position.set(0.05, 0.11, -0.10); cigar.rotation.set(0, 0.55, 0.18); g.add(cigar);
-  g.userData = { ember, emberMat, tip };
-  g.position.set(-0.34, -0.95, -0.5);    // start fully below the screen (raised during use)
-  g.rotation.set(0.1, 0.2, 0);
-  g.visible = false; camera.add(g);
-  return g;
-}
-// Q: light up the cigar (one per life; consumed the instant you start — no cancel-and-reuse).
-function useCigar() {
-  if (!gameState.running || !player.alive || cigSmoking || player.cigar <= 0) return;
-  player.cigar--;
-  cigSmoking = true; cigCanceling = false; cigT = 0; cigLowerT = 0; cigPuffT = 0;
-  aiming = false;                              // drop ADS — the main weapon holsters
-  if (!_cigVM) _cigVM = buildCigarVM();
-  _cigVM.visible = true; _cigVM.userData.ember.visible = false; _cigVM.position.set(-0.34, -0.95, -0.5);
-  if (gunMesh) gunMesh.visible = false;
-  updateHUD();
-}
-// Interrupt: quick-lower and stop healing (the cigar is already consumed for this life).
-function cigCancel() { if (cigSmoking && !cigCanceling) { cigCanceling = true; cigLowerT = 0; } }
-function cigFinish() { cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false; updateHUD(); }
-// Per-frame: heal, animate the viewmodel (raise → light → hold+puff → lower), keep the gun holstered.
-function updateCigar(dt) {
-  if (!cigSmoking) return;
-  if (!player.alive) { cigFinish(); return; }
-  if (gunMesh) gunMesh.visible = false;        // keep the weapon holstered every frame (overrides scope/sight logic)
-  const downY = -0.95, restY = -0.30, vm = _cigVM, ember = vm.userData.ember;
-  if (cigCanceling) {                          // fast lower, heal stopped
-    cigLowerT += dt; const k = Math.min(1, cigLowerT / CIGAR.lowerFast);
-    vm.position.y = restY + (downY - restY) * smoothstep(k);
-    ember.visible = false;
-    if (k >= 1) cigFinish();
-    return;
+function spawnSmokeCloud(center) {
+  const group = new THREE.Group(); group.position.copy(center).setY(center.y + 1.5);
+  const puffMat = () => new THREE.MeshBasicMaterial({ color: 0xeef0f2, transparent: true, opacity: 0, depthWrite: false });
+  const puffs = [];
+  for (let i = 0; i < 16; i++) {
+    const rad = 2.4 + Math.random() * 2.2;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(rad, 8, 6), puffMat());
+    const base = new THREE.Vector3((Math.random() - 0.5) * SMOKE.radius * 1.2, (Math.random() - 0.3) * 3.5, (Math.random() - 0.5) * SMOKE.radius * 1.2);
+    m.position.copy(base); group.add(m);
+    puffs.push({ m, base, phase: Math.random() * 6.28, amp: 0.4 + Math.random() * 0.6, alpha: 0.55 + Math.random() * 0.35 });
   }
-  // Heal smoothly to full over the full duration (~33%/s); incoming damage still applies normally.
-  player.health = Math.min(100, player.health + (100 / CIGAR.dur) * dt);
-  updateHUD();
-  cigT += dt;
-  const lowerStart = CIGAR.dur - 0.4;
-  if (cigT < CIGAR.raise) vm.position.y = downY + (restY - downY) * smoothstep(cigT / CIGAR.raise);
-  else if (cigT < lowerStart) vm.position.y = restY + Math.sin(cigT * 2.0) * 0.012;     // subtle idle bob at the mouth
-  else vm.position.y = restY + (downY - restY) * smoothstep((cigT - lowerStart) / 0.4);
-  if (cigT >= 0.5) {                           // light the ember after the raise + flicker it
-    ember.visible = true;
-    const f = 0.85 + Math.random() * 0.15;
-    ember.scale.setScalar(f); vm.userData.emberMat.color.setRGB(1, 0.35 * f, 0.08);
+  scene.add(group);
+  smokeClouds.push({ center: group.position.clone(), group, puffs, t: 0, opacity: 0, radius: SMOKE.radius });
+}
+function updateSmokeClouds(dt) {
+  let viewObscure = 0;
+  const camPos = camera.getWorldPosition(new THREE.Vector3());
+  for (let i = smokeClouds.length - 1; i >= 0; i--) {
+    const cl = smokeClouds[i]; cl.t += dt;
+    let env;
+    if (cl.t < SMOKE.rise) env = cl.t / SMOKE.rise;
+    else if (cl.t < SMOKE.rise + SMOKE.full) env = 1;
+    else if (cl.t < SMOKE.rise + SMOKE.full + SMOKE.fade) env = 1 - (cl.t - SMOKE.rise - SMOKE.full) / SMOKE.fade;
+    else { cl.group.children.forEach(m => m.material.dispose()); scene.remove(cl.group); smokeClouds.splice(i, 1); continue; }
+    cl.opacity = Math.max(0, Math.min(1, env));
+    const grow = 0.4 + 0.6 * Math.min(1, cl.t / SMOKE.rise);
+    for (const pf of cl.puffs) {                               // billow: drift + gentle pulse
+      pf.phase += dt * 0.8;
+      pf.m.position.set(pf.base.x + Math.sin(pf.phase) * pf.amp, pf.base.y + Math.cos(pf.phase * 0.7) * pf.amp * 0.6, pf.base.z + Math.cos(pf.phase) * pf.amp);
+      pf.m.scale.setScalar(grow * (0.92 + 0.08 * Math.sin(pf.phase * 1.3)));
+      pf.m.material.opacity = cl.opacity * pf.alpha;
+    }
+    const d = camPos.distanceTo(cl.center);
+    if (d < cl.radius) viewObscure = Math.max(viewObscure, cl.opacity * smoothstep((cl.radius - d) / cl.radius));
   }
-  if (cigT >= 0.6 && cigT < lowerStart) {      // periodic smoke wisps from the lit tip
-    cigPuffT -= dt;
-    if (cigPuffT <= 0) { spawnSmokePuff(vm.userData.tip.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.12, 0.7); cigPuffT = 0.35; }
-  }
-  if (cigT >= CIGAR.dur) cigFinish();
+  // Heavy fog over the screen when the camera is inside a cloud.
+  el('smokeView').style.opacity = (viewObscure * 0.9).toFixed(3);
 }
 
 // Ammo-box pickups: spin/bob, and refill ammo + 1 grenade when the player touches one.
@@ -4452,12 +3891,11 @@ function updateHUD() {
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
   el('weaponName').textContent = w.name;
-  // Gold = legendary, cyan = karambit/RC, blue = other specials, yellow = base.
-  el('weaponName').style.color = w.legendary ? '#ffd700' : ((w.karambit || w.rc) ? '#7fe9ff' : (w.special ? '#9ad0ff' : '#ffe600'));
+  // Gold = legendary, cyan = karambit, blue = other specials, yellow = base.
+  el('weaponName').style.color = w.legendary ? '#ffd700' : (w.karambit ? '#7fe9ff' : (w.special ? '#9ad0ff' : '#ffe600'));
   el('ammoCur').textContent = ws.ammo;
   // Specials show remaining RESERVE after the slash; base weapons show mag size.
   el('ammoMag').textContent = (ws.reserve === Infinity) ? w.mag : ws.reserve;
-  el('ammoCur').textContent = w.rc ? `🚀 ${ws.ammo}` : ws.ammo;
   el('reloading').textContent = ws.reloading > 0 ? 'RELOADING…' : '';
   el('scoreVal').textContent = gameState.score;
   el('killCount').textContent = gameState.kills;
@@ -4469,18 +3907,14 @@ function updateHUD() {
     el('ggLevel').style.display = '';
     el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">KARAMBIT</span>` : ``);
     el('killCounter').style.display = 'none'; el('grenades').style.display = 'none'; el('lootInfo').style.display = 'none';
-    el('impulseCount').style.display = ''; el('impulseNum').textContent = player.impulses;
+    el('smokeCount').style.display = ''; el('smokeNum').textContent = player.smokes;
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
     else if (magSpan) magSpan.style.display = '';
   } else {
     el('ggLevel').style.display = 'none'; el('killCounter').style.display = ''; el('grenades').style.display = '';
-    el('impulseCount').style.display = 'none';
+    el('smokeCount').style.display = 'none';
     if (magSpan) magSpan.style.display = '';
   }
-  if (w.rc && magSpan) magSpan.style.display = 'none';   // RC launcher: rockets/life, no reserve to show
-  // Cigar self-heal availability (all modes): full when carried, dimmed once used.
-  el('cigarCount').style.display = ''; el('cigarNum').textContent = player.cigar;
-  el('cigarCount').style.opacity = player.cigar > 0 ? '1' : '0.35';
   // Health bar
   const hp = Math.max(0, player.health);
   const bar = el('healthBar');
@@ -4522,7 +3956,6 @@ el('scoreTarget').textContent = SCORE_TARGET;
 // Equip a weapon immediately (no special-ownership / same-key guards).
 function ggEquip(key) {
   if (!WEAPONS[key]) return;
-  rcEquipped = (key === 'rcrl');
   currentWeaponKey = key; weaponState[key].reloading = 0; currentSpread = 0;
   buildGunModel(key); updateHUD();
 }
@@ -4568,16 +4001,6 @@ function ggSendLevel(id, level) { NET.route(id, { t: 'ggset', level }); }
 
 // HOST authority: process one kill for gun-game progression / demotion / win.
 function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
-  // --- SECRET RC ROCKET: tracked separately; the killer NEVER advances / demotes / wins (Option A). ---
-  if (weapon === 'rcrl') {
-    const killerName = (killerId && NET.scores.has(killerId)) ? NET.scores.get(killerId).name : 'A player';
-    const victimName = (victimIsPlayer && victimId && NET.scores.has(victimId)) ? NET.scores.get(victimId).name : null;
-    const html = `${ggMeOrName(killerName)} <span class="gg-rc">🚀 [RC]</span> ${victimName ? ggMeOrName(victimName) : 'a bot'}`;
-    addKillFeed(html); if (NET.isHost) NET.broadcast({ t: 'feed', html });
-    if (killerId && NET.scores.has(killerId)) { const ks = NET.scores.get(killerId); ks.rcKills = (ks.rcKills || 0) + 1; }
-    NET.broadcastScores();
-    return;
-  }
   // --- KARAMBIT: demote the victim one level; the killer NEVER advances / wins. ---
   if (weapon === KARAMBIT_KEY) {
     if (victimIsPlayer && killerId !== victimId && NET.scores.has(victimId)) {
@@ -4610,7 +4033,6 @@ function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
 // SOLO authority: only the local player has a level (bots can't knife you, and the
 // karambit never advances — so a karambit/non-ladder weapon just does nothing here).
 function ggSoloKill(weapon) {
-  if (weapon === 'rcrl') { addKillFeed(`<b>YOU</b> <span class="gg-rc">🚀 [RC]</span> a bot`); return; }   // secret weapon: no progression
   if (weapon !== GUNGAME_LADDER[ggLevel - 1]) return;       // wrong weapon (or karambit): no progress
   if (ggLevel >= GUNGAME_MAX) { doMatchOver('YOU'); return; }
   const nl = ggLevel + 1; ggSetLevel(nl); ggAnnounce('YOU', nl, 'up');
@@ -4659,8 +4081,6 @@ function hurtPlayer(dmg) {
 }
 
 function playerDie() {
-  if (rcActive || rcMissile) rcDetonate(null, null, null, true);   // piloting an RC missile? auto-detonate, then die normally
-  if (cigSmoking) cigFinish();                                     // dying ends any cigar in progress
   player.alive = false;
   player.health = 0;
   if (NET.active) {
@@ -4681,15 +4101,10 @@ function playerDie() {
     player.vel.set(0, 0, 0);
     player.health = 100; player.alive = true;
     player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
-    player.impulseT = 0; player.impulseGrace = 0;
-    player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
     player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
-    weaponState.rcrl.ammo = RC.ammo; weaponState.rcrl.cooldown = 0;   // RC rockets refill on respawn (no regen mid-life)
-    if (rcEquipped && gameMode !== 'gungame') { rcEquipped = false; currentWeaponKey = 'pistol'; buildGunModel('pistol'); }
-    else rcEquipped = false;
     if (gameMode === 'gungame') {                       // respawn with your current ladder weapon (back to the gun)
-      player.grenades = 0; player.impulses = IMPULSE.maxCarry; ggKarambit = false;
+      player.grenades = 0; player.smokes = SMOKE.maxCarry; ggKarambit = false;
       const key = GUNGAME_LADDER[ggLevel - 1];
       weaponState[key].ammo = WEAPONS[key].mag; weaponState[key].cooldown = 0; weaponState[key].reloading = 0;
       weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
@@ -4711,14 +4126,11 @@ function endMatch(won) {
 
 function startMatch() {
   gameState.running = true; gameState.over = false; gameState.kills = 0; gameState.score = 0;
-  rcResetMatch();   // RC launcher locks again each match (unlock is per-match, not permanent)
   // Everyone spawns on a real spawn point, facing the centre of the map.
   const sp = randomSpawn(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
   player.health = 100; player.alive = true; player.sliding = false; player.launchCd = 0;
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
-  player.impulseT = 0; player.impulseGrace = 0;
-  player.cigar = CIGAR.maxCarry; cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;   // fresh cigar; clear any prior smoke
   player.grenades = throwMaxCarry();
   yaw = Math.atan2(sp.x, sp.z); pitch = 0; recoilPitch = 0; recoilYaw = 0;   // look toward map centre
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; shakeTime = 0; shakeMag = 0;
@@ -4730,9 +4142,10 @@ function startMatch() {
   debris.forEach(d => { scene.remove(d.obj); disposeGroup(d.obj); }); debris.length = 0;
   liveRockets.forEach(r => { scene.remove(r.grp); r.flameMat.dispose(); }); liveRockets.length = 0;
   ggProjectiles.forEach(p => { scene.remove(p.mesh); disposeGroup(p.mesh); }); ggProjectiles.length = 0;
-  ggSmoke.forEach(s => { scene.remove(s.mesh); s.mesh.material.dispose(); }); ggSmoke.length = 0;   // projectile-trail puffs
-  liveImpulses.forEach(c => { scene.remove(c.mesh); disposeGroup(c.mesh); }); liveImpulses.length = 0;
-  impulseThrowT = 0;
+  ggSmoke.forEach(s => { scene.remove(s.mesh); s.mesh.material.dispose(); }); ggSmoke.length = 0;
+  liveSmokeCans.forEach(c => { scene.remove(c.mesh); disposeGroup(c.mesh); }); liveSmokeCans.length = 0;
+  smokeClouds.forEach(cl => { cl.group.children.forEach(m => m.material.dispose()); scene.remove(cl.group); }); smokeClouds.length = 0;
+  smokeThrowT = 0; el('smokeView').style.opacity = 0;
   el('floatLayer').innerHTML = '';
   WEAPON_ORDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
   // Reset special weapons + loot (improvements #2/#3)
@@ -4768,7 +4181,7 @@ function startMatch() {
     GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
     weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
     weaponState[KARAMBIT_KEY].cooldown = 0; weaponState[KARAMBIT_KEY].reloading = 0;
-    player.grenades = 0; player.impulses = IMPULSE.maxCarry;   // impulse grenades are the gun-game equipment
+    player.grenades = 0; player.smokes = SMOKE.maxCarry;   // smoke grenades are the gun-game equipment
     ggEquip('gg1');                                  // start on the level-1 gun
   } else {
     switchWeapon(selectedStartWeapon);
@@ -5153,15 +4566,14 @@ const NET = {
     return { id: this.selfId, name: this.selfName, x: player.pos.x, y: player.pos.y, z: player.pos.z,
              yaw, pitch, weapon: currentWeaponKey, health: Math.max(0, player.health), alive: player.alive,
              ads: (gameMode === 'gungame' && adsBlend > 0.5), rl,            // aim + reload state for others to see
-             cr: player.crouchBlend, dv: player.diving,                      // crouch amount + dive (shorter hitbox)
-             cig: cigSmoking && !cigCanceling };                             // smoking a cigar (third-person tell)
+             cr: player.crouchBlend, dv: player.diving };                    // crouch amount + dive (shorter hitbox)
   },
   // host -> all: positions of every human (host builds from its own state + clients' last pmove)
   broadcastPlayers() {
     const list = [this.selfSnapshot()];
     this.players.forEach((rp) => list.push({ id: rp.id, name: rp.name, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
       yaw: rp.yaw, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
-      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig }));
+      cr: rp.cr || 0, dv: !!rp.dv }));
     this.broadcast({ t: 'players', list });
   },
   broadcastBots() {
@@ -5237,45 +4649,14 @@ const NET = {
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
         break;
       }
-      case 'rc': {                                     // a peer's RC missile (render-only exterior + trail)
-        if (msg.id !== this.selfId) {
-          if (msg.s === 'spawn') rcRemoteSpawn(msg.id, new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.dx, msg.dy, msg.dz));
-          else if (msg.s === 'move') rcRemoteMove(msg.id, new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.dx, msg.dy, msg.dz));
-          else if (msg.s === 'boom') rcRemoteBoom(msg.id, new THREE.Vector3(msg.x, msg.y, msg.z));
-        }
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay
+      case 'smoke': {                                  // a peer threw a smoke canister — visual copy
+        spawnSmokeCan(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false);
+        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
         break;
       }
-      case 'rcshot': {                                 // my RC missile was shot down — detonate it where it is
-        if (msg.id === this.selfId && (rcActive || rcMissile)) rcDetonate(null, null, null, false);
-        break;
-      }
-      case 'imp': {                                    // a peer's impulse grenade (throw / stick / detonation)
-        if (msg.s === 'spawn') {
-          if (msg.id !== this.selfId) spawnImpulse(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false, msg.id);
-        } else if (msg.s === 'stick') {                                          // snap the network copy to the owner's stuck surface
-          for (let k = 0; k < liveImpulses.length; k++) {
-            const c = liveImpulses[k];
-            if (!c.owned && c.ownerId === msg.id) {
-              impulseOrient(c.mesh, new THREE.Vector3(msg.nx, msg.ny, msg.nz));
-              c.stuck = true; c.fuse = IMPULSE.settleFuse; c.vel.set(0, 0, 0);
-              c.pos.set(msg.x, msg.y, msg.z); c.mesh.position.copy(c.pos);
-              const f = msg.fid ? impulseResolveFollow(msg.fid) : null;
-              if (f) { c.follow = f; c.followId = msg.fid; const a = impulseFollowPos(f); if (a) c.followOff.copy(c.pos).sub(a); }
-              break;
-            }
-          }
-        } else if (msg.s === 'boom') {
-          impulseDetonate(new THREE.Vector3(msg.x, msg.y, msg.z), this.isHost);   // only the host applies launches
-          for (let k = liveImpulses.length - 1; k >= 0; k--) {                    // drop the matching network canister copy
-            if (!liveImpulses[k].owned && liveImpulses[k].ownerId === msg.id) { scene.remove(liveImpulses[k].mesh); disposeGroup(liveImpulses[k].mesh); liveImpulses.splice(k, 1); }
-          }
-        }
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay
-        break;
-      }
-      case 'impulse': {                                // host launched me — apply the impulse to my velocity
-        applyImpulseVec(new THREE.Vector3(msg.vx, msg.vy, msg.vz));
+      case 'smokecloud': {                             // authoritative cloud spawn (synced for everyone)
+        spawnSmokeCloud(new THREE.Vector3(msg.x, msg.y, msg.z));
+        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
         break;
       }
       case 'skin': { this.onSkinChunk(msg, fromId); break; }   // a peer's painted skin (chunked PNG)
@@ -5389,7 +4770,7 @@ function textureFromDataURL(id, url, cb) {
 function makeRemotePlayer(id, name, color) {
   return {
     id, name: (name || 'Player').slice(0, 14), color, alive: true, health: 100, weapon: 'pistol',
-    pos: new THREE.Vector3(0, 0, 0), yaw: 0, ads: false, rl: 0, cr: 0, dv: false, cig: false, crShown: 0, _cigPuffT: 0,
+    pos: new THREE.Vector3(0, 0, 0), yaw: 0, ads: false, rl: 0, cr: 0, dv: false, crShown: 0,
     renderPos: new THREE.Vector3(0, 0, 0), renderYaw: 0,
     avatar: null, head: null, gun: null, nameSprite: null, _hadAvatar: false, _lastNameHp: -1,
     apply(d) {
@@ -5403,7 +4784,6 @@ function makeRemotePlayer(id, name, color) {
       if (d.rl != null) this.rl = d.rl;
       if (d.cr != null) this.cr = d.cr;
       if (d.dv != null) this.dv = d.dv;
-      if (d.cig != null) this.cig = d.cig;
     }
   };
 }
@@ -5422,11 +4802,6 @@ function buildRemoteAvatar(rp) {
   // little gun box in front (colored by held weapon)
   const gun = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.6), new THREE.MeshLambertMaterial({ color: WEAPONS[rp.weapon] ? WEAPONS[rp.weapon].color : 0xffcc00, flatShading: true }));
   gun.position.set(0.45, 1.25, 0.45); g.add(gun);
-  // Third-person cigar held to the mouth (shown only while this player is smoking — a heal tell).
-  const cigM = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.34, 8), new THREE.MeshLambertMaterial({ color: 0x6b4a2a, flatShading: true }));
-  cigM.rotation.z = Math.PI / 2; cigM.position.set(0.20, 1.62, 0.22); cigM.visible = false; g.add(cigM);
-  const cigEm = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 5), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); cigEm.position.set(0.38, 1.62, 0.22); cigEm.visible = false; g.add(cigEm);
-  rp.cigMesh = cigM; rp.cigEmber = cigEm;
   rp.avatar = g; rp.head = head; rp.gun = gun;
   rp.renderPos.copy(rp.pos);
   drawNameSprite(rp);
@@ -5496,12 +4871,6 @@ function lerpRemotePlayers(dt) {
       rp.gun.position.x += (tx - rp.gun.position.x) * t;
       rp.gun.position.y += (ty - rp.gun.position.y) * t;
       rp.gun.rotation.x += (rotx - rp.gun.rotation.x) * t;
-    }
-    // Cigar smoking tell: show the held cigar + lit ember and puff smoke from the tip.
-    if (rp.cigMesh) {
-      const on = !!rp.cig;
-      rp.cigMesh.visible = on; rp.cigEmber.visible = on;
-      if (on) { rp._cigPuffT -= dt; if (rp._cigPuffT <= 0) { spawnSmokePuff(rp.cigEmber.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.14, 0.8); rp._cigPuffT = 0.5; } }
     }
     if (Math.round(rp.health) !== rp._lastNameHp) drawNameSprite(rp);
   });
@@ -5610,8 +4979,6 @@ function showScreen(id) {
 }
 function leaveToMenu() {
   NET.reset();
-  rcResetMatch();   // lock the RC launcher + clear any missiles when leaving to the lobby
-  cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;
   // wipe remote/client-bot state and any in-progress match
   bots.forEach(b => { if (b.group) { scene.remove(b.group); disposeGroup(b.group); } });
   bots.length = 0;
@@ -5878,9 +5245,8 @@ function animate() {
     updateTomahawks(dt);  // thrown tomahawks (alternate throwable)
     updateRockets(dt);    // rocket projectiles (special weapon)
     updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails
-    rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles
-    updateImpulses(dt);   // impulse-grenade canisters (bounce + fast activation + kinetic launch)
-    if (impulseThrowT > 0) impulseThrowT -= dt;
+    updateSmokeCans(dt); updateSmokeClouds(dt);  // smoke-grenade canisters + clouds
+    if (smokeThrowT > 0) smokeThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill + grenade)
     if (gameMode === 'gungame') { /* no loot crates in gun game */ }
     else if (!NET.active || NET.isHost) updateLoot(dt);   // loot crates are host-driven in MP
@@ -5979,7 +5345,6 @@ function animate() {
   el('hud').style.opacity = 1 - 0.4 * scopeBlend;
   if (gunMesh) gunMesh.visible = scopeBlend < 0.5;
   updateSights();   // GUN GAME per-weapon sights + reload bar (overrides the above in gun game)
-  updateCigar(dt);  // cigar heal: animate the left-hand viewmodel + keep the weapon holstered while smoking
 
   // Effects animate continuously (so they finish even on the end screen)
   updateBlood(dt);
@@ -5988,28 +5353,7 @@ function animate() {
   updateDebris(dt);    // detached limbs / heads / dropped guns
   updateTracers(dt);   // pooled bullet tracers fade-out
 
-  // SECRET RC: when the nose cam is live, render it fullscreen + a corner picture-in-picture
-  // of the body's view. The thermal/scanline HUD overlay shows only then.
-  const rcView = rcActive && rcCamLive;
-  el('rcHud').classList.toggle('on', rcView);
-  if (rcView) {
-    const W = window.innerWidth, H = window.innerHeight;
-    rcCam.aspect = W / H; rcCam.updateProjectionMatrix();
-    renderer.render(scene, rcCam);
-    // picture-in-picture: the player body's normal view, bottom-right corner
-    const pw = Math.round(W * 0.24), ph = Math.round(H * 0.24), pad = 16;
-    renderer.clearDepth();
-    renderer.setScissorTest(true);
-    renderer.setScissor(W - pw - pad, pad, pw, ph);
-    renderer.setViewport(W - pw - pad, pad, pw, ph);
-    camera.aspect = pw / ph; camera.updateProjectionMatrix();
-    renderer.render(scene, camera);
-    renderer.setScissorTest(false);
-    renderer.setViewport(0, 0, W, H);
-    camera.aspect = W / H; camera.updateProjectionMatrix();
-  } else {
-    renderer.render(scene, camera);
-  }
+  renderer.render(scene, camera);
 }
 animate();
 </script>

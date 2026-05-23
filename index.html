@@ -47,6 +47,41 @@
   #grenades span { color: #fff; }
   /* Subtle crouch indicator near the ammo counter */
   #crouchInd { font-size: 13px; font-weight: bold; letter-spacing: 1px; color: #8fd0ff; margin-top: 3px; opacity: 0; transition: opacity .12s; }
+  /* Smoke-grenade count near the ammo counter (gun game) */
+  #smokeCount { font-size: 14px; font-weight: bold; color: #cdd6e0; margin-top: 3px; display: none; }
+  #smokeCount span { color: #fff; }
+  /* In-cloud fog: a near-opaque light-gray wash over the whole view while inside smoke */
+  #smokeView { position: fixed; inset: 0; z-index: 13; pointer-events: none; opacity: 0; transition: opacity .18s;
+    background: radial-gradient(circle at 50% 45%, rgba(232,236,240,0.96), rgba(212,218,224,0.99)); }
+
+  /* ---- Skin creator ---- */
+  #skinCreator { position: fixed; inset: 0; z-index: 30; background: #14181f; display: flex; flex-direction: column; color: #e8eef5; }
+  #skTopbar { display: flex; align-items: center; gap: 14px; padding: 12px 18px; background: #0d1117; border-bottom: 2px solid #000; }
+  #skTopbar .skTitle { font-size: 20px; font-weight: bold; letter-spacing: 2px; color: #ffe600; }
+  #skTopbar #skHint { font-size: 12px; opacity: .7; margin-left: auto; }
+  #skName { font-family: inherit; font-weight: bold; border: 2px solid #000; border-radius: 6px; padding: 6px 10px; width: 160px; background: #1c2330; color: #fff; }
+  #skMain { flex: 1; display: flex; min-height: 0; }
+  #skStage { flex: 1; position: relative; background: radial-gradient(circle at 50% 40%, #232b38, #11151c); cursor: crosshair; overflow: hidden; }
+  #skStage canvas { display: block; width: 100%; height: 100%; }
+  #skBrushCursor { position: absolute; border: 1.5px solid rgba(255,255,255,0.9); border-radius: 50%; pointer-events: none; transform: translate(-50%,-50%); box-shadow: 0 0 3px rgba(0,0,0,0.8); display: none; }
+  #skTools { width: 280px; background: #0d1117; border-left: 2px solid #000; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+  #skTools .skGroup { display: flex; flex-direction: column; gap: 7px; }
+  #skTools label { font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #8fb0d0; }
+  #skTools .skRow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .skTool, .skTpl { pointer-events: auto; cursor: pointer; border: 2px solid #000; border-radius: 6px; background: #283142; color: #dfe7f0; font-family: inherit; font-weight: bold; padding: 8px 12px; font-size: 13px; }
+  .skTool.sel { background: #34d058; color: #07210f; outline: 2px solid #fff; }
+  .skTpl { padding: 6px 9px; font-size: 12px; }
+  #skSize { width: 100%; }
+  #skColor { width: 46px; height: 34px; border: 2px solid #000; border-radius: 6px; background: none; cursor: pointer; }
+  #skSwatch { width: 34px; height: 34px; border: 2px solid #000; border-radius: 6px; background: #e0392b; }
+  .skPalette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .skPalette .sw { width: 100%; padding-bottom: 100%; border: 1px solid #000; border-radius: 3px; cursor: pointer; }
+  #skSlots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; }
+  #skSlots .slot { aspect-ratio: 1; border: 2px solid #000; border-radius: 6px; background: #1c2330; cursor: pointer; font-size: 11px; color: #9fb0c0; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; }
+  #skSlots .slot.sel { outline: 2px solid #ffe600; }
+  #skSlots .slot.filled { color: #fff; background-size: cover; background-position: center; }
+  #skStatus { font-size: 12px; color: #7dffae; min-height: 16px; }
+  #skSave { font-size: 16px; padding: 12px; }
 
   /* Floating combat text */
   #floatLayer { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
@@ -162,15 +197,16 @@
   /* Red-dot "look through the optic" overlay (lighter than a scope — a tube, not full black) */
   /* Clear-optic reticle layer: NO border/occlusion — a tiny dot (or holo reticle) on a clean view */
   #redDotSight { position:fixed; inset:0; z-index:11; pointer-events:none; opacity:0; }
-  /* Grain-of-rice red dot: 1px solid core (minimum renderable) with a tight bright bloom
-     (~15% of the previous halo footprint) so it stays visible without an outline. */
-  #redDotDot { position:absolute; left:50%; top:50%; width:1px; height:1px; transform:translate(-50%,-50%);
-    border-radius:50%; background:#ff2b2b; box-shadow: 0 0 1px 0 rgba(255,55,55,1), 0 0 2px 0.5px rgba(255,0,0,0.7); }
-  #redDotDot.mini { width:1px; height:1px; box-shadow: 0 0 1px 0 rgba(255,55,55,1), 0 0 1.5px 0.5px rgba(255,0,0,0.65); }
+  /* RED DOT CORE SIZE — set here (1px solid core; the visible footprint is the bloom halo).
+     >>> THE DOT SIZE IS THIS width/height: 1px. Change here to tune. No min-width / !important. <<<
+     All rifle red dots (lvls 2/3/5/7) use #redDotDot; mini red dot (lvl 18) adds .mini. */
+  #redDotDot { position:absolute; left:50%; top:50%; width:1px; height:1px; min-width:0; min-height:0; transform:translate(-50%,-50%);
+    border-radius:50%; background:#ff2b2b; box-shadow: 0 0 2px 1px rgba(255,60,60,1), 0 0 7px 2px rgba(255,0,0,0.6); }   /* 1px core + ~8px bloom */
+  #redDotDot.mini { width:1px; height:1px; box-shadow: 0 0 2px 1px rgba(255,60,60,1), 0 0 6px 1.5px rgba(255,0,0,0.55); } /* mini: 1px core + ~6px bloom */
   /* Holographic (EOTech-style): tiny tight reticle (~10px total) — thin ring + 1px dot + small chevron */
   #ggHolo { position:absolute; left:50%; top:50%; width:10px; height:10px; transform:translate(-50%,-50%); }
   #ggHolo .ring { position:absolute; inset:0; border:1px solid rgba(255,40,40,0.85); border-radius:50%; box-shadow:0 0 3px rgba(255,0,0,0.55); }
-  #ggHolo .cdot { position:absolute; left:50%; top:50%; width:1px; height:1px; transform:translate(-50%,-50%); border-radius:50%; background:#ff2b2b; box-shadow:0 0 1px 0 rgba(255,55,55,1), 0 0 2px 0.5px rgba(255,0,0,0.65); }
+  #ggHolo .cdot { position:absolute; left:50%; top:50%; width:1px; height:1px; min-width:0; min-height:0; transform:translate(-50%,-50%); border-radius:50%; background:#ff2b2b; box-shadow:0 0 2px 1px rgba(255,60,60,1), 0 0 6px 1.5px rgba(255,0,0,0.55); }  /* holo centre dot: 1px core + ~6px bloom */
   #ggHolo .chev { position:absolute; left:50%; top:18%; width:0; height:0; transform:translate(-50%,-50%);
     border-left:2px solid transparent; border-right:2px solid transparent; border-top:3px solid rgba(255,40,40,0.95); }
 
@@ -183,6 +219,24 @@
   #dmrScope .lh { top:50%; left:0; width:100%; height:1px; transform:translateY(-50%); }
   #dmrScope .lv { left:50%; top:0; height:100%; width:1px; transform:translateX(-50%); }
   #dmrScope .md { position:absolute; left:50%; top:50%; width:3px; height:3px; background:rgba(0,0,0,0.85); border-radius:50%; transform:translate(-50%,-50%); }
+
+  /* THERMAL scope (DMR): circular black border, scanline/noise sensor feel, white reticle,
+     and HOT heat blobs (#thermalBlobs) drawn over the cold-filtered world. */
+  #thermalScope { position:fixed; inset:0; z-index:11; pointer-events:none; opacity:0; }
+  #thermalScope .vig { position:absolute; inset:0; background: radial-gradient(circle at 50% 50%,
+      rgba(10,18,34,0) 0, rgba(10,18,34,0) 33vh, rgba(0,0,0,0.55) 34vh, #000 39vh, #000 100%); }
+  #thermalScope .scan { position:absolute; left:50%; top:50%; width:80vh; height:80vh; transform:translate(-50%,-50%); border-radius:50%; overflow:hidden;
+      background: repeating-linear-gradient(to bottom, rgba(180,210,255,0.05) 0px, rgba(180,210,255,0.05) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px); opacity:0.7; }
+  #thermalBlobs { position:absolute; inset:0; }
+  #thermalBlobs .blob { position:absolute; transform:translate(-50%,-50%); border-radius:50%; display:none;
+      background: radial-gradient(ellipse at 50% 45%, #ffffff 0%, #fff7c0 22%, #ffc23a 45%, #ff6a1a 68%, rgba(255,30,0,0.35) 88%, rgba(255,0,0,0) 100%); }
+  #thermalScope .tret { position:absolute; left:50%; top:50%; width:64vh; height:64vh; transform:translate(-50%,-50%); }
+  #thermalScope .tln { position:absolute; background:rgba(255,255,255,0.9); box-shadow:0 0 2px rgba(0,0,0,0.6); }
+  #thermalScope .tlh { top:50%; left:0; width:100%; height:1px; transform:translateY(-50%); }
+  #thermalScope .tlv { left:50%; top:0; height:100%; width:1px; transform:translateX(-50%); }
+  #thermalScope .tmd { position:absolute; left:50%; top:50%; width:3px; height:3px; background:rgba(255,255,255,0.9); border-radius:50%; transform:translate(-50%,-50%); }
+  #thermalScope .thud { position:absolute; color:#cfe0ff; font-family:"Courier New",monospace; font-size:14px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 5px rgba(120,180,255,0.6); }
+  #thermalScope .th-tl { top:14%; left:18%; } #thermalScope .th-br { bottom:14%; right:18%; font-size:20px; }
 
   /* Javelin digital targeting scope: green thermal tint + corner brackets + HUD readouts */
   #javelinScope { position:fixed; inset:0; z-index:11; pointer-events:none; opacity:0; }
@@ -331,8 +385,12 @@
     <div id="reloading"></div>
     <div id="grenades"><span id="grenadeLabel">GRENADES</span> <span id="grenadeCount">2</span></div>
     <div id="crouchInd">▼ CROUCHED</div>
+    <div id="smokeCount">🔵 SMOKE <span id="smokeNum">2</span></div>
   </div>
 </div>
+
+<!-- Heavy fog drawn over the screen while the camera is inside a smoke cloud -->
+<div id="smokeView"></div>
 
 <!-- Floating combat text (improvement #5): "+100" / "+140 HEADSHOT!" -->
 <div id="floatLayer"></div>
@@ -392,6 +450,19 @@
     <div class="md" style="left:53%"></div><div class="md" style="left:56%"></div><div class="md" style="left:60%"></div><div class="md" style="left:65%"></div>
   </div>
 </div>
+<!-- THERMAL scope (DMR): cold world (canvas filter) + hot heat blobs + white reticle + sensor HUD -->
+<div id="thermalScope">
+  <div class="scan"></div>
+  <div id="thermalBlobs"></div>
+  <div class="tret">
+    <div class="tln tlh"></div><div class="tln tlv"></div>
+    <div class="tmd" style="top:40%"></div><div class="tmd" style="top:44%"></div><div class="tmd" style="top:56%"></div><div class="tmd" style="top:60%"></div>
+    <div class="tmd" style="left:40%"></div><div class="tmd" style="left:44%"></div><div class="tmd" style="left:56%"></div><div class="tmd" style="left:60%"></div>
+  </div>
+  <div class="vig"></div>
+  <div class="thud th-tl">THERMAL</div>
+  <div class="thud th-br">🌡</div>
+</div>
 <!-- Javelin digital targeting scope (RPG): green thermal HUD + corner brackets -->
 <div id="javelinScope">
   <div class="frame"></div><div class="scan"></div>
@@ -422,8 +493,70 @@
     <button class="bigbtn" id="menuHost">HOST PRIVATE LOBBY</button>
     <button class="bigbtn" id="menuJoin">JOIN WITH CODE</button>
   </div>
-  <button class="smallbtn" id="menuSettings">⚙ SETTINGS</button>
+  <div class="menuRow">
+    <button class="smallbtn" id="menuSkin">🎨 CUSTOMIZE SKIN</button>
+    <button class="smallbtn" id="menuSettings">⚙ SETTINGS</button>
+  </div>
   <p class="controls-hint">Host a lobby to get a 5-letter code, share it with friends, and they join from anywhere online.</p>
+</div>
+
+<!-- ============================================================
+     SKIN CREATOR — paint your character; saved skin shows to all players
+     ============================================================ -->
+<div id="skinCreator" class="hidden">
+  <div id="skTopbar">
+    <span class="skTitle">🎨 SKIN CREATOR</span>
+    <input id="skName" maxlength="16" placeholder="skin name" />
+    <span id="skHint">Left-drag to paint · Right-drag to rotate · Scroll to zoom</span>
+    <button class="smallbtn" id="skClose">✕ CLOSE</button>
+  </div>
+  <div id="skMain">
+    <div id="skStage"><div id="skBrushCursor"></div></div>
+    <div id="skTools">
+      <div class="skGroup"><label>BRUSH</label>
+        <div class="skRow">
+          <button class="skTool sel" data-tool="marker">Marker</button>
+          <button class="skTool" data-tool="spray">Spray</button>
+          <button class="skTool" data-tool="pen">Pen</button>
+        </div>
+        <div class="skRow">
+          <button class="skTool" data-tool="eraser">Eraser</button>
+          <button class="skTool" data-tool="fill">Fill</button>
+        </div>
+      </div>
+      <div class="skGroup"><label>SIZE <span id="skSizeVal">18</span></label>
+        <input id="skSize" type="range" min="1" max="60" value="18" />
+      </div>
+      <div class="skGroup"><label>COLOR</label>
+        <div class="skRow">
+          <input id="skColor" type="color" value="#e0392b" />
+          <span id="skSwatch"></span>
+        </div>
+        <div class="skPalette" id="skPalette"></div>
+      </div>
+      <div class="skGroup"><label>HISTORY</label>
+        <div class="skRow">
+          <button class="smallbtn" id="skUndo">↶ Undo</button>
+          <button class="smallbtn" id="skRedo">↷ Redo</button>
+          <button class="smallbtn" id="skClear">Clear All</button>
+        </div>
+      </div>
+      <div class="skGroup"><label>TEMPLATE</label>
+        <div class="skRow" id="skTemplates">
+          <button class="skTpl" data-tpl="plain">Plain</button>
+          <button class="skTpl" data-tpl="solid">Solid</button>
+          <button class="skTpl" data-tpl="camo">Camo</button>
+          <button class="skTpl" data-tpl="stripes">Stripes</button>
+          <button class="skTpl" data-tpl="skull">Skull</button>
+        </div>
+      </div>
+      <div class="skGroup"><label>SLOTS</label>
+        <div class="skRow" id="skSlots"></div>
+      </div>
+      <button class="bigbtn" id="skSave">SAVE &amp; USE</button>
+      <div id="skStatus"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -448,7 +581,10 @@
     </div>
     <div class="setHint">Press <b>G</b> in-game to throw your chosen weapon.</div>
   </div>
-  <button class="bigbtn" id="settingsBack">DONE</button>
+  <div class="menuRow">
+    <button class="smallbtn" id="settingsEditSkin">🎨 EDIT SKIN</button>
+    <button class="bigbtn" id="settingsBack">DONE</button>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -690,6 +826,12 @@ for (const k in GG_SPEC) {
 }
 WEAPONS.karambit.speed = 1.10;   // karambit itself is fast (also forced when holstered, below)
 
+// These gun-game weapons fire VISIBLE PROJECTILES (not hitscan) — see the GG projectile system.
+WEAPONS.gg10.projType = 'bolt';      // Crossbow
+WEAPONS.gg11.projType = 'grenade';   // Grenade Launcher
+WEAPONS.gg12.projType = 'rocket';    // RPG
+WEAPONS.gg19.projType = 'knife';     // Throwing Knives
+
 /* --- Iron-sight ADS geometry + anchors (CoD-style raise-to-center) ---------
    Per weapon: sy = local height the rear/front sights sit at (their tops); the
    ADS anchor `ads` raises/centers the model so those sights land on screen center
@@ -724,7 +866,7 @@ const GG_REDDOT = {
    Only these get the circular black border + zoom. `style` picks the overlay +
    reticle; `fov` is the FOV multiplier; `sway` is the breath-drift amount.        */
 const GG_SCOPE = {
-  gg8:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'dmr',     fov:0.45, sway:0.5 },   // DMR (medium scope)
+  gg8:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'thermal', fov:0.45, sway:0.5 },   // DMR (THERMAL scope)
   gg9:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'heavy',   fov:0.18, sway:1.0 },   // Bolt sniper (heavy scope)
   gg12: { ads:{ x:0, y:-0.16, z:-0.42 }, style:'javelin', fov:0.70, sway:0.0 }    // RPG (digital targeting)
 };
@@ -1129,7 +1271,7 @@ document.addEventListener('keydown', (e) => {
   }
   // SHIFT slides — unless you're scoped through the heavy sniper, where it holds breath instead.
   if (e.code === 'ShiftLeft' && !ggHeavyScopedNow()) startSlide();
-  if (e.code === 'KeyG' && gameMode !== 'gungame') throwGrenade();      // frag grenade (disabled in gun game)
+  if (e.code === 'KeyG') { if (gameMode === 'gungame') throwSmoke(); else throwGrenade(); }   // smoke (gun game) / frag (other modes)
 });
 document.addEventListener('keyup', (e) => {
   keys[e.code] = false;
@@ -1204,7 +1346,8 @@ const player = {
   diving: false, diveAir: false,         // dive in progress / has left the ground
   diveTime: 0, diveRecover: 0,           // dive duration + post-landing recovery
   diveTilt: 0,                           // smoothed forward camera tilt during a dive
-  cHeld: 0, cTapCrouched: false          // C-key hold tracking (tap = toggle, hold = momentary)
+  cHeld: 0, cTapCrouched: false,         // C-key hold tracking (tap = toggle, hold = momentary)
+  smokes: 0                              // gun-game smoke grenades carried this life
 };
 let aiming = false;
 
@@ -1292,6 +1435,58 @@ function updateJavelinHud() {
   el('javLock').textContent = locked ? 'LOCK' : 'SCAN';
   el('javLock').style.color = locked ? '#ff5b5b' : '#9dffb0';
 }
+
+/* --- THERMAL scope heat signatures (line-of-sight; walls AND smoke block them) --- */
+const _thBlobs = [];                                 // pooled DOM heat-blob elements
+function thermalBlobPool() {
+  if (_thBlobs.length) return _thBlobs;
+  const host = el('thermalBlobs');
+  for (let i = 0; i < 16; i++) { const d = document.createElement('div'); d.className = 'blob'; host.appendChild(d); _thBlobs.push(d); }
+  return _thBlobs;
+}
+function hideThermalBlobs() { for (const b of _thBlobs) b.style.display = 'none'; }
+// Does a smoke cloud sit on the segment a->b? (option A: smoke disrupts the IR sensor)
+function smokeBlocks(a, b) {
+  for (const c of smokeClouds) {
+    if (c.opacity < 0.25) continue;
+    const ab = b.clone().sub(a), t = Math.max(0, Math.min(1, c.center.clone().sub(a).dot(ab) / Math.max(1e-4, ab.lengthSq())));
+    const closest = a.clone().addScaledVector(ab, t);
+    if (closest.distanceTo(c.center) < c.radius * 0.92) return true;
+  }
+  return false;
+}
+// Draw a hot blob for each living bot / remote player that has a CLEAR line of sight to the scope.
+function updateThermal() {
+  const pool = thermalBlobPool();
+  const camPos = camera.getWorldPosition(new THREE.Vector3());
+  const W = window.innerWidth, H = window.innerHeight;
+  const ents = [];
+  for (const bot of bots) if (bot.alive) ents.push({ pos: bot.pos, h: 1.8 });
+  if (NET.active) NET.players.forEach(rp => { if (rp.alive) ents.push({ pos: rp.pos, h: 1.8 * (1 - 0.4 * (rp.cr || 0)) }); });
+  let idx = 0;
+  for (const e of ents) {
+    if (idx >= pool.length) break;
+    const chest = new THREE.Vector3(e.pos.x, e.pos.y + e.h * 0.55, e.pos.z);
+    const toE = chest.clone().sub(camPos), dist = toE.length(); toE.normalize();
+    if (dist > 1.2) {                                          // skip self-overlap; check occlusion
+      const ray = new THREE.Raycaster(camPos, toE, 0, dist - 0.4);
+      if (ray.intersectObjects(colliders, false).length) continue;   // wall / structure blocks heat
+      if (smokeBlocks(camPos, chest)) continue;                      // smoke blocks heat (option A)
+    }
+    const p = chest.clone().project(camera);
+    if (p.z > 1) continue;                                     // behind the camera
+    const head = new THREE.Vector3(e.pos.x, e.pos.y + e.h, e.pos.z).project(camera);
+    const feet = new THREE.Vector3(e.pos.x, e.pos.y, e.pos.z).project(camera);
+    const pxH = Math.max(12, Math.abs(feet.y - head.y) * 0.5 * H * 1.15), pxW = pxH * 0.5;
+    const bl = pool[idx++];
+    bl.style.display = 'block';
+    bl.style.left = ((p.x * 0.5 + 0.5) * W) + 'px';
+    bl.style.top = ((-p.y * 0.5 + 0.5) * H) + 'px';
+    bl.style.width = pxW + 'px'; bl.style.height = pxH + 'px';
+  }
+  for (let i = idx; i < pool.length; i++) pool[i].style.display = 'none';
+}
+
 const smoothstep = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };   // ease-in-out
 // Lerp the held weapon between its hip-fire rest and its per-weapon ADS anchor by `e` (0..1).
 function applyRaiseAdsPose(key, e) {
@@ -1310,7 +1505,7 @@ function updateSights() {
   const clear = el('redDotSight'), dmr = el('dmrScope'), jav = el('javelinScope'), scope = el('scopeOverlay');
   akimbo.style.display = 'none';
   legacy.style.opacity = 0; legacy.querySelectorAll('.ret').forEach(r => r.classList.remove('on'));
-  if (gameMode !== 'gungame') { clear.style.opacity = 0; dmr.style.opacity = 0; jav.style.opacity = 0; rl.style.display = 'none'; return; }
+  if (gameMode !== 'gungame') { clear.style.opacity = 0; dmr.style.opacity = 0; jav.style.opacity = 0; el('thermalScope').style.opacity = 0; renderer.domElement.style.filter = ''; hideThermalBlobs(); rl.style.display = 'none'; return; }
 
   const w = WEAPONS[currentWeaponKey], ws = weaponState[currentWeaponKey], info = ggAdsInfo();
   const b = adsBlend, kind = info ? info.kind : null;
@@ -1322,6 +1517,15 @@ function updateSights() {
   el('redDotDot').style.display = isDot ? 'block' : 'none';
   el('redDotDot').classList.toggle('mini', kind === 'minidot');
   el('ggHolo').style.display = isHolo ? 'block' : 'none';
+  // Hide the chunky 3D on-glass dot once aiming so it can't swamp the 1px DOM reticle.
+  if (gunMesh && gunMesh.userData.opticDot) gunMesh.userData.opticDot.visible = (b < 0.35);
+  // One-time verification of the actual rendered dot size (see PART 1).
+  if ((isDot || isHolo) && b > 0.6 && !window._rdLogged) {
+    window._rdLogged = true;
+    const dEl = isHolo ? document.querySelector('#ggHolo .cdot') : el('redDotDot');
+    const r = dEl.getBoundingClientRect();
+    console.log('[red-dot reticle] rendered core size:', r.width + 'px ×', r.height + 'px', '(target 1px + bloom)');
+  }
   if (isDot && b > 0.01) {                                // tiny parallax lag on the dot
     rdParX *= 0.82; rdParY *= 0.82;
     el('redDotDot').style.transform = `translate(calc(-50% + ${rdParX.toFixed(1)}px), calc(-50% + ${rdParY.toFixed(1)}px))`;
@@ -1331,6 +1535,12 @@ function updateSights() {
   dmr.style.opacity = (sStyle === 'dmr') ? b : 0;
   jav.style.opacity = (sStyle === 'javelin') ? b : 0;
   if (sStyle === 'heavy') scope.style.opacity = b;        // reuse the big sniper scope overlay
+  // THERMAL (DMR): black-border scope + cold monochrome world filter + hot heat blobs.
+  const th = el('thermalScope');
+  th.style.opacity = (sStyle === 'thermal') ? b : 0;
+  const thermalOn = (sStyle === 'thermal' && b > 0.4);
+  renderer.domElement.style.filter = thermalOn ? 'grayscale(1) brightness(0.5) sepia(1) hue-rotate(168deg) saturate(1.7) contrast(1.12)' : '';
+  if (sStyle === 'thermal' && b > 0.05) updateThermal(); else hideThermalBlobs();
   if (gunMesh) gunMesh.visible = isScope ? (b < 0.6) : true;   // gun hides once you're looking down the scope
   el('hud').style.opacity = isScope ? (1 - 0.35 * b) : 1;
   if (sStyle === 'javelin' && b > 0.05) updateJavelinHud();
@@ -1701,9 +1911,12 @@ function addRedDotOptic(g, cfg) {
   const glass = new THREE.Mesh(new THREE.BoxGeometry(gw - 2 * t, gh - 2 * t, 0.012),
     new THREE.MeshBasicMaterial({ color: glassTint, transparent: true, opacity: 0.30 }));
   glass.position.set(0, y, z); g.add(glass);                                       // faintly tinted glass
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(style === 'minidot' ? 0.007 : 0.010, 8, 6),
+  // Faint on-glass 3D dot — ONLY for hipfire flavour. It's hidden once you ADS so it can't
+  // dominate the centred view; the crisp aim point is the 1px DOM #redDotDot. (Kept tiny.)
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 8, 6),
     new THREE.MeshBasicMaterial({ color: 0xff2222 }));
-  dot.position.set(0, y, z + 0.006); g.add(dot);                                   // faint on-glass dot
+  dot.position.set(0, y, z + 0.006); g.add(dot);
+  g.userData.opticDot = dot;
 }
 
 function buildGunModel(key) {
@@ -2110,8 +2323,17 @@ function tryShoot(akSide) {
   const origin = camera.getWorldPosition(new THREE.Vector3());
   const baseDir = camera.getWorldDirection(new THREE.Vector3());
 
-  // Rocket Launcher: fire a physical projectile instead of hitscan (its flame trail
-  // is the "tracer"). Then auto-reload from reserve.
+  // Gun-game projectile weapons (crossbow bolt / grenade / RPG rocket / thrown knife):
+  // fire a visible physics projectile from the muzzle instead of hitscan.
+  if (w.projType) {
+    fireGGProjectile(w.projType, gunMuzzleWorld(), baseDir.clone());
+    if (ws.ammo <= 0) reload();
+    updateHUD();
+    return;
+  }
+
+  // Rocket Launcher (FFA special): fire a physical projectile instead of hitscan (its flame
+  // trail is the "tracer"). Then auto-reload from reserve.
   if (w.projectile) {
     fireRocket(gunMuzzleWorld(), baseDir.clone());
     if (ws.ammo <= 0) reload();
@@ -3135,6 +3357,282 @@ function explodeRocket(center, directBot, dir) {
              { limbRadius: ROCKET.limbRadius, limbChance: ROCKET.limbChance, shakeRange: ROCKET.shakeRange, shakeMag: ROCKET.shakeMag });
 }
 
+/* ============================================================================
+   7e. GUN-GAME PROJECTILES — visible crossbow bolt / grenade / RPG rocket / thrown knife
+   Each travels with real physics, collides with the world + entities, and is
+   broadcast so other peers see it fly. The FIRER simulates hit detection (host
+   applies bot/PvP damage directly; clients report it) exactly like the tomahawk;
+   non-owned (network) copies are render-only.
+   ============================================================================ */
+const GG_PROJ = {
+  bolt:    { speed: 90,  grav: 14, life: 5, hitR: 1.0, spin: 9,  stick: 2.0, dmg: 200,   expl: false },
+  grenade: { speed: 60,  grav: 26, life: 5, hitR: 1.3, spin: 14, stick: 0,   dmg: 99999, expl: true, blastR: 11, blastDmg: 150, smoke: 0x9aa0a0 },
+  rocket:  { speed: 115, grav: 0,  life: 5, hitR: 1.3, spin: 0,  stick: 0,   dmg: 99999, expl: true, blastR: 14, blastDmg: 170, flame: true },
+  knife:   { speed: 90,  grav: 13, life: 6, hitR: 0.9, spin: 26, stick: 3.0, dmg: 200,   expl: false }
+};
+const ggProjectiles = [];
+const ggSmoke = [];                  // light smoke puffs for grenade/rocket trails
+function spawnSmokePuff(pos, color, size, life) {
+  const m = new THREE.Mesh(explGeo, new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5 }));
+  m.position.copy(pos); m.scale.setScalar(size); scene.add(m);
+  ggSmoke.push({ mesh: m, life: life, maxLife: life, grow: size * 1.8 });
+}
+function updateSmoke(dt) {
+  for (let i = ggSmoke.length - 1; i >= 0; i--) {
+    const s = ggSmoke[i]; s.life -= dt;
+    const k = 1 - s.life / s.maxLife;
+    s.mesh.scale.addScalar(s.grow * dt);
+    s.mesh.material.opacity = Math.max(0, 0.5 * (1 - k));
+    if (s.life <= 0) { scene.remove(s.mesh); s.mesh.material.dispose(); ggSmoke.splice(i, 1); }
+  }
+}
+// Build the distinct mesh for each projectile type (oriented so local +Z is "forward").
+function buildProjMesh(type) {
+  const g = new THREE.Group();
+  const box = (x, y, z, sx, sy, sz, c, emissive) => {
+    const mat = emissive ? new THREE.MeshBasicMaterial({ color: c }) : new THREE.MeshLambertMaterial({ color: c, flatShading: true });
+    const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); g.add(m); return m;
+  };
+  if (type === 'bolt') {
+    box(0, 0, 0.0, 0.04, 0.04, 0.66, 0x4a3320);            // wooden shaft
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 6), new THREE.MeshLambertMaterial({ color: 0x9aa4ad, flatShading: true }));
+    head.rotation.x = Math.PI / 2; head.position.z = 0.40; g.add(head);   // arrowhead (forward +Z)
+    box(0.05, 0, -0.30, 0.02, 0.10, 0.12, 0xe8e8e8);       // fletching
+    box(-0.05, 0, -0.30, 0.02, 0.10, 0.12, 0xe8e8e8);
+    box(0, 0.05, -0.30, 0.10, 0.02, 0.12, 0xe8e8e8);
+  } else if (type === 'grenade') {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), new THREE.MeshLambertMaterial({ color: 0x2f3a22, flatShading: true })); g.add(s);
+    box(0, 0, 0, 0.26, 0.05, 0.05, 0xe0c020);              // yellow stripe
+  } else if (type === 'rocket') {
+    box(0, 0, 0, 0.13, 0.13, 0.5, 0x5a6a3a);               // olive body
+    const wh = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.24, 8), new THREE.MeshLambertMaterial({ color: 0x3a3a3a, flatShading: true }));
+    wh.rotation.x = Math.PI / 2; wh.position.z = 0.36; g.add(wh);          // warhead
+    [[0.11, 0], [-0.11, 0], [0, 0.11], [0, -0.11]].forEach(([fx, fy]) => box(fx, fy, -0.26, 0.04, 0.04, 0.16, 0x2a2a2a));  // fins
+    const flame = new THREE.Mesh(flameGeo, new THREE.MeshBasicMaterial({ color: 0xffb030, transparent: true, opacity: 0.95 }));
+    flame.position.z = -0.5; g.add(flame); g.userData.flame = flame;
+    const light = new THREE.PointLight(0xffa030, 0.8, 7); light.position.z = -0.2; g.add(light);  // faint thrust light
+  } else { // knife
+    box(0, 0, 0.12, 0.03, 0.10, 0.34, 0xd6dde4);           // blade
+    box(0, 0, -0.16, 0.05, 0.07, 0.16, 0x1c1c1c);          // handle
+  }
+  return g;
+}
+// Spawn a projectile. `owned` = I fired it (do hit detection); else it's a network render copy.
+function spawnGGProjectile(type, pos, vel, owned, weaponKey) {
+  const cfg = GG_PROJ[type]; if (!cfg) return;
+  const mesh = buildProjMesh(type); mesh.position.copy(pos); scene.add(mesh);
+  ggProjectiles.push({ type, cfg, mesh, pos: pos.clone(), vel: vel.clone(),
+    life: cfg.life, spin: 0, owned: !!owned, stuck: false, weaponKey: weaponKey || type, trailT: 0 });
+}
+// Fire from the muzzle (local): spawn an owned projectile + broadcast a render copy to peers.
+function fireGGProjectile(type, origin, dir) {
+  const cfg = GG_PROJ[type];
+  const vel = dir.clone().normalize().multiplyScalar(cfg.speed);
+  if (type === 'grenade') vel.y += 6;                       // a little lob on the grenade
+  spawnGGProjectile(type, origin, vel, true, currentWeaponKey);
+  if (NET.active) NET.broadcast({ t: 'proj', pt: type, x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
+}
+function ggProjExplode(p, center) {
+  spawnExplosionFX(center, p.cfg.blastR, 0xffb030); spawnBlood(center, 10);
+  if (!p.owned) return;                                     // network copies are visual-only
+  // Bots in radius (host applies; clients report each hit) — credited to this weapon.
+  for (const bot of bots) {
+    if (!bot.alive) continue;
+    const d = Math.hypot(bot.pos.x - center.x, bot.pos.y + 1 - center.y, bot.pos.z - center.z);
+    if (d >= p.cfg.blastR) continue;
+    const dmg = p.cfg.blastDmg * (1 - d / p.cfg.blastR);
+    if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg, head: false, weapon: p.weaponKey, fromId: NET.selfId });
+    else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, dmg, new THREE.Vector3(0, 0, 1), null, { weapon: p.weaponKey, blast: true, dist: d }); if (NET.isHost) NET.botCredit = null; }
+  }
+  // Remote players in radius (PvP splash).
+  if (NET.active) NET.players.forEach(rp => {
+    if (!rp.alive) return;
+    const d = Math.hypot(rp.pos.x - center.x, rp.pos.y + 1 - center.y, rp.pos.z - center.z);
+    if (d < p.cfg.blastR) NET.damageRemote(rp, p.cfg.blastDmg * (1 - d / p.cfg.blastR), false, p.weaponKey, false);
+  });
+  // Self splash.
+  const pd = Math.hypot(player.pos.x - center.x, player.pos.y + 1 - center.y, player.pos.z - center.z);
+  if (player.alive && pd < p.cfg.blastR) hurtPlayer(p.cfg.blastDmg * (1 - pd / p.cfg.blastR));
+  addShake(0.18 * Math.max(0, 1 - pd / (p.cfg.blastR * 2)), 0.4);
+}
+function updateGGProjectiles(dt) {
+  const lim = ARENA - 1;
+  for (let i = ggProjectiles.length - 1; i >= 0; i--) {
+    const p = ggProjectiles[i], cfg = p.cfg;
+    p.life -= dt;
+    if (p.stuck) { if (p.life <= 0) { scene.remove(p.mesh); disposeGroup(p.mesh); ggProjectiles.splice(i, 1); } continue; }
+
+    p.vel.y -= cfg.grav * dt;
+    p.pos.addScaledVector(p.vel, dt);
+    p.spin += cfg.spin * dt;
+    p.mesh.position.copy(p.pos);
+    // Orientation: bolt/rocket point along travel (with a roll); knife/grenade tumble.
+    if (p.type === 'bolt' || p.type === 'rocket') {
+      p.mesh.lookAt(p.pos.clone().add(p.vel));
+      p.mesh.rotateZ(p.spin);
+      if (p.type === 'rocket' && p.mesh.userData.flame) p.mesh.userData.flame.material.opacity = 0.7 + Math.random() * 0.3;
+    } else {
+      p.mesh.rotation.set(p.spin, Math.atan2(p.vel.x, p.vel.z), 0);
+    }
+    // Trails
+    p.trailT -= dt;
+    if (p.trailT <= 0) {
+      if (p.type === 'rocket') { spawnSmokePuff(p.pos, 0xb0b0b0, 0.4, 0.5); p.trailT = 0.03; }
+      else if (p.type === 'grenade') { spawnSmokePuff(p.pos, cfg.smoke, 0.3, 0.4); p.trailT = 0.05; }
+      else p.trailT = 1;
+    }
+
+    // --- Hit detection (owned only) — bots, then remote players ---
+    let hitPoint = null;
+    if (p.owned && !cfg.expl) {                              // direct-hit weapons (bolt, knife)
+      for (const bot of bots) {
+        if (!bot.alive) continue;
+        if (Math.hypot(bot.pos.x - p.pos.x, bot.pos.y + 1.1 - p.pos.y, bot.pos.z - p.pos.z) < cfg.hitR) {
+          spawnBlood(p.pos, 14);
+          if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: cfg.dmg, head: false, weapon: p.weaponKey, fromId: NET.selfId });
+          else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, cfg.dmg, p.vel.clone().setY(0).normalize(), null, { weapon: p.weaponKey, dist: 4 }); if (NET.isHost) NET.botCredit = null; }
+          showHitMarker(); hitPoint = p.pos.clone(); break;
+        }
+      }
+      if (!hitPoint && NET.active) NET.players.forEach(rp => {
+        if (hitPoint || !rp.alive) return;
+        const chestY = rp.pos.y + 1.0 - 0.5 * (rp.cr || 0);   // crouched players sit lower
+        if (Math.hypot(rp.pos.x - p.pos.x, chestY - p.pos.y, rp.pos.z - p.pos.z) < cfg.hitR) {
+          spawnBlood(p.pos, 14); NET.damageRemote(rp, cfg.dmg, false, p.weaponKey, false); showHitMarker(); hitPoint = p.pos.clone();
+        }
+      });
+    } else if (p.owned && cfg.expl) {                        // explosive proximity (grenade direct contact / rocket)
+      for (const bot of bots) { if (bot.alive && Math.hypot(bot.pos.x - p.pos.x, bot.pos.y + 1.1 - p.pos.y, bot.pos.z - p.pos.z) < cfg.hitR) { hitPoint = p.pos.clone(); break; } }
+      if (!hitPoint && NET.active) NET.players.forEach(rp => { if (!hitPoint && rp.alive && Math.hypot(rp.pos.x - p.pos.x, rp.pos.y + 1 - p.pos.y, rp.pos.z - p.pos.z) < cfg.hitR) hitPoint = p.pos.clone(); });
+    }
+
+    // --- World collision (ground / walls / arena edges) ---
+    let world = false;
+    const gh = groundHeightAt(p.pos.x, p.pos.z, p.pos.y);
+    if (p.pos.y < gh + 0.1) { p.pos.y = gh + 0.1; world = true; }
+    if (Math.abs(p.pos.x) > lim || Math.abs(p.pos.z) > lim) world = true;
+    if (!world) for (const s of solids) {
+      if (p.pos.y < s.max.y && p.pos.y > s.min.y && p.pos.x > s.min.x && p.pos.x < s.max.x && p.pos.z > s.min.z && p.pos.z < s.max.z) { world = true; break; }
+    }
+
+    const impact = hitPoint || (world ? p.pos.clone() : null);
+    if (impact || p.life <= 0) {
+      if (cfg.expl) {                                        // grenade / rocket → explode
+        ggProjExplode(p, impact || p.pos);
+        scene.remove(p.mesh); disposeGroup(p.mesh); ggProjectiles.splice(i, 1);
+      } else if (hitPoint || world) {                        // bolt / knife → stick for a moment
+        p.stuck = true; p.life = cfg.stick; p.mesh.position.copy(p.pos);
+      } else {                                               // lifetime ran out mid-air
+        scene.remove(p.mesh); disposeGroup(p.mesh); ggProjectiles.splice(i, 1);
+      }
+    }
+  }
+}
+
+/* ============================================================================
+   7f. SMOKE GRENADES (gun-game tactical equipment) — bouncing canister + cloud
+   ============================================================================ */
+const SMOKE = { maxCarry: 2, throwVel: 24, upArc: 7, gravity: 30, bounce: 0.4, settle: 1.6,
+                fuse: 1.0, radius: 9, rise: 2.0, full: 15.0, fade: 3.0 };
+const liveSmokeCans = [];     // thrown canisters (bounce, then erupt)
+const smokeClouds = [];       // active clouds (referenced by the thermal occlusion check)
+let smokeThrowT = 0;          // brief throw animation / re-throw guard
+
+function throwSmoke() {
+  if (!gameState.running || !player.alive || player.smokes <= 0 || smokeThrowT > 0) return;
+  player.smokes--; smokeThrowT = 0.4;
+  const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
+  const dir = camera.getWorldDirection(new THREE.Vector3());
+  const vel = dir.multiplyScalar(SMOKE.throwVel); vel.y += SMOKE.upArc;
+  spawnSmokeCan(origin, vel, true);
+  if (NET.active) NET.broadcast({ t: 'smoke', x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
+  updateHUD();
+}
+function buildSmokeCan() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.34, 8), new THREE.MeshLambertMaterial({ color: 0x2a2e26, flatShading: true })));
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.05, 8), new THREE.MeshLambertMaterial({ color: 0xb0b6b0, flatShading: true }));
+  cap.position.y = 0.18; g.add(cap);
+  return g;
+}
+function spawnSmokeCan(pos, vel, owned) {
+  const mesh = buildSmokeCan(); mesh.position.copy(pos); scene.add(mesh);
+  liveSmokeCans.push({ mesh, pos: pos.clone(), vel: vel.clone(), owned: !!owned, settled: false, fuse: SMOKE.fuse, life: owned ? 99 : 1.8, spin: 0 });
+}
+function updateSmokeCans(dt) {
+  const lim = ARENA - 1, r = 0.18, damp = SMOKE.bounce;
+  for (let i = liveSmokeCans.length - 1; i >= 0; i--) {
+    const c = liveSmokeCans[i]; c.life -= dt;
+    if (!c.settled) {
+      c.vel.y -= SMOKE.gravity * dt;
+      c.pos.addScaledVector(c.vel, dt); c.spin += dt * 6;
+      const gh = groundHeightAt(c.pos.x, c.pos.z, c.pos.y);
+      if (c.pos.y < gh + r) { c.pos.y = gh + r; if (c.vel.y < 0) { c.vel.y = -c.vel.y * damp; c.vel.x *= 0.7; c.vel.z *= 0.7; } }
+      for (const s of solids) {           // bounce off walls/crates
+        if (c.pos.y >= s.max.y - 0.02 || c.pos.y <= s.min.y) continue;
+        if (c.pos.x > s.min.x - r && c.pos.x < s.max.x + r && c.pos.z > s.min.z - r && c.pos.z < s.max.z + r) {
+          const pL = c.pos.x - (s.min.x - r), pR = (s.max.x + r) - c.pos.x, pB = c.pos.z - (s.min.z - r), pF = (s.max.z + r) - c.pos.z;
+          if (Math.min(pL, pR) < Math.min(pB, pF)) { c.pos.x += pL < pR ? -pL : pR; c.vel.x = -c.vel.x * damp; }
+          else { c.pos.z += pB < pF ? -pB : pF; c.vel.z = -c.vel.z * damp; }
+        }
+      }
+      if (c.pos.x < -lim) { c.pos.x = -lim; c.vel.x *= -damp; } if (c.pos.x > lim) { c.pos.x = lim; c.vel.x *= -damp; }
+      if (c.pos.z < -lim) { c.pos.z = -lim; c.vel.z *= -damp; } if (c.pos.z > lim) { c.pos.z = lim; c.vel.z *= -damp; }
+      c.mesh.position.copy(c.pos); c.mesh.rotation.set(c.spin, 0, c.spin * 0.7);
+      const onGround = c.pos.y <= gh + r + 0.02;
+      if (onGround && Math.hypot(c.vel.x, c.vel.z) < SMOKE.settle) c.settled = true;
+    } else {
+      c.fuse -= dt;
+    }
+    // Owned canister erupts into a cloud when its fuse runs out (then everyone sees it via NET).
+    if ((c.settled && c.fuse <= 0) || (!c.owned && c.life <= 0)) {
+      if (c.owned) {
+        spawnSmokeCloud(c.pos.clone());
+        if (NET.active) NET.broadcast({ t: 'smokecloud', x: c.pos.x, y: c.pos.y, z: c.pos.z });
+      }
+      scene.remove(c.mesh); disposeGroup(c.mesh); liveSmokeCans.splice(i, 1);
+    }
+  }
+}
+function spawnSmokeCloud(center) {
+  const group = new THREE.Group(); group.position.copy(center).setY(center.y + 1.5);
+  const puffMat = () => new THREE.MeshBasicMaterial({ color: 0xeef0f2, transparent: true, opacity: 0, depthWrite: false });
+  const puffs = [];
+  for (let i = 0; i < 16; i++) {
+    const rad = 2.4 + Math.random() * 2.2;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(rad, 8, 6), puffMat());
+    const base = new THREE.Vector3((Math.random() - 0.5) * SMOKE.radius * 1.2, (Math.random() - 0.3) * 3.5, (Math.random() - 0.5) * SMOKE.radius * 1.2);
+    m.position.copy(base); group.add(m);
+    puffs.push({ m, base, phase: Math.random() * 6.28, amp: 0.4 + Math.random() * 0.6, alpha: 0.55 + Math.random() * 0.35 });
+  }
+  scene.add(group);
+  smokeClouds.push({ center: group.position.clone(), group, puffs, t: 0, opacity: 0, radius: SMOKE.radius });
+}
+function updateSmokeClouds(dt) {
+  let viewObscure = 0;
+  const camPos = camera.getWorldPosition(new THREE.Vector3());
+  for (let i = smokeClouds.length - 1; i >= 0; i--) {
+    const cl = smokeClouds[i]; cl.t += dt;
+    let env;
+    if (cl.t < SMOKE.rise) env = cl.t / SMOKE.rise;
+    else if (cl.t < SMOKE.rise + SMOKE.full) env = 1;
+    else if (cl.t < SMOKE.rise + SMOKE.full + SMOKE.fade) env = 1 - (cl.t - SMOKE.rise - SMOKE.full) / SMOKE.fade;
+    else { cl.group.children.forEach(m => m.material.dispose()); scene.remove(cl.group); smokeClouds.splice(i, 1); continue; }
+    cl.opacity = Math.max(0, Math.min(1, env));
+    const grow = 0.4 + 0.6 * Math.min(1, cl.t / SMOKE.rise);
+    for (const pf of cl.puffs) {                               // billow: drift + gentle pulse
+      pf.phase += dt * 0.8;
+      pf.m.position.set(pf.base.x + Math.sin(pf.phase) * pf.amp, pf.base.y + Math.cos(pf.phase * 0.7) * pf.amp * 0.6, pf.base.z + Math.cos(pf.phase) * pf.amp);
+      pf.m.scale.setScalar(grow * (0.92 + 0.08 * Math.sin(pf.phase * 1.3)));
+      pf.m.material.opacity = cl.opacity * pf.alpha;
+    }
+    const d = camPos.distanceTo(cl.center);
+    if (d < cl.radius) viewObscure = Math.max(viewObscure, cl.opacity * smoothstep((cl.radius - d) / cl.radius));
+  }
+  // Heavy fog over the screen when the camera is inside a cloud.
+  el('smokeView').style.opacity = (viewObscure * 0.9).toFixed(3);
+}
+
 // Ammo-box pickups: spin/bob, and refill ammo + 1 grenade when the player touches one.
 function updatePickups(dt) {
   for (const pk of pickups) {
@@ -3275,10 +3773,12 @@ function updateHUD() {
     el('ggLevel').style.display = '';
     el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">KARAMBIT</span>` : ``);
     el('killCounter').style.display = 'none'; el('grenades').style.display = 'none'; el('lootInfo').style.display = 'none';
+    el('smokeCount').style.display = ''; el('smokeNum').textContent = player.smokes;
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
     else if (magSpan) magSpan.style.display = '';
   } else {
     el('ggLevel').style.display = 'none'; el('killCounter').style.display = ''; el('grenades').style.display = '';
+    el('smokeCount').style.display = 'none';
     if (magSpan) magSpan.style.display = '';
   }
   // Health bar
@@ -3470,7 +3970,7 @@ function playerDie() {
     player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
     if (gameMode === 'gungame') {                       // respawn with your current ladder weapon (back to the gun)
-      player.grenades = 0; ggKarambit = false;
+      player.grenades = 0; player.smokes = SMOKE.maxCarry; ggKarambit = false;
       const key = GUNGAME_LADDER[ggLevel - 1];
       weaponState[key].ammo = WEAPONS[key].mag; weaponState[key].cooldown = 0; weaponState[key].reloading = 0;
       weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
@@ -3508,6 +4008,11 @@ function startMatch() {
   bloodDecals.forEach(d => scene.remove(d.mesh)); bloodDecals.length = 0;
   debris.forEach(d => { scene.remove(d.obj); disposeGroup(d.obj); }); debris.length = 0;
   liveRockets.forEach(r => { scene.remove(r.grp); r.flameMat.dispose(); }); liveRockets.length = 0;
+  ggProjectiles.forEach(p => { scene.remove(p.mesh); disposeGroup(p.mesh); }); ggProjectiles.length = 0;
+  ggSmoke.forEach(s => { scene.remove(s.mesh); s.mesh.material.dispose(); }); ggSmoke.length = 0;
+  liveSmokeCans.forEach(c => { scene.remove(c.mesh); disposeGroup(c.mesh); }); liveSmokeCans.length = 0;
+  smokeClouds.forEach(cl => { cl.group.children.forEach(m => m.material.dispose()); scene.remove(cl.group); }); smokeClouds.length = 0;
+  smokeThrowT = 0; el('smokeView').style.opacity = 0;
   el('floatLayer').innerHTML = '';
   WEAPON_ORDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
   // Reset special weapons + loot (improvements #2/#3)
@@ -3543,7 +4048,7 @@ function startMatch() {
     GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
     weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
     weaponState[KARAMBIT_KEY].cooldown = 0; weaponState[KARAMBIT_KEY].reloading = 0;
-    player.grenades = 0;                              // no throwables in gun game
+    player.grenades = 0; player.smokes = SMOKE.maxCarry;   // smoke grenades are the gun-game equipment
     ggEquip('gg1');                                  // start on the level-1 gun
   } else {
     switchWeapon(selectedStartWeapon);
@@ -3670,6 +4175,9 @@ function openSettings(from) { settingsReturn = from; refreshSettingsUI(); showSc
 el('menuSettings').onclick = () => openSettings('mainMenu');
 el('lobbySettings').onclick = () => openSettings('lobbyScreen');
 el('settingsBack').onclick = () => showScreen(settingsReturn);
+// Skin creator access: main menu, and "Edit Skin" inside Settings (applies next respawn).
+el('menuSkin').onclick = () => SkinCreator.open('mainMenu');
+el('settingsEditSkin').onclick = () => SkinCreator.open(settingsReturn);
 function setBotCount(n) {
   botCount = Math.max(0, Math.min(BOT_MAX, n));
   localStorage.setItem('blockoutBots', botCount);
@@ -3771,6 +4279,7 @@ const NET = {
     this.peer.on('open', () => {
       this.scores.set(this.selfId, { name: this.selfName, score: 0, kills: 0 });
       this.color = this.nextColor();
+      if (mySkinDataURL()) skinDataCache[this.selfId] = mySkinDataURL();   // cache own skin to serve to joiners
       setNetStatus('lobbyStatus', 'Lobby is live — share the code!');
       renderRoster();
     });
@@ -3803,6 +4312,7 @@ const NET = {
       conn.on('open', () => {
         opened = true;
         conn.send({ t: 'hello', id, name });
+        this.broadcastSkin();                                    // send my custom skin to the host (relayed to all)
         showScreen('lobbyScreen');
         el('lobbyCode').textContent = this.code;
         el('lobbyStart').style.display = 'none';                 // only the host can start
@@ -3848,6 +4358,33 @@ const NET = {
   broadcastScores() {
     const list = []; this.scores.forEach((s, id) => list.push({ id, name: s.name, score: s.score, kills: s.kills, level: s.level || 1 }));
     this.broadcast({ t: 'scores', list });
+  },
+
+  /* ---------------- CUSTOM SKINS ---------------- */
+  // Send one player's skin (base64 PNG) in chunks via `sendFn` (handles >200KB).
+  sendSkin(sendFn, fromId, url) {
+    if (!url) return;
+    const CH = 48000, n = Math.ceil(url.length / CH);
+    for (let i = 0; i < n; i++) sendFn({ t: 'skin', from: fromId, seq: i, count: n, data: url.slice(i * CH, (i + 1) * CH) });
+  },
+  // Broadcast MY active skin to everyone (cached for late joiners / host relay).
+  broadcastSkin() {
+    if (!this.active) return;
+    const url = mySkinDataURL(); if (!url) return;
+    skinDataCache[this.selfId] = url;
+    this.sendSkin(this.broadcast.bind(this), this.selfId, url);
+  },
+  _skinRecv: {},
+  // Reassemble incoming skin chunks; on completion build the texture + apply to that avatar.
+  onSkinChunk(msg, fromConnId) {
+    const buf = this._skinRecv[msg.from] || (this._skinRecv[msg.from] = { count: msg.count, parts: [] });
+    buf.count = msg.count; buf.parts[msg.seq] = msg.data;
+    let done = 0; for (let i = 0; i < buf.count; i++) if (buf.parts[i] != null) done++;
+    if (this.isHost) for (const id in this.conns) { if (id !== fromConnId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
+    if (done === buf.count) {
+      const url = buf.parts.join(''); delete this._skinRecv[msg.from];
+      textureFromDataURL(msg.from, url, () => applyRemoteSkin(msg.from));
+    }
   },
   applyScoresLocal() {
     const mine = this.scores.get(this.selfId);
@@ -3924,6 +4461,8 @@ const NET = {
         this.scores.set(msg.id, { name: (msg.name || 'Player').slice(0, 14), score: 0, kills: 0, level: 1 });
         const rp = this.ensurePlayer(msg.id, msg.name); rp.color = rp.color || this.nextColor();
         this.broadcastRoster(); renderRoster();
+        // Serve every skin we've cached (host's own + other clients') to the newcomer.
+        if (conn) for (const sid in skinDataCache) this.sendSkin((m) => conn.send(m), sid, skinDataCache[sid]);
         break;
       }
       case 'pmove': {                                  // client position update
@@ -3972,6 +4511,22 @@ const NET = {
       case 'scores': { this.scores.clear(); msg.list.forEach(s => this.scores.set(s.id, { name: s.name, score: s.score, kills: s.kills, level: s.level || 1 })); this.applyScoresLocal(); break; }
       case 'feed': { addKillFeed(msg.html); break; }
       case 'matchover': { doMatchOver(msg.winner); break; }
+      case 'proj': {                                   // a peer fired a projectile — render-only copy
+        spawnGGProjectile(msg.pt, new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false, msg.pt);
+        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
+        break;
+      }
+      case 'smoke': {                                  // a peer threw a smoke canister — visual copy
+        spawnSmokeCan(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false);
+        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
+        break;
+      }
+      case 'smokecloud': {                             // authoritative cloud spawn (synced for everyone)
+        spawnSmokeCloud(new THREE.Vector3(msg.x, msg.y, msg.z));
+        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
+        break;
+      }
+      case 'skin': { this.onSkinChunk(msg, fromId); break; }   // a peer's painted skin (chunked PNG)
 
       case 'ggset': { ggSetLevel(msg.level); break; }    // host told me my new gun-game level
 
@@ -4011,6 +4566,73 @@ const NET = {
   },
 };
 
+/* ============================================================================
+   9d. CUSTOM SKINS — a paintable UV-atlas texture shared by the player character
+   model (skin creator preview + every remote avatar). Geometry is unchanged; only
+   the texture differs. Default = a plain light-gray mannequin.
+   ============================================================================ */
+const SKIN_RES = 512;
+// Atlas cells (normalized) for each body box — a 3-col × 2-row grid. Each box's 6
+// faces are spread into sub-rects of its cell so paint wraps correctly per face.
+const SKIN_CELLS = {
+  head:  [0 / 3, 0 / 2], torso: [1 / 3, 0 / 2], legs: [2 / 3, 0 / 2],
+  armL:  [0 / 3, 1 / 2], armR:  [1 / 3, 1 / 2]
+};
+const CELL_W = 1 / 3, CELL_H = 1 / 2;
+// Remap a BoxGeometry's UVs so each of its 6 faces occupies a distinct sub-rect of [u0,v0].
+function assignBoxUVs(geo, u0, v0) {
+  const uv = geo.attributes.uv, subW = CELL_W / 3, subH = CELL_H / 2;
+  for (let f = 0; f < 6; f++) {
+    const col = f % 3, row = (f / 3) | 0;
+    const cu = u0 + col * subW, cv = v0 + row * subH;
+    for (let k = 0; k < 4; k++) {
+      const i = f * 4 + k, a = uv.getX(i), b = uv.getY(i);   // a,b are 0 or 1
+      uv.setXY(i, cu + a * subW * 0.96 + subW * 0.02, cv + b * subH * 0.96 + subH * 0.02);
+    }
+  }
+  uv.needsUpdate = true;
+}
+// Build the shared character: 5 textured body boxes (one material/atlas) + tags via `mk`.
+// `mk(w,h,d,x,y,z,part)` lets callers tag meshes (e.g. for hit detection on remotes).
+function buildCharacterModel(material, mk) {
+  const part = (w, h, d, x, y, z, name) => {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    assignBoxUVs(geo, SKIN_CELLS[name][0], SKIN_CELLS[name][1]);
+    const m = mk ? mk(geo, material, x, y, z, name) : new THREE.Mesh(geo, material);
+    if (!mk) { m.position.set(x, y, z); }
+    return m;
+  };
+  return {
+    legs:  part(0.5, 0.6, 0.5, 0, 0.55, 0, 'legs'),
+    torso: part(0.85, 0.7, 0.55, 0, 1.15, 0, 'torso'),
+    armL:  part(0.18, 0.55, 0.18, -0.5, 1.2, 0, 'armL'),
+    armR:  part(0.18, 0.55, 0.18, 0.5, 1.2, 0, 'armR'),
+    head:  part(0.5, 0.5, 0.5, 0, 1.75, 0, 'head')
+  };
+}
+// Default blank mannequin texture (plain light gray) — shared by uncustomised players.
+function makeBlankSkinCanvas() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = SKIN_RES;
+  const ctx = cv.getContext('2d'); ctx.fillStyle = '#d8d8d8'; ctx.fillRect(0, 0, SKIN_RES, SKIN_RES);
+  return cv;
+}
+const defaultSkinTex = new THREE.CanvasTexture(makeBlankSkinCanvas());
+defaultSkinTex.colorSpace = THREE.SRGBColorSpace !== undefined ? THREE.SRGBColorSpace : defaultSkinTex.colorSpace;
+
+const skinCache = {};          // id -> THREE.Texture (received/own skins, keyed by player id)
+const skinDataCache = {};      // id -> dataURL (so we can re-broadcast / persist)
+// Turn a PNG dataURL into a texture (async) and cache it under `id`; calls cb(tex) when ready.
+function textureFromDataURL(id, url, cb) {
+  const img = new Image();
+  img.onload = () => {
+    const tex = new THREE.Texture(img); tex.needsUpdate = true;
+    if (THREE.SRGBColorSpace !== undefined) tex.colorSpace = THREE.SRGBColorSpace;
+    skinCache[id] = tex; skinDataCache[id] = url; if (cb) cb(tex);
+  };
+  img.onerror = () => { if (cb) cb(null); };
+  img.src = url;
+}
+
 /* ---- Remote player object + blocky avatar ---- */
 function makeRemotePlayer(id, name, color) {
   return {
@@ -4034,19 +4656,16 @@ function makeRemotePlayer(id, name, color) {
 }
 function buildRemoteAvatar(rp) {
   const g = new THREE.Group();
-  const body = new THREE.MeshLambertMaterial({ color: rp.color, flatShading: true });
-  const dark = new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true });
-  const skin = new THREE.MeshLambertMaterial({ color: 0xe0b483, flatShading: true });
-  const mk = (w, h, d, mat, x, y, z, part) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-    m.position.set(x, y, z); m.castShadow = true; m.userData = { remote: rp, part: part || 'body' };
+  // One material sampling the player's custom skin texture (or the default blank mannequin).
+  const mat = new THREE.MeshLambertMaterial({ map: skinCache[rp.id] || defaultSkinTex });
+  rp.skinMat = mat;
+  const parts = buildCharacterModel(mat, (geo, material, x, y, z, name) => {
+    const m = new THREE.Mesh(geo, material);
+    m.position.set(x, y, z); m.castShadow = true;
+    m.userData = { remote: rp, part: name === 'head' ? 'head' : 'torso' };   // head = headshot, rest = body
     g.add(m); return m;
-  };
-  mk(0.5, 0.6, 0.5, body, 0, 0.55, 0, 'torso');       // legs block
-  mk(0.85, 0.7, 0.55, body, 0, 1.15, 0, 'torso');     // torso
-  mk(0.18, 0.55, 0.18, body, -0.5, 1.2, 0, 'torso');  // arms
-  mk(0.18, 0.55, 0.18, body, 0.5, 1.2, 0, 'torso');
-  const head = mk(0.5, 0.5, 0.5, skin, 0, 1.75, 0, 'head');
+  });
+  const head = parts.head;
   // little gun box in front (colored by held weapon)
   const gun = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.6), new THREE.MeshLambertMaterial({ color: WEAPONS[rp.weapon] ? WEAPONS[rp.weapon].color : 0xffcc00, flatShading: true }));
   gun.position.set(0.45, 1.25, 0.45); g.add(gun);
@@ -4054,6 +4673,24 @@ function buildRemoteAvatar(rp) {
   rp.renderPos.copy(rp.pos);
   drawNameSprite(rp);
   scene.add(g);
+}
+// Swap a remote player's avatar material to their (now-loaded) skin texture, or default.
+function applyRemoteSkin(id) {
+  const rp = NET.players.get(id);
+  if (rp && rp.skinMat) { rp.skinMat.map = skinCache[id] || defaultSkinTex; rp.skinMat.needsUpdate = true; }
+}
+
+/* ---- Local skin storage (up to 5 named slots in localStorage) ---- */
+const SKIN_STORE_KEY = 'blockoutSkins';
+function loadSkinStore() {
+  try { const s = JSON.parse(localStorage.getItem(SKIN_STORE_KEY)); if (s && Array.isArray(s.slots)) return s; } catch (e) {}
+  return { slots: [], active: -1 };   // slots: [{name, data(dataURL)}]
+}
+function saveSkinStore(s) { try { localStorage.setItem(SKIN_STORE_KEY, JSON.stringify(s)); } catch (e) {} }
+// The dataURL of the player's currently-active saved skin, or null if they've never customised.
+function mySkinDataURL() {
+  const s = loadSkinStore();
+  return (s.active >= 0 && s.slots[s.active]) ? s.slots[s.active].data : null;
 }
 function drawNameSprite(rp) {
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 80;
@@ -4191,8 +4828,11 @@ function renderRoster() {
   const wrap = el('lobbyPlayers'); if (!wrap) return;
   const list = NET.rosterList();
   wrap.innerHTML = list.map(p =>
-    `<div class="pl"><span>${p.id === NET.selfId ? p.name + ' (you)' : p.name}</span>${p.host ? '<span class="tag">HOST</span>' : ''}</div>`
+    `<div class="pl${p.id === NET.selfId ? ' me' : ''}" data-self="${p.id === NET.selfId}"><span>${p.id === NET.selfId ? p.name + ' (you) 🎨' : p.name}</span>${p.host ? '<span class="tag">HOST</span>' : ''}</div>`
   ).join('');
+  // Click your own roster entry to open the skin creator.
+  const meEl = wrap.querySelector('.pl[data-self="true"]');
+  if (meEl) { meEl.style.cursor = 'pointer'; meEl.title = 'Customize your skin'; meEl.onclick = () => SkinCreator.open('lobbyScreen'); }
 }
 function setNetStatus(id, text, isErr) {
   const e = el(id); if (!e) return; e.textContent = text; e.classList.toggle('err', !!isErr);
@@ -4240,6 +4880,220 @@ document.addEventListener('keyup', (e) => {
 });
 
 /* ============================================================================
+   9e. SKIN CREATOR — paint the character model (own mini-renderer + tools)
+   ============================================================================ */
+const SkinCreator = (() => {
+  let inited = false, open = false, returnScreen = 'mainMenu', dirty = false;
+  let renderer, scene, cam, char, raf = 0, spinIn = 0;
+  let yaw = 0.4, pitch = 0.1, dist = 3.4;
+  let canvas, ctx, tex, mat;                       // the paint canvas (512) + its texture/material
+  let tool = 'marker', size = 18, color = '#e0392b';
+  let painting = false, rotating = false, lastUV = null, lastM = { x: 0, y: 0 };
+  let selSlot = 0;
+  const undoStack = [], redoStack = [];
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const PALETTE = ['#000000','#ffffff','#7f7f7f','#e0392b','#ff8c1a','#ffe600','#34d058','#1ca3ec',
+                   '#2b50c8','#9b59ff','#ff7bd5','#7a4a1e','#3a2a1a','#0a5a2a','#0a2a5a','#d8d8d8'];
+
+  function init() {
+    if (inited) return; inited = true;
+    canvas = makeBlankSkinCanvas(); ctx = canvas.getContext('2d');
+    tex = new THREE.CanvasTexture(canvas);
+    if (THREE.SRGBColorSpace !== undefined) tex.colorSpace = THREE.SRGBColorSpace;
+    mat = new THREE.MeshLambertMaterial({ map: tex });
+    scene = new THREE.Scene(); scene.background = new THREE.Color(0x1a2230);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x55606e, 1.0));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.7); dl.position.set(3, 6, 4); scene.add(dl);
+    const grp = new THREE.Group();
+    char = buildCharacterModel(mat, (geo, material, x, y, z, name) => {
+      const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.userData = { skPart: name }; grp.add(m); return m;
+    });
+    grp._parts = char; scene.add(grp); scene._charGrp = grp;
+    const stage = el('skStage');
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    stage.insertBefore(renderer.domElement, stage.firstChild);
+    cam = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    bindStage(); buildPalette(); buildTemplates(); wireTools();
+  }
+  function resize() {
+    const stage = el('skStage'), w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix();
+  }
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    if (spinIn > 0) { spinIn -= 0.016; yaw += 0.05; }       // intro spin-in
+    const cy = 1.1;
+    cam.position.set(Math.sin(yaw) * dist, cy + pitch * 2.2, Math.cos(yaw) * dist);
+    cam.lookAt(0, cy, 0);
+    renderer.render(scene, cam);
+  }
+
+  /* ---- painting ---- */
+  function snapshot() { undoStack.push(ctx.getImageData(0, 0, SKIN_RES, SKIN_RES)); if (undoStack.length > 22) undoStack.shift(); redoStack.length = 0; }
+  function hitUV(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, cam);
+    const hit = ray.intersectObjects(scene._charGrp.children, false)[0];
+    return hit ? { uv: hit.uv, part: hit.object.userData.skPart } : null;
+  }
+  function stamp(px, py) {
+    if (tool === 'spray') {
+      ctx.fillStyle = color; ctx.globalAlpha = 0.16;
+      for (let i = 0; i < size * 1.2; i++) { const a = Math.random() * 6.283, rr = Math.random() * size; ctx.beginPath(); ctx.arc(px + Math.cos(a) * rr, py + Math.sin(a) * rr, 1.1, 0, 6.283); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    } else if (tool === 'pen') {
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(px, py, Math.max(1, size * 0.22), 0, 6.283); ctx.fill();
+    } else {                                                 // marker / eraser (soft round)
+      const col = tool === 'eraser' ? '#d8d8d8' : color, g = ctx.createRadialGradient(px, py, 0, px, py, size);
+      g.addColorStop(0, col); g.addColorStop(0.7, col); g.addColorStop(1, col + (tool === 'eraser' ? '' : '00'));
+      ctx.fillStyle = (tool === 'eraser') ? col : g;
+      ctx.beginPath(); ctx.arc(px, py, size, 0, 6.283); ctx.fill();
+    }
+  }
+  function paint(e) {
+    const h = hitUV(e); if (!h) { lastUV = null; return; }
+    const px = h.uv.x * SKIN_RES, py = (1 - h.uv.y) * SKIN_RES;
+    if (lastUV && Math.abs(h.uv.x - lastUV.x) < 0.1 && Math.abs(h.uv.y - lastUV.y) < 0.1) {
+      const lpx = lastUV.x * SKIN_RES, lpy = (1 - lastUV.y) * SKIN_RES, steps = Math.ceil(Math.hypot(px - lpx, py - lpy) / 3);
+      for (let i = 1; i <= steps; i++) stamp(lpx + (px - lpx) * i / steps, lpy + (py - lpy) * i / steps);
+    } else stamp(px, py);
+    lastUV = { x: h.uv.x, y: h.uv.y }; tex.needsUpdate = true; dirty = true;
+  }
+  function fillAt(e) {                                       // bucket: flood-fill within the clicked body part's cell
+    const h = hitUV(e); if (!h) return; snapshot();
+    const cell = SKIN_CELLS[h.part], x0 = Math.floor(cell[0] * SKIN_RES), y0 = Math.floor(cell[1] * SKIN_RES);
+    const x1 = Math.floor((cell[0] + CELL_W) * SKIN_RES), y1 = Math.floor((cell[1] + CELL_H) * SKIN_RES);
+    const sx = Math.floor(h.uv.x * SKIN_RES), sy = Math.floor((1 - h.uv.y) * SKIN_RES);
+    floodFill(sx, sy, color, x0, y0, x1, y1); tex.needsUpdate = true; dirty = true;
+  }
+  function floodFill(sx, sy, hex, x0, y0, x1, y1) {
+    const img = ctx.getImageData(0, 0, SKIN_RES, SKIN_RES), d = img.data, W = SKIN_RES;
+    const at = (x, y) => (y * W + x) * 4;
+    const si = at(sx, sy), tr = d[si], tg = d[si + 1], tb = d[si + 2];
+    const nr = parseInt(hex.slice(1, 3), 16), ng = parseInt(hex.slice(3, 5), 16), nb = parseInt(hex.slice(5, 7), 16);
+    if (tr === nr && tg === ng && tb === nb) return;
+    const match = (i) => Math.abs(d[i] - tr) < 24 && Math.abs(d[i + 1] - tg) < 24 && Math.abs(d[i + 2] - tb) < 24;
+    const stack = [[sx, sy]];
+    while (stack.length) {
+      const [x, y] = stack.pop(); if (x < x0 || y < y0 || x >= x1 || y >= y1) continue;
+      const i = at(x, y); if (!match(i)) continue;
+      d[i] = nr; d[i + 1] = ng; d[i + 2] = nb; d[i + 3] = 255;
+      stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  /* ---- templates ---- */
+  function template(name) {
+    snapshot();
+    ctx.fillStyle = (name === 'solid') ? color : '#d8d8d8'; ctx.fillRect(0, 0, SKIN_RES, SKIN_RES);
+    if (name === 'camo') {
+      const cols = ['#4a5d23', '#3a4a1a', '#6b7a3a', '#2a3312'];
+      for (let i = 0; i < 220; i++) { ctx.fillStyle = cols[i % 4]; ctx.beginPath(); ctx.ellipse(Math.random() * SKIN_RES, Math.random() * SKIN_RES, 14 + Math.random() * 22, 10 + Math.random() * 16, Math.random() * 3, 0, 6.283); ctx.fill(); }
+    } else if (name === 'stripes') {
+      for (let x = 0; x < SKIN_RES; x += 26) { ctx.fillStyle = (x / 26) % 2 ? '#222' : color; ctx.fillRect(x, 0, 26, SKIN_RES); }
+    } else if (name === 'skull') {
+      const c = SKIN_CELLS.head, hx = c[0] * SKIN_RES, hy = c[1] * SKIN_RES, hw = CELL_W * SKIN_RES, hh = CELL_H * SKIN_RES;
+      ctx.fillStyle = '#111'; ctx.fillRect(hx, hy, hw, hh);
+      ctx.fillStyle = '#eee'; ctx.font = 'bold ' + (hh * 0.7) + 'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let f = 0; f < 6; f++) { const col = f % 3, row = (f / 3) | 0; ctx.fillText('☠', hx + (col + 0.5) * hw / 3, hy + (row + 0.5) * hh / 2); }
+    }
+    tex.needsUpdate = true; dirty = true;
+  }
+
+  /* ---- slots / storage ---- */
+  function renderSlots() {
+    const store = loadSkinStore(), host = el('skSlots'); host.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const sl = document.createElement('div'); sl.className = 'slot' + (i === selSlot ? ' sel' : '');
+      const data = store.slots[i];
+      if (data) { sl.classList.add('filled'); sl.style.backgroundImage = `url(${data.data})`; sl.title = data.name; sl.textContent = ''; }
+      else sl.textContent = 'slot ' + (i + 1);
+      sl.onclick = () => { selSlot = i; if (store.slots[i]) { snapshot(); loadDataURLToCanvas(store.slots[i].data); el('skName').value = store.slots[i].name || ''; } renderSlots(); };
+      host.appendChild(sl);
+    }
+  }
+  function loadDataURLToCanvas(url) {
+    const img = new Image(); img.onload = () => { ctx.fillStyle = '#d8d8d8'; ctx.fillRect(0, 0, SKIN_RES, SKIN_RES); ctx.drawImage(img, 0, 0, SKIN_RES, SKIN_RES); tex.needsUpdate = true; }; img.src = url;
+  }
+  function saveAndUse() {
+    const store = loadSkinStore();
+    const url = canvas.toDataURL('image/png');
+    store.slots[selSlot] = { name: (el('skName').value || ('Skin ' + (selSlot + 1))).slice(0, 16), data: url };
+    store.active = selSlot; saveSkinStore(store);
+    dirty = false; el('skStatus').textContent = 'Saved & active ✓';
+    // Make it our live skin + push to peers.
+    if (NET.active) { skinDataCache[NET.selfId] = url; NET.broadcastSkin(); }
+    renderSlots();
+  }
+
+  /* ---- input wiring ---- */
+  function bindStage() {
+    const dom = renderer.domElement, cur = el('skBrushCursor');
+    dom.addEventListener('contextmenu', e => e.preventDefault());
+    dom.addEventListener('pointerdown', e => {
+      if (e.button === 2) { rotating = true; lastM = { x: e.clientX, y: e.clientY }; }
+      else if (e.button === 0) {
+        if (tool === 'fill') fillAt(e);
+        else { snapshot(); painting = true; lastUV = null; paint(e); }
+      }
+    });
+    window.addEventListener('pointermove', e => {
+      if (!open) return;
+      const r = dom.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+        cur.style.display = (tool === 'fill') ? 'none' : 'block'; cur.style.left = (e.clientX - r.left) + 'px'; cur.style.top = (e.clientY - r.top) + 'px';
+        const px = (tool === 'pen' ? size * 0.44 : size * 2) * (r.width / renderer.domElement.width * window.devicePixelRatio || 1);
+        cur.style.width = cur.style.height = Math.max(4, px) + 'px';
+      } else cur.style.display = 'none';
+      if (rotating) { yaw -= (e.clientX - lastM.x) * 0.01; pitch = Math.max(-0.8, Math.min(0.8, pitch - (e.clientY - lastM.y) * 0.01)); lastM = { x: e.clientX, y: e.clientY }; }
+      else if (painting) paint(e);
+    });
+    window.addEventListener('pointerup', () => { painting = false; rotating = false; lastUV = null; });
+    dom.addEventListener('wheel', e => { e.preventDefault(); dist = Math.max(1.6, Math.min(7, dist + e.deltaY * 0.002)); }, { passive: false });
+  }
+  function buildPalette() {
+    const host = el('skPalette');
+    PALETTE.forEach(c => { const s = document.createElement('div'); s.className = 'sw'; s.style.background = c; s.onclick = () => setColor(c); host.appendChild(s); });
+  }
+  function buildTemplates() { el('skTemplates').querySelectorAll('.skTpl').forEach(b => b.onclick = () => template(b.dataset.tpl)); }
+  function setColor(c) { color = c; el('skColor').value = c; el('skSwatch').style.background = c; }
+  function setTool(t) { tool = t; el('skTools').querySelectorAll('.skTool').forEach(b => b.classList.toggle('sel', b.dataset.tool === t)); }
+  function wireTools() {
+    el('skTools').querySelectorAll('.skTool').forEach(b => b.onclick = () => setTool(b.dataset.tool));
+    el('skSize').oninput = e => { size = +e.target.value; el('skSizeVal').textContent = size; };
+    el('skColor').oninput = e => setColor(e.target.value);
+    el('skUndo').onclick = () => { if (!undoStack.length) return; redoStack.push(ctx.getImageData(0, 0, SKIN_RES, SKIN_RES)); ctx.putImageData(undoStack.pop(), 0, 0); tex.needsUpdate = true; };
+    el('skRedo').onclick = () => { if (!redoStack.length) return; undoStack.push(ctx.getImageData(0, 0, SKIN_RES, SKIN_RES)); ctx.putImageData(redoStack.pop(), 0, 0); tex.needsUpdate = true; };
+    el('skClear').onclick = () => { if (confirm('Erase all paint?')) { snapshot(); ctx.fillStyle = '#d8d8d8'; ctx.fillRect(0, 0, SKIN_RES, SKIN_RES); tex.needsUpdate = true; dirty = true; } };
+    el('skSave').onclick = saveAndUse;
+    el('skClose').onclick = close;
+  }
+
+  function openCreator(ret) {
+    returnScreen = ret || 'mainMenu'; init();
+    el('skinCreator').classList.remove('hidden');
+    open = true; dirty = false; spinIn = 0.9;
+    const store = loadSkinStore(); selSlot = store.active >= 0 ? store.active : 0;
+    if (store.active >= 0 && store.slots[store.active]) { loadDataURLToCanvas(store.slots[store.active].data); el('skName').value = store.slots[store.active].name || ''; }
+    else { ctx.fillStyle = '#d8d8d8'; ctx.fillRect(0, 0, SKIN_RES, SKIN_RES); tex.needsUpdate = true; el('skName').value = ''; }
+    setColor(color); setTool(tool); el('skSizeVal').textContent = size; renderSlots(); el('skStatus').textContent = '';
+    resize(); if (!raf) loop();
+  }
+  function close() {
+    if (dirty && !confirm('Discard unsaved changes?')) return;
+    open = false; if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    el('skinCreator').classList.add('hidden');
+    if (returnScreen === '__resume') { /* opened from settings mid-session: just go back to menu */ showScreen('mainMenu'); }
+    else showScreen(returnScreen);
+  }
+  window.addEventListener('resize', () => { if (open) resize(); });
+  return { open: openCreator };
+})();
+
+/* ============================================================================
    10. GAME LOOP
    ============================================================================ */
 const clock = new THREE.Clock();
@@ -4257,6 +5111,9 @@ function animate() {
     updateGrenades(dt);   // frag grenade physics + fuse
     updateTomahawks(dt);  // thrown tomahawks (alternate throwable)
     updateRockets(dt);    // rocket projectiles (special weapon)
+    updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails
+    updateSmokeCans(dt); updateSmokeClouds(dt);  // smoke-grenade canisters + clouds
+    if (smokeThrowT > 0) smokeThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill + grenade)
     if (gameMode === 'gungame') { /* no loot crates in gun game */ }
     else if (!NET.active || NET.isHost) updateLoot(dt);   // loot crates are host-driven in MP

@@ -158,14 +158,6 @@
   #lobbyStage { width: min(880px, 92vw); height: 290px; margin: 2px auto; border-radius: 12px; overflow: hidden; position: relative;
     background: linear-gradient(180deg, #10141c, #080a10); border: 2px solid rgba(120,150,220,0.28); box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
   #lobbyStage canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
-  .meleeSect { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 2px 0; }
-  .meleeSect .meleeHdr { font-size: 12px; opacity: .75; letter-spacing: 2px; }
-  .meleeRow { display: flex; gap: 10px; justify-content: center; }
-  .meleeCard { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.16); border-radius: 8px; padding: 5px 8px 4px; color: #b8c2cc; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: border-color .15s, background .15s; }
-  .meleeCard:hover { border-color: rgba(127,233,255,0.6); }
-  .meleeCard.sel { border-color: #7fe9ff; background: rgba(40,90,120,0.5); color: #fff; }
-  .meleeCard canvas { width: 46px; height: 46px; }
-  .meleeCard .mLab { font-size: 10px; font-weight: 700; letter-spacing: .5px; }
   #flameFuelWrap { font-size: 12px; font-weight: 800; letter-spacing: .5px; color: #ff9a3a; text-shadow: 0 2px 3px #000; margin-top: 6px; display: none; }
   #flameFuelBg { width: 150px; height: 11px; background: rgba(0,0,0,0.45); border: 2px solid #000; border-radius: 4px; margin-top: 2px; }
   #flameFuelBar { height: 100%; width: 100%; background: linear-gradient(90deg,#ff3a1a,#ffd23a); border-radius: 2px; transition: width .1s; }
@@ -703,7 +695,6 @@
     <button class="smallbtn" id="menuSkin">🎨 CUSTOMIZE SKIN</button>
     <button class="smallbtn" id="menuSettings">⚙ SETTINGS</button>
   </div>
-  <div class="meleeSect"><div class="meleeHdr">MELEE KNIFE</div><div class="meleeRow" id="menuMelee"></div></div>
   <p class="controls-hint">Host a lobby to get a 5-letter code, share it with friends, and they join from anywhere online.</p>
 </div>
 
@@ -880,7 +871,6 @@
     <div id="lobbyCode" class="lobbyCode" title="click to copy">-----</div>
   </div>
   <div id="lobbyStage" title="Click your character to customize your skin"></div>
-  <div class="meleeSect"><div class="meleeHdr">MELEE KNIFE</div><div class="meleeRow" id="lobbyMelee"></div></div>
   <div class="lobbyPlayers" id="lobbyPlayers"></div>
   <div style="font-size:14px;opacity:.85">Game mode <span id="lobbyModeHostNote" style="opacity:.7;font-size:12px"></span>:</div>
   <div class="modePick" id="lobbyModePick">
@@ -1058,23 +1048,6 @@ const GUNGAME_MAX = GUNGAME_LADDER.length;   // 20
 // FFA-only extra weapons: selectable from the I-key inventory but NEVER on the gun-game ladder.
 const FFA_ONLY_WEAPONS = ["gg21", "gg22", "gg23", "gg24", "gg25", "gg26"];
 const KARAMBIT_KEY = "karambit";
-// --- MELEE SELECTION (CS:GO-inspired): the slot-3 melee is ALWAYS keyed 'karambit' internally
-// (identical stats / demotion / range / networking); only its model, animations + audio vary by
-// `meleeChoice` ('karambit' | 'm9' | 'butterfly'). Persisted in localStorage, synced per-player as `mc`. ---
-const MELEE_TYPES = ['karambit', 'm9', 'butterfly'];
-const MELEE_NAMES = { karambit: 'KARAMBIT', m9: 'M9 BAYONET', butterfly: 'BUTTERFLY' };
-let meleeChoice = 'karambit';
-try { const _mc = localStorage.getItem('meleeChoice_v1'); if (_mc && MELEE_TYPES.indexOf(_mc) >= 0) meleeChoice = _mc; } catch (e) {}
-function setMeleeChoice(t) {
-  if (MELEE_TYPES.indexOf(t) < 0) return;
-  const changed = (t !== meleeChoice);
-  meleeChoice = t; try { localStorage.setItem('meleeChoice_v1', t); } catch (e) {}
-  if (changed && NET.active) NET.broadcast({ t: 'melee', id: NET.selfId, mc: t });
-  if (changed && currentWeaponKey === KARAMBIT_KEY && gameState.running) ggEquip(KARAMBIT_KEY);   // rebuild the held viewmodel
-  if (typeof refreshMeleePickers === 'function') refreshMeleePickers();
-  if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();
-  if (typeof updateHUD === 'function') updateHUD();
-}
 let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame'
 let ggLevel  = 1;       // the LOCAL player's current gun-game level (1..20)
 let ggKarambit = false; // is the LOCAL player currently holding the karambit (vs their gun)?
@@ -1485,29 +1458,11 @@ function sfxEmpty(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type
 // Convenience: where the local player "hears from" (camera world position).
 function playerEarPos() { return camera.getWorldPosition(new THREE.Vector3()); }
 // Play a weapon's fire sound at a world position (used locally + for networked remote shots).
-// CS:GO-style melee SFX — distinct swing / hit / equip per knife (all share the 'karambit' weapon).
-function sfxMeleeSwing(mv, pos) {
-  const P = pos || playerEarPos();
-  if (mv === 'm9') SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.22, peak: 0.4, filter: 'bandpass', freq: 1100, freq1: 480, q: 0.9 }), P, 'weapons', 'melee', 0.8, 0.22);           // heavy whoosh
-  else if (mv === 'butterfly') SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.12, peak: 0.32, filter: 'bandpass', freq: 2200, freq1: 1000, q: 1.2 }), P, 'weapons', 'melee', 0.7, 0.12);  // light quick whoosh
-  else SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.16, peak: 0.38, filter: 'bandpass', freq: 2600, freq1: 900, q: 1.3 }), P, 'weapons', 'melee', 0.75, 0.16);                          // sharp aggressive swish
-}
-function sfxMeleeHit(mv, pos) {
-  const P = pos || playerEarPos();
-  if (mv === 'm9') SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 160, f1: 70, dur: 0.1, peak: 0.32 }); aNoise(ctx, out, t, { dur: 0.09, peak: 0.34, filter: 'lowpass', freq: 700 }); }, P, 'weapons', 'meleehit', 0.85, 0.12);   // meaty thud
-  else if (mv === 'butterfly') SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.07, peak: 0.34, filter: 'bandpass', freq: 1800, freq1: 800, q: 1.5 }); aTone(ctx, out, t, { type: 'triangle', f0: 1400, f1: 700, dur: 0.06, peak: 0.16 }); }, P, 'weapons', 'meleehit', 0.8, 0.1);   // clean cut
-  else SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.36, filter: 'lowpass', freq: 1100, freq1: 400 }); aNoise(ctx, out, t + 0.03, { dur: 0.08, peak: 0.2, filter: 'bandpass', freq: 900, q: 0.8 }); }, P, 'weapons', 'meleehit', 0.85, 0.12);   // tearing / ripping
-}
-function sfxMeleeEquip(mv) {
-  if (mv === 'm9') SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.3, filter: 'bandpass', freq: 1600, freq1: 3200, q: 1.0 }); aTone(ctx, out, t + 0.12, { type: 'triangle', f0: 2600, f1: 1800, dur: 0.1, peak: 0.12 }); }, 'weapons', 'meleeq', 0.6, 0.4);   // unsheath scrape + ring
-  else if (mv === 'butterfly') SND.play2d((ctx, out, t) => { for (let i = 0; i < 5; i++) aTone(ctx, out, t + i * 0.12, { type: 'square', f0: 1800 + Math.random() * 600, dur: 0.03, peak: 0.16 }); aTone(ctx, out, t + 0.66, { type: 'square', f0: 1400, dur: 0.05, peak: 0.24 }); }, 'weapons', 'meleeq', 0.6, 0.7);   // click-clack flips + final SNAP
-  else SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.14, peak: 0.2, filter: 'bandpass', freq: 1200, freq1: 2400, q: 0.8 }); aNoise(ctx, out, t + 0.18, { dur: 0.12, peak: 0.18, filter: 'bandpass', freq: 2400, freq1: 1000, q: 0.8 }); aTone(ctx, out, t + 0.42, { type: 'square', f0: 900, dur: 0.04, peak: 0.18 }); }, 'weapons', 'meleeq', 0.6, 0.55);   // spin whoosh-whoosh + grip click
-}
-function sfxFire(weaponKey, pos, side, meleeVar) {
+function sfxFire(weaponKey, pos, side) {
   const cat = 'weapons';
   // Lightsaber swing: airy whoosh + the iconic high energy zing.
   if (weaponKey === 'saber') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.22, peak: 0.34, filter: 'bandpass', freq: 700, freq1: 2400, q: 0.8 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 900, f1: 1500, dur: 0.18, peak: 0.16 }); aTone(ctx, out, t + 0.03, { type: 'sine', f0: 1700, f1: 1200, dur: 0.16, peak: 0.1 }); }, pos, cat, 'sabersw', 0.8, 0.24); return; }
-  if (weaponKey === KARAMBIT_KEY) { sfxMeleeSwing(meleeVar || meleeChoice, pos); return; }   // swing sound varies by the chosen knife
+  if (weaponKey === KARAMBIT_KEY) { SND.play3d(buildSlash(true), pos, cat, 'melee', 0.7, 0.2); return; }
   if (weaponKey === 'gg20' || (WEAPONS[weaponKey] && WEAPONS[weaponKey].melee)) { SND.play3d(buildSlash(false), pos, cat, 'melee', 0.8, 0.2); return; }
   if (weaponKey === 'gg19') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.3, filter: 'bandpass', freq: 1700, freq1: 2600, q: 1.4 }); }, pos, cat, 'melee', 0.6, 0.13); return; }   // throwing-knife release
   if (weaponKey === 'gg10') { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.05, peak: 0.3, filter: 'lowpass', freq: 1200 }); aNoise(ctx, out, t + 0.02, { dur: 0.16, peak: 0.16, filter: 'bandpass', freq: 1800, freq1: 700, q: 0.8 }); }, pos, cat, 'fire', 0.7, 0.18); return; }   // crossbow: thunk + string whoosh
@@ -2433,20 +2388,6 @@ function pandaLogoTexture() {
   x.fillStyle = '#d11a1a'; x.font = 'bold 52px Arial, sans-serif'; x.textAlign = 'center'; x.fillText('PANDA', 128, 232);
   return new THREE.CanvasTexture(c);
 }
-// Philippine flag sticker: white hoist triangle (8-ray sun + 3 corner stars), blue over red field; faintly worn.
-function philippineFlagTexture() {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d');
-  x.fillStyle = '#0038a8'; x.fillRect(0, 0, 256, 64);                          // blue top stripe
-  x.fillStyle = '#ce1126'; x.fillRect(0, 64, 256, 64);                          // red bottom stripe
-  x.fillStyle = '#ffffff'; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, 128); x.lineTo(110, 64); x.closePath(); x.fill();   // white hoist triangle
-  const sx = 37, sy = 64; x.fillStyle = '#fcd116';
-  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; x.save(); x.translate(sx, sy); x.rotate(a); x.beginPath(); x.moveTo(0, -4); x.lineTo(23, 0); x.lineTo(0, 4); x.closePath(); x.fill(); x.restore(); }   // 8 sun rays
-  x.beginPath(); x.arc(sx, sy, 9, 0, 7); x.fill();                              // sun disc
-  const star = (px, py, r) => { x.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / 5; x.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r); const b = a + Math.PI / 5; x.lineTo(px + Math.cos(b) * r * 0.45, py + Math.sin(b) * r * 0.45); } x.closePath(); x.fill(); };
-  star(13, 13, 7); star(13, 115, 7); star(101, 64, 7);                          // 3 corner stars
-  x.fillStyle = 'rgba(110,110,110,0.12)'; for (let i = 0; i < 6; i++) x.fillRect(Math.random() * 256, Math.random() * 128, 28, 2);   // faint wrinkles / wear
-  return new THREE.CanvasTexture(c);
-}
 (function buildNoodleBox() {
   const cx = -40, cz = 30, W = 4.2, D = 4.2, H = 5.2, t = 0.18, hx = W / 2, hz = D / 2, doorW = 2.0;   // ~30% bigger, ~2.6 player-heights tall
   const paper = 0xf6f4ef, red = 0xd11a1a;                       // Panda Express white + red
@@ -2476,8 +2417,6 @@ function philippineFlagTexture() {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({ map: logoTex, transparent: true })); m.position.set(cx, H * 0.52, pz); m.rotation.y = ry; scene.add(m);
   });
   const banner = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.0), new THREE.MeshBasicMaterial({ map: logoTex, transparent: true })); banner.position.set(cx + hx + 0.05, H - 0.5, cz); banner.rotation.y = Math.PI / 2; scene.add(banner);   // small banner over the doorway
-  const flag = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.15), new THREE.MeshBasicMaterial({ map: philippineFlagTexture(), transparent: true, opacity: 0.93 }));
-  flag.position.set(cx - hx - 0.05, H * 0.62, cz); flag.rotation.y = -Math.PI / 2; scene.add(flag);   // Philippine flag sticker on the back face (opposite the Panda branding)
   noodleBox = { cx, cz, minX: cx - hx, maxX: cx + hx, minZ: cz - hz, maxZ: cz + hz, H };
 })();
 function inNoodleBox() {
@@ -2904,7 +2843,7 @@ let rdParX = 0, rdParY = 0;   // red-dot reticle parallax offset (px), lags fast
 const GG_BREATH_MAX = 3;      // seconds of steady "held breath" available on the heavy sniper scope
 let ggBreath = GG_BREATH_MAX, ggBreathHeld = false;
 // Karambit viewmodel animation: equip flourish, swing arc, idle bob.
-let karEquipT = 0, karEquipDur = 0.7, karSwingT = 0, karSwingDir = 1, karBob = 0, karInspectT = 0, karInspectDur = 1, karInspectClock = 0;
+let karEquipT = 0, karSwingT = 0, karSwingDir = 1, karBob = 0;
 // Per-shot cycle animation (bolt/pump) state.
 let ggCycleT = 0, ggCycleDur = 0, ggCycleStyle = '';
 function ggStartCycle(style, dur) { ggCycleStyle = style; ggCycleDur = dur; ggCycleT = dur; }
@@ -3600,7 +3539,7 @@ function addRedDotOptic(g, cfg) {
 
 // Shared weapon geometry — used by the first-person viewmodel AND the third-person models other
 // players see. Returns { g, muzzleZ }. Includes iron sights, red dot, and saber/akimbo userData.
-function buildWeaponMesh(key, variant) {
+function buildWeaponMesh(key) {
   const w = WEAPONS[key];
   const model = w.baseModel || key;   // gun-game weapons borrow an existing silhouette
   const g = new THREE.Group();
@@ -3755,56 +3694,30 @@ function buildWeaponMesh(key, variant) {
     body(0,0.02,-0.18,0.05,0.16,0.42,w.color);     // straight blade
     muzzleZ = -0.34;
   } else if (model === 'karambit') {
-    // The slot-3 melee — one of three CS:GO-style knives picked via `meleeChoice` (or `variant` for remotes).
-    const mv = variant || meleeChoice;
-    g.userData.meleeType = mv;
+    // CS:GO-style karambit — REVERSE GRIP: ergonomic handle held in a fist with the
+    // signature finger ring at the pommel, and a curved tiger-claw blade hooking DOWN
+    // and forward to a sharp tip. Metallic (specular) blade, dark textured handle.
+    const bladeMat = new THREE.MeshPhongMaterial({ color: 0xc2ccd6, specular: 0xffffff, shininess: 100, flatShading: true });
+    const edgeMat  = new THREE.MeshPhongMaterial({ color: 0xeef4fa, specular: 0xffffff, shininess: 120, flatShading: true });
+    const gripMat  = new THREE.MeshPhongMaterial({ color: 0x16161a, specular: 0x444444, shininess: 24, flatShading: true });
     const seg = (x, y, z, sx, sy, sz, mat, rx) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; g.add(m); return m; };
-    if (mv === 'm9') {
-      // M9 BAYONET — long straight clip-point blade in a FORWARD grip (blade up-forward), spine serrations + bayonet ring.
-      const blade = new THREE.MeshPhongMaterial({ color: 0x26282c, specular: 0x9aa2ac, shininess: 60, flatShading: true });   // matte black
-      const edge = new THREE.MeshPhongMaterial({ color: 0xd8dee6, specular: 0xffffff, shininess: 120, flatShading: true });
-      const grip = new THREE.MeshPhongMaterial({ color: 0x141414, specular: 0x333333, shininess: 16, flatShading: true });
-      seg(0, -0.05, 0.16, 0.06, 0.07, 0.26, grip);                       // ridged handle
-      seg(0, -0.05, 0.30, 0.085, 0.085, 0.05, grip);                     // metal pommel cap
-      seg(0, 0.0, 0.0, 0.17, 0.045, 0.07, grip);                         // finger guard
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.015, 8, 16), grip); ring.position.set(0, 0.0, -0.05); ring.rotation.x = Math.PI / 2; g.add(ring);   // bayonet attachment ring
-      seg(0, 0.07, -0.42, 0.045, 0.11, 0.74, blade, -0.12);              // long straight blade (forward + up)
-      seg(0.024, 0.07, -0.42, 0.008, 0.11, 0.74, edge, -0.12);           // honed bottom edge
-      seg(0, 0.135, -0.75, 0.03, 0.06, 0.16, edge, -0.5);                // clipped point tip + top swedge
-      for (let i = 0; i < 5; i++) seg(0, 0.025 + i * 0.012, -0.085 - i * 0.05, 0.052, 0.03, 0.028, edge, -0.12);   // saw-tooth serrations on the spine
-      muzzleZ = -0.74;
-    } else if (mv === 'butterfly') {
-      // BUTTERFLY / BALISONG — deployed (open): two skeletal steel handles + a spear-point chrome-blue blade, pivot pin.
-      const blade = new THREE.MeshPhongMaterial({ color: 0xcdd8e6, specular: 0xffffff, shininess: 120, flatShading: true });
-      const steel = new THREE.MeshPhongMaterial({ color: 0x9aa2ac, specular: 0xdfe8f0, shininess: 80, flatShading: true });
-      seg(0.05, -0.02, 0.16, 0.04, 0.05, 0.34, steel); seg(-0.05, -0.02, 0.16, 0.04, 0.05, 0.34, steel);   // two parallel handles
-      seg(0.05, -0.02, 0.0, 0.045, 0.055, 0.06, steel); seg(-0.05, -0.02, 0.0, 0.045, 0.055, 0.06, steel); // handle heads
-      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.17, 10), steel); pin.rotation.z = Math.PI / 2; pin.position.set(0, -0.02, -0.02); g.add(pin);   // pivot pin
-      seg(0, 0.02, -0.38, 0.04, 0.085, 0.66, blade, -0.05);              // spear-point blade forward
-      seg(0, 0.05, -0.68, 0.026, 0.06, 0.13, blade, -0.4);               // point
-      seg(0.022, 0.02, -0.38, 0.006, 0.085, 0.66, new THREE.MeshBasicMaterial({ color: 0xbfe6ff }), -0.05);   // bright blue-tinted edge
-      muzzleZ = -0.66;
-    } else {
-      // KARAMBIT (overhaul) — REVERSE GRIP: dramatic forward tiger-claw hook, fuller, G10 grip, prominent silver ring.
-      const blade = new THREE.MeshPhongMaterial({ color: 0x8a929c, specular: 0xdfe8f0, shininess: 90, flatShading: true });   // gunmetal
-      const edge = new THREE.MeshPhongMaterial({ color: 0xeef4fa, specular: 0xffffff, shininess: 120, flatShading: true });
-      const grip = new THREE.MeshPhongMaterial({ color: 0x14141a, specular: 0x333333, shininess: 18, flatShading: true });
-      const ringMat = new THREE.MeshPhongMaterial({ color: 0xc8ccd2, specular: 0xffffff, shininess: 150, flatShading: true });   // silver
-      seg(0, 0.08, 0.16, 0.07, 0.09, 0.30, grip, 0.22);                  // G10 handle
-      seg(0, 0.11, 0.02, 0.055, 0.055, 0.10, grip, 0.22);                // bolster
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.074, 0.018, 12, 20), ringMat); ring.position.set(0, 0.05, 0.35); ring.rotation.y = Math.PI / 2; g.add(ring);   // prominent silver finger ring
-      seg(0, -0.04, 0.05, 0.055, 0.14, 0.09, blade, 0.45);               // dramatic forward hook (tighter curve)
-      seg(0, -0.16, 0.0, 0.05, 0.14, 0.085, blade, 0.9);
-      seg(0, -0.28, -0.10, 0.045, 0.13, 0.075, blade, 1.3);
-      seg(0, -0.38, -0.24, 0.038, 0.12, 0.065, blade, 1.75);
-      seg(0, -0.41, -0.37, 0.026, 0.095, 0.05, edge, 2.15);              // sharp hooked tip
-      seg(0.026, -0.20, -0.05, 0.008, 0.14, 0.085, edge, 0.9);           // honed inner edge
-      seg(0, -0.16, -0.005, 0.014, 0.05, 0.085, grip, 0.9);              // blood groove / fuller
-      muzzleZ = -0.22;
-    }
-    const trail = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.6),
+    seg(0, 0.07, 0.15, 0.065, 0.085, 0.30, gripMat, 0.22);                          // handle (gripped)
+    seg(0, 0.10, 0.02, 0.05, 0.05, 0.10, gripMat, 0.22);                            // bolster
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.066, 0.016, 10, 18), gripMat);
+    ring.position.set(0, 0.05, 0.33); ring.rotation.y = Math.PI / 2; g.add(ring);   // finger ring (signature)
+    // curved blade: tapering segments rotated progressively to form the down-forward hook
+    seg(0, -0.05, 0.03, 0.05,  0.13, 0.085, bladeMat, 0.50);
+    seg(0, -0.16, -0.03, 0.045, 0.13, 0.08,  bladeMat, 0.90);
+    seg(0, -0.26, -0.12, 0.04,  0.12, 0.07,  bladeMat, 1.25);
+    seg(0, -0.33, -0.23, 0.032, 0.11, 0.06,  bladeMat, 1.60);
+    seg(0, -0.35, -0.33, 0.022, 0.085,0.045, edgeMat,  1.90);                       // sharp tapered tip
+    seg(0.024, -0.18, -0.04, 0.010, 0.13, 0.085, edgeMat, 0.90);                    // bright honed edge (specular)
+    seg(-0.022, -0.18, -0.04, 0.010, 0.13, 0.085, gripMat, 0.90);                   // swedge / false edge on the spine
+    // faint swing trail (toggled during a slash)
+    const trail = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5),
       new THREE.MeshBasicMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
-    trail.position.set(-0.05, -0.1, -0.25); trail.rotation.y = Math.PI / 2; g.add(trail); g.userData.karTrail = trail;
+    trail.position.set(-0.1, -0.2, -0.12); trail.rotation.y = Math.PI / 2; g.add(trail); g.userData.karTrail = trail;
+    muzzleZ = -0.22;
   } else if (model === 'saber') {
     // LIGHTSABER — silver cylindrical hilt held in a fist (lower-right); a glowing blue blade
     // (white-hot core → blue glow → soft halo) ignites upward from the emitter. The blade lives
@@ -3956,9 +3869,9 @@ function buildGunModel(key) {
 }
 // Third-person held weapon for remote avatars: the shared mesh, rotated so its muzzle points the
 // avatar's forward (+Z), wrapped in a holder we pose at the hand. Saber/RC/akimbo geometry included.
-function buildThirdPersonWeapon(key, variant) {
+function buildThirdPersonWeapon(key) {
   const holder = new THREE.Group();
-  const built = buildWeaponMesh(key, variant);
+  const built = buildWeaponMesh(key);
   built.g.rotation.y = Math.PI;   // FP weapons point -Z; flip so the muzzle faces avatar-forward (+Z)
   holder.add(built.g);
   holder.userData.muzzleZ = built.muzzleZ;
@@ -4194,7 +4107,7 @@ function meleeAttack(swingDir) {
   const creditW = w.saber ? saberCreditWeapon() : currentWeaponKey;
   const meleeFlag = w.saber ? false : true;
   sfxFire(currentWeaponKey, playerEarPos());     // slash whoosh (karambit higher-pitched, saber = energy zing)
-  if (NET.active) NET.broadcast({ t: 'fire', id: NET.selfId, w: currentWeaponKey, mc: meleeChoice, x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z });
+  if (NET.active) NET.broadcast({ t: 'fire', id: NET.selfId, w: currentWeaponKey, x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z });
   // Distinct viewmodel motion: saber = fast alternating arc, karambit = arcing slash (+1/-1),
   // combat knife = forward stab.
   if (gunMesh) {
@@ -4224,7 +4137,7 @@ function meleeAttack(swingDir) {
       NET.damageRemote(rp, 9999, false, creditW, meleeFlag);   // saber: melee=false (no demote, counts as a gun kill)
     });
   }
-  if (hit) { showHitMarker(); showKillFlash(); if (w.saber) sfxSaberHit(origin.clone().addScaledVector(dir, reach * 0.6)); else if (w.karambit) sfxMeleeHit(meleeChoice, origin.clone().addScaledVector(dir, reach * 0.6)); }
+  if (hit) { showHitMarker(); showKillFlash(); if (w.saber) sfxSaberHit(origin.clone().addScaledVector(dir, reach * 0.6)); }
   else if (w.saber) {
     // Missed a body — if the swing clips a wall/object, give an electric clash + sparks.
     const ray = new THREE.Raycaster(origin, dir, 0, reach);
@@ -4232,26 +4145,6 @@ function meleeAttack(swingDir) {
     if (ch.length) { sfxSaberClash(ch[0].point); spawnSmokePuff(ch[0].point, 0x9ed2ff, 0.18, 0.3); }
   }
   updateHUD();
-}
-
-// --- Per-melee viewmodel poses (equip flourish / swing / idle inspect), driven by progress 0..1. ---
-function meleeEquipPose(g, mt, e) {   // e: 0 (just drawn from below) -> 1 (settled in ready pose)
-  const k = 1 - e;
-  g.position.set(0.32, -0.28 - k * 0.55, -0.6);
-  if (mt === 'm9') g.rotation.set(k * 0.25, 0.04 + Math.sin(k * Math.PI * 3) * 0.6, k * 0.15);            // rise + side-to-side inspect tilt
-  else if (mt === 'butterfly') g.rotation.set(k * Math.PI * 6, 0.04, Math.sin(k * Math.PI * 4) * 0.4);    // elaborate balisong flips
-  else g.rotation.set(0, 0.04, k * -Math.PI * 4);                                                          // karambit: spinning twirl around the ring
-}
-function meleeSwingPose(g, mt, s, dir) {   // s: 0 -> 1 -> 0 across the swing
-  if (mt === 'm9') { g.position.set(0.32 - 0.05 * s, -0.28 - 0.04 * s, -0.6 - 0.34 * s); g.rotation.set(0.95 * s, 0.04, 0.18 * s); }        // downward/forward stab
-  else if (mt === 'butterfly') { g.position.set(0.32 - 0.30 * s, -0.28 + 0.07 * s, -0.6 + 0.10 * s); g.rotation.set(0.2 * s, 0.04, -1.0 * s + s * s * Math.PI * 0.5); }   // quick slash + flip flourish
-  else { g.position.set(0.32 - dir * 0.34 * s, -0.28 + 0.10 * s, -0.6 + 0.12 * s); g.rotation.set(0.30 * s, 0.04, dir * 1.30 * s); }        // karambit arcing reverse-grip slash
-}
-function meleeInspectPose(g, mt, e) {   // e: 0 -> 1 full inspect cycle
-  g.position.set(0.30, -0.26 + Math.sin(e * Math.PI) * 0.04, -0.55);
-  if (mt === 'm9') g.rotation.set(0.1, 0.04 + Math.sin(e * Math.PI * 2) * 0.7, 0);          // tilt the blade side to side
-  else if (mt === 'butterfly') g.rotation.set(e * Math.PI * 2, 0.04, 0);                     // flip closed and back open
-  else g.rotation.set(0, 0.04, Math.sin(e * Math.PI) * -Math.PI * 2);                        // karambit spins once on the ring
 }
 
 // Burst-fire scheduler: weapons with a `burst` count queue their follow-up shells here.
@@ -7564,7 +7457,7 @@ function updateHUD() {
   const magSpan = document.querySelector('#ammo .mag');
   if (gameMode === 'gungame') {
     el('ggLevel').style.display = '';
-    el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">⚔ ${MELEE_NAMES[meleeChoice]}</span>` : ``);
+    el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">KARAMBIT</span>` : ``);
     el('killCounter').style.display = 'none'; el('grenades').style.display = 'none'; el('lootInfo').style.display = 'none';
     el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
@@ -7650,7 +7543,7 @@ function ggSetKarambit(use) {
   if (ws) { ws.reloading = 0; ws.shellReload = false; }
   ggKarambit = !!use;
   ggEquipCurrent();
-  if (ggKarambit) { karEquipDur = (meleeChoice === 'butterfly' ? 0.9 : meleeChoice === 'karambit' ? 0.7 : 0.6); karEquipT = karEquipDur; karSwingT = 0; karInspectT = 0; karInspectClock = 0; sfxMeleeEquip(meleeChoice); }   // variant-specific pull-out flourish + sound
+  if (ggKarambit) { karEquipT = 0.25; karSwingT = 0; }   // equip flourish (twirl up from below)
 }
 // Set the LOCAL player's level: refill + instantly swap to that ladder weapon
 // (advancing always pulls you off the karambit and onto the new gun).
@@ -8195,28 +8088,6 @@ el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display
 // Skin creator access: main menu, and "Edit Skin" inside Settings (applies next respawn).
 el('menuSkin').onclick = () => SkinCreator.open('mainMenu');
 el('settingsEditSkin').onclick = () => SkinCreator.open(settingsReturn);
-// --- MELEE picker UI (main menu + lobby): 3 cards with line-art icons; click to select + persist. ---
-function meleeIconCanvas(type) {
-  const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d');
-  x.strokeStyle = '#dfe8f0'; x.lineWidth = 4; x.lineCap = 'round'; x.lineJoin = 'round';
-  if (type === 'karambit') { x.beginPath(); x.arc(38, 30, 22, 0.5, 3.3); x.stroke(); x.lineWidth = 3; x.beginPath(); x.arc(48, 48, 8, 0, 7); x.stroke(); }           // hooked blade + finger ring
-  else if (type === 'm9') { x.beginPath(); x.moveTo(14, 54); x.lineTo(52, 12); x.stroke(); x.lineWidth = 8; x.beginPath(); x.moveTo(12, 56); x.lineTo(24, 44); x.stroke(); }   // long straight blade + handle
-  else { x.beginPath(); x.moveTo(14, 50); x.lineTo(52, 14); x.stroke(); x.beginPath(); x.moveTo(14, 28); x.lineTo(40, 52); x.stroke(); }                                       // butterfly handles + blade
-  return c;
-}
-function buildMeleePicker(id) {
-  const wrap = el(id); if (!wrap) return; wrap.innerHTML = '';
-  MELEE_TYPES.forEach(t => {
-    const b = document.createElement('button'); b.className = 'meleeCard'; b.dataset.melee = t;
-    b.appendChild(meleeIconCanvas(t));
-    const lab = document.createElement('div'); lab.className = 'mLab'; lab.textContent = MELEE_NAMES[t]; b.appendChild(lab);
-    b.onclick = () => { setMeleeChoice(t); sfxMeleeEquip(t); };
-    wrap.appendChild(b);
-  });
-  refreshMeleePickers();
-}
-function refreshMeleePickers() { document.querySelectorAll('.meleeCard').forEach(b => b.classList.toggle('sel', b.dataset.melee === meleeChoice)); }
-buildMeleePicker('menuMelee'); buildMeleePicker('lobbyMelee');
 function setBotCount(n) {
   botCount = Math.max(0, Math.min(BOT_MAX, n));
   localStorage.setItem('blockoutBots', botCount);
@@ -8500,7 +8371,6 @@ const NET = {
              sb: saberBlocking,                                              // saber block stance (third-person pose)
              flm: (flameEquipped && firing && flameFuel > 0), brn: (player.burnT > 0),   // flamethrower spray + on-fire tells
              lz: (laserOn && hasLaser(currentWeaponKey)),                    // laser sight on (others see the beam)
-             mc: meleeChoice,                                               // chosen melee (others render the right knife)
              clm: player.onLadder };                                         // climbing a ladder (third-person)
   },
   // host -> all: positions of every human (host builds from its own state + clients' last pmove)
@@ -8508,7 +8378,7 @@ const NET = {
     const list = [this.selfSnapshot()];
     this.players.forEach((rp) => list.push({ id: rp.id, name: rp.name, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
       yaw: rp.yaw, pitch: rp.pitch || 0, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
-      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, sb: !!rp.sb, flm: !!rp.flm, brn: !!rp.brn, lz: !!rp.lz, mc: rp.mc || 'karambit', clm: !!rp.clm }));
+      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, sb: !!rp.sb, flm: !!rp.flm, brn: !!rp.brn, lz: !!rp.lz, clm: !!rp.clm }));
     this.broadcast({ t: 'players', list });
   },
   broadcastBots() {
@@ -8644,14 +8514,8 @@ const NET = {
         break;
       }
       case 'fire': {                                   // a peer fired — play their weapon's shot at their position
-        if (msg.id !== this.selfId) sfxFire(msg.w, new THREE.Vector3(msg.x, msg.y, msg.z), msg.sd || null, msg.mc);
+        if (msg.id !== this.selfId) sfxFire(msg.w, new THREE.Vector3(msg.x, msg.y, msg.z), msg.sd || null);
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
-        break;
-      }
-      case 'melee': {                                  // a peer changed their chosen melee (lobby/in-match) — update their knife
-        const rpm = this.players.get(msg.id); if (rpm) { rpm.mc = msg.mc; if (rpm.weaponKey) rpm.weaponKey = null; }
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
-        if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();
         break;
       }
       case 'minspin': {                                // a peer started spinning up their minigun (heard map-wide)
@@ -8795,7 +8659,7 @@ function makeRemotePlayer(id, name, color) {
     id, name: (name || 'Player').slice(0, 14), color, alive: true, health: 100, weapon: 'pistol',
     pos: new THREE.Vector3(0, 0, 0), yaw: 0, ads: false, rl: 0, cr: 0, dv: false, cig: false, clm: false, crShown: 0, _cigPuffT: 0,
     renderPos: new THREE.Vector3(0, 0, 0), renderYaw: 0,
-    avatar: null, head: null, gun: null, nameSprite: null, _hadAvatar: false, _lastNameHp: -1, mc: 'karambit',
+    avatar: null, head: null, gun: null, nameSprite: null, _hadAvatar: false, _lastNameHp: -1,
     apply(d) {
       if (d.name) this.name = d.name.slice(0, 14);
       if (d.x != null) this.pos.set(d.x, d.y, d.z);
@@ -8814,7 +8678,6 @@ function makeRemotePlayer(id, name, color) {
       if (d.flm != null) this.flm = d.flm;
       if (d.brn != null) this.brn = d.brn;
       if (d.lz != null) this.lz = d.lz;
-      if (d.mc) this.mc = d.mc;
     }
   };
 }
@@ -8882,11 +8745,11 @@ function drawNameSprite(rp) {
 // Rebuild a remote player's held weapon mesh when their equipped weapon changes; manage the
 // left-hand Jack Daniels bottle that accompanies the saber scorestreak.
 function updateRemoteWeapon(rp) {
-  if (rp.weaponKey === rp.weapon && rp.weaponMc === rp.mc) return;   // unchanged since last rebuild (weapon OR melee variant)
-  rp.weaponKey = rp.weapon; rp.weaponMc = rp.mc;
+  if (rp.weaponKey === rp.weapon) return;   // unchanged since last rebuild
+  rp.weaponKey = rp.weapon;
   if (rp.weaponMesh) { rp.avatar.remove(rp.weaponMesh); disposeGroup(rp.weaponMesh); rp.weaponMesh = null; }
   if (WEAPONS[rp.weapon]) {
-    rp.weaponMesh = buildThirdPersonWeapon(rp.weapon, rp.weapon === KARAMBIT_KEY ? (rp.mc || 'karambit') : undefined);   // show their chosen knife
+    rp.weaponMesh = buildThirdPersonWeapon(rp.weapon);
     rp.weaponMesh.position.set(0.42, 1.26, 0.34);
     rp.avatar.add(rp.weaponMesh);
   }
@@ -9172,7 +9035,7 @@ const LobbyStage = (() => {
       buildCharacterModel(mat, (geo, material, x, y, z, name) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); g.add(m); if (name === 'head') head = m; return m; });
       const wk = isSelf ? mainGunKey() : ((NET.players.get(p.id) || {}).weapon || ffaMain || 'gg2');
       if (WEAPONS[wk] && !WEAPONS[wk].melee && !WEAPONS[wk].rc) { const w = buildThirdPersonWeapon(wk); w.position.set(0.42, 1.26, 0.34); g.add(w); }   // equipped main weapon
-      const kar = buildThirdPersonWeapon('karambit', isSelf ? meleeChoice : ((NET.players.get(p.id) || {}).mc || 'karambit')); kar.position.set(-0.46, 0.95, 0.12); kar.scale.setScalar(0.7); g.add(kar);   // holstered melee (their chosen knife)
+      const kar = buildThirdPersonWeapon('karambit'); kar.position.set(-0.46, 0.95, 0.12); kar.scale.setScalar(0.7); g.add(kar);   // holstered karambit
       const label = makeLabel(p.name + (isSelf ? ' (you)' : ''), p.host); label.scale.set(2.3, 0.58, 1); label.position.y = 2.55; g.add(label);
       const x = (i - (n - 1) / 2) * spread;
       g.position.set(x, 0, 0); g.userData = { id: p.id, self: isSelf, phase: Math.random() * 6.28, head, baseRot: -x * 0.06 }; g.rotation.y = g.userData.baseRot;
@@ -9500,32 +9363,29 @@ function animate() {
       const _ws = weaponState[currentWeaponKey], _w = WEAPONS[currentWeaponKey];
       const _ironAds = (ggWeapon() && adsBlend > 0.001 && ggAnchorFor(currentWeaponKey));
       if (currentWeaponKey === KARAMBIT_KEY) {
-        // Slot-3 melee: variant-specific equip flourish > swing > occasional idle inspect > idle bob.
+        // Karambit: equip flourish (twirl up) > slash arc > idle bob.
         const trail = gunMesh.userData && gunMesh.userData.karTrail;
-        const mt = (gunMesh.userData && gunMesh.userData.meleeType) || 'karambit';
-        const moving = Math.hypot(player.vel.x, player.vel.z);
         if (karEquipT > 0) {
-          karEquipT -= dt; meleeEquipPose(gunMesh, mt, smoothstep(1 - karEquipT / (karEquipDur || 0.6)));
-          if (trail) trail.material.opacity = 0; karInspectClock = 0;
-        } else if (karSwingT > 0) {
-          karSwingT -= dt; const s = Math.sin(Math.max(0, 1 - karSwingT / 0.35) * Math.PI);   // 0->1->0
-          meleeSwingPose(gunMesh, mt, s, karSwingDir);
-          if (trail) trail.material.opacity = 0.45 * s; karInspectClock = 0;
-        } else if (karInspectT > 0) {
-          karInspectT -= dt; meleeInspectPose(gunMesh, mt, 1 - karInspectT / (karInspectDur || 1));
+          karEquipT -= dt;
+          const e = smoothstep(1 - karEquipT / 0.25);
+          gunMesh.position.set(0.32, -0.28 - (1 - e) * 0.55, -0.6);
+          gunMesh.rotation.set(0, 0.04, (1 - e) * -Math.PI * 2);    // one quick twirl
           if (trail) trail.material.opacity = 0;
+        } else if (karSwingT > 0) {
+          karSwingT -= dt;
+          const s = Math.sin(Math.max(0, 1 - karSwingT / 0.35) * Math.PI);   // 0->1->0
+          gunMesh.position.set(0.32 - karSwingDir * 0.34 * s, -0.28 + 0.10 * s, -0.6 + 0.12 * s);
+          gunMesh.rotation.set(0.30 * s, 0.04, karSwingDir * 1.30 * s);      // arcing reverse-grip slash
+          if (trail) trail.material.opacity = 0.4 * s;
         } else {
-          karBob += dt * (5 + moving * 1.2);
-          const bob = Math.sin(karBob) * 0.012 * Math.min(1, moving / 4);
+          karBob += dt * (5 + Math.hypot(player.vel.x, player.vel.z) * 1.2);
+          const bob = Math.sin(karBob) * 0.012 * Math.min(1, Math.hypot(player.vel.x, player.vel.z) / 4);
           gunMesh.position.x += (0.32 - gunMesh.position.x) * Math.min(1, dt * 12);
           gunMesh.position.y += (-0.28 + bob - gunMesh.position.y) * Math.min(1, dt * 12);
           gunMesh.position.z += (-0.6 - gunMesh.position.z) * Math.min(1, dt * 12);
           gunMesh.rotation.x += (0 - gunMesh.rotation.x) * Math.min(1, dt * 12);
           gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);
           if (trail) trail.material.opacity = 0;
-          // CS:GO-style idle inspect every ~15-20s of standing still (purely cosmetic).
-          if (moving < 0.5) { karInspectClock += dt; if (karInspectClock > 15 + Math.random() * 5) { karInspectClock = 0; karInspectDur = (mt === 'butterfly' ? 1.2 : mt === 'karambit' ? 1.0 : 0.9); karInspectT = karInspectDur; sfxMeleeSwing(mt); } }
-          else karInspectClock = 0;
         }
       } else if (currentWeaponKey === 'saber') {
         // LIGHTSABER: ignition (blade grows) > slash arc > block stance / idle hum-sway, with a

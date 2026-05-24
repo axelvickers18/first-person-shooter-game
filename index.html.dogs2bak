@@ -491,9 +491,9 @@
     </div>
     <div class="streakTier locked" id="streakTier2">
       <div class="stIcon">🐕</div>
-      <div class="stBody"><div class="stLabel">10 · 20 KIRKS AVENGERS</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 10</div></div>
+      <div class="stBody"><div class="stLabel">10 · KIRKS AVENGERS</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 10</div></div>
     </div>
-    <div id="dogCount">🐕 KIRKS AVENGERS: <span id="dogNum">0</span>/20</div>
+    <div id="dogCount">🐕 KIRKS AVENGERS: <span id="dogNum">0</span>/10</div>
   </div>
   <div id="streakLost">STREAK LOST</div>
 
@@ -1190,7 +1190,7 @@ const SND = {
   CATS: ['weapons', 'footsteps', 'ui', 'ambient', 'voice'],
   vol: { master: 0.5, weapons: 1.0, footsteps: 0.85, ui: 0.7, ambient: 0.45, voice: 1.0 },
   muted: false,
-  poly: {}, LIM: { footstep: 6, dog: 8, _def: 4 },
+  poly: {}, LIM: { footstep: 6, _def: 4 },
   lpos: new THREE.Vector3(), lright: new THREE.Vector3(1, 0, 0),
   _noise: null, _tmp: new THREE.Vector3(), CULL: 80,
 
@@ -1432,21 +1432,11 @@ function sfxSaberHit(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { t
 // Blade-vs-solid: sharp electric crackle/sizzle.
 function sfxSaberClash(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.36, filter: 'highpass', freq: 3500 }); for (let i = 0; i < 5; i++) aTone(ctx, out, t + Math.random() * 0.12, { type: 'square', f0: 2600 + Math.random() * 3000, dur: 0.03, peak: 0.12 }); }, pos, 'weapons', 'saberclash', 0.8, 0.2); }
 // --- KIRKS AVENGERS attack dogs ---
-// "PACK SUMMONED" signature: a whistle + a rising/falling howl + a big bark chorus (for the summoner).
-function sfxDogSummon() { SND.play2d((ctx, out, t) => {
-  aTone(ctx, out, t, { type: 'sine', f0: 1000, f1: 1900, dur: 0.2, peak: 0.18 });                  // whistle
-  aTone(ctx, out, t + 0.15, { type: 'sawtooth', f0: 300, f1: 640, dur: 0.45, peak: 0.2 });           // howl up
-  aTone(ctx, out, t + 0.6, { type: 'sawtooth', f0: 640, f1: 240, dur: 0.5, peak: 0.18 });            // howl down
-  for (let i = 0; i < 12; i++) aTone(ctx, out, t + 0.1 + Math.random() * 1.0, { type: 'sawtooth', f0: 260 + Math.random() * 260, f1: 160, dur: 0.1, peak: 0.16 });   // bark chorus
-}, 'voice', 'dogsum', 1.0, 1.3); }
-// Chase-loop sounds share the 'dog' audio type so polyphony is clamped to MAX 8 (see SND.LIM.dog).
-function sfxDogBark(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 440, f1: 200, dur: 0.1, peak: 0.3 }); aNoise(ctx, out, t, { dur: 0.08, peak: 0.18, filter: 'bandpass', freq: 800, q: 0.8 }); }, pos, 'voice', 'dog', 0.7, 0.12); }
-function sfxDogGrowl(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 95, f1: 70, dur: 0.5, peak: 0.16 }); aNoise(ctx, out, t, { dur: 0.5, peak: 0.1, filter: 'lowpass', freq: 320 }); }, pos, 'voice', 'dog', 0.7, 0.5); }
-function sfxDogPaws(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.05, peak: 0.16, filter: 'lowpass', freq: 260 }), pos, 'voice', 'dog', 0.5, 0.06); }
-function sfxDogPant(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.12, peak: 0.12, filter: 'bandpass', freq: 700, freq1: 1100, q: 0.6 }), pos, 'voice', 'dog', 0.45, 0.13); }
-// Bite (lunge snap + chomp) and death (whimper) stay on their own one-shot types.
+function sfxDogSummon() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 900, f1: 1700, dur: 0.22, peak: 0.2 }); for (let i = 0; i < 6; i++) aTone(ctx, out, t + 0.12 + Math.random() * 0.5, { type: 'sawtooth', f0: 280 + Math.random() * 220, f1: 170, dur: 0.12, peak: 0.18 }); }, 'voice', 'dogsum', 0.95, 0.8); }
+function sfxDogBark(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 440, f1: 200, dur: 0.1, peak: 0.3 }); aNoise(ctx, out, t, { dur: 0.08, peak: 0.18, filter: 'bandpass', freq: 800, q: 0.8 }); }, pos, 'voice', 'bark', 0.7, 0.12); }
 function sfxDogBite(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.06, peak: 0.34, filter: 'bandpass', freq: 1500, freq1: 600, q: 0.7 }); aTone(ctx, out, t, { type: 'square', f0: 210, f1: 90, dur: 0.07, peak: 0.24 }); }, pos, 'voice', 'bite', 0.8, 0.1); }
 function sfxDogDeath(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 720, f1: 240, dur: 0.42, peak: 0.28 }), pos, 'voice', 'yelp', 0.85, 0.44); }
+function sfxDogGrowl(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 95, f1: 70, dur: 0.5, peak: 0.16 }); aNoise(ctx, out, t, { dur: 0.5, peak: 0.1, filter: 'lowpass', freq: 320 }); }, pos, 'voice', 'growl', 0.7, 0.5); }
 // Force jump "whoom": a low rising swoosh on a saber leap.
 function sfxForceJump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 170, f1: 440, dur: 0.32, peak: 0.3, atk: 0.02 }); aNoise(ctx, out, t, { dur: 0.32, peak: 0.18, filter: 'lowpass', freq: 600, freq1: 1700 }); }, pos, 'weapons', 'forcejmp', 0.85, 0.34); }
 // Sharp electric ricochet "zing" when the saber blade deflects a bullet.
@@ -4942,7 +4932,7 @@ function rcResetMatch() {
    Deals NO direct damage. The host validates who's in radius and routes each
    affected player an impulse vector to apply to their own velocity.
    ============================================================================ */
-const IMPULSE = { maxCarry: 4, throwVel: 30, upArc: 6.5, gravity: 30,
+const IMPULSE = { maxCarry: 2, throwVel: 30, upArc: 6.5, gravity: 30,
                   settleFuse: 0.3,   // detonate 0.3s after STICKING
                   maxAir: 1.5,       // ...or auto-detonate 1.5s after the throw if it never sticks (edge case)
                   charge: 0.2,       // glow brightens over the final 0.2s
@@ -5139,7 +5129,7 @@ function impulseDetonate(center, doLaunches) {
    move speed, and CANCELS (and is consumed) on fire / weapon-switch / reload /
    grenade / dive. Other players see the smoking tell on the third-person avatar.
    ============================================================================ */
-const CIGAR = { maxCarry: 3, dur: 3.0, raise: 0.4, lowerFast: 0.25 };
+const CIGAR = { maxCarry: 1, dur: 3.0, raise: 0.4, lowerFast: 0.25 };
 let cigSmoking = false;        // a cigar use is in progress (raise→light→hold→lower)
 let cigCanceling = false;      // an interrupt triggered: quick-lower then finish
 let cigT = 0, cigLowerT = 0, cigPuffT = 0, _cigAudioPuffT = 0;
@@ -5234,7 +5224,7 @@ const STREAK = {
   tiers: [
     { id: 'saberjd', need: 3, key: 'KeyB', label: '3 · SABER + JACK',    hint: 'PRESS B', unlocked: false, consumed: false },
     { id: 'rcrl',    need: 5, key: 'KeyN', label: '5 · RC ROCKET',       hint: 'PRESS N', unlocked: false, consumed: false },
-    { id: 'dogs',    need: 10, key: 'KeyM', label: '10 · 20 KIRKS AVENGERS', hint: 'PRESS M', unlocked: false, consumed: false }
+    { id: 'dogs',    need: 10, key: 'KeyM', label: '10 · KIRKS AVENGERS', hint: 'PRESS M', unlocked: false, consumed: false }
   ]
 };
 // Saber + Jack Daniels combo state.
@@ -5506,10 +5496,7 @@ function flashSaber() { const f = el('saberFlash'); if (!f) return; f.style.tran
    The HOST (or solo player) runs the dog AI; clients render host snapshots. Dogs chase the
    nearest ENEMY of their owner, bite for 25 HP, have 100 HP, and despawn when their owner dies.
    ============================================================================ */
-// Speeds are relative to the player's walk (MOVE.groundSpeed = 11): chase 1.8x, sprint 2.0x when
-// locked onto a target within ~15u. 20 dogs spawn one every 0.15s (~3s). audioMax = closest-N audible.
-const DOG = { count: 20, hp: 100, chaseSpeed: 11 * 1.8, sprintSpeed: 11 * 2.0, sprintRange: 15, followSpeed: 5.0,
-              accel: 30, biteRange: 1.6, biteDmg: 25, biteCd: 1.5, spawnGap: 0.15, deathFade: 1.0, audioMax: 8 };
+const DOG = { count: 10, hp: 100, chaseSpeed: 8.5, followSpeed: 5.0, accel: 30, biteRange: 1.6, biteDmg: 25, biteCd: 1.5, spawnGap: 0.2, deathFade: 1.0 };
 const dogs = [];               // active dogs (simulated on host/solo; render-only on clients)
 let dogSpawnQueue = [];        // staggered summon queue (host/solo): { ownerId, t }
 let dogIdSeq = 1, dogNetAcc = 0;
@@ -5538,12 +5525,7 @@ function buildDogModel() {
   const mkLeg = (x, z) => { const l = new THREE.Group(); l.position.set(x, 0.42, z); const s = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.42, 0.10), black); s.position.y = -0.21; l.add(s); g.add(l); legs.push(l); };
   mkLeg(-0.14, 0.34); mkLeg(0.14, 0.34); mkLeg(-0.14, -0.36); mkLeg(0.14, -0.36);
   const tail = new THREE.Group(); tail.position.set(0, 0.62, -0.46); const ts = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.34), dark); ts.position.z = -0.17; tail.add(ts); tail.rotation.x = -0.5; g.add(tail);
-  // Lit cigar clenched in the jaws (cosmetic gag) — ~snout-length, glowing ember, protruding forward.
-  const cigBody = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.036, 0.26, 8), new THREE.MeshLambertMaterial({ color: 0x6b4a2a, flatShading: true }));
-  cigBody.rotation.x = Math.PI / 2; cigBody.position.set(0.06, 0.655, 1.04); g.add(cigBody);
-  const cigEmber = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 5), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); cigEmber.position.set(0.06, 0.655, 1.18); g.add(cigEmber);
-  const cigTip = new THREE.Object3D(); cigTip.position.set(0.06, 0.655, 1.21); g.add(cigTip);
-  g.userData = { legs, jaw, tail, cigEmber, cigTip };
+  g.userData = { legs, jaw, tail };
   return g;
 }
 // "Kirks Avengers" nameplate sprite above a dog's head.
@@ -5593,8 +5575,7 @@ function spawnOneDog(ownerId) {
   const x = op.x + Math.cos(ang) * r, z = op.z + Math.sin(ang) * r;
   const dog = { id: dogIdSeq++, ownerId, pos: new THREE.Vector3(x, groundHeightAt(x, z, 1), z), vel: new THREE.Vector3(),
                 yaw: Math.random() * 6.283, health: DOG.hp, alive: true, dying: false, deathT: 0,
-                target: null, biteCd: 0, mouthOpen: 0, legPhase: Math.random() * 6.283, state: 'follow',
-                _growlT: Math.random() * 0.5, _barkT: 1 + Math.random() * 2, _pawT: Math.random() * 0.3, _smokeT: Math.random() * 1.5 };
+                target: null, biteCd: 0, mouthOpen: 0, legPhase: Math.random() * 6.283, growlT: Math.random() * 2, state: 'follow' };
   attachDogMesh(dog);
   spawnExplosionFX(dog.pos.clone().setY(dog.pos.y + 0.5), 1.0, 0x9a4cff);   // summon sparkle/portal
   dogs.push(dog);
@@ -5628,10 +5609,11 @@ function dogAI(dog, dt) {
   if (tgt) {
     faceP = tgt.pos;
     dog.state = td <= DOG.biteRange + 0.4 ? 'bite' : 'chase';
-    // Sprint when locked onto a nearby target (within ~15u), else chase speed.
-    if (td > DOG.biteRange) { desired.subVectors(tgt.pos, dog.pos); desired.y = 0; desired.normalize(); speed = td < DOG.sprintRange ? DOG.sprintSpeed : DOG.chaseSpeed; }
+    if (td > DOG.biteRange) { desired.subVectors(tgt.pos, dog.pos); desired.y = 0; desired.normalize(); speed = DOG.chaseSpeed; }
     dog.biteCd -= dt;
     if (td <= DOG.biteRange && dog.biteCd <= 0) { dogBite(dog, tgt); dog.biteCd = DOG.biteCd; }
+    dog.growlT -= dt;
+    if (dog.growlT <= 0 && td < 16) { dog.growlT = 1.6 + Math.random() * 2.4; (Math.random() < 0.5 ? sfxDogGrowl : sfxDogBark)(dog.pos); }
   } else {
     const op = dogOwnerPos(dog.ownerId), d = dog.pos.distanceTo(op);
     dog.state = d > 3 ? 'follow' : 'idle';
@@ -5668,12 +5650,6 @@ function dogAnimate(dog, dt) {
   if (dog.state === 'bite') dog.mouthOpen = 1;
   dog.mouthOpen = Math.max(0, dog.mouthOpen - dt * 3);
   if (ud.jaw) ud.jaw.rotation.x = -dog.mouthOpen * 0.55;
-  // Lit cigar: flicker the ember + an occasional subtle smoke wisp (only for dogs near the listener).
-  if (ud.cigEmber) ud.cigEmber.scale.setScalar(0.8 + Math.random() * 0.25);
-  if (ud.cigTip) {
-    dog._smokeT = (dog._smokeT == null ? Math.random() * 1.5 : dog._smokeT) - dt;
-    if (dog._smokeT <= 0) { dog._smokeT = 1.6 + Math.random() * 1.8; if (SND.lpos && dog.pos.distanceToSquared(SND.lpos) < 900) spawnSmokePuff(ud.cigTip.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.07, 0.6); }
-  }
 }
 // Host/solo: remove every dog owned by `ownerId` (loyalty — they leave when their owner falls).
 function despawnOwnedDogs(ownerId) {
@@ -5712,25 +5688,7 @@ function updateDogs(dt) {
     for (let i = dogs.length - 1; i >= 0; i--) { const dog = dogs[i]; if (dog._remove) { removeDog(dog); dogs.splice(i, 1); continue; } dogClientLerp(dog, dt); }
   }
   for (const dog of dogs) dogAnimate(dog, dt);
-  dogAudioPass(dt);
   dogUpdateHUD();
-}
-// Chasing dogs growl/bark/pant + pound paws, positionally (louder as they close in). To avoid audio
-// chaos we only let the CLOSEST `audioMax` chasing dogs to the listener play — the rest stay silent.
-// Runs on every machine (each client hears the dogs near their own camera).
-function dogAudioPass(dt) {
-  const lp = SND.lpos; if (!lp) return;
-  const chasers = [];
-  for (const d of dogs) if (d.alive && !d.dying && (d.state === 'chase' || d.state === 'bite')) chasers.push(d);
-  chasers.sort((a, b) => a.pos.distanceToSquared(lp) - b.pos.distanceToSquared(lp));
-  const n = Math.min(DOG.audioMax, chasers.length);
-  for (let i = 0; i < n; i++) {
-    const d = chasers[i], dist = d.pos.distanceTo(lp), sprint = d.state === 'chase' && dist < DOG.sprintRange;
-    d._growlT -= dt; d._barkT -= dt; d._pawT -= dt;
-    if (d._growlT <= 0) { d._growlT = 0.5 + Math.random() * 0.4; sfxDogGrowl(d.pos); }      // near-continuous low growl
-    if (d._barkT <= 0)  { d._barkT = 1 + Math.random() * 2; sfxDogBark(d.pos); }            // sharp bark every 1-3s
-    if (d._pawT <= 0)   { d._pawT = sprint ? 0.16 : 0.26; sfxDogPaws(d.pos); if (sprint && Math.random() < 0.35) sfxDogPant(d.pos); }   // paw thumps (+pant while sprinting)
-  }
 }
 // Client: rebuild local dog render-copies from the host's snapshot.
 function applyDogsSnapshot(list) {
@@ -5738,7 +5696,7 @@ function applyDogsSnapshot(list) {
   for (const e of list) {
     seen[e.id] = true;
     let dog = dogs.find(d => d.id === e.id);
-    if (!dog) { dog = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, mouthOpen: 0, legPhase: Math.random() * 6.283, _growlT: Math.random() * 0.5, _barkT: 1 + Math.random() * 2, _pawT: Math.random() * 0.3, _smokeT: Math.random() * 1.5 }; attachDogMesh(dog); dogs.push(dog); }
+    if (!dog) { dog = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, mouthOpen: 0, legPhase: Math.random() * 6.283 }; attachDogMesh(dog); dogs.push(dog); }
     dog.tpos.set(e.x, e.y, e.z); dog.tyaw = e.yaw; dog.state = e.st; dog.health = e.hp; dog.dying = e.dy;
   }
   for (const dog of dogs) if (!seen[dog.id]) dog._remove = true;

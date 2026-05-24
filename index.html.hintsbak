@@ -292,41 +292,6 @@
   #paneController .gpStatus { background: #0e1620; border: 1px solid #28435c; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 14px; }
   #paneController .gpStatus .gpOn { color: #6fe08f; } #paneController .gpStatus .gpOff { color: #d98a8a; }
   #paneController .ctrlScroll { max-height: 220px; }
-  /* CONTROL HINTS panel (right edge, above the ammo) — live keybind/controller hints */
-  #ctrlHints { position: fixed; right: 14px; bottom: 96px; width: 224px; z-index: 11; pointer-events: none;
-    display: flex; flex-direction: column; align-items: stretch;
-    background: rgba(10,14,20,0.78); border: 1px solid rgba(255,255,255,0.32); border-radius: 9px; padding: 8px 10px;
-    font-family: 'Segoe UI', system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,0.45); }
-  #ctrlHints.hidden { display: none; }
-  #chBanner { display: none; font-size: 11.5px; line-height: 1.35; color: #a8d6ff; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.12); }
-  #chBanner.on { display: block; }
-  #chBanner b { color: #ffd34a; }
-  .chRow { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 1.5px 0; white-space: nowrap; }
-  .chRow .chKey { flex: 0 0 auto; min-width: 30px; text-align: center; font-weight: 700; color: #ffd34a; }
-  .chRow .chAct { flex: 1 1 auto; color: #e6eef5; overflow: hidden; text-overflow: ellipsis; }
-  .chRow.ctx { max-height: 0; opacity: 0; transform: translateX(-10px); overflow: hidden; padding: 0; transition: max-height .25s ease, opacity .25s ease, transform .25s ease, padding .25s ease; }
-  .chRow.ctx.on { max-height: 22px; opacity: 1; transform: none; padding: 1.5px 0; }
-  .chRow.ctx .chAct { color: #ffe9b0; font-weight: 600; }
-  #chCtx.any { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.12); }
-  .chRow.pulse { animation: chPulse 0.75s ease; }
-  @keyframes chPulse { 0% { background: rgba(127,208,255,0.55); } 100% { background: transparent; } }
-  /* objective hint (top-centre, brief on match start) */
-  #objHint { position: fixed; top: 13%; left: 50%; transform: translateX(-50%) translateY(-8px); z-index: 16; pointer-events: none; opacity: 0;
-    background: rgba(10,14,20,0.85); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 9px 18px;
-    font: 600 15px 'Segoe UI', sans-serif; color: #e8eef5; letter-spacing: .5px; transition: opacity .4s, transform .4s; text-shadow: 0 2px 5px #000; }
-  #objHint.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-  #objHint b.red { color: #ff7a7a; } #objHint b.blue { color: #7fb0ff; } #objHint b { color: #ffd34a; }
-  /* full controls reference overlay (F1 / hold Start) */
-  #fullControls { position: fixed; inset: 0; z-index: 32; display: none; align-items: center; justify-content: center; background: rgba(4,8,12,0.86); color: #e6eef6; font-family: 'Segoe UI', sans-serif; }
-  #fullControls.on { display: flex; }
-  #fullControls .fcCard { background: #10161e; border: 1px solid #2c6e8f; border-radius: 14px; padding: 22px 26px; max-width: 760px; width: 80%; max-height: 80vh; overflow: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.6); pointer-events: auto; }
-  #fullControls h2 { margin: 0 0 2px; font-size: 21px; color: #7fd0ff; letter-spacing: 1px; text-align: center; }
-  #fullControls .fcSub { text-align: center; font-size: 12.5px; opacity: .65; margin-bottom: 16px; }
-  #fullControls .fcCols { columns: 2; column-gap: 30px; }
-  #fullControls .fcCat { break-inside: avoid; font-size: 12px; letter-spacing: 1.5px; color: #ffd34a; margin: 10px 0 4px; opacity: .85; }
-  #fullControls .fcRow { break-inside: avoid; display: flex; justify-content: space-between; gap: 14px; font-size: 13.5px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
-  #fullControls .fcRow b { color: #e8eef5; white-space: nowrap; }
-  #fullControls .fcFoot { text-align: center; font-size: 12.5px; opacity: .6; margin-top: 16px; }
   /* Mobility scooter (Part 7) */
   #scooterPrompt { position: absolute; left: 50%; bottom: 30%; transform: translateX(-50%); z-index: 15; display: none;
     background: rgba(0,0,0,0.55); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 17px; color: #fff; }
@@ -839,20 +804,6 @@
       <div class="gpFoot">Press any button to dismiss · <b>View full controls in Settings → Controller</b></div>
     </div>
   </div>
-  <div id="ctrlHints" class="hidden">
-    <div id="chBanner"></div>
-    <div id="chCtx"></div>
-    <div id="chBase"></div>
-  </div>
-  <div id="objHint"></div>
-  <div id="fullControls">
-    <div class="fcCard">
-      <h2>CONTROLS</h2>
-      <div class="fcSub" id="fcSub"></div>
-      <div class="fcCols" id="fcCols"></div>
-      <div class="fcFoot" id="fcFoot"></div>
-    </div>
-  </div>
   <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
   <div id="axePrompt">Press <b>E</b> to pick up axe</div>
   <div id="scooterPrompt">Press <b>E</b> to ride the scooter</div>
@@ -1188,11 +1139,6 @@
         <button data-throw="tomahawk" id="throwTomahawkBtn">TOMAHAWK<small>fast • direct hit one-shot</small></button>
       </div>
       <div class="setHint">Press your <b>Throw</b> key (G) in-game.</div>
-    </div>
-    <div class="setBlock">
-      <div class="setLabel">HUD</div>
-      <label class="optRow" style="max-width:320px"><span>Show Control Hints</span><input type="checkbox" id="optCtrlHints"></label>
-      <div class="setHint">An on-screen list of key actions + context prompts (press <b>F1</b> for the full reference).</div>
     </div>
   </div>
 
@@ -3503,9 +3449,9 @@ IM.load();
 
 /* Local control OPTIONS (sensitivity, invert-Y, ADS/sprint hold-vs-toggle, auto-reload, hit markers, FOV). */
 const OPT = {
-  sens: 1, sensAds: 1, sensScope: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, dmgNumbers: true, ctrlHints: true, fov: 78,
+  sens: 1, sensAds: 1, sensScope: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, dmgNumbers: true, fov: 78,
   load() { try { const o = JSON.parse(localStorage.getItem('controls_opts_v1')); if (o && typeof o === 'object') Object.assign(this, o); } catch (e) {} },
-  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, sensAds: this.sensAds, sensScope: this.sensScope, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, dmgNumbers: this.dmgNumbers, ctrlHints: this.ctrlHints, fov: this.fov })); } catch (e) {} }
+  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, sensAds: this.sensAds, sensScope: this.sensScope, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, dmgNumbers: this.dmgNumbers, fov: this.fov })); } catch (e) {} }
 };
 OPT.load();
 DEFAULT_FOV = OPT.fov;     // apply the saved field-of-view
@@ -3630,14 +3576,7 @@ GP.poll = function (dt) {
     if (ltDown && !this._lt) adsPress(); else if (!ltDown && this._lt) adsRelease(); this._lt = ltDown;
   } else { if (this._rt) { fireRelease(); this._rt = false; } if (this._lt) { adsRelease(); this._lt = false; } }
   // ---- BUTTONS -> actions ----
-  // START: tap = pause/resume (or close the controls overlay); hold ≥0.5s = toggle the full-controls overlay
-  const startDown = pressed(B.pause);
-  if (startDown && !this._start) { this._startT = 0; this._startHeld = false; }
-  if (startDown) { this._startT += dt; if (this._startT >= 0.5 && !this._startHeld) { this._startHeld = true; toggleFullControls(); } }
-  if (!startDown && this._start && !this._startHeld) {
-    if (fullControlsOpen()) toggleFullControls(false); else if (paused) resumeGame(); else if (invOpen) toggleInventory(); else openPauseMenu();
-  }
-  this._start = startDown;
+  if (just(B.pause)) { if (paused) resumeGame(); else if (invOpen) toggleInventory(); else openPauseMenu(); }
   this.handleBack(dt, pressed(B.scoreboard));
   if (playing && player.alive && !invOpen && !rcActive) {
     const lb = pressed(B.grenade), rb = pressed(B.lethal);
@@ -3699,7 +3638,6 @@ document.addEventListener('pointerlockchange', () => {
     clearInput();   // ESC / lost lock: don't leave keys held
     // Pressing ESC (or otherwise losing the lock) mid-match with no menu open → open the pause menu.
     setTimeout(() => {
-      if (!pointerLocked && fullControlsOpen()) { toggleFullControls(false); if (gameState.running && player.alive) lockPointer(); return; }   // ESC closes the controls overlay (no pause)
       if (!pointerLocked && gameState.running && !gameState.over && !paused && !invOpen && el('settingsScreen').classList.contains('hidden') && el('skinCreator').classList.contains('hidden')) openPauseMenu();
     }, 40);
   }
@@ -7741,108 +7679,6 @@ function refreshKeyHints() {       // re-stamp static prompts from the current b
   set('axePrompt', 'Press <b>' + ik + '</b> to pick up axe');
   const it = el('invTipText'); if (it) it.textContent = GP.active ? (GP.gpIcon('inventory').toUpperCase() + ' TO OPEN INVENTORY') : ('PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY');
 }
-
-/* ============================================================================
-   CONTROL HINTS PANEL — a live, mode-aware (keyboard/controller) HUD list of the key actions +
-   context-sensitive prompts. Every label is pulled live via getPromptForAction() so rebinds and
-   keyboard↔controller switches update instantly. Toggle in Settings → Gameplay.
-   ============================================================================ */
-const CH_BASE = [
-  ['inventory', 'OPEN INVENTORY'], ['use', 'CIGAR / DRINK JD'], ['grenade', 'IMPULSE GRENADE'],
-  ['lethal', 'LETHAL — SMOKE/AXE'], ['interact', 'INTERACT'], ['karambit', 'MELEE WEAPON'],
-  ['scoreboard', 'SCOREBOARD'], ['pause', 'PAUSE / SETTINGS']
-];
-let _chBannerT = 0, _chBannerDone = false, _chBuilt = false;
-function chKeyColor(action) {   // keyboard = gold; controller face buttons colour-coded (Xbox/PS), else neutral
-  if (!GP.active) return '#ffd34a';
-  const bi = GP.bind[action];
-  const c = (GP.type === 'ps' ? { 0: '#7fb0ff', 1: '#ff7a9a', 2: '#e08fd0', 3: '#7fe08f' } : { 0: '#7fe08f', 1: '#ff6a6a', 2: '#7fb0ff', 3: '#ffd24a' })[bi];
-  return c || '#7fd0ff';
-}
-function _chRow(cls) { const r = document.createElement('div'); r.className = 'chRow' + (cls ? ' ' + cls : ''); r.innerHTML = '<span class="chKey"></span><span class="chAct"></span>'; return r; }
-function buildCtrlHints() {
-  if (_chBuilt) return; const base = el('chBase'), ctx = el('chCtx'); if (!base || !ctx) return; _chBuilt = true;
-  base.innerHTML = ''; ctx.innerHTML = '';
-  CH_BASE.forEach(([a, label]) => { const r = _chRow(); r.dataset.action = a; r.querySelector('.chAct').textContent = label; base.appendChild(r); });
-  // persistent context rows (toggled .on for smooth slide in/out): ready scorestreaks + interaction prompts
-  STREAK.tiers.forEach(t => { const r = _chRow('ctx'); r._k = 's:' + t.id; r.dataset.streak = t.id; r.dataset.action = t.action; r.querySelector('.chAct').textContent = t.name; ctx.appendChild(r); });
-  [['ladderPrompt', 'CLIMB LADDER'], ['noodlePrompt', 'SUMMON MCKAYLA'], ['scooterPrompt', 'MOUNT SCOOTER'], ['axePrompt', 'PICK UP AXE']].forEach(([src, label]) => {
-    const r = _chRow('ctx'); r._k = 'p:' + src; r.dataset.src = src; r.dataset.action = 'interact'; r.querySelector('.chAct').textContent = label; ctx.appendChild(r);
-  });
-}
-function _chToggle(r, on) {
-  const was = r.classList.contains('on');
-  if (on && !was) { r.classList.add('on'); r.classList.remove('pulse'); void r.offsetWidth; r.classList.add('pulse'); }   // pulse when newly relevant
-  else if (!on && was) r.classList.remove('on');
-}
-function updateCtrlHints(dt) {
-  const panel = el('ctrlHints'); if (!panel) return;
-  const show = OPT.ctrlHints && gameState.running && !gameState.over && player.alive && !paused && !invOpen && !rcActive && !killcam.active && !riding;
-  panel.classList.toggle('hidden', !show);
-  if (!show) return;
-  if (!_chBuilt) buildCtrlHints();
-  el('chBase').querySelectorAll('.chRow').forEach(r => { const k = r.querySelector('.chKey'); k.textContent = getPromptForAction(r.dataset.action); k.style.color = chKeyColor(r.dataset.action); });
-  let anyCtx = false;
-  el('chCtx').querySelectorAll('.chRow.ctx').forEach(r => {
-    let on = false;
-    if (r.dataset.streak) { const t = STREAK.tiers.find(x => x.id === r.dataset.streak); on = !!(t && t.unlocked && !t.consumed); }
-    else { const s = el(r.dataset.src); on = !!(s && s.style.display === 'block'); }   // mirror the existing interaction prompts
-    if (on) { const k = r.querySelector('.chKey'); k.textContent = getPromptForAction(r.dataset.action); k.style.color = chKeyColor(r.dataset.action); }
-    _chToggle(r, on); if (on) anyCtx = true;
-  });
-  el('chCtx').classList.toggle('any', anyCtx);
-  const b = el('chBanner');
-  if (b) {
-    if (_chBannerT > 0 && !_chBannerDone) {
-      _chBannerT -= dt; b.classList.add('on');
-      b.innerHTML = '💡 New here? <b>' + (GP.active ? ('Hold ' + GP.gpIcon('pause') + ' for all controls') : 'Press [F1] for all controls') + '</b>';
-      if (_chBannerT <= 0) { _chBannerDone = true; b.classList.remove('on'); }
-    } else b.classList.remove('on');
-  }
-}
-function chResetBanner() { _chBannerT = 60; _chBannerDone = false; }   // 60s new-player banner at match start (also dismissed on first inventory open)
-
-/* --- FULL CONTROLS reference overlay (F1 / hold Start) — same info as Settings → Controls, mid-match --- */
-function fullControlsOpen() { const e = el('fullControls'); return !!(e && e.classList.contains('on')); }
-function renderFullControls() {
-  const cols = el('fcCols'), sub = el('fcSub'), foot = el('fcFoot'); if (!cols) return; cols.innerHTML = '';
-  const cat = (name) => { const h = document.createElement('div'); h.className = 'fcCat'; h.textContent = name; cols.appendChild(h); };
-  const row = (lab, val) => { const r = document.createElement('div'); r.className = 'fcRow'; r.innerHTML = '<span>' + lab + '</span><b>' + val + '</b>'; cols.appendChild(r); };
-  if (GP.active) {
-    sub.textContent = 'Controller — ' + (GP.type === 'ps' ? 'PlayStation' : 'Xbox / Standard');
-    const I = a => GP.gpIcon(a);
-    cat('MOVEMENT'); row('Move', 'Left Stick'); row('Look / Aim', 'Right Stick'); row('Jump', I('jump')); row('Crouch / Dive', I('crouch')); row('Sprint', I('sprint'));
-    cat('COMBAT'); row('Fire / Attack', I('fire')); row('Aim Down Sights / Block', I('ads')); row('Reload', I('reload')); row('Melee', I('karambit')); row('Quick Melee', I('quickMelee'));
-    cat('EQUIPMENT'); row('Impulse Grenade', I('grenade')); row('Lethal (Smoke / Axe)', I('lethal')); row('Cigar / Drink JD', I('use')); row('Interact / Climb', I('interact')); row('Weapon Slots', I('weapon1') + ' / ' + I('weapon2'));
-    cat('SCORESTREAKS'); row('Saber + Jack', I('saber')); row('Flamethrower', I('flamethrower')); row('RC Rocket', I('rcStreak')); row('Kirks Avengers', I('dogs')); row('Summon King Kong', I('kong'));
-    cat('UI'); row('Inventory', I('inventory')); row('Scoreboard', 'hold ' + GP.gpIcon('scoreboard')); row('Pause / Menu', I('pause'));
-    foot.textContent = 'Release / tap ' + GP.gpIcon('pause') + ' or press ESC to close';
-  } else {
-    sub.textContent = 'Keyboard & Mouse';
-    IM.ROWS.forEach(([a, label]) => { if (label === null) cat(a); else row(label, getKeyForAction(a)); });
-    foot.textContent = 'Press [F1] or ESC to close';
-  }
-}
-function toggleFullControls(forceOpen) {
-  const e = el('fullControls'); if (!e) return;
-  const open = forceOpen != null ? forceOpen : !fullControlsOpen();
-  if (open) { renderFullControls(); e.classList.add('on'); } else e.classList.remove('on');
-}
-window.addEventListener('keydown', (e) => {   // F1 toggles the full-controls overlay mid-match
-  if (e.code === 'F1') { e.preventDefault(); if (gameState.running) toggleFullControls(); }
-}, true);
-
-/* --- Objective hint (top-centre, ~5s on match start) --- */
-let _objHintT = 0;
-function showObjHint() {
-  const e = el('objHint'); if (!e) return;
-  let msg;
-  if (gameMode === 'gungame') msg = 'Get a kill to advance to the next weapon';
-  else if (gameMode === 'tdm') msg = (myTeam === 'red' ? '<b class="red">RED TEAM</b>' : myTeam === 'blue' ? '<b class="blue">BLUE TEAM</b>' : 'TEAM DEATHMATCH') + ' — eliminate the enemy team to win';
-  else msg = 'Press <b>' + getPromptForAction('inventory') + '</b> to pick a different weapon';
-  e.innerHTML = msg; e.classList.add('on'); _objHintT = 5;
-}
-function updateObjHint(dt) { if (_objHintT > 0) { _objHintT -= dt; if (_objHintT <= 0) { const e = el('objHint'); if (e) e.classList.remove('on'); } } }
 // --- "PRESS [I] TO OPEN INVENTORY" discoverability hint (FFA only): 30s at match start, ~4s on respawn. ---
 let invTipT = 0, invTipSession = false;
 function _invTipNever() { try { return localStorage.getItem('invTipNever') === '1'; } catch (e) { return false; } }
@@ -9616,7 +9452,6 @@ function startMatch() {
   currentWeaponKey = 'pistol';
   lootActive = false; lootGroup.visible = false; el('pickupBanner').style.opacity = 0;
   maybeShowInvTip(30, true);   // FFA-only "PRESS I" inventory discoverability hint (first 30s of the match)
-  chResetBanner(); showObjHint();   // control-hints new-player banner (60s) + brief objective reminder
 
   // --- Bots: host (or solo) simulates them; clients render host snapshots ---
   if (!NET.active || NET.isHost) {
@@ -9724,7 +9559,6 @@ function toggleInventory() {
     cigCancel();
     setInvTab('paneMain'); refreshInvPanes();
     dismissInvTip(false);   // opening the inventory = discovered it; stop nagging this session
-    _chBannerDone = true;   // ...and retire the control-hints new-player banner
     el('invMenu').classList.remove('hidden');
     sfxInvOpen();                                            // tactical tab-open
     document.exitPointerLock && document.exitPointerLock();   // free the cursor (game keeps running)
@@ -10197,14 +10031,13 @@ el('pauseTeamSwitch').onclick = () => {
     el('optInvertY').checked = OPT.invertY; el('optAdsToggle').checked = OPT.adsToggle; el('optSprintToggle').checked = OPT.sprintToggle;
     el('optAutoReload').checked = OPT.autoReload; el('optHitMarkers').checked = OPT.hitMarkers;
     if (el('optDmgNumbers')) el('optDmgNumbers').checked = OPT.dmgNumbers;
-    if (el('optCtrlHints')) el('optCtrlHints').checked = OPT.ctrlHints;
   }
   el('optSens').addEventListener('input', () => { OPT.sens = Math.max(0.1, Math.min(5, el('optSens').value / 100)); el('optSensV').textContent = OPT.sens.toFixed(1) + 'x'; OPT.save(); });
   el('optSensAds').addEventListener('input', () => { OPT.sensAds = Math.max(0.1, Math.min(2, el('optSensAds').value / 100)); el('optSensAdsV').textContent = OPT.sensAds.toFixed(1) + 'x'; OPT.save(); });
   el('optSensScope').addEventListener('input', () => { OPT.sensScope = Math.max(0.1, Math.min(2, el('optSensScope').value / 100)); el('optSensScopeV').textContent = OPT.sensScope.toFixed(1) + 'x'; OPT.save(); });
   el('optFov').addEventListener('input', () => { OPT.fov = Math.max(60, Math.min(120, parseInt(el('optFov').value, 10) || 78)); el('optFovV').textContent = OPT.fov; DEFAULT_FOV = OPT.fov; if (!aiming) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); } OPT.save(); });
   const tog = (id, key) => el(id).addEventListener('change', () => { OPT[key] = el(id).checked; if (key === 'sprintToggle') sprintLatch = false; OPT.save(); sfxClick(); });
-  tog('optInvertY', 'invertY'); tog('optAdsToggle', 'adsToggle'); tog('optSprintToggle', 'sprintToggle'); tog('optAutoReload', 'autoReload'); tog('optHitMarkers', 'hitMarkers'); tog('optDmgNumbers', 'dmgNumbers'); tog('optCtrlHints', 'ctrlHints');
+  tog('optInvertY', 'invertY'); tog('optAdsToggle', 'adsToggle'); tog('optSprintToggle', 'sprintToggle'); tog('optAutoReload', 'autoReload'); tog('optHitMarkers', 'hitMarkers'); tog('optDmgNumbers', 'dmgNumbers');
 
   window._renderControls = renderControls; window._refreshControlOpts = refreshControlOpts;
   renderControls(); refreshControlOpts();
@@ -12314,8 +12147,6 @@ function animate() {
   updateCigar(dt);  // cigar heal: animate the left-hand viewmodel + keep the weapon holstered while smoking
   updateJD(dt);     // Jack Daniels bottle: keep it in the left hand + animate a swig while saber+JD is active
   updateLadderPrompt();   // "Press E to climb" when standing in a watchtower-ladder zone
-  updateCtrlHints(dt);    // live control-hints panel (after the interaction prompts so its context rows are current)
-  updateObjHint(dt);      // brief objective reminder at match start
 
   // Effects animate continuously (so they finish even on the end screen)
   updateBlood(dt);

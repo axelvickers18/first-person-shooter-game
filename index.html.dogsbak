@@ -148,8 +148,6 @@
   /* SCORESTREAK ladder (left, vertically centered) */
   #streakBar { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 188px; display: none; z-index: 11; font-family: 'Segoe UI', system-ui, sans-serif; }
   #streakCount { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #ffe600; text-shadow: 0 2px 3px #000; margin-bottom: 8px; }
-  #dogCount { font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #ff8a7a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
-  #dogCount span { color: #fff; }
   .streakTier { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.42); border: 2px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 6px 8px; margin-bottom: 8px; transition: border-color .2s, opacity .2s, box-shadow .2s; }
   .streakTier .stIcon { font-size: 20px; line-height: 1; filter: grayscale(0.7) brightness(0.7); transition: filter .2s; flex: 0 0 auto; }
   .streakTier .stBody { flex: 1 1 auto; min-width: 0; }
@@ -489,11 +487,6 @@
       <div class="stIcon">🚀</div>
       <div class="stBody"><div class="stLabel">5 · RC ROCKET</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 5</div></div>
     </div>
-    <div class="streakTier locked" id="streakTier2">
-      <div class="stIcon">🐕</div>
-      <div class="stBody"><div class="stLabel">10 · KIRKS AVENGERS</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 10</div></div>
-    </div>
-    <div id="dogCount">🐕 KIRKS AVENGERS: <span id="dogNum">0</span>/10</div>
   </div>
   <div id="streakLost">STREAK LOST</div>
 
@@ -1431,16 +1424,6 @@ function sfxSaberIgnite() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { 
 function sfxSaberHit(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 420, f1: 120, dur: 0.16, peak: 0.34 }); aNoise(ctx, out, t, { dur: 0.12, peak: 0.3, filter: 'lowpass', freq: 1400 }); }, pos, 'weapons', 'saberhit', 0.85, 0.16); }
 // Blade-vs-solid: sharp electric crackle/sizzle.
 function sfxSaberClash(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.36, filter: 'highpass', freq: 3500 }); for (let i = 0; i < 5; i++) aTone(ctx, out, t + Math.random() * 0.12, { type: 'square', f0: 2600 + Math.random() * 3000, dur: 0.03, peak: 0.12 }); }, pos, 'weapons', 'saberclash', 0.8, 0.2); }
-// --- KIRKS AVENGERS attack dogs ---
-function sfxDogSummon() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 900, f1: 1700, dur: 0.22, peak: 0.2 }); for (let i = 0; i < 6; i++) aTone(ctx, out, t + 0.12 + Math.random() * 0.5, { type: 'sawtooth', f0: 280 + Math.random() * 220, f1: 170, dur: 0.12, peak: 0.18 }); }, 'voice', 'dogsum', 0.95, 0.8); }
-function sfxDogBark(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 440, f1: 200, dur: 0.1, peak: 0.3 }); aNoise(ctx, out, t, { dur: 0.08, peak: 0.18, filter: 'bandpass', freq: 800, q: 0.8 }); }, pos, 'voice', 'bark', 0.7, 0.12); }
-function sfxDogBite(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.06, peak: 0.34, filter: 'bandpass', freq: 1500, freq1: 600, q: 0.7 }); aTone(ctx, out, t, { type: 'square', f0: 210, f1: 90, dur: 0.07, peak: 0.24 }); }, pos, 'voice', 'bite', 0.8, 0.1); }
-function sfxDogDeath(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 720, f1: 240, dur: 0.42, peak: 0.28 }), pos, 'voice', 'yelp', 0.85, 0.44); }
-function sfxDogGrowl(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 95, f1: 70, dur: 0.5, peak: 0.16 }); aNoise(ctx, out, t, { dur: 0.5, peak: 0.1, filter: 'lowpass', freq: 320 }); }, pos, 'voice', 'growl', 0.7, 0.5); }
-// Force jump "whoom": a low rising swoosh on a saber leap.
-function sfxForceJump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 170, f1: 440, dur: 0.32, peak: 0.3, atk: 0.02 }); aNoise(ctx, out, t, { dur: 0.32, peak: 0.18, filter: 'lowpass', freq: 600, freq1: 1700 }); }, pos, 'weapons', 'forcejmp', 0.85, 0.34); }
-// Sharp electric ricochet "zing" when the saber blade deflects a bullet.
-function sfxSaberDeflect(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.1, peak: 0.34, filter: 'highpass', freq: 4000 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 2200, f1: 700, dur: 0.14, peak: 0.2 }); for (let i = 0; i < 4; i++) aTone(ctx, out, t + Math.random() * 0.08, { type: 'square', f0: 3000 + Math.random() * 3500, dur: 0.025, peak: 0.12 }); }, pos, 'weapons', 'deflect', 0.8, 0.16); }
 // Jack Daniels swig: a few liquid glugs then a satisfied exhale.
 function sfxJDDrink() { SND.play2d((ctx, out, t) => { for (let i = 0; i < 3; i++) aNoise(ctx, out, t + 0.15 + i * 0.18, { dur: 0.1, peak: 0.18, filter: 'bandpass', freq: 380, freq1: 700, q: 1.4 }); aTone(ctx, out, t + 0.85, { type: 'sine', f0: 300, f1: 220, dur: 0.5, peak: 0.16, atk: 0.08 }); aNoise(ctx, out, t + 0.85, { dur: 0.5, peak: 0.06, filter: 'bandpass', freq: 700, q: 0.5 }); }, 'voice', 'jd', 0.8, 1.3); }
 
@@ -2056,7 +2039,6 @@ document.addEventListener('keydown', (e) => {
   // SCORESTREAK rewards: B = saber + Jack Daniels (3 kills), N = RC rocket launcher (5 kills).
   if (e.code === 'KeyB' && !e.repeat) { streakActivate('saberjd'); return; }
   if (e.code === 'KeyN' && !e.repeat) { streakActivate('rcrl'); return; }
-  if (e.code === 'KeyM' && !e.repeat) { streakActivate('dogs'); return; }
   // Q: drink from the Jack Daniels bottle while saber+JD is active; otherwise light a cigar.
   if (e.code === 'KeyQ' && !e.repeat) { if (saberMode) drinkJD(); else useCigar(); }
   if (e.code === 'KeyE' && !e.repeat) tryGrabLadder();                  // grab a watchtower ladder
@@ -2571,16 +2553,8 @@ function updateMovement(dt) {
   let jumpedThisFrame = false;
   const wantJump = keys['Space'];
   if (wantJump && !player.jumpHeld && !player.crouching && !player.diving) {   // jump disabled while crouched / diving
-    // Lightsaber "force jump": ~2.5x height + 4s fall-damage immunity (stacks with pads/impulse/dive).
-    const saberJump = (currentWeaponKey === 'saber');
-    const jv = saberJump ? MOVE.jumpVel * 2.5 : MOVE.jumpVel;
-    let jumped = false;
-    if (player.onGround) { player.vel.y = jv; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; jumped = true; }
-    else if (player.jumps < 2) { player.vel.y = jv; player.jumps++; jumpedThisFrame = true; jumped = true; }
-    if (jumped) {
-      if (saberJump) { player.impulseGrace = Math.max(player.impulseGrace, 4.0); spawnForceRing(player.pos); sfxForceJump(player.pos); }
-      else sfxJump(player.pos);
-    }
+    if (player.onGround) { player.vel.y = MOVE.jumpVel; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; sfxJump(player.pos); }
+    else if (player.jumps < 2) { player.vel.y = MOVE.jumpVel; player.jumps++; jumpedThisFrame = true; sfxJump(player.pos); }
   }
   player.jumpHeld = wantJump;
 
@@ -2845,9 +2819,8 @@ function addRedDotOptic(g, cfg) {
   g.userData.opticDot = dot;
 }
 
-// Shared weapon geometry — used by the first-person viewmodel AND the third-person models other
-// players see. Returns { g, muzzleZ }. Includes iron sights, red dot, and saber/akimbo userData.
-function buildWeaponMesh(key) {
+function buildGunModel(key) {
+  if (gunMesh) viewModel.remove(gunMesh);
   const w = WEAPONS[key];
   const model = w.baseModel || key;   // gun-game weapons borrow an existing silhouette
   const g = new THREE.Group();
@@ -3081,12 +3054,6 @@ function buildWeaponMesh(key) {
   if (GG_IRON[key]) addIronSights(g, GG_IRON[key]);
   // Red-dot weapons get a mounted optic housing on top of the receiver.
   if (GG_REDDOT[key]) addRedDotOptic(g, GG_REDDOT[key]);
-  return { g, muzzleZ };
-}
-// First-person viewmodel: the shared weapon mesh + a muzzle anchor/flash, anchored lower-right.
-function buildGunModel(key) {
-  if (gunMesh) viewModel.remove(gunMesh);
-  const built = buildWeaponMesh(key), g = built.g, muzzleZ = built.muzzleZ;
   // Muzzle anchor (tracers/flash originate here) + a hidden muzzle-flash sprite
   gunMuzzle = new THREE.Object3D(); gunMuzzle.position.set(0, 0, muzzleZ); g.add(gunMuzzle);
   gunFlash = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.12),
@@ -3105,28 +3072,6 @@ function buildGunModel(key) {
     console.log('[tactical pistol] model exists:', bodyMeshes > 0, '| body meshes:', bodyMeshes,
       '| visible:', g.visible, '| local pos:', g.position.toArray().map(n => n.toFixed(2)).join(','));
   }
-}
-// Third-person held weapon for remote avatars: the shared mesh, rotated so its muzzle points the
-// avatar's forward (+Z), wrapped in a holder we pose at the hand. Saber/RC/akimbo geometry included.
-function buildThirdPersonWeapon(key) {
-  const holder = new THREE.Group();
-  const built = buildWeaponMesh(key);
-  built.g.rotation.y = Math.PI;   // FP weapons point -Z; flip so the muzzle faces avatar-forward (+Z)
-  holder.add(built.g);
-  holder.userData.muzzleZ = built.muzzleZ;
-  return holder;
-}
-// A compact Jack Daniels bottle for a remote avatar's left hand (shown with the saber scorestreak).
-function buildTpBottle() {
-  const g = new THREE.Group();
-  const glass = new THREE.MeshLambertMaterial({ color: 0x241a12, flatShading: true });
-  const black = new THREE.MeshLambertMaterial({ color: 0x0a0a0a, flatShading: true });
-  const gold = new THREE.MeshBasicMaterial({ color: 0xC9A24A });
-  g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.34, 0.11), glass), {}));
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.12, 8), glass); neck.position.y = 0.23; g.add(neck);
-  const label = new THREE.Mesh(new THREE.BoxGeometry(0.145, 0.20, 0.006), black); label.position.z = 0.058; g.add(label);
-  const badge = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.03, 0.004), gold); badge.position.set(0, 0, 0.062); g.add(badge);
-  return g;
 }
 buildGunModel(currentWeaponKey);
 
@@ -3391,9 +3336,8 @@ function tryShoot(akSide) {
   const tLife  = TRACER.life[currentWeaponKey]  != null ? TRACER.life[currentWeaponKey]  : TRACER.life.def;
   const tThick = !!TRACER.thick[currentWeaponKey] || !!w.explosive;
 
-  // Raycast against bots' part-meshes, remote-player avatars, ENEMY dogs, AND world colliders.
+  // Raycast against bots' part-meshes, remote-player avatars, AND world colliders.
   const targets = colliders.concat(botMeshes());
-  dogMeshes(dogSelfId()).forEach(m => targets.push(m));   // shootable ENEMY dogs (never your own)
   if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
   // Other players' in-flight RC missiles can be shot down (any direct bullet hit detonates them).
   rcRemote.forEach(o => o.grp.children.forEach(c => { if (c.isMesh) targets.push(c); }));
@@ -3437,13 +3381,7 @@ function tryShoot(akSide) {
         const isHead = ud.part === 'head';
         const dmg = w.damage * (isHead ? w.headMult : 1);
         spawnBlood(hit.point, isHead ? 16 : 9);
-        NET.damageRemote(ud.remote, dmg, isHead, currentWeaponKey, false, origin, dir);   // origin+dir let their saber deflect
-      }
-      else if (ud.dog && ud.dog.alive && !ud.dog.dying) {
-        // Shot an enemy's attack dog — host applies the damage (clients route it for validation).
-        hitSomething = true; spawnBlood(hit.point, 8);
-        if (NET.isClient) NET.route(NET.hostId, { t: 'doghit', dogId: ud.dog.id, dmg: w.damage });
-        else damageDog(ud.dog, w.damage);
+        NET.damageRemote(ud.remote, dmg, isHead, currentWeaponKey, false);
       }
       else if (ud.rcRemoteOwner) {
         // Shot down someone's RC missile: pop a flash here + tell the owner to detonate it.
@@ -4130,15 +4068,7 @@ function updateBots(dt) {
       // Hit chance falls off with distance (and with a lost arm)
       let chance = Math.max(0.08, BOT_AI.baseAccuracy * (1 - distToPlayer / (BOT_AI.shootRange * 1.4)));
       if (bot.aimPenalty) chance *= 0.5;
-      // If the shot is aimed at the LOCAL player and crosses their active saber blade, it's blocked
-      // (deflected back out) instead of dealing damage.
-      let deflected = false;
-      if (target === player && saberCanDeflect()) {
-        const bdir = aimPt.clone().sub(muzzlePos).normalize();
-        const defl = saberDeflectRay(muzzlePos, bdir);
-        if (defl) { saberDoDeflect(defl, stat.dmg); deflected = true; }
-      }
-      if (!deflected && Math.random() < chance) damageHuman(target, stat.dmg);
+      if (Math.random() < chance) damageHuman(target, stat.dmg);
     }
   }
 }
@@ -4368,12 +4298,6 @@ function applyBlast(center, radius, maxDmg, weaponTag, opts) {
       }
     }
   }
-  // Explosions are indiscriminate — they hurt attack dogs in range too (host/solo applies).
-  if (!NET.active || NET.isHost) for (const dog of dogs) {
-    if (!dog.alive || dog.dying) continue;
-    const dd = new THREE.Vector3(dog.pos.x, dog.pos.y + 0.5, dog.pos.z).distanceTo(center);
-    if (dd < radius) damageDog(dog, maxDmg * (1 - dd / radius));
-  }
   const pe = new THREE.Vector3(player.pos.x, player.pos.y + 1, player.pos.z);
   const pdist = pe.distanceTo(center);
   if (player.alive && pdist < radius) hurtPlayer(maxDmg * (1 - pdist / radius));
@@ -4386,24 +4310,6 @@ function spawnExplosionFX(center, radius, color) {
   const fx = new THREE.Mesh(explGeo, new THREE.MeshBasicMaterial({ color: color || 0xffa520, transparent: true, opacity: 0.9 }));
   fx.position.copy(center); scene.add(fx);
   explosions.push({ mesh: fx, life: 0.38, maxLife: 0.38, radius });
-}
-
-// Blue "force jump" energy ring that expands + fades at the player's feet on a saber leap.
-const forceRings = [];
-function spawnForceRing(pos) {
-  const p = pos || player.pos;
-  const m = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.52, 24),
-    new THREE.MeshBasicMaterial({ color: 0x5ab0ff, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
-  m.rotation.x = -Math.PI / 2; m.position.set(p.x, p.y + 0.06, p.z);
-  scene.add(m); forceRings.push({ m, life: 0.45, max: 0.45 });
-}
-function updateForceRings(dt) {
-  for (let i = forceRings.length - 1; i >= 0; i--) {
-    const r = forceRings[i]; r.life -= dt;
-    if (r.life <= 0) { scene.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); forceRings.splice(i, 1); continue; }
-    const k = 1 - r.life / r.max, s = 1 + k * 5;
-    r.m.scale.set(s, s, s); r.m.material.opacity = 0.85 * (1 - k);
-  }
 }
 
 function explodeGrenade(g) {
@@ -5222,9 +5128,8 @@ function updateCigar(dt) {
 const STREAK = {
   count: 0,
   tiers: [
-    { id: 'saberjd', need: 3, key: 'KeyB', label: '3 · SABER + JACK',    hint: 'PRESS B', unlocked: false, consumed: false },
-    { id: 'rcrl',    need: 5, key: 'KeyN', label: '5 · RC ROCKET',       hint: 'PRESS N', unlocked: false, consumed: false },
-    { id: 'dogs',    need: 10, key: 'KeyM', label: '10 · KIRKS AVENGERS', hint: 'PRESS M', unlocked: false, consumed: false }
+    { id: 'saberjd', need: 3, key: 'KeyB', label: '3 · SABER + JACK', hint: 'PRESS B', unlocked: false, consumed: false },
+    { id: 'rcrl',    need: 5, key: 'KeyN', label: '5 · RC ROCKET',    hint: 'PRESS N', unlocked: false, consumed: false }
   ]
 };
 // Saber + Jack Daniels combo state.
@@ -5233,7 +5138,6 @@ let saberMode = false;          // saber+JD scorestreak currently equipped
 let saberBlocking = false;      // RMB block stance (50% damage taken, 70% move speed, can't swing)
 let saberIgniteT = 0;           // blade-ignition animation timer (counts down from SABER_IGNITE)
 let saberSwingT = 0, saberSwingDir = 1;   // slash arc timer + alternating direction
-let saberPulseT = 0;            // brief blade glow-pulse after a successful bullet deflection
 let _jdVM = null, jdDrinking = false, jdDrinkT = 0;   // Jack Daniels left-hand viewmodel + drink anim
 
 // A kill happened for the LOCAL player (any weapon). Bump the streak + unlock tiers.
@@ -5258,7 +5162,6 @@ function streakReset(announce) {
   STREAK.tiers.forEach(t => { t.unlocked = false; t.consumed = false; });
   saberEnd();
   player.overheal = 0;
-  despawnOwnedDogs(NET.active ? NET.selfId : 'solo');   // loyalty: my dogs leave when I fall
   if (announce && had) { showStreakLost(); sfxStreakLost(); }
   updateStreakHUD();
 }
@@ -5269,7 +5172,6 @@ function streakActivate(tierId) {
   if (!t.unlocked || t.consumed) { sfxStreakDenied(); return; }
   if (tierId === 'saberjd') { t.consumed = true; equipSaberJD(); updateStreakHUD(); }
   else if (tierId === 'rcrl') { streakDeployRC(); }   // consumed when the rocket is actually fired (see rcTryLaunch)
-  else if (tierId === 'dogs') { t.consumed = true; requestSummonDogs(); updateStreakHUD(); }
 }
 
 /* ---- SABER + JACK DANIELS (3-kill reward) ---- */
@@ -5350,93 +5252,6 @@ function updateJD(dt) {
   }
 }
 
-/* ---- SABER BULLET BLOCK + DEFLECT ----
-   The blade is a physical object: a tall thin box in normal stance, a wide horizontal bar in block
-   stance. An incoming DIRECT BULLET whose ray crosses the blade before reaching the body is blocked
-   and mirror-reflected off the blade's broad face (can hit anyone, including the shooter). Explosions
-   and projectiles (RPG/GL/crossbow/grenade) are NOT blocked — only hitscan bullets pass through here. */
-function saberCanDeflect() { return saberMode && currentWeaponKey === 'saber' && player.alive && gameState.running; }
-// The blade's oriented box in world space (center + orthonormal axes u/v/w + half-extents + face normal).
-function saberBladeBox() {
-  const eye = camera.getWorldPosition(new THREE.Vector3());
-  const F = camera.getWorldDirection(new THREE.Vector3()).normalize();
-  const R = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
-  const U = new THREE.Vector3().crossVectors(R, F).normalize();
-  if (saberBlocking) {   // horizontal bar across the front — WIDE arc
-    return { center: eye.clone().addScaledVector(F, 0.55), u: R, v: U, w: F, hu: 0.78, hv: 0.17, hw: 0.12, normal: F.clone(), eye };
-  }
-  // vertical blade held front-right — NARROW arc (just where the blade is)
-  return { center: eye.clone().addScaledVector(F, 0.5).addScaledVector(R, 0.22).addScaledVector(U, 0.25),
-           u: R, v: U, w: F, hu: 0.1, hv: 0.62, hw: 0.1, normal: F.clone(), eye };
-}
-// Ray (origin O, unit dir D) vs the blade box. Returns { point, reflectDir } if it strikes the blade
-// before reaching the body, else null. Slab test in the box's local frame.
-function saberDeflectRay(O, D) {
-  const b = saberBladeBox();
-  const p = new THREE.Vector3().subVectors(O, b.center);
-  const loA = [p.dot(b.u), p.dot(b.v), p.dot(b.w)], ldA = [D.dot(b.u), D.dot(b.v), D.dot(b.w)], h = [b.hu, b.hv, b.hw];
-  let tmin = 0, tmax = Infinity;
-  for (let i = 0; i < 3; i++) {
-    if (Math.abs(ldA[i]) < 1e-6) { if (loA[i] < -h[i] || loA[i] > h[i]) return null; }
-    else {
-      let t1 = (-h[i] - loA[i]) / ldA[i], t2 = (h[i] - loA[i]) / ldA[i];
-      if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp; }
-      tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
-      if (tmin > tmax) return null;
-    }
-  }
-  if (tmin < 0 || tmin > O.distanceTo(b.eye)) return null;   // must hit the blade before the body
-  const point = O.clone().addScaledVector(D, tmin);
-  const reflectDir = D.clone().addScaledVector(b.normal, -2 * D.dot(b.normal)).normalize();   // mirror off the broad face
-  return { point, reflectDir };
-}
-// Resolve a successful deflection: spawn the reflected bullet, sparks, sound, blade glow pulse.
-function saberDoDeflect(defl, dmg) {
-  spawnDeflectedBullet(defl.point, defl.reflectDir, dmg);
-  spawnExplosionFX(defl.point, 0.55, 0x9ed2ff);   // bright spark flash
-  spawnBlood(defl.point, 6, 0x9ed2ff);            // blue spark particles
-  sfxSaberDeflect(defl.point);
-  saberPulseT = 0.18;                              // blade glow pulse
-}
-
-// Reflected bullets: fast projectiles with a bright white-blue trail; on hit they deal the original
-// damage to any enemy (bot or remote player, including the original shooter). Simulated locally by
-// the deflector (host/solo apply bot damage directly; clients route it for host validation).
-const deflectedBullets = [];
-function spawnDeflectedBullet(point, dir, dmg) {
-  deflectedBullets.push({ pos: point.clone(), dir: dir.clone().normalize(), dmg: dmg, life: 0.6, speed: 90 });
-}
-function updateDeflectedBullets(dt) {
-  for (let i = deflectedBullets.length - 1; i >= 0; i--) {
-    const b = deflectedBullets[i];
-    b.life -= dt;
-    if (b.life <= 0) { deflectedBullets.splice(i, 1); continue; }
-    const step = b.speed * dt;
-    const from = b.pos.clone();
-    const targets = colliders.concat(botMeshes());
-    if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
-    const ray = new THREE.Raycaster(from, b.dir, 0, step + 0.05);
-    const hits = ray.intersectObjects(targets, false);
-    let done = false;
-    if (hits.length) {
-      const hp = hits[0], ud = hp.object.userData || {};
-      if (ud.bot && ud.bot.alive) {
-        spawnBlood(hp.point, 10);
-        if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: ud.bot.id, dmg: b.dmg, head: false, weapon: saberCreditWeapon(), fromId: NET.selfId });
-        else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(ud.bot, b.dmg, b.dir, ud.part, { weapon: saberCreditWeapon(), dist: 8 }); if (NET.isHost) NET.botCredit = null; }
-        done = true;
-      } else if (ud.remote && ud.remote.alive) {
-        spawnBlood(hp.point, 10);
-        NET.damageRemote(ud.remote, b.dmg, ud.part === 'head', saberCreditWeapon(), false);   // no origin/dir => can't be re-deflected
-        done = true;
-      } else if (!ud.rcRemoteOwner) { sfxImpact(ud.mat === 'metal' ? 'metal' : 'wall', hp.point); done = true; }   // hit world geometry
-      if (done) { spawnTracer(from, hp.point, { color: 0xcfeeff, life: 0.3, thick: true }); deflectedBullets.splice(i, 1); continue; }
-    }
-    b.pos.addScaledVector(b.dir, step);
-    spawnTracer(from, b.pos, { color: 0xcfeeff, life: 0.28, thick: true });   // bright white-blue deflected trail
-  }
-}
-
 /* ---- RC ROCKET LAUNCHER (5-kill reward) ---- */
 // Deploy the RC launcher with exactly 1 rocket. Consumed when the rocket is fired (rcTryLaunch);
 // re-pressing N before firing just re-arms the same single rocket (never grants a second).
@@ -5490,219 +5305,6 @@ function showStreakLost() {
 // Quick screen flashes: golden when drinking, blue-white on saber ignition.
 function flashJD() { const f = el('jdFlash'); if (!f) return; f.style.transition = 'none'; f.style.opacity = '0.8'; requestAnimationFrame(() => { f.style.transition = 'opacity 0.7s'; f.style.opacity = '0'; }); }
 function flashSaber() { const f = el('saberFlash'); if (!f) return; f.style.transition = 'none'; f.style.opacity = '0.7'; requestAnimationFrame(() => { f.style.transition = 'opacity 0.45s'; f.style.opacity = '0'; }); }
-
-/* ============================================================================
-   7i. KIRKS AVENGERS — the 10-kill scorestreak: 10 loyal attack dogs (press M).
-   The HOST (or solo player) runs the dog AI; clients render host snapshots. Dogs chase the
-   nearest ENEMY of their owner, bite for 25 HP, have 100 HP, and despawn when their owner dies.
-   ============================================================================ */
-const DOG = { count: 10, hp: 100, chaseSpeed: 8.5, followSpeed: 5.0, accel: 30, biteRange: 1.6, biteDmg: 25, biteCd: 1.5, spawnGap: 0.2, deathFade: 1.0 };
-const dogs = [];               // active dogs (simulated on host/solo; render-only on clients)
-let dogSpawnQueue = [];        // staggered summon queue (host/solo): { ownerId, t }
-let dogIdSeq = 1, dogNetAcc = 0;
-
-// Low-poly Doberman: dark body, red collar + glowing red eyes, animated legs/tail/jaws.
-function buildDogModel() {
-  const g = new THREE.Group();
-  const dark = new THREE.MeshLambertMaterial({ color: 0x26292f, flatShading: true });
-  const black = new THREE.MeshLambertMaterial({ color: 0x141519, flatShading: true });
-  const red = new THREE.MeshBasicMaterial({ color: 0xcc2222 });
-  const eye = new THREE.MeshBasicMaterial({ color: 0xff3030 });
-  const white = new THREE.MeshLambertMaterial({ color: 0xdde0e6, flatShading: true });
-  const box = (mat, x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); g.add(m); return m; };
-  box(dark, 0, 0.55, -0.05, 0.36, 0.40, 0.86);     // torso
-  box(dark, 0, 0.62, 0.42, 0.30, 0.30, 0.30);      // neck/shoulders
-  box(dark, 0, 0.74, 0.62, 0.30, 0.30, 0.34);      // head
-  box(black, 0, 0.70, 0.84, 0.22, 0.16, 0.22);     // snout (upper)
-  const jaw = box(black, 0, 0.62, 0.86, 0.20, 0.08, 0.20);   // lower jaw (opens to bite)
-  box(white, 0, 0.665, 0.97, 0.16, 0.03, 0.04);    // teeth
-  box(black, -0.10, 0.93, 0.55, 0.07, 0.16, 0.05); // ears
-  box(black, 0.10, 0.93, 0.55, 0.07, 0.16, 0.05);
-  box(eye, -0.08, 0.80, 0.78, 0.05, 0.05, 0.03);   // glowing red eyes
-  box(eye, 0.08, 0.80, 0.78, 0.05, 0.05, 0.03);
-  box(red, 0, 0.60, 0.30, 0.34, 0.09, 0.10);       // red collar
-  const legs = [];
-  const mkLeg = (x, z) => { const l = new THREE.Group(); l.position.set(x, 0.42, z); const s = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.42, 0.10), black); s.position.y = -0.21; l.add(s); g.add(l); legs.push(l); };
-  mkLeg(-0.14, 0.34); mkLeg(0.14, 0.34); mkLeg(-0.14, -0.36); mkLeg(0.14, -0.36);
-  const tail = new THREE.Group(); tail.position.set(0, 0.62, -0.46); const ts = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.34), dark); ts.position.z = -0.17; tail.add(ts); tail.rotation.x = -0.5; g.add(tail);
-  g.userData = { legs, jaw, tail };
-  return g;
-}
-// "Kirks Avengers" nameplate sprite above a dog's head.
-function dogNameSprite() {
-  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
-  const c = cv.getContext('2d'); c.font = 'bold 26px Trebuchet MS, Arial'; c.textAlign = 'center';
-  c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,0.85)'; c.fillStyle = '#ff8a7a';
-  c.strokeText('Kirks Avengers', 128, 42); c.fillText('Kirks Avengers', 128, 42);
-  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true }));
-  spr.scale.set(1.8, 0.45, 1); spr.position.set(0, 1.25, 0);
-  return spr;
-}
-function attachDogMesh(dog) {
-  dog.group = buildDogModel();
-  dog.group.position.copy(dog.pos);
-  dog.nameSprite = dogNameSprite(); dog.group.add(dog.nameSprite);
-  scene.add(dog.group);
-}
-function removeDog(dog) { if (dog.group) { scene.remove(dog.group); disposeGroup(dog.group); dog.group = null; } }
-
-// Owner helpers (the "self" id is 'solo' offline, else the PeerJS id).
-function dogSelfId() { return NET.active ? NET.selfId : 'solo'; }
-function dogOwnerPos(ownerId) {
-  if (ownerId === dogSelfId()) return player.pos;
-  const rp = NET.active ? NET.players.get(ownerId) : null;
-  return rp ? rp.pos : player.pos;
-}
-// Every alive enemy of `ownerId`: all bots + all humans except the owner.
-function dogTargets(ownerId) {
-  const out = [];
-  for (const b of bots) if (b.alive) out.push({ pos: b.pos, kind: 'bot', ref: b });
-  const sid = dogSelfId();
-  if (player.alive && ownerId !== sid) out.push({ pos: player.pos, kind: 'self', ref: player });
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
-  return out;
-}
-// Local player pressed M: play the summon fanfare, then summon (host/solo) or ask the host to.
-function requestSummonDogs() {
-  sfxDogSummon();
-  const ownerId = dogSelfId();
-  if (!NET.active || NET.isHost) summonDogs(ownerId);
-  else NET.route(NET.hostId, { t: 'dogsummon', ownerId });
-}
-function summonDogs(ownerId) { for (let i = 0; i < DOG.count; i++) dogSpawnQueue.push({ ownerId, t: i * DOG.spawnGap }); }
-function spawnOneDog(ownerId) {
-  const op = dogOwnerPos(ownerId), ang = Math.random() * Math.PI * 2, r = 0.8 + Math.random() * 1.4;
-  const x = op.x + Math.cos(ang) * r, z = op.z + Math.sin(ang) * r;
-  const dog = { id: dogIdSeq++, ownerId, pos: new THREE.Vector3(x, groundHeightAt(x, z, 1), z), vel: new THREE.Vector3(),
-                yaw: Math.random() * 6.283, health: DOG.hp, alive: true, dying: false, deathT: 0,
-                target: null, biteCd: 0, mouthOpen: 0, legPhase: Math.random() * 6.283, growlT: Math.random() * 2, state: 'follow' };
-  attachDogMesh(dog);
-  spawnExplosionFX(dog.pos.clone().setY(dog.pos.y + 0.5), 1.0, 0x9a4cff);   // summon sparkle/portal
-  dogs.push(dog);
-}
-// Host/solo: damage a dog; on lethal damage start the death (yelp + topple + 1s despawn).
-function damageDog(dog, dmg) {
-  if (!dog || !dog.alive || dog.dying) return;
-  dog.health -= dmg;
-  if (dog.health <= 0) { dog.alive = false; dog.dying = true; dog.deathT = DOG.deathFade; sfxDogDeath(dog.pos); spawnBlood(dog.pos.clone().setY(dog.pos.y + 0.5), 8); }
-}
-// Host/solo: a dog bites a target for 25 HP (owner gets the credit).
-function dogBite(dog, tgt) {
-  dog.mouthOpen = 1; sfxDogBite(dog.pos);
-  if (tgt.kind === 'bot') {
-    if (NET.isHost) NET.botCredit = dog.ownerId;
-    damageBot(tgt.ref, DOG.biteDmg, new THREE.Vector3(0, 0, 1), null, { weapon: 'dogbite', dist: 2 });
-    if (NET.isHost) NET.botCredit = null;
-  } else if (tgt.kind === 'self') {
-    player.lastAttacker = dog.ownerId; player.lastAttackerName = 'Kirks Avengers'; player.lastAttackerWeapon = 'dogbite'; player.lastAttackerMelee = false;
-    hurtPlayer(DOG.biteDmg);
-  } else if (tgt.kind === 'remote') {
-    NET.route(tgt.ref.id, { t: 'youhit', dmg: DOG.biteDmg, head: false, fromId: dog.ownerId, fromName: 'Kirks Avengers', weapon: 'dogbite', melee: false });
-  }
-}
-// Host/solo per-dog AI: pick the nearest enemy, chase + bite it; if none, follow the owner.
-function dogAI(dog, dt) {
-  const enemies = dogTargets(dog.ownerId);
-  let tgt = null, td = Infinity;
-  for (const e of enemies) { const d = dog.pos.distanceTo(e.pos); if (d < td) { td = d; tgt = e; } }
-  let desired = new THREE.Vector3(), speed = 0, faceP = null;
-  if (tgt) {
-    faceP = tgt.pos;
-    dog.state = td <= DOG.biteRange + 0.4 ? 'bite' : 'chase';
-    if (td > DOG.biteRange) { desired.subVectors(tgt.pos, dog.pos); desired.y = 0; desired.normalize(); speed = DOG.chaseSpeed; }
-    dog.biteCd -= dt;
-    if (td <= DOG.biteRange && dog.biteCd <= 0) { dogBite(dog, tgt); dog.biteCd = DOG.biteCd; }
-    dog.growlT -= dt;
-    if (dog.growlT <= 0 && td < 16) { dog.growlT = 1.6 + Math.random() * 2.4; (Math.random() < 0.5 ? sfxDogGrowl : sfxDogBark)(dog.pos); }
-  } else {
-    const op = dogOwnerPos(dog.ownerId), d = dog.pos.distanceTo(op);
-    dog.state = d > 3 ? 'follow' : 'idle';
-    if (d > 2.5) { desired.subVectors(op, dog.pos); desired.y = 0; desired.normalize(); speed = DOG.followSpeed; faceP = op; }
-  }
-  const maxDelta = DOG.accel * dt, lim = ARENA - 2;
-  dog.vel.x = approach(dog.vel.x, desired.x * speed, maxDelta);
-  dog.vel.z = approach(dog.vel.z, desired.z * speed, maxDelta);
-  dog.pos.x = Math.max(-lim, Math.min(lim, dog.pos.x + dog.vel.x * dt));
-  dog.pos.z = Math.max(-lim, Math.min(lim, dog.pos.z + dog.vel.z * dt));
-  resolveHorizontal(dog.pos, 1.0);                       // slide along walls/vehicles (basic obstacle handling)
-  dog.pos.y = groundHeightAt(dog.pos.x, dog.pos.z, dog.pos.y + 0.4);
-  let ty = dog.yaw;
-  if (faceP) ty = Math.atan2(faceP.x - dog.pos.x, faceP.z - dog.pos.z);
-  else if (Math.hypot(dog.vel.x, dog.vel.z) > 0.2) ty = Math.atan2(dog.vel.x, dog.vel.z);
-  let dy = ty - dog.yaw; while (dy > Math.PI) dy -= 6.283; while (dy < -Math.PI) dy += 6.283;
-  dog.yaw += dy * Math.min(1, dt * 9);
-  dog.group.position.copy(dog.pos); dog.group.rotation.y = dog.yaw;
-}
-function dogDeathAnim(dog, dt) { dog.deathT -= dt; if (dog.group) { dog.group.rotation.z += (1.4 - dog.group.rotation.z) * Math.min(1, dt * 8); dog.group.position.copy(dog.pos); } }
-function dogClientLerp(dog, dt) {
-  const t = Math.min(1, dt * 12);
-  dog.pos.lerp(dog.tpos, t); dog.yaw = lerpAngle(dog.yaw, dog.tyaw, t);
-  dog.group.position.copy(dog.pos); dog.group.rotation.y = dog.yaw;
-  if (dog.dying) dog.group.rotation.z += (1.4 - dog.group.rotation.z) * Math.min(1, dt * 8);
-}
-// Visual animation (both host + clients): trotting legs, wagging tail, snapping jaws.
-function dogAnimate(dog, dt) {
-  if (!dog.group) return;
-  const ud = dog.group.userData, moving = dog.state === 'chase' || dog.state === 'follow';
-  dog.legPhase += dt * (dog.state === 'chase' ? 16 : moving ? 9 : 3);
-  if (ud.legs) ud.legs.forEach((l, i) => { l.rotation.x = moving ? Math.sin(dog.legPhase + (i < 2 ? 0 : Math.PI) + (i % 2) * Math.PI) * 0.6 : l.rotation.x * 0.8; });
-  if (ud.tail) ud.tail.rotation.y = Math.sin(dog.legPhase * 0.5) * 0.45;
-  if (dog.state === 'bite') dog.mouthOpen = 1;
-  dog.mouthOpen = Math.max(0, dog.mouthOpen - dt * 3);
-  if (ud.jaw) ud.jaw.rotation.x = -dog.mouthOpen * 0.55;
-}
-// Host/solo: remove every dog owned by `ownerId` (loyalty — they leave when their owner falls).
-function despawnOwnedDogs(ownerId) {
-  if (NET.active && !NET.isHost) return;   // only the simulator removes; clients follow snapshots
-  dogSpawnQueue = dogSpawnQueue.filter(q => q.ownerId !== ownerId);
-  for (let i = dogs.length - 1; i >= 0; i--) if (dogs[i].ownerId === ownerId) { removeDog(dogs[i]); dogs.splice(i, 1); }
-}
-function dogUpdateHUD() {
-  const myId = dogSelfId();
-  let n = 0; for (const d of dogs) if (d.ownerId === myId && d.alive && !d.dying) n++;
-  if (!NET.active || NET.isHost) n += dogSpawnQueue.filter(q => q.ownerId === myId).length;   // count the still-summoning ones
-  const wrap = el('dogCount');
-  if (wrap) { if (n > 0) { wrap.style.display = 'block'; el('dogNum').textContent = n; } else wrap.style.display = 'none'; }
-}
-// Dog body meshes NOT owned by `excludeId` — so a player can shoot ENEMY dogs (never their own).
-function dogMeshes(excludeId) {
-  const out = [];
-  for (const d of dogs) {
-    if (!d.alive || d.dying || !d.group || d.ownerId === excludeId) continue;
-    d.group.traverse(o => { if (o.isMesh) { o.userData.dog = d; out.push(o); } });
-  }
-  return out;
-}
-function updateDogs(dt) {
-  const sim = !NET.active || NET.isHost;
-  if (sim) {
-    for (let i = dogSpawnQueue.length - 1; i >= 0; i--) { dogSpawnQueue[i].t -= dt; if (dogSpawnQueue[i].t <= 0) { spawnOneDog(dogSpawnQueue[i].ownerId); dogSpawnQueue.splice(i, 1); } }
-    for (let i = dogs.length - 1; i >= 0; i--) {
-      const dog = dogs[i];
-      if (dog.dying) { dogDeathAnim(dog, dt); if (dog.deathT <= 0) { removeDog(dog); dogs.splice(i, 1); } continue; }
-      if (!dog.alive) { removeDog(dog); dogs.splice(i, 1); continue; }
-      dogAI(dog, dt);
-    }
-    if (NET.active) { dogNetAcc += dt; if (dogNetAcc >= 0.06) { dogNetAcc = 0; NET.broadcast({ t: 'kdogs', list: dogs.map(d => ({ id: d.id, o: d.ownerId, x: d.pos.x, y: d.pos.y, z: d.pos.z, yaw: d.yaw, st: d.state, hp: d.health, dy: !!d.dying })) }); } }
-  } else {
-    for (let i = dogs.length - 1; i >= 0; i--) { const dog = dogs[i]; if (dog._remove) { removeDog(dog); dogs.splice(i, 1); continue; } dogClientLerp(dog, dt); }
-  }
-  for (const dog of dogs) dogAnimate(dog, dt);
-  dogUpdateHUD();
-}
-// Client: rebuild local dog render-copies from the host's snapshot.
-function applyDogsSnapshot(list) {
-  const seen = {};
-  for (const e of list) {
-    seen[e.id] = true;
-    let dog = dogs.find(d => d.id === e.id);
-    if (!dog) { dog = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, mouthOpen: 0, legPhase: Math.random() * 6.283 }; attachDogMesh(dog); dogs.push(dog); }
-    dog.tpos.set(e.x, e.y, e.z); dog.tyaw = e.yaw; dog.state = e.st; dog.health = e.hp; dog.dying = e.dy;
-  }
-  for (const dog of dogs) if (!seen[dog.id]) dog._remove = true;
-}
-// Clear all dogs (match start / reset).
-function clearDogs() { for (const d of dogs) removeDog(d); dogs.length = 0; dogSpawnQueue = []; dogUpdateHUD(); }
 
 // Ammo-box pickups: spin/bob, and refill ammo + 1 grenade when the player touches one.
 function updatePickups(dt) {
@@ -6107,7 +5709,7 @@ function endMatch(won) {
   gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); clearDogs(); (won ? sfxWin() : sfxLose());
+  Ambient.stop(); SaberHum.stop(); (won ? sfxWin() : sfxLose());
   el('endTitle').textContent = won ? 'YOU WIN' : 'MATCH OVER';
   el('endSub').textContent = `Final: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
   el('endScreen').style.display = 'flex';
@@ -6123,7 +5725,7 @@ function startMatch() {
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.impulseT = 0; player.impulseGrace = 0;
   player.cigar = CIGAR.maxCarry; cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;   // fresh cigar; clear any prior smoke
-  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; clearDogs(); streakReset(false);   // fresh scorestreak + no leftover dogs
+  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; streakReset(false);   // fresh scorestreak
   player.grenades = throwMaxCarry();
   yaw = Math.atan2(sp.x, sp.z); pitch = 0; recoilPitch = 0; recoilYaw = 0;   // look toward map centre
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; shakeTime = 0; shakeMag = 0;
@@ -6285,7 +5887,7 @@ function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); clearDogs();
+  Ambient.stop(); SaberHum.stop();
   const won = winnerName && winnerName === NET.selfName;
   if (!NET.active) (winnerName === 'YOU' ? sfxWin() : sfxLose()); else (won ? sfxWin() : sfxLose());   // victory / defeat fanfare
   const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
@@ -6623,11 +6225,8 @@ const NET = {
   /* ---------------- DAMAGE ROUTING ---------------- */
   // I shot a remote player's avatar -> tell them to take damage (they're authoritative on their HP).
   // weapon/melee ride along so the host can validate gun-game progression & demotion.
-  damageRemote(rp, dmg, head, weapon, melee, origin, dir) {
-    const m = { t: 'youhit', dmg, head: !!head, fromId: this.selfId, fromName: this.selfName, weapon: weapon || null, melee: !!melee };
-    // Direct bullets ride their trajectory along so the target's saber can decide to deflect.
-    if (origin && dir) { m.ox = origin.x; m.oy = origin.y; m.oz = origin.z; m.dx = dir.x; m.dy = dir.y; m.dz = dir.z; }
-    this.route(rp.id, m);
+  damageRemote(rp, dmg, head, weapon, melee) {
+    this.route(rp.id, { t: 'youhit', dmg, head: !!head, fromId: this.selfId, fromName: this.selfName, weapon: weapon || null, melee: !!melee });
   },
   // Report my own death so the host can credit my killer.
   reportDeath(byId, head, weapon, melee) {
@@ -6648,15 +6247,14 @@ const NET = {
              ads: (adsBlend > 0.5), rl,            // aim + reload state for others to see
              cr: player.crouchBlend, dv: player.diving,                      // crouch amount + dive (shorter hitbox)
              cig: cigSmoking && !cigCanceling,                               // smoking a cigar (third-person tell)
-             sb: saberBlocking,                                              // saber block stance (third-person pose)
              clm: player.onLadder };                                         // climbing a ladder (third-person)
   },
   // host -> all: positions of every human (host builds from its own state + clients' last pmove)
   broadcastPlayers() {
     const list = [this.selfSnapshot()];
     this.players.forEach((rp) => list.push({ id: rp.id, name: rp.name, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
-      yaw: rp.yaw, pitch: rp.pitch || 0, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
-      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, sb: !!rp.sb, clm: !!rp.clm }));
+      yaw: rp.yaw, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
+      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, clm: !!rp.clm }));
     this.broadcast({ t: 'players', list });
   },
   broadcastBots() {
@@ -6698,14 +6296,11 @@ const NET = {
         break;
       }
       case 'killed': {                                 // a client died; credit its killer
-        despawnOwnedDogs(msg.victimId);                // their attack dogs leave when they fall
         if (gameMode === 'gungame') { ggHostKill(msg.byId, msg.weapon, true, msg.victimId, !!msg.melee); break; }
         const victim = this.scores.get(msg.victimId);
         this.awardKill(msg.byId, POINTS_KILL + (msg.head ? POINTS_HEADSHOT : 0), victim ? victim.name : 'Player', { headshot: msg.head });
         break;
       }
-      case 'dogsummon': { if (this.isHost) summonDogs(msg.ownerId); break; }   // a client deployed their 10-kill dogs
-      case 'doghit': { if (this.isHost) { const d = dogs.find(x => x.id === msg.dogId); if (d) damageDog(d, msg.dmg); } break; }   // a client shot an enemy dog
       case 'route': { this.route(msg.to, msg.msg); break; }   // forward client->client
 
       /* ---- CLIENT handlers ---- */
@@ -6713,7 +6308,6 @@ const NET = {
       case 'start': { if (msg.mode) gameMode = msg.mode; beginMatch(); break; }
       case 'players': { this.applyPlayers(msg.list); break; }
       case 'bots': { applyBotsSnapshot(msg.list); applyClientLoot(msg.loot); break; }
-      case 'kdogs': { applyDogsSnapshot(msg.list); break; }   // host -> clients: attack-dog positions/state
       case 'lootgrab': {                               // a client walked into the crate
         if (lootActive) {
           const key = chooseSpecial();
@@ -6799,12 +6393,6 @@ const NET = {
       case 'youhit': {
         player.lastAttacker = msg.fromId; player.lastAttackerHead = !!msg.head; player.lastAttackerName = msg.fromName;
         player.lastAttackerWeapon = msg.weapon || null; player.lastAttackerMelee = !!msg.melee;
-        // Saber deflection: if a direct bullet (origin+dir present) crosses the active blade, reflect it.
-        if (msg.ox != null && saberCanDeflect()) {
-          const o = new THREE.Vector3(msg.ox, msg.oy, msg.oz), d = new THREE.Vector3(msg.dx, msg.dy, msg.dz).normalize();
-          const defl = saberDeflectRay(o, d);
-          if (defl) { saberDoDeflect(defl, msg.dmg); break; }   // blocked — take no damage
-        }
         hurtPlayer(msg.dmg);
         break;
       }
@@ -6924,8 +6512,6 @@ function makeRemotePlayer(id, name, color) {
       if (d.dv != null) this.dv = d.dv;
       if (d.cig != null) this.cig = d.cig;
       if (d.clm != null) this.clm = d.clm;
-      if (d.pitch != null) this.pitch = d.pitch;
-      if (d.sb != null) this.sb = d.sb;
     }
   };
 }
@@ -6941,14 +6527,15 @@ function buildRemoteAvatar(rp) {
     g.add(m); return m;
   });
   const head = parts.head;
-  // Third-person held weapon — real geometry, (re)built when rp.weapon changes (see updateRemoteWeapon).
-  rp.weaponKey = null; rp.weaponMesh = null; rp.jdMesh = null;
+  // little gun box in front (colored by held weapon)
+  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.6), new THREE.MeshLambertMaterial({ color: WEAPONS[rp.weapon] ? WEAPONS[rp.weapon].color : 0xffcc00, flatShading: true }));
+  gun.position.set(0.45, 1.25, 0.45); g.add(gun);
   // Third-person cigar held to the mouth (shown only while this player is smoking — a heal tell).
   const cigM = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.34, 8), new THREE.MeshLambertMaterial({ color: 0x6b4a2a, flatShading: true }));
   cigM.rotation.z = Math.PI / 2; cigM.position.set(0.20, 1.62, 0.22); cigM.visible = false; g.add(cigM);
   const cigEm = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 5), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); cigEm.position.set(0.38, 1.62, 0.22); cigEm.visible = false; g.add(cigEm);
   rp.cigMesh = cigM; rp.cigEmber = cigEm;
-  rp.avatar = g; rp.head = head;
+  rp.avatar = g; rp.head = head; rp.gun = gun;
   rp.renderPos.copy(rp.pos);
   drawNameSprite(rp);
   scene.add(g);
@@ -6990,21 +6577,6 @@ function drawNameSprite(rp) {
   }
   rp._lastNameHp = Math.round(rp.health);
 }
-// Rebuild a remote player's held weapon mesh when their equipped weapon changes; manage the
-// left-hand Jack Daniels bottle that accompanies the saber scorestreak.
-function updateRemoteWeapon(rp) {
-  if (rp.weaponKey === rp.weapon) return;   // unchanged since last rebuild
-  rp.weaponKey = rp.weapon;
-  if (rp.weaponMesh) { rp.avatar.remove(rp.weaponMesh); disposeGroup(rp.weaponMesh); rp.weaponMesh = null; }
-  if (WEAPONS[rp.weapon]) {
-    rp.weaponMesh = buildThirdPersonWeapon(rp.weapon);
-    rp.weaponMesh.position.set(0.42, 1.26, 0.34);
-    rp.avatar.add(rp.weaponMesh);
-  }
-  const wantBottle = (rp.weapon === 'saber');
-  if (wantBottle && !rp.jdMesh) { rp.jdMesh = buildTpBottle(); rp.jdMesh.position.set(-0.42, 1.18, 0.30); rp.avatar.add(rp.jdMesh); }
-  else if (!wantBottle && rp.jdMesh) { rp.avatar.remove(rp.jdMesh); disposeGroup(rp.jdMesh); rp.jdMesh = null; }
-}
 // Smoothly move all remote players toward their last network position.
 function lerpRemotePlayers(dt) {
   NET.players.forEach(rp => {
@@ -7032,24 +6604,17 @@ function lerpRemotePlayers(dt) {
     rp.avatar.scale.y = 1 - 0.40 * rp.crShown;            // ~60% height when fully crouched/prone
     rp.avatar.rotation.x = (rp.dv ? 0.45 : 0) * rp.crShown;  // slight forward (prone) lean while diving
     if (rp.nameSprite) { const sy = rp.avatar.scale.y || 1; rp.nameSprite.scale.set(2.2, 0.7 / sy, 1); rp.nameSprite.position.y = 2.55 / sy; }   // keep tag upright + above head
-    // Third-person held weapon: rebuild on weapon change, then pose for aim/reload/climb/saber-block.
-    updateRemoteWeapon(rp);
-    if (rp.weaponMesh) {
-      const wm = rp.weaponMesh, sy = rp.avatar.scale.y || 1;
-      wm.scale.set(1, 1 / sy, 1);                               // un-squash from the crouch scale (it still lowers)
-      const saber = rp.weapon === 'saber';
-      let tx = 0.42, ty = 1.26, rotx = -(rp.pitch || 0) * 0.5, rotz = 0, show = true;
-      if (rp.clm) show = false;                                 // climbing: holstered (both hands on the ladder)
-      else if (saber && rp.sb) { tx = 0.16; ty = 1.34; rotx = 0; rotz = 1.4; }   // block stance: blade held horizontally across the front
-      else if (rp.ads) { tx = 0.14; ty = 1.5; rotx *= 0.4; }
-      else if (rp.rl > 0) { ty = 1.06; rotx = 0.6; }
-      wm.visible = show;
-      wm.position.x += (tx - wm.position.x) * t;
-      wm.position.y += (ty - wm.position.y) * t;
-      wm.rotation.x += (rotx - wm.rotation.x) * t;
-      wm.rotation.z += (rotz - wm.rotation.z) * t;
+    if (rp.gun && WEAPONS[rp.weapon]) rp.gun.material.color.setHex(WEAPONS[rp.weapon].color);
+    // Pose the held gun so others can see you aiming (raised to center) or reloading (dipped).
+    if (rp.gun) {
+      let tx = 0.45, ty = 1.25, rotx = 0;
+      if (rp.clm) { tx = 0.3; ty = 0.95; rotx = 0.4; }       // climbing: gun lowered (one hand on the ladder)
+      else if (rp.ads) { tx = 0.12; ty = 1.5; }
+      else if (rp.rl > 0) { ty = 1.05; rotx = 0.6; }
+      rp.gun.position.x += (tx - rp.gun.position.x) * t;
+      rp.gun.position.y += (ty - rp.gun.position.y) * t;
+      rp.gun.rotation.x += (rotx - rp.gun.rotation.x) * t;
     }
-    if (rp.jdMesh) { rp.jdMesh.visible = !rp.clm; rp.jdMesh.scale.set(1, 1 / (rp.avatar.scale.y || 1), 1); }
     // Cigar smoking tell: show the held cigar + lit ember and puff smoke from the tip.
     if (rp.cigMesh) {
       const on = !!rp.cig;
@@ -7444,8 +7009,6 @@ function animate() {
     rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles
     updateImpulses(dt);   // impulse-grenade canisters (bounce + fast activation + kinetic launch)
     updateBoostPads(dt);  // boost pads: glow/particles + step-on launch
-    updateDeflectedBullets(dt);   // saber-reflected bullets in flight
-    updateDogs(dt);       // Kirks Avengers attack dogs (host AI / client render)
     if (impulseThrowT > 0) impulseThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill)
     // No loot crates in either mode now — both use the shared gun-game arsenal (FFA picks via inventory).
@@ -7512,9 +7075,7 @@ function animate() {
         // constant living-blade flicker on the glow + halo.
         const S = gunMesh.userData && gunMesh.userData.saber;
         const flick = 0.92 + Math.random() * 0.08;
-        if (saberPulseT > 0) saberPulseT -= dt;
-        const pulse = saberPulseT > 0 ? saberPulseT / 0.18 : 0;   // brief brighten on a successful deflection
-        if (S) { if (S.glow) S.glow.material.opacity = 0.50 * flick + 0.08 + pulse * 0.4; if (S.halo) S.halo.material.opacity = 0.20 * flick + pulse * 0.5; }
+        if (S) { if (S.glow) S.glow.material.opacity = 0.50 * flick + 0.08; if (S.halo) S.halo.material.opacity = 0.20 * flick; }
         if (saberIgniteT > 0) {
           saberIgniteT -= dt;
           const p = Math.min(1, 1 - Math.max(0, saberIgniteT) / SABER_IGNITE);
@@ -7593,7 +7154,6 @@ function animate() {
   updateBlood(dt);
   updateDecals(dt);
   updateExplosions(dt);
-  updateForceRings(dt);   // saber force-jump energy rings
   updateDebris(dt);    // detached limbs / heads / dropped guns
   updateTracers(dt);   // pooled bullet tracers fade-out
 

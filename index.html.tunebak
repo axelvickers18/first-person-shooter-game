@@ -1034,7 +1034,7 @@ const GUNGAME_WEAPONS = {
   gg23: { name:"HEAVY SNIPER",     baseModel:"heavysniper", color:0x33384a, damage:200,fireRate:1.80,  mag:3,  reload:4.5, spreadBase:0.001,spreadGrow:0.0,  spreadMax:0.006, recoil:0.085,pellets:1,range:600,headMult:1.75,auto:false, kongDmg:100 },
   gg24: { name:"BULLPUP RIFLE",    baseModel:"bullpup",     color:0x394032, damage:22, fireRate:0.0909, mag:25, reload:2.0, spreadBase:0.012,spreadGrow:0.009,spreadMax:0.075, recoil:0.012,pellets:1,range:280,headMult:1.8, auto:true },
   gg25: { name:"SUPPRESSED SMG",   baseModel:"suppressedsmg",color:0x1c1c20,damage:18, fireRate:0.0833, mag:30, reload:2.2, spreadBase:0.016,spreadGrow:0.010,spreadMax:0.110, recoil:0.008,pellets:1,range:150,headMult:1.6, auto:true, suppressed:true },
-  gg26: { name:"MINIGUN",          baseModel:"minigun",     color:0x2a2a2e, damage:18, fireRate:0.04,   mag:200,reload:8.0, spreadBase:0.030,spreadGrow:0.006,spreadMax:0.120, recoil:0.010,pellets:1,range:200,headMult:1.4, auto:true, minigun:true, spinup:0.8, winddown:1.0 },
+  gg26: { name:"MINIGUN",          baseModel:"minigun",     color:0x2a2a2e, damage:18, fireRate:0.04,   mag:100,reload:8.0, spreadBase:0.050,spreadGrow:0.010,spreadMax:0.200, recoil:0.010,pellets:1,range:200,headMult:1.4, auto:true, minigun:true, spinup:0.8, winddown:1.0 },
   // KARAMBIT — a permanent second slot in gun game (NOT on the ladder). A curved
   // reverse-grip hook blade: fast one-hit melee that DEMOTES the victim (the killer
   // never advances, and it can't win). See `karambit:true` checks below.
@@ -1085,7 +1085,7 @@ const GG_SPEC = {
   gg23: { speed:0.65, sight:'scope_heavy', zoom:10.0, reload:4.5, rstyle:'bolt', model:'heavysniper', boltShot:true },
   gg24: { speed:0.95, sight:'holo',        zoom:1.5,  reload:2.0, rstyle:'mag',  model:'bullpup' },
   gg25: { speed:1.00, sight:'minidot',     zoom:1.35, reload:2.2, rstyle:'mag',  model:'suppressedsmg' },
-  gg26: { speed:0.35, sight:'none',        zoom:1.0,  reload:8.0, rstyle:'belt', model:'minigun', noads:true }
+  gg26: { speed:0.50, sight:'none',        zoom:1.0,  reload:8.0, rstyle:'belt', model:'minigun', noads:true }
 };
 for (const k in GG_SPEC) {
   const s = GG_SPEC[k], w = WEAPONS[k];
@@ -2376,47 +2376,26 @@ function buildLightTower(x, z) {
 
 // THE NOODLE BOX — a giant Chinese-takeout box on the left flank you can WALK INSIDE to summon Mckayla.
 let noodleBox = null;
-// A generic Panda-Express-style panda face + "PANDA" wordmark drawn to a canvas texture (not the real logo).
-function pandaLogoTexture() {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 256; const x = c.getContext('2d');
-  x.fillStyle = '#1a1a1a';
-  x.beginPath(); x.arc(86, 86, 28, 0, 7); x.arc(170, 86, 28, 0, 7); x.fill();                 // ears
-  x.beginPath(); x.ellipse(99, 122, 21, 29, -0.3, 0, 7); x.ellipse(157, 122, 21, 29, 0.3, 0, 7); x.fill();   // eye patches
-  x.fillStyle = '#2fff6a'; x.beginPath(); x.arc(101, 120, 8, 0, 7); x.arc(155, 120, 8, 0, 7); x.fill();       // green eyes
-  x.fillStyle = '#1a1a1a'; x.beginPath(); x.ellipse(128, 150, 10, 7, 0, 0, 7); x.fill();        // nose
-  x.lineWidth = 4; x.strokeStyle = '#1a1a1a'; x.beginPath(); x.moveTo(128, 157); x.lineTo(128, 168); x.lineTo(113, 178); x.moveTo(128, 168); x.lineTo(143, 178); x.stroke();   // mouth
-  x.fillStyle = '#d11a1a'; x.font = 'bold 52px Arial, sans-serif'; x.textAlign = 'center'; x.fillText('PANDA', 128, 232);
-  return new THREE.CanvasTexture(c);
-}
 (function buildNoodleBox() {
-  const cx = -40, cz = 30, W = 4.2, D = 4.2, H = 5.2, t = 0.18, hx = W / 2, hz = D / 2, doorW = 2.0;   // ~30% bigger, ~2.6 player-heights tall
-  const paper = 0xf6f4ef, red = 0xd11a1a;                       // Panda Express white + red
+  const cx = -40, cz = 30, W = 3.2, D = 3.2, H = 4.0, t = 0.16, hx = W / 2, hz = D / 2, doorW = 1.5;
+  const paper = 0xf2ede2;                                       // off-white waxed paper
   addBox(cx, 0, cz, W, 0.08, D, paper, { noCollide: true });    // interior floor (cosmetic)
   addBox(cx - hx, 0, cz, t, H, D, paper);                       // back wall (-X)
   addBox(cx, 0, cz - hz, W, H, t, paper);                       // side wall (-Z)
   addBox(cx, 0, cz + hz, W, H, t, paper);                       // side wall (+Z)
-  const segD = (D - doorW) / 2;                                 // front wall (+X) split around a wider doorway gap
+  const segD = (D - doorW) / 2;                                 // front wall (+X) split around a doorway gap
   addBox(cx + hx, 0, cz - hz + segD / 2, t, H, segD, paper);
   addBox(cx + hx, 0, cz + hz - segD / 2, t, H, segD, paper);
-  addBox(cx + hx, H - 1.0, cz, t, 1.0, doorW, paper, { noCollide: true });   // lintel above the doorway
-  // red rim band around the top edge (Panda Express red accent)
-  [cz - hz, cz + hz].forEach(pz => addBox(cx, H - 0.2, pz, W + 0.06, 0.2, t + 0.05, red, { noCollide: true }));
-  [cx - hx, cx + hx].forEach(px => addBox(px, H - 0.2, cz, t + 0.05, 0.2, D + 0.06, red, { noCollide: true }));
-  for (let s = 0; s < 4; s++) {                                 // folded paper flaps with a red leading edge
+  addBox(cx + hx, H - 0.9, cz, t, 0.9, doorW, paper, { noCollide: true });   // lintel above the doorway
+  for (let s = 0; s < 4; s++) {                                 // folded paper flaps around the top rim
     const ang = s * Math.PI / 2;
-    const flap = new THREE.Mesh(new THREE.BoxGeometry(W * 0.92, 0.07, D * 0.46), new THREE.MeshLambertMaterial({ color: paper, flatShading: true }));
-    flap.position.set(cx - Math.sin(ang) * D * 0.27, H + 0.2, cz + Math.cos(ang) * D * 0.27); flap.rotation.y = ang; flap.rotation.x = -0.6; scene.add(flap);
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(W * 0.92, 0.05, 0.09), new THREE.MeshBasicMaterial({ color: red }));
-    trim.position.copy(flap.position); trim.rotation.copy(flap.rotation); trim.translateZ(D * 0.22); scene.add(trim);
+    const flap = new THREE.Mesh(new THREE.BoxGeometry(W * 0.92, 0.06, D * 0.46), new THREE.MeshLambertMaterial({ color: paper, flatShading: true }));
+    flap.position.set(cx - Math.sin(ang) * D * 0.26, H + 0.16, cz + Math.cos(ang) * D * 0.26); flap.rotation.y = ang; flap.rotation.x = -0.6; scene.add(flap);
   }
-  addBox(cx - 0.72, H + 0.12, cz, 0.06, 0.8, 0.06, 0x9a9a9a, { noCollide: true });   // wire handle (two posts + a top bar)
-  addBox(cx + 0.72, H + 0.12, cz, 0.06, 0.8, 0.06, 0x9a9a9a, { noCollide: true });
-  addBox(cx, H + 0.82, cz, 1.55, 0.06, 0.06, 0x9a9a9a, { noCollide: true });
-  const logoTex = pandaLogoTexture();                           // panda + PANDA wordmark on both wide faces
-  [[cz - hz - 0.06, Math.PI], [cz + hz + 0.06, 0]].forEach(([pz, ry]) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({ map: logoTex, transparent: true })); m.position.set(cx, H * 0.52, pz); m.rotation.y = ry; scene.add(m);
-  });
-  const banner = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.0), new THREE.MeshBasicMaterial({ map: logoTex, transparent: true })); banner.position.set(cx + hx + 0.05, H - 0.5, cz); banner.rotation.y = Math.PI / 2; scene.add(banner);   // small banner over the doorway
+  addBox(cx - 0.62, H, cz, 0.05, 0.7, 0.05, 0x9a9a9a, { noCollide: true });  // wire handle (two posts + a top bar)
+  addBox(cx + 0.62, H, cz, 0.05, 0.7, 0.05, 0x9a9a9a, { noCollide: true });
+  addBox(cx, H + 0.66, cz, 1.3, 0.05, 0.05, 0x9a9a9a, { noCollide: true });
+  [cz - hz - 0.02, cz + hz + 0.02].forEach(pz => { for (let k = 0; k < 3; k++) { const w2 = 1.7 - k * 0.42; const m = new THREE.Mesh(new THREE.BoxGeometry(w2, 0.13, 0.04), new THREE.MeshBasicMaterial({ color: 0xcc2222 })); m.position.set(cx, H * 0.5 + k * 0.5, pz); scene.add(m); } });   // red pagoda motif
   noodleBox = { cx, cz, minX: cx - hx, maxX: cx + hx, minZ: cz - hz, maxZ: cz + hz, H };
 })();
 function inNoodleBox() {
@@ -3101,7 +3080,7 @@ function crouchKey() {
   if (!player.alive || player.diving) return;
   const spd = Math.hypot(player.vel.x, player.vel.z);
   const runNow = MOVE.groundSpeed * Math.max(0.4, ggSpeedMult()) * (minigunSteady ? 0 : 1);   // weapon's max WALK/RUN speed (minigun steady stance roots you)
-  if (player.onGround && player.diveRecover <= 0 && spd >= MOVE.diveTrigger * runNow && !(WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun)) startDive();   // minigun is too heavy to dive — just crouches
+  if (player.onGround && player.diveRecover <= 0 && spd >= MOVE.diveTrigger * runNow) startDive();
 }
 function startDive() {
   cigCancel();                                     // diving cancels a cigar in progress
@@ -3258,7 +3237,7 @@ function updateMovement(dt) {
   if (wantJump && !player.jumpHeld && !player.crouching && !player.diving) {   // jump disabled while crouched / diving
     // Lightsaber "force jump": ~2.5x height + 4s fall-damage immunity (stacks with pads/impulse/dive).
     const saberJump = (currentWeaponKey === 'saber');
-    const jv = (saberJump ? MOVE.jumpVel * 2.5 : MOVE.jumpVel) * ((WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun) ? 0.8 : 1);   // minigun's weight cuts jump height 20%
+    const jv = saberJump ? MOVE.jumpVel * 2.5 : MOVE.jumpVel;
     let jumped = false;
     if (player.onGround) { player.vel.y = jv; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; jumped = true; }
     else if (player.jumps < 2) { player.vel.y = jv; player.jumps++; jumpedThisFrame = true; jumped = true; }
@@ -7075,50 +7054,29 @@ function clearKongs() {
    chips 80 HP/slash off an enemy Kong. Modeled on the Kirks Avengers attack-dog system.
    ============================================================================ */
 const MCK = { hp: 200, walk: 11 * 1.4, sprint: 11 * 1.7, sprintRange: 15, follow: 11, accel: 28,
-              slashRange: 2.5, slashCd: 0.8, kongDmg: 80, deathFade: 1.2, scale: 1.0 };   // 100% = normal player height
+              slashRange: 2.5, slashCd: 0.8, kongDmg: 80, deathFade: 1.2, scale: 0.8 };
 const mckaylas = [];
 let mckIdSeq = 1, mckNetAcc = 0, mckaylaSummonedThisLife = false;
 
 function buildMckaylaMesh() {
   const g = new THREE.Group();
   const skinM = new THREE.MeshLambertMaterial({ color: 0xe8c6a4, flatShading: true });
-  const kimono = new THREE.MeshLambertMaterial({ color: 0xf5b8c8, flatShading: true });   // soft cherry-blossom pink kimono
-  const hairM = new THREE.MeshLambertMaterial({ color: 0x14161e, flatShading: true });     // jet blue-black hair
-  const obi = new THREE.MeshLambertMaterial({ color: 0xc8a83a, flatShading: true });        // gold obi sash
-  const legg = new THREE.MeshLambertMaterial({ color: 0x2a2a30, flatShading: true });       // charcoal leggings
-  const shoe = new THREE.MeshLambertMaterial({ color: 0x101014, flatShading: true });       // black tabi
+  const kimono = new THREE.MeshLambertMaterial({ color: 0x7a1f2b, flatShading: true });   // dark red short kimono
+  const dark = new THREE.MeshLambertMaterial({ color: 0x16161b, flatShading: true });      // black hair / leggings / sash
   const steel = new THREE.MeshLambertMaterial({ color: 0xccd4de, flatShading: true });
-  const lash = new THREE.MeshBasicMaterial({ color: 0x0c0c10 });
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2fff6a });
   const box = (w, h, d, x, y, z, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
-  // --- body: charcoal leggings + tabi, knee-length pink kimono + gold obi, wide elbow-length sleeves ---
-  box(0.46, 0.58, 0.46, 0, 0.42, 0, legg);                    // legs (leggings)
-  box(0.26, 0.16, 0.36, -0.13, 0.08, 0.05, shoe); box(0.26, 0.16, 0.36, 0.13, 0.08, 0.05, shoe);   // tabi shoes
-  box(0.66, 0.46, 0.5, 0, 0.78, 0, kimono);                   // knee-length kimono skirt
-  box(0.7, 0.56, 0.45, 0, 1.14, 0, kimono);                   // torso
-  box(0.74, 0.14, 0.48, 0, 0.92, 0, obi);                     // obi sash (gold)
-  const armL = box(0.16, 0.5, 0.16, -0.42, 1.12, 0, skinM);
-  const armR = box(0.16, 0.5, 0.16, 0.42, 1.12, 0, skinM);    // sword arm
-  box(0.25, 0.34, 0.25, -0.42, 1.24, 0, kimono); box(0.25, 0.34, 0.25, 0.42, 1.24, 0, kimono);     // wide elbow-length sleeves
-  [[-0.16, 1.22, 0.235, 0xe06a98], [0.14, 1.06, 0.235, 0xfff2f7], [0.0, 0.86, 0.265, 0xe06a98], [-0.12, 0.72, 0.265, 0xfff2f7], [0.2, 1.26, 0.235, 0xfff2f7], [-0.2, 0.96, 0.235, 0xe06a98]]
-    .forEach(([x, y, z, c]) => box(0.09, 0.09, 0.03, x, y, z, new THREE.MeshLambertMaterial({ color: c, flatShading: true })));   // cherry-blossom floral dots
-  // --- head + full black hairstyle (crown + bangs + side frame + long flowing back) ---
-  box(0.42, 0.42, 0.42, 0, 1.62, 0, skinM);                   // head
-  box(0.5, 0.28, 0.52, 0, 1.84, -0.02, hairM);                // crown / top of hair
-  box(0.5, 0.5, 0.2, 0, 1.6, -0.27, hairM);                   // back of head
-  box(0.1, 0.42, 0.42, -0.25, 1.56, 0.0, hairM); box(0.1, 0.42, 0.42, 0.25, 1.56, 0.0, hairM);     // side hair framing the face
-  box(0.46, 0.13, 0.1, 0, 1.79, 0.21, hairM);                 // front bangs / fringe
-  const hair = box(0.5, 1.05, 0.15, 0, 1.12, -0.35, hairM);   // long flowing hair down the back (animated)
-  // --- slanted almond green eyes + eyelashes + thin arched brows ---
-  box(0.14, 0.06, 0.04, -0.1, 1.64, 0.215, eyeMat).rotation.z = 0.2;
-  box(0.14, 0.06, 0.04, 0.1, 1.64, 0.215, eyeMat).rotation.z = -0.2;
-  box(0.16, 0.022, 0.04, -0.1, 1.675, 0.216, lash).rotation.z = 0.2;
-  box(0.16, 0.022, 0.04, 0.1, 1.675, 0.216, lash).rotation.z = -0.2;
-  box(0.15, 0.025, 0.04, -0.1, 1.73, 0.214, lash).rotation.z = 0.22;
-  box(0.15, 0.025, 0.04, 0.1, 1.73, 0.214, lash).rotation.z = -0.22;
-  // --- katana (scales up with her now-normal height) ---
-  const kat = new THREE.Group();
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.32), hairM); grip.position.z = 0.15; kat.add(grip);
+  box(0.5, 0.55, 0.5, 0, 0.5, 0, dark);            // legs / leggings
+  box(0.7, 0.62, 0.45, 0, 1.06, 0, kimono);         // torso
+  box(0.74, 0.12, 0.48, 0, 0.8, 0, dark);           // belt sash
+  const armL = box(0.16, 0.5, 0.16, -0.42, 1.12, 0, kimono);
+  const armR = box(0.16, 0.5, 0.16, 0.42, 1.12, 0, skinM);     // sword arm
+  box(0.42, 0.42, 0.42, 0, 1.62, 0, skinM);          // head
+  box(0.5, 0.46, 0.16, 0, 1.62, -0.27, dark);        // hair (back of head)
+  const hair = box(0.46, 0.95, 0.13, 0, 1.18, -0.33, dark);    // long flowing hair
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2fff6a });
+  box(0.09, 0.09, 0.04, -0.1, 1.66, 0.22, eyeMat); box(0.09, 0.09, 0.04, 0.1, 1.66, 0.22, eyeMat);   // bright green eyes
+  const kat = new THREE.Group();                     // katana — handle + guard + steel blade + glowing blue edge
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.32), dark); grip.position.z = 0.15; kat.add(grip);
   kat.add(new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.17, 0.04), new THREE.MeshLambertMaterial({ color: 0x2a2a30, flatShading: true })));
   const blade = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.075, 1.1), steel); blade.position.z = -0.62; kat.add(blade);
   const edge = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 1.04), new THREE.MeshBasicMaterial({ color: 0xbfe6ff })); edge.position.set(0, 0.04, -0.62); kat.add(edge);
@@ -7126,7 +7084,7 @@ function buildMckaylaMesh() {
   const trail = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.85), new THREE.MeshBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
   trail.position.set(0.45, 1.05, -0.35); g.add(trail); g.userData.trail = trail;
   g.userData.armR = armR; g.userData.armL = armL; g.userData.hair = hair;
-  g.scale.setScalar(MCK.scale);   // 100% — normal player height
+  g.scale.setScalar(MCK.scale);   // ~80% height — she's little
   return g;
 }
 function drawMckTag(mck) {

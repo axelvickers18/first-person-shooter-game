@@ -149,10 +149,6 @@
   #streakBar { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 188px; display: none; z-index: 11; font-family: 'Segoe UI', system-ui, sans-serif; }
   #streakCount { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #ffe600; text-shadow: 0 2px 3px #000; margin-bottom: 8px; }
   #dogCount { font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #ff8a7a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
-  #kongHud { font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #ffcf5a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
-  #kongHud span { color: #fff; }
-  #kongMsg { position: absolute; left: 50%; top: 30%; transform: translate(-50%,-50%); z-index: 15; display: none; opacity: 0; transition: opacity .35s;
-    font: 800 30px 'Segoe UI', sans-serif; color: #ffcf5a; letter-spacing: 2px; text-shadow: 0 2px 8px #000, 0 0 18px rgba(255,180,40,0.55); pointer-events: none; }
   #dogCount span { color: #fff; }
   .streakTier { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.42); border: 2px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 6px 8px; margin-bottom: 8px; transition: border-color .2s, opacity .2s, box-shadow .2s; }
   .streakTier .stIcon { font-size: 20px; line-height: 1; filter: grayscale(0.7) brightness(0.7); transition: filter .2s; flex: 0 0 auto; }
@@ -498,10 +494,8 @@
       <div class="stBody"><div class="stLabel">10 · 20 KIRKS AVENGERS</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 10</div></div>
     </div>
     <div id="dogCount">🐕 KIRKS AVENGERS: <span id="dogNum">0</span>/20</div>
-    <div id="kongHud">🦍 KONG: <span id="kongHpNum">1000</span>/1000</div>
   </div>
   <div id="streakLost">STREAK LOST</div>
-  <div id="kongMsg">KING KONG SUMMONED</div>
 
   <div id="ammoWrap">
     <div id="ggLevel"></div>
@@ -1445,25 +1439,6 @@ function sfxDogPant(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur
 // Bite (lunge snap + chomp) and death (whimper) stay on their own one-shot types.
 function sfxDogBite(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.06, peak: 0.34, filter: 'bandpass', freq: 1500, freq1: 600, q: 0.7 }); aTone(ctx, out, t, { type: 'square', f0: 210, f1: 90, dur: 0.07, peak: 0.24 }); }, pos, 'voice', 'bite', 0.8, 0.1); }
 function sfxDogDeath(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 720, f1: 240, dur: 0.42, peak: 0.28 }), pos, 'voice', 'yelp', 0.85, 0.44); }
-
-/* --- KING KONG (secret boss-tier ally) --- */
-// Summon + death roars are NON-positional (play2d) — a major event everyone hears equally.
-function sfxKongSummon() { SND.play2d((ctx, out, t) => {
-  for (let i = 0; i < 5; i++) aTone(ctx, out, t + i * 0.17, { type: 'sine', f0: 92, f1: 58, dur: 0.16, peak: 0.45 });   // jungle drums
-  aTone(ctx, out, t + 0.3, { type: 'sawtooth', f0: 210, f1: 70, dur: 0.95, peak: 0.42 });                              // roar
-  aTone(ctx, out, t + 0.3, { type: 'sine', f0: 90, f1: 55, dur: 0.95, peak: 0.3 });
-  aNoise(ctx, out, t + 0.3, { dur: 0.95, peak: 0.3, filter: 'lowpass', freq: 800, freq1: 300 });
-}, 'voice', 'kongsum', 1.0, 1.4); }
-function sfxKongRoar() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 230, f1: 52, dur: 1.5, peak: 0.45 }); aTone(ctx, out, t, { type: 'sine', f0: 72, f1: 42, dur: 1.5, peak: 0.32 }); aNoise(ctx, out, t, { dur: 1.5, peak: 0.3, filter: 'lowpass', freq: 700, freq1: 200 }); }, 'voice', 'kongroar', 1.0, 1.6); }
-function sfxKongGrunt(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 145, f1: 88, dur: 0.22, peak: 0.3 }); aNoise(ctx, out, t, { dur: 0.18, peak: 0.12, filter: 'lowpass', freq: 500 }); }, pos, 'voice', 'konggr', 0.7, 0.24); }
-function sfxKongThump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 120, f1: 68, dur: 0.12, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.1, peak: 0.16, filter: 'lowpass', freq: 300 }); }, pos, 'voice', 'kongth', 0.8, 0.13); }
-function sfxKongStep(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 80, f1: 45, dur: 0.16, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.12, peak: 0.18, filter: 'lowpass', freq: 250 }); }, pos, 'footsteps', 'kongstep', 0.9, 0.17); }
-function sfxKongFire(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 130, f1: 50, dur: 0.28, peak: 0.55, atk: 0.004 }); aTone(ctx, out, t, { type: 'sine', f0: 70, f1: 40, dur: 0.35, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.18, peak: 0.3, filter: 'lowpass', freq: 900, freq1: 300 }); }, pos, 'weapons', 'kongfire', 1.0, 0.34); }
-function sfxBananaFly(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.14, peak: 0.12, filter: 'bandpass', freq: 500, freq1: 900, q: 0.6 }), pos, 'weapons', 'banfly', 0.5, 0.14); }
-function sfxBananaSplat(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.2, peak: 0.3, filter: 'lowpass', freq: 1200, freq1: 400 }); aTone(ctx, out, t, { type: 'sine', f0: 200, f1: 90, dur: 0.12, peak: 0.2 }); }, pos, 'weapons', 'bansplat', 0.7, 0.2); }
-function sfxBananaHit(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.16, peak: 0.34, filter: 'lowpass', freq: 800 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 160, f1: 68, dur: 0.18, peak: 0.3 }); aTone(ctx, out, t + 0.05, { type: 'sawtooth', f0: 150, f1: 100, dur: 0.14, peak: 0.16 }); }, pos, 'weapons', 'banhit', 0.85, 0.2); }
-function sfxKongMelee(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.22, peak: 0.32, filter: 'bandpass', freq: 300, freq1: 1200, q: 0.5 }); aTone(ctx, out, t + 0.12, { type: 'sine', f0: 110, f1: 55, dur: 0.16, peak: 0.35 }); }, pos, 'weapons', 'kongmel', 0.85, 0.3); }
-function sfxKongHurt(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 185, f1: 110, dur: 0.16, peak: 0.26 }), pos, 'voice', 'konghurt', 0.6, 0.17); }
 // Force jump "whoom": a low rising swoosh on a saber leap.
 function sfxForceJump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 170, f1: 440, dur: 0.32, peak: 0.3, atk: 0.02 }); aNoise(ctx, out, t, { dur: 0.32, peak: 0.18, filter: 'lowpass', freq: 600, freq1: 1700 }); }, pos, 'weapons', 'forcejmp', 0.85, 0.34); }
 // Sharp electric ricochet "zing" when the saber blade deflects a bullet.
@@ -2239,8 +2214,6 @@ document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (!gameState.running) return;
   if (invOpen) { if (e.code === 'KeyI' && !e.repeat) toggleInventory(); return; }   // inventory open: only I closes it (ESC handled separately)
-  // SECRET: "=" summons King Kong (boss-tier ally). Ignored while a text input is focused.
-  if (e.code === 'Equal' && !e.repeat) { const ae = document.activeElement; if (!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable))) requestSummonKong(); return; }
   if (rcActive) return;   // piloting a missile: keys stay tracked (boost/brake) but no body actions fire
   // C: HOLD to crouch (released => stand; handled each frame in updateMovement). A press
   // while sprinting still triggers a DIVE.
@@ -3595,7 +3568,6 @@ function tryShoot(akSide) {
   // Raycast against bots' part-meshes, remote-player avatars, ENEMY dogs, AND world colliders.
   const targets = colliders.concat(botMeshes());
   dogMeshes(dogSelfId()).forEach(m => targets.push(m));   // shootable ENEMY dogs (never your own)
-  kongMeshes(dogSelfId()).forEach(m => targets.push(m));  // shootable ENEMY King Kongs (never your own ally)
   if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
   // Other players' in-flight RC missiles can be shot down (any direct bullet hit detonates them).
   rcRemote.forEach(o => o.grp.children.forEach(c => { if (c.isMesh) targets.push(c); }));
@@ -3646,12 +3618,6 @@ function tryShoot(akSide) {
         hitSomething = true; spawnBlood(hit.point, 8);
         if (NET.isClient) NET.route(NET.hostId, { t: 'doghit', dogId: ud.dog.id, dmg: w.damage });
         else damageDog(ud.dog, w.damage);
-      }
-      else if (ud.kong && ud.kong.alive && !ud.kong.dying) {
-        // Shot an enemy's King Kong — host applies the damage (clients route it, crediting the shooter).
-        hitSomething = true; spawnBlood(hit.point, 10);
-        if (NET.isClient) NET.route(NET.hostId, { t: 'konghit', kongId: ud.kong.id, dmg: w.damage, fromId: NET.selfId });
-        else damageKong(ud.kong, w.damage, dogSelfId());
       }
       else if (ud.rcRemoteOwner) {
         // Shot down someone's RC missile: pop a flash here + tell the owner to detonate it.
@@ -4576,18 +4542,11 @@ function applyBlast(center, radius, maxDmg, weaponTag, opts) {
       }
     }
   }
-  // Explosions are indiscriminate — they hurt attack dogs (and King Kong) in range too (host/solo).
-  if (!NET.active || NET.isHost) {
-    for (const dog of dogs) {
-      if (!dog.alive || dog.dying) continue;
-      const dd = new THREE.Vector3(dog.pos.x, dog.pos.y + 0.5, dog.pos.z).distanceTo(center);
-      if (dd < radius) damageDog(dog, maxDmg * (1 - dd / radius));
-    }
-    for (const k of kongs) {
-      if (!k.alive || k.dying) continue;
-      const kd = new THREE.Vector3(k.pos.x, k.pos.y + 3, k.pos.z).distanceTo(center);
-      if (kd < radius) damageKong(k, maxDmg * (1 - kd / radius), null);
-    }
+  // Explosions are indiscriminate — they hurt attack dogs in range too (host/solo applies).
+  if (!NET.active || NET.isHost) for (const dog of dogs) {
+    if (!dog.alive || dog.dying) continue;
+    const dd = new THREE.Vector3(dog.pos.x, dog.pos.y + 0.5, dog.pos.z).distanceTo(center);
+    if (dd < radius) damageDog(dog, maxDmg * (1 - dd / radius));
   }
   const pe = new THREE.Vector3(player.pos.x, player.pos.y + 1, player.pos.z);
   const pdist = pe.distanceTo(center);
@@ -4987,11 +4946,6 @@ function rcApplyDamage(center, directBot, directRemote) {
     let dmg = RC.blastDmg * (1 - d / RC.blastR); if (d < RC.killR) dmg = Math.max(dmg, 120);
     NET.damageRemote(rp, dmg, false, wkey, false);
   });
-  if (!NET.active || NET.isHost) for (const k of kongs) {   // RC rockets can hurt King Kong too
-    if (!k.alive || k.dying) continue;
-    const d = Math.hypot(k.pos.x - center.x, k.pos.y + 3 - center.y, k.pos.z - center.z);
-    if (d < RC.blastR) damageKong(k, Math.max(RC.blastDmg * (1 - d / RC.blastR), d < RC.killR ? 120 : 0), (NET.active ? NET.selfId : 'solo'));
-  }
   const pd = Math.hypot(player.pos.x - center.x, player.pos.y + 1 - center.y, player.pos.z - center.z);
   if (player.alive && pd < RC.blastR) hurtPlayer(RC.blastDmg * (1 - pd / RC.blastR));
   addShake(0.2 * Math.max(0, 1 - pd / (RC.blastR * 2)), 0.4);
@@ -5956,335 +5910,6 @@ function applyDogsSnapshot(list) {
 // Clear all dogs (match start / reset).
 function clearDogs() { for (const d of dogs) removeDog(d); dogs.length = 0; dogSpawnQueue = []; dogUpdateHUD(); }
 
-/* ============================================================================
-   KING KONG — secret boss-tier ally (press "="). One per summoner, host-authoritative AI
-   (mirrors the dogs: broadcast snapshots, clients render). Wields a banana gun that fires
-   giant tumbling banana projectiles; melees up close. 1000 HP; despawns on death / summoner
-   death / match end. Friendly to the summoner + their Kirks Avengers dogs.
-   ============================================================================ */
-const KONG = { hp: 1000, speed: 11 * 1.4, accel: 24, fireRange: 40, fireCd: 2.0, bananaSpeed: 35, bananaDmg: 75,
-               meleeRange: 3.2, meleeDmg: 60, meleeCd: 1.5, deathHold: 3.0, riseTime: 1.2, footShakeR: 15 };
-const kongs = [];          // active King Kongs (one per owner) — host/solo simulate, clients render
-let kongIdSeq = 1, kongNetAcc = 0;
-const bananas = [];        // giant banana projectiles (host-owned do damage; client copies render only)
-const bananaSplats = [];   // cosmetic goo decals (fade over 5s)
-
-// ---- Meshes (flat-shaded, low-poly) ----
-function buildBananaGun() {
-  const g = new THREE.Group();
-  const yellow = new THREE.MeshLambertMaterial({ color: 0xf4d11a, flatShading: true });
-  const spot = new THREE.MeshLambertMaterial({ color: 0x6e5212, flatShading: true });
-  const seg = (z, rz, len, r) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), yellow); m.rotation.x = Math.PI / 2; m.rotation.z = rz; m.position.z = z; g.add(m); };
-  seg(-0.1, 0, 0.5, 0.16); seg(0.34, 0.4, 0.45, 0.14); seg(0.7, 0.8, 0.4, 0.11);   // curved banana barrel
-  for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.05), spot); s.position.set((Math.random() - 0.5) * 0.22, 0.1, -0.2 + i * 0.22); g.add(s); }
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 0.18, 6), spot); stem.rotation.x = Math.PI / 2; stem.position.z = -0.42; g.add(stem);   // grip = stem end
-  const mz = new THREE.Object3D(); mz.position.set(0.18, 0.18, 0.92); g.add(mz);
-  const flash = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.55, 8), new THREE.MeshBasicMaterial({ color: 0xfff0a0, transparent: true, opacity: 0.95 })); flash.rotation.x = -Math.PI / 2; flash.position.copy(mz.position); flash.visible = false; g.add(flash);
-  g.userData = { muzzle: mz, flash };
-  return g;
-}
-function buildBananaMesh() {
-  const g = new THREE.Group();
-  const yellow = new THREE.MeshLambertMaterial({ color: 0xf6d521, flatShading: true });
-  const spot = new THREE.MeshLambertMaterial({ color: 0x5e4710, flatShading: true });
-  const seg = (x, ry, len) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, len, 8), yellow); m.rotation.z = Math.PI / 2; m.rotation.y = ry; m.position.x = x; g.add(m); };
-  seg(-0.34, -0.5, 0.42); seg(0, 0, 0.5); seg(0.34, 0.5, 0.42);   // curved banana (~1u long)
-  [-0.5, 0.5].forEach(x => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.1, 0.14, 6), spot); t.rotation.z = Math.PI / 2 + (x < 0 ? 0.7 : -0.7); t.position.set(x, -0.05, 0); g.add(t); });   // dark tips
-  for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.05), spot); s.position.set(-0.4 + i * 0.16, 0.1, (Math.random() - 0.5) * 0.1); g.add(s); }
-  return g;
-}
-function buildKongModel() {
-  const root = new THREE.Group();
-  const fur = new THREE.MeshLambertMaterial({ color: 0x3a342e, flatShading: true });
-  const furLt = new THREE.MeshLambertMaterial({ color: 0x8a8278, flatShading: true });
-  const dark = new THREE.MeshLambertMaterial({ color: 0x1c1814, flatShading: true });
-  const eye = new THREE.MeshBasicMaterial({ color: 0xffd24a });
-  const white = new THREE.MeshLambertMaterial({ color: 0xe8e2d2, flatShading: true });
-  const box = (par, mat, x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); par.add(m); return m; };
-  box(root, fur, -0.7, 0.9, 0, 0.8, 1.8, 0.9); box(root, fur, 0.7, 0.9, 0, 0.8, 1.8, 0.9);     // legs
-  box(root, dark, -0.7, 0.1, 0.35, 0.85, 0.3, 0.5); box(root, dark, 0.7, 0.1, 0.35, 0.85, 0.3, 0.5);   // feet
-  const upper = new THREE.Group(); upper.position.set(0, 1.8, 0); root.add(upper);
-  box(upper, fur, 0, 1.1, 0, 2.0, 2.4, 1.4);                 // torso
-  box(upper, furLt, 0, 1.1, 0.72, 1.2, 1.8, 0.1);            // silverback chest patch (+Z front)
-  const head = new THREE.Group(); head.position.set(0, 2.55, 0.2); upper.add(head);
-  box(head, fur, 0, 0, 0, 1.1, 1.0, 1.0); box(head, fur, 0, 0.55, -0.1, 1.3, 0.4, 1.1);   // skull + brow
-  const jaw = box(head, fur, 0, -0.5, 0.2, 0.95, 0.4, 0.7); box(jaw, white, 0, 0.18, 0.28, 0.7, 0.12, 0.06);   // jaw + teeth
-  box(head, eye, -0.26, 0.12, 0.5, 0.14, 0.12, 0.06); box(head, eye, 0.26, 0.12, 0.5, 0.14, 0.12, 0.06);       // eyes
-  const armL = new THREE.Group(); armL.position.set(-1.15, 2.0, 0); upper.add(armL);
-  box(armL, fur, 0, -1.1, 0, 0.7, 2.4, 0.7); box(armL, dark, 0, -2.2, 0.1, 0.8, 0.5, 0.8);
-  const armR = new THREE.Group(); armR.position.set(1.15, 2.0, 0); upper.add(armR);
-  box(armR, fur, 0, -1.1, 0, 0.7, 2.4, 0.7); box(armR, dark, 0, -2.2, 0.1, 0.8, 0.5, 0.8);
-  const gun = buildBananaGun(); gun.scale.setScalar(1.6); gun.position.set(0, -2.2, 0.4); gun.rotation.x = 0.2; armR.add(gun);
-  root.userData = { upper, head, jaw, armL, armR, gun, gunFlash: gun.userData.flash, gunMuzzle: gun.userData.muzzle };
-  return root;   // ~6.4 units tall (~3.4 player-heights)
-}
-
-// ---- HUD / notify ----
-function kongDrawHp(kong) {
-  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const c = cv.getContext('2d');
-  c.font = 'bold 26px Trebuchet MS, Arial'; c.textAlign = 'center'; c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,0.85)'; c.fillStyle = '#ffcf5a';
-  c.strokeText('🦍 KING KONG', 128, 28); c.fillText('🦍 KING KONG', 128, 28);
-  const hp = Math.max(0, Math.min(1, kong.health / KONG.hp));
-  c.fillStyle = 'rgba(0,0,0,0.6)'; c.fillRect(40, 40, 176, 16);
-  c.fillStyle = hp > 0.5 ? '#34d058' : hp > 0.25 ? '#f0b429' : '#e0392b'; c.fillRect(42, 42, 172 * hp, 12);
-  const tex = new THREE.CanvasTexture(cv);
-  if (kong.hpSprite) { if (kong.hpSprite.material.map) kong.hpSprite.material.map.dispose(); kong.hpSprite.material.map = tex; kong.hpSprite.material.needsUpdate = true; }
-}
-function kongUpdateHUD() {
-  const myId = dogSelfId(), mine = kongs.find(k => k.ownerId === myId && k.alive && !k.dying), wrap = el('kongHud');
-  if (wrap) { if (mine) { wrap.style.display = 'block'; el('kongHpNum').textContent = Math.max(0, Math.ceil(mine.health)); } else wrap.style.display = 'none'; }
-}
-let _kongMsgT = null;
-function showKongMsg(text) {
-  const e = el('kongMsg'); if (!e) return;
-  e.textContent = text; e.style.display = 'block'; requestAnimationFrame(() => e.style.opacity = '1');
-  clearTimeout(_kongMsgT); _kongMsgT = setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.style.display = 'none', 400); }, 1800);
-}
-// Dramatic rise FX + audio, played once per Kong on every machine (it's a major event).
-function kongSummonFX(pos) {
-  addShake(0.6, 1.0);
-  spawnExplosionFX(pos.clone().setY(pos.y + 0.5), 4, 0xbfae8a);
-  for (let i = 0; i < 8; i++) spawnSmokePuff(pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 4, Math.random() * 1.5, (Math.random() - 0.5) * 4)), 0xb0a280, 0.5, 1.0);
-  sfxKongSummon();
-}
-function attachKongMesh(kong) {
-  kong.group = buildKongModel();
-  kong.group.position.copy(kong.pos); kong.group.rotation.y = kong.yaw;
-  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ depthTest: false, transparent: true })); spr.scale.set(3.4, 0.85, 1); spr.position.set(0, 7.4, 0); kong.group.add(spr); kong.hpSprite = spr;
-  scene.add(kong.group);
-  kongDrawHp(kong); kongSummonFX(kong.pos);
-}
-function removeKong(kong) { if (kong.group) { scene.remove(kong.group); disposeGroup(kong.group); kong.group = null; } }
-
-// ---- Summon ----
-function requestSummonKong() {
-  if (!gameState.running || !player.alive) return;
-  const ownerId = dogSelfId();
-  if (kongs.some(k => k.ownerId === ownerId && k.alive)) return;   // one Kong at a time
-  showKongMsg('KING KONG SUMMONED');
-  if (!NET.active || NET.isHost) summonKong(ownerId);
-  else NET.route(NET.hostId, { t: 'kongsummon', ownerId });
-}
-function summonKong(ownerId) {   // host/solo authoritative spawn
-  if (kongs.some(k => k.ownerId === ownerId && k.alive)) return;
-  const op = dogOwnerPos(ownerId);
-  let fdx, fdz;
-  if (ownerId === dogSelfId()) { const f = horizontalForward(); fdx = f.x; fdz = f.z; }
-  else { const rp = NET.players.get(ownerId), yw = rp ? rp.yaw : 0; fdx = -Math.sin(yw); fdz = -Math.cos(yw); }
-  const fx = op.x + fdx * 5, fz = op.z + fdz * 5;
-  const kong = { id: kongIdSeq++, ownerId, pos: new THREE.Vector3(fx, groundHeightAt(fx, fz, 2), fz), vel: new THREE.Vector3(),
-                 yaw: Math.atan2(fdx, fdz), health: KONG.hp, alive: true, dying: false, deathT: 0, riseT: KONG.riseTime,
-                 target: null, fireCd: 1.2, meleeCd: 0, state: 'idle', bipedal: 1, animPhase: Math.random() * 6,
-                 stepT: 0, gruntT: 2 + Math.random() * 3, flashT: 0, flinchT: 0, meleeSwingT: 0, lastAttacker: null };
-  attachKongMesh(kong); kongs.push(kong);
-}
-
-// ---- AI (host/solo) ----
-function kongHasLOS(kong, tgt) {
-  const from = new THREE.Vector3(kong.pos.x, kong.pos.y + 4, kong.pos.z);
-  const to = new THREE.Vector3(tgt.pos.x, tgt.pos.y + 1, tgt.pos.z);
-  const dir = to.clone().sub(from); const dist = dir.length(); dir.normalize();
-  const ray = new THREE.Raycaster(from, dir, 0, dist - 1.0);
-  return ray.intersectObjects(colliders, false).length === 0;
-}
-function kongAI(kong, dt) {
-  if (kong.riseT > 0) { kong.riseT -= dt; kong.state = 'idle'; kong.group.position.copy(kong.pos); kong.group.rotation.y = kong.yaw; return; }
-  const enemies = dogTargets(kong.ownerId);
-  let tgt = null, td = Infinity;
-  for (const e of enemies) { const d = kong.pos.distanceTo(e.pos); if (d < td) { td = d; tgt = e; } }
-  kong.target = tgt;
-  let desired = new THREE.Vector3(), speed = 0, faceP = null;
-  kong.meleeCd -= dt; kong.fireCd -= dt;
-  if (tgt) {
-    faceP = tgt.pos;
-    if (td <= KONG.meleeRange) {
-      kong.state = 'melee';
-      if (kong.meleeCd <= 0) { kongMelee(kong, tgt); kong.meleeCd = KONG.meleeCd; }
-      desired.subVectors(kong.pos, tgt.pos).setY(0); if (desired.lengthSq() > 0) desired.normalize(); speed = KONG.speed * 0.4;   // back off to re-gun
-    } else if (td <= KONG.fireRange && kongHasLOS(kong, tgt)) {
-      kong.state = 'attack';
-      if (kong.fireCd <= 0) { kongFireBanana(kong, tgt); kong.fireCd = KONG.fireCd; }
-    } else {
-      kong.state = 'walk'; desired.subVectors(tgt.pos, kong.pos).setY(0).normalize(); speed = KONG.speed;
-    }
-  } else {
-    const op = dogOwnerPos(kong.ownerId), d = kong.pos.distanceTo(op);
-    if (d > 8) { kong.state = 'walk'; desired.subVectors(op, kong.pos).setY(0).normalize(); speed = KONG.speed * 0.8; faceP = op; }
-    else kong.state = 'idle';
-  }
-  const wantBiped = kong.state === 'walk' ? 0 : 1;   // upright to attack/idle, leaned to knuckle-walk
-  kong.bipedal += (wantBiped - kong.bipedal) * Math.min(1, dt * 6);
-  const maxDelta = KONG.accel * dt, lim = ARENA - 3;
-  kong.vel.x = approach(kong.vel.x, desired.x * speed, maxDelta);
-  kong.vel.z = approach(kong.vel.z, desired.z * speed, maxDelta);
-  kong.pos.x = Math.max(-lim, Math.min(lim, kong.pos.x + kong.vel.x * dt));
-  kong.pos.z = Math.max(-lim, Math.min(lim, kong.pos.z + kong.vel.z * dt));
-  resolveHorizontal(kong.pos, 3.0);                       // too big to pass through buildings (clumsy giant)
-  kong.pos.y = groundHeightAt(kong.pos.x, kong.pos.z, kong.pos.y + 0.6);
-  let ty = kong.yaw;
-  if (faceP) ty = Math.atan2(faceP.x - kong.pos.x, faceP.z - kong.pos.z);
-  else if (Math.hypot(kong.vel.x, kong.vel.z) > 0.3) ty = Math.atan2(kong.vel.x, kong.vel.z);
-  let dy = ty - kong.yaw; while (dy > Math.PI) dy -= 6.283; while (dy < -Math.PI) dy += 6.283;
-  kong.yaw += dy * Math.min(1, dt * 4);   // heavy, slow turning
-  kong.group.position.copy(kong.pos); kong.group.rotation.y = kong.yaw;
-}
-function kongFireBanana(kong, tgt) {
-  kong.flashT = 0.1;
-  const muzzle = kong.group.userData.gunMuzzle.getWorldPosition(new THREE.Vector3());
-  const aim = new THREE.Vector3(tgt.pos.x, tgt.pos.y + 1.0, tgt.pos.z);
-  const tv = tgt.ref && tgt.ref.vel ? tgt.ref.vel : null;
-  if (tv) { const tHit = muzzle.distanceTo(aim) / KONG.bananaSpeed; aim.addScaledVector(tv, tHit * 0.8); }   // basic lead
-  const dir = aim.sub(muzzle).normalize(); dir.y += 0.06;   // counter the gravity arc a touch
-  const vel = dir.normalize().multiplyScalar(KONG.bananaSpeed);
-  spawnBanana(muzzle, vel, kong.ownerId, true);
-  sfxKongFire(muzzle);
-  if (NET.active) NET.broadcast({ t: 'banana', x: muzzle.x, y: muzzle.y, z: muzzle.z, vx: vel.x, vy: vel.y, vz: vel.z, o: kong.ownerId });
-}
-function kongMelee(kong, tgt) {
-  kong.meleeSwingT = 0.3; sfxKongMelee(kong.pos);
-  if (tgt.kind === 'bot') { if (NET.isHost) NET.botCredit = null; damageBot(tgt.ref, KONG.meleeDmg, new THREE.Vector3(0, 0, 1), null, { weapon: 'kongmelee' }); }
-  else if (tgt.kind === 'self') { player.lastAttacker = 'kong'; player.lastAttackerName = 'King Kong'; player.lastAttackerWeapon = 'kongmelee'; player.lastAttackerMelee = false; hurtPlayer(KONG.meleeDmg); }
-  else if (tgt.kind === 'remote') { NET.route(tgt.ref.id, { t: 'youhit', dmg: KONG.meleeDmg, head: false, fromId: 'kong', fromName: 'King Kong', weapon: 'kongmelee' }); }
-}
-// Host/solo: damage King Kong; on lethal damage start the death + notifications + killer reward.
-function damageKong(kong, dmg, attackerId) {
-  if (!kong || !kong.alive || kong.dying) return;
-  kong.health -= dmg; kong.flinchT = 0.18; if (attackerId) kong.lastAttacker = attackerId;
-  sfxKongHurt(kong.pos); kongDrawHp(kong); kongUpdateHUD();
-  if (kong.health <= 0) {
-    kong.health = 0; kong.alive = false; kong.dying = true; kong.deathT = KONG.deathHold;
-    sfxKongRoar(); addShake(0.5, 0.8);
-    const owner = kong.ownerId, killer = kong.lastAttacker;
-    if (owner === dogSelfId()) showKongMsg('KING KONG HAS FALLEN'); else NET.route(owner, { t: 'kongmsg', m: 'KING KONG HAS FALLEN' });
-    if (killer) {
-      if (killer === dogSelfId()) { showKongMsg('KILLED KING KONG'); for (let i = 0; i < 5; i++) streakOnKill(); }   // killing Kong = 5 streak kills
-      else { NET.route(killer, { t: 'kongmsg', m: 'KILLED KING KONG' }); for (let i = 0; i < 5; i++) NET.route(killer, { t: 'kc' }); }
-    }
-  }
-}
-function despawnKong(ownerId) {
-  if (NET.active && !NET.isHost) return;   // only the simulator removes; clients follow snapshots
-  for (let i = kongs.length - 1; i >= 0; i--) if (kongs[i].ownerId === ownerId) { removeKong(kongs[i]); kongs.splice(i, 1); }
-  kongUpdateHUD();
-}
-// Kong's kills are attributed to "KING KONG" (no player progression credit).
-function kongKillFeed(victimName) {
-  const html = `<span class="gg-rc">🦍 KING KONG</span> ▸ ${victimName || 'someone'}`;
-  addKillFeed(html); if (NET.active && NET.isHost) NET.broadcast({ t: 'feed', html });
-}
-function kongDeathAnim(kong, dt) { if (kong.group) { kong.group.position.copy(kong.pos); kong.group.rotation.y = kong.yaw; } }
-function kongClientLerp(kong, dt) {
-  const t = Math.min(1, dt * 12);
-  kong.pos.lerp(kong.tpos, t); kong.yaw = lerpAngle(kong.yaw, kong.tyaw, t);
-  kong.group.position.copy(kong.pos); kong.group.rotation.y = kong.yaw;
-}
-function kongAnimate(kong, dt) {
-  if (!kong.group) return;
-  const ud = kong.group.userData;
-  let yOff = 0, sc = 1;
-  if (kong.riseT > 0) { const p = 1 - kong.riseT / KONG.riseTime; yOff = -(1 - smoothstep(p)) * 5; sc = 0.5 + 0.5 * smoothstep(p); }
-  kong.group.scale.setScalar(sc);
-  const lean = (1 - (kong.bipedal || 0)) * 0.6;
-  const moving = kong.state === 'walk';
-  kong.animPhase += dt * (moving ? 7 : 2);
-  const sw = Math.sin(kong.animPhase) * (moving ? 0.5 : 0.05);
-  if (ud.upper) ud.upper.rotation.x = lean + (kong.flinchT > 0 ? -0.18 : 0);
-  if (ud.armL) ud.armL.rotation.x = -0.3 + sw + lean * 0.5;
-  if (ud.armR) ud.armR.rotation.x = -0.3 - sw * 0.3 - (kong.bipedal || 0) * 0.9;   // raise the gun when bipedal
-  if (kong.meleeSwingT > 0) { kong.meleeSwingT -= dt; const s = Math.sin(Math.max(0, 1 - kong.meleeSwingT / 0.3) * Math.PI); if (ud.armL) ud.armL.rotation.x = -0.3 - s * 1.9; }
-  if (kong.flinchT > 0) kong.flinchT -= dt;
-  if (ud.gunFlash) { if (kong.flashT > 0) { kong.flashT -= dt; ud.gunFlash.visible = true; ud.gunFlash.scale.setScalar(0.8 + Math.random() * 0.5); } else ud.gunFlash.visible = false; }
-  if (moving) yOff += Math.abs(Math.sin(kong.animPhase)) * 0.12;   // heavy step bob
-  if (kong.dying) { kong.group.rotation.x += (1.45 - kong.group.rotation.x) * Math.min(1, dt * 5); yOff -= 0.3 * (1 - Math.max(0, kong.deathT) / KONG.deathHold); }
-  kong.group.position.y = kong.pos.y + yOff;
-  // Per-machine positional ambience + footstep screen shake for nearby players.
-  if (SND.lpos) {
-    const dist = Math.hypot(kong.pos.x - SND.lpos.x, kong.pos.z - SND.lpos.z);
-    if (!kong.dying && (kong.state === 'idle' || kong.state === 'attack')) { kong.gruntT -= dt; if (kong.gruntT <= 0) { kong.gruntT = 3 + Math.random() * 4; (Math.random() < 0.5 ? sfxKongGrunt : sfxKongThump)(kong.pos); } }
-    if (moving) { kong.stepT -= dt; if (kong.stepT <= 0) { kong.stepT = 0.42; sfxKongStep(kong.pos); if (dist < KONG.footShakeR) addShake(0.12 * (1 - dist / KONG.footShakeR), 0.18); } }
-  }
-}
-function updateKongs(dt) {
-  const sim = !NET.active || NET.isHost;
-  if (sim) {
-    for (let i = kongs.length - 1; i >= 0; i--) {
-      const k = kongs[i];
-      if (k.dying) { k.deathT -= dt; kongDeathAnim(k, dt); if (k.deathT <= 0) { removeKong(k); kongs.splice(i, 1); } continue; }
-      kongAI(k, dt);
-    }
-    if (NET.active) { kongNetAcc += dt; if (kongNetAcc >= 0.06) { kongNetAcc = 0; NET.broadcast({ t: 'kongs', list: kongs.map(k => ({ id: k.id, o: k.ownerId, x: k.pos.x, y: k.pos.y, z: k.pos.z, yaw: k.yaw, st: k.state, hp: k.health, bp: +(k.bipedal).toFixed(2), rise: Math.max(0, k.riseT), dy: !!k.dying, fl: k.flashT > 0 ? 1 : 0 })) }); } }
-  } else {
-    for (let i = kongs.length - 1; i >= 0; i--) { const k = kongs[i]; if (k._remove) { removeKong(k); kongs.splice(i, 1); continue; } kongClientLerp(k, dt); }
-  }
-  for (const k of kongs) kongAnimate(k, dt);
-  updateBananas(dt);
-  kongUpdateHUD();
-}
-function applyKongsSnapshot(list) {
-  const seen = {};
-  for (const e of list) {
-    seen[e.id] = true;
-    let k = kongs.find(x => x.id === e.id);
-    if (!k) { k = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, bipedal: e.bp || 0, riseT: e.rise || 0, animPhase: Math.random() * 6, stepT: 0, gruntT: 2, flashT: 0, flinchT: 0, meleeSwingT: 0 }; attachKongMesh(k); kongs.push(k); }
-    k.tpos.set(e.x, e.y, e.z); k.tyaw = e.yaw; k.state = e.st; k.dying = e.dy; k.bipedal = e.bp || 0; if (e.rise != null) k.riseT = e.rise;
-    if (e.fl) k.flashT = 0.1;
-    if (k.health !== e.hp) { k.health = e.hp; kongDrawHp(k); }
-  }
-  for (const k of kongs) if (!seen[k.id]) k._remove = true;
-  kongUpdateHUD();
-}
-// Kong body meshes NOT owned by `excludeId` — so players can shoot ENEMY Kongs (never their own ally).
-function kongMeshes(excludeId) {
-  const out = [];
-  for (const k of kongs) { if (!k.alive || k.dying || !k.group || k.ownerId === excludeId) continue; k.group.traverse(o => { if (o.isMesh) { o.userData.kong = k; out.push(o); } }); }
-  return out;
-}
-function clearKongs() {
-  for (const k of kongs) removeKong(k); kongs.length = 0;
-  for (const b of bananas) { scene.remove(b.mesh); disposeGroup(b.mesh); } bananas.length = 0;
-  for (const s of bananaSplats) { scene.remove(s.mesh); } bananaSplats.length = 0;
-  kongUpdateHUD();
-}
-
-// ---- Banana projectiles ----
-function spawnBanana(pos, vel, ownerId, owned) {
-  const mesh = buildBananaMesh(); mesh.position.copy(pos); scene.add(mesh);
-  bananas.push({ mesh, pos: pos.clone(), vel: vel.clone(), ownerId, owned: !!owned, life: 3.0, spin: Math.random() * 6, wobble: Math.random() * 6, sfxT: 0 });
-}
-function spawnBananaSplat(pos) {
-  const m = new THREE.Mesh(new THREE.CircleGeometry(0.6 + Math.random() * 0.5, 10), new THREE.MeshBasicMaterial({ color: 0xe8c81e, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
-  m.position.set(pos.x, Math.max(0.03, pos.y - 0.3), pos.z); m.rotation.x = -Math.PI / 2; scene.add(m);
-  bananaSplats.push({ mesh: m, life: 5.0 });
-}
-function updateBananas(dt) {
-  const lim = ARENA - 1;
-  for (let i = bananaSplats.length - 1; i >= 0; i--) { const s = bananaSplats[i]; s.life -= dt; if (s.life <= 0) { scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); bananaSplats.splice(i, 1); continue; } s.mesh.material.opacity = 0.85 * Math.min(1, s.life / 1.0); }
-  for (let i = bananas.length - 1; i >= 0; i--) {
-    const b = bananas[i]; b.life -= dt;
-    b.vel.y -= 9 * dt;                                     // mild gravity arc
-    b.pos.addScaledVector(b.vel, dt);
-    b.spin += dt * 7; b.wobble += dt * 3;
-    b.mesh.position.copy(b.pos);
-    b.mesh.rotation.set(Math.sin(b.wobble) * 0.3, Math.atan2(b.vel.x, b.vel.z), b.spin);   // tumble + spin
-    b.sfxT -= dt; if (b.sfxT <= 0) { b.sfxT = 0.16; sfxBananaFly(b.pos); }
-    let hit = null;
-    if (b.owned) { for (const e of dogTargets(b.ownerId)) { const cy = e.pos.y + 1.0 - 0.5 * (e.ref.cr || 0); if (Math.hypot(e.pos.x - b.pos.x, cy - b.pos.y, e.pos.z - b.pos.z) < 1.3) { hit = e; break; } } }
-    let world = false;
-    const gh = groundHeightAt(b.pos.x, b.pos.z, b.pos.y);
-    if (b.pos.y < gh + 0.15) { b.pos.y = gh + 0.15; world = true; }
-    if (Math.abs(b.pos.x) > lim || Math.abs(b.pos.z) > lim) world = true;
-    if (!world) for (const s of solids) { if (b.pos.y < s.max.y && b.pos.y > s.min.y && b.pos.x > s.min.x && b.pos.x < s.max.x && b.pos.z > s.min.z && b.pos.z < s.max.z) { world = true; break; } }
-    if (hit) { kongBananaHit(hit, b); spawnBananaSplat(b.pos); scene.remove(b.mesh); disposeGroup(b.mesh); bananas.splice(i, 1); continue; }
-    if (world || b.life <= 0) { if (world) { sfxBananaSplat(b.pos); spawnBananaSplat(b.pos); } scene.remove(b.mesh); disposeGroup(b.mesh); bananas.splice(i, 1); continue; }
-  }
-}
-function kongBananaHit(e, b) {
-  sfxBananaHit(b.pos); spawnBlood(b.pos, 12);
-  if (e.kind === 'bot') { if (NET.isHost) NET.botCredit = null; damageBot(e.ref, KONG.bananaDmg, b.vel.clone().setY(0).normalize(), null, { weapon: 'kongbanana' }); }
-  else if (e.kind === 'self') { player.lastAttacker = 'kong'; player.lastAttackerName = 'King Kong'; player.lastAttackerWeapon = 'kongbanana'; player.lastAttackerMelee = false; hurtPlayer(KONG.bananaDmg); }
-  else if (e.kind === 'remote') { NET.route(e.ref.id, { t: 'youhit', dmg: KONG.bananaDmg, head: false, fromId: 'kong', fromName: 'King Kong', weapon: 'kongbanana' }); }
-}
-
 // Ammo-box pickups: spin/bob, and refill ammo + 1 grenade when the player touches one.
 function updatePickups(dt) {
   for (const pk of pickups) {
@@ -6541,11 +6166,6 @@ function ggSendLevel(id, level) { NET.route(id, { t: 'ggset', level }); }
 
 // HOST authority: process one kill for gun-game progression / demotion / win.
 function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
-  // --- KING KONG: a Kong kill is attributed to "KING KONG" (no player progression). ---
-  if (killerId === 'kong' || weapon === 'kongbanana' || weapon === 'kongmelee') {
-    const victimName = (victimIsPlayer && victimId && NET.scores.has(victimId)) ? NET.scores.get(victimId).name : (victimIsPlayer ? 'a player' : 'a bot');
-    kongKillFeed(victimName); return;
-  }
   streakCredit(killerId, victimId);   // every kill (any weapon) counts toward the killer's scorestreak
   // --- RC ROCKET: tracked separately; the killer NEVER advances / demotes / wins (Option A). ---
   if (weapon === 'rcrl') {
@@ -6599,12 +6219,6 @@ function ggSoloKill(weapon) {
 // tag and special floating text (improvements #1 + #5).
 function onBotKilled(bot, info) {
   info = info || {};
-  // King Kong's kills are attributed to "KING KONG" (no player score/progression credit).
-  if (info.weapon === 'kongbanana' || info.weapon === 'kongmelee') {
-    floatText(new THREE.Vector3(bot.pos.x, bot.pos.y + 1.7, bot.pos.z), '🦍', '#ffcf5a');
-    if (!NET.active || NET.isHost) kongKillFeed('Bot ' + bot.id);   // host broadcasts; clients receive via 'feed'
-    return;
-  }
   const headshot = !!info.headshot, dism = !!info.dismembered;
   const pts = POINTS_KILL + (headshot ? POINTS_HEADSHOT : 0);
   const label = headshot ? `+${pts} HEADSHOT!` : (dism ? `+${pts} DISMEMBERED!` : `+${pts}`);
@@ -6659,7 +6273,6 @@ function playerDie() {
   player.alive = false;
   player.health = 0;
   streakReset(true);                                               // dying wipes the streak + forfeits saber/JD/RC ("STREAK LOST")
-  despawnKong(dogSelfId());                                        // loyalty: my King Kong leaves when I fall
   if (NET.active) {
     // tell the host who killed me so they get credit (and everyone sees the feed)
     NET.reportDeath(player.lastAttacker, player.lastAttackerHead, player.lastAttackerWeapon, player.lastAttackerMelee);
@@ -6700,7 +6313,7 @@ function endMatch(won) {
   gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); (won ? sfxWin() : sfxLose());
+  Ambient.stop(); SaberHum.stop(); clearDogs(); (won ? sfxWin() : sfxLose());
   el('endTitle').textContent = won ? 'YOU WIN' : 'MATCH OVER';
   el('endSub').textContent = `Final: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
   el('endScreen').style.display = 'flex';
@@ -6716,7 +6329,7 @@ function startMatch() {
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.impulseT = 0; player.impulseGrace = 0;
   player.cigar = CIGAR.maxCarry; cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;   // fresh cigar; clear any prior smoke
-  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; clearDogs(); clearKongs(); streakReset(false);   // fresh scorestreak + no leftover dogs
+  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; clearDogs(); streakReset(false);   // fresh scorestreak + no leftover dogs
   player.grenades = throwMaxCarry();
   yaw = Math.atan2(sp.x, sp.z); pitch = 0; recoilPitch = 0; recoilYaw = 0;   // look toward map centre
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; shakeTime = 0; shakeMag = 0;
@@ -6860,7 +6473,7 @@ function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs();
+  Ambient.stop(); SaberHum.stop(); clearDogs();
   const won = winnerName && winnerName === NET.selfName;
   if (!NET.active) (winnerName === 'YOU' ? sfxWin() : sfxLose()); else (won ? sfxWin() : sfxLose());   // victory / defeat fanfare
   const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
@@ -7180,7 +6793,6 @@ const NET = {
   awardKill(killerId, pts, victimName, opts) {
     if (!this.isHost) return;
     opts = opts || {};
-    if (killerId === 'kong') { kongKillFeed(victimName); return; }   // King Kong kill — attributed to Kong, no player score
     let killerName = 'A bot';
     if (killerId && this.scores.has(killerId)) {
       const s = this.scores.get(killerId); s.score += pts; s.kills += 1; killerName = s.name;
@@ -7271,7 +6883,7 @@ const NET = {
         break;
       }
       case 'killed': {                                 // a client died; credit its killer
-        despawnOwnedDogs(msg.victimId); despawnKong(msg.victimId);   // their attack dogs + King Kong leave when they fall
+        despawnOwnedDogs(msg.victimId);                // their attack dogs leave when they fall
         if (gameMode === 'gungame') { ggHostKill(msg.byId, msg.weapon, true, msg.victimId, !!msg.melee); break; }
         const victim = this.scores.get(msg.victimId);
         this.awardKill(msg.byId, POINTS_KILL + (msg.head ? POINTS_HEADSHOT : 0), victim ? victim.name : 'Player', { headshot: msg.head });
@@ -7279,8 +6891,6 @@ const NET = {
       }
       case 'dogsummon': { if (this.isHost) summonDogs(msg.ownerId); break; }   // a client deployed their 10-kill dogs
       case 'doghit': { if (this.isHost) { const d = dogs.find(x => x.id === msg.dogId); if (d) damageDog(d, msg.dmg); } break; }   // a client shot an enemy dog
-      case 'kongsummon': { if (this.isHost) summonKong(msg.ownerId); break; }   // a client summoned King Kong
-      case 'konghit': { if (this.isHost) { const k = kongs.find(x => x.id === msg.kongId); if (k) damageKong(k, msg.dmg, msg.fromId); } break; }   // a client shot an enemy Kong
       case 'route': { this.route(msg.to, msg.msg); break; }   // forward client->client
 
       /* ---- CLIENT handlers ---- */
@@ -7289,9 +6899,6 @@ const NET = {
       case 'players': { this.applyPlayers(msg.list); break; }
       case 'bots': { applyBotsSnapshot(msg.list); applyClientLoot(msg.loot); break; }
       case 'kdogs': { applyDogsSnapshot(msg.list); break; }   // host -> clients: attack-dog positions/state
-      case 'kongs': { applyKongsSnapshot(msg.list); break; }  // host -> clients: King Kong positions/state
-      case 'banana': { spawnBanana(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), msg.o, false); break; }   // render-only banana copy
-      case 'kongmsg': { showKongMsg(msg.m); break; }          // host -> me: Kong summon/fall/kill notification
       case 'lootgrab': {                               // a client walked into the crate
         if (lootActive) {
           const key = chooseSpecial();
@@ -8024,7 +7631,6 @@ function animate() {
     updateBoostPads(dt);  // boost pads: glow/particles + step-on launch
     updateDeflectedBullets(dt);   // saber-reflected bullets in flight
     updateDogs(dt);       // Kirks Avengers attack dogs (host AI / client render)
-    updateKongs(dt);      // King Kong boss-ally (host AI / client render) + banana projectiles
     if (impulseThrowT > 0) impulseThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill)
     // No loot crates in either mode now — both use the shared gun-game arsenal (FFA picks via inventory).

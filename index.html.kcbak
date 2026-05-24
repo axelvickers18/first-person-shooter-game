@@ -266,14 +266,6 @@
   #killcamSkip { position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); font-size: 13px; opacity: .7; }
   /* darken edges during the killcam for a "spectating" feel */
   #killcamUI.on::before { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 180px 60px rgba(0,0,0,0.7); }
-  /* "KILLED — RECORDING REPLAY..." overlay shown while the killer finishes capturing 2s of post-kill action */
-  #killcamRecording { position: fixed; inset: 0; z-index: 20; display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; pointer-events: none; background: rgba(0,0,0,0.62); }
-  #killcamRecording.on { display: flex; }
-  #killcamRecording .kcrTag { font: 800 46px 'Arial Black', sans-serif; letter-spacing: 5px; color: #ff5a5a; text-shadow: 0 0 14px #ff3b1e, 0 4px 12px #000; }
-  #killcamRecording .kcrSub { margin-top: 16px; font: 700 17px 'Segoe UI'; letter-spacing: 3px; color: #d8e6ff; opacity: .92; }
-  #killcamRecording .kcrDots::after { content: ''; display: inline-block; width: 1.4em; text-align: left; animation: kcrDots 1.2s steps(1,end) infinite; }
-  @keyframes kcrDots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} 100%{content:''} }
-  #killcamRecording .kcrSkip { margin-top: 28px; font-size: 13px; opacity: .6; }
   /* Mobility scooter (Part 7) */
   #scooterPrompt { position: absolute; left: 50%; bottom: 30%; transform: translateX(-50%); z-index: 15; display: none;
     background: rgba(0,0,0,0.55); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 17px; color: #fff; }
@@ -761,11 +753,6 @@
     <div id="killcamBar"><div id="killcamBarFill"></div><div id="killcamKillMark"></div></div>
     <div id="killcamCountdown"></div>
     <div id="killcamSkip"></div>
-  </div>
-  <div id="killcamRecording">
-    <div class="kcrTag">KILLED</div>
-    <div class="kcrSub">RECORDING REPLAY<span class="kcrDots"></span></div>
-    <div class="kcrSkip"></div>
   </div>
   <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
   <div id="axePrompt">Press <b>E</b> to pick up axe</div>
@@ -4429,9 +4416,9 @@ function addWeaponAttachments(g, key, c, muzzleZ) {
   }
 }
 // First-person viewmodel: the shared weapon mesh + a muzzle anchor/flash, anchored lower-right.
-function buildGunModel(key, cfg) {
+function buildGunModel(key) {
   if (gunMesh) viewModel.remove(gunMesh);
-  const built = buildWeaponMesh(key, undefined, cfg), g = built.g, muzzleZ = built.muzzleZ;   // cfg: killcam passes the killer's attachment config
+  const built = buildWeaponMesh(key), g = built.g, muzzleZ = built.muzzleZ;
   // Muzzle anchor (tracers/flash originate here) + a hidden muzzle-flash sprite
   gunMuzzle = new THREE.Object3D(); gunMuzzle.position.set(0, 0, muzzleZ); g.add(gunMuzzle);
   gunFlash = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.12),
@@ -8648,13 +8635,9 @@ function doRespawn() {
    PART 5 — KILLCAM: a brief death replay from the killer's perspective (or a
    death-cam orbit fallback), skippable with the jump key. Victim-only.
    ============================================================================ */
-let _camRing = [], _camRingAcc = 0, _camFire = 0;   // rolling killer-POV buffer @ 30Hz (holds 3s before + 2s after a kill)
-let _worldRing = [], _worldRingAcc = 0;             // rolling buffer of OTHER players' positions @ 20Hz
-// New timing (Part 2): the killcam shows 3s BEFORE the kill + 2s AFTER (kill lands at the 3s / 60% mark).
-const KC_PRE = 3, KC_POST_REC = 2, KC_SECONDS = KC_PRE + KC_POST_REC;   // 5s total recorded around the kill
-const KC_SLOW = 0.6, KC_KILLSLOW = 0.25;            // playback: 60% slow-mo, with a brief 25% burst at the kill
-const KC_KILLZONE = 0.07;                           // half-width (buffer-seconds) of the extra-slow zone around the kill (~0.56s real)
-const KC_FALL = 0.5;                                // buffer-seconds over which the victim collapses after the kill
+let _camRing = [], _camRingAcc = 0, _camFire = 0;   // 5s killer-POV buffer @ 30Hz
+let _worldRing = [], _worldRingAcc = 0;             // 5s buffer of OTHER players' positions @ 20Hz
+const KC_SECONDS = 5, KC_SLOW = 0.6, KC_KILLSLOW = 0.25, KC_KILLZONE = 0.125, KC_POST = 0.5;
 function recordCamFrame(dt) {
   if (!gameState.running || !player.alive) return;
   _camRingAcc += dt;
@@ -8665,7 +8648,7 @@ function recordCamFrame(dt) {
                     w: currentWeaponKey, ads: (adsBlend > 0.4 || scopeBlend > 0.4) ? 1 : 0, cr: R2(player.crouchBlend || 0), dv: player.diving ? 1 : 0,
                     hp: Math.max(0, Math.round(player.health)), am: ws.ammo != null ? ws.ammo : 0, f: _camFire });
     _camFire = 0;
-    while (_camRing.length && performance.now() - _camRing[0].t > KC_SECONDS * 1000 + 1200)_camRing.shift();
+    while (_camRing.length && performance.now() - _camRing[0].t > KC_SECONDS * 1000 + 600) _camRing.shift();
   }
   if (NET.active) {
     _worldRingAcc += dt;
@@ -8673,37 +8656,12 @@ function recordCamFrame(dt) {
       _worldRingAcc = 0; const ps = [];
       NET.players.forEach(rp => { if (rp.alive) ps.push({ id: rp.id, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z, yaw: rp.yaw }); });
       _worldRing.push({ t: performance.now(), ps: ps });
-      while (_worldRing.length && performance.now() - _worldRing[0].t > KC_SECONDS * 1000 + 1200)_worldRing.shift();
-    }
-  }
-}
-// Killer-side outbound killcam queue (Part 2). A victim's kcReq marks (≈) the kill moment; we keep recording
-// for KC_POST_REC seconds, then send them the [kill-3s, kill+2s] slice of our POV buffer.
-let _kcSends = [];
-function scheduleKillcamSend(toId) {
-  const now = performance.now(), ex = _kcSends.find(s => s.to === toId);
-  if (ex) { ex.killT = now; ex.sendAt = now + KC_POST_REC * 1000; }   // re-kill of the same victim: reset the window
-  else _kcSends.push({ to: toId, killT: now, sendAt: now + KC_POST_REC * 1000 });
-}
-function _kcCfgSnapshot() {   // the killer's live weapon configs, so the victim renders the right FP attachments
-  const out = {}; for (const k in liveCfg) if (liveCfg[k]) out[k] = liveCfg[k]; return out;
-}
-function processKcSends() {
-  if (!_kcSends.length) return;
-  const now = performance.now(), dead = !player.alive;   // killer died early → send whatever post-kill action was captured
-  for (let i = _kcSends.length - 1; i >= 0; i--) {
-    const s = _kcSends[i];
-    if (now >= s.sendAt || dead) {
-      const lo = s.killT - KC_PRE * 1000, hi = s.killT + KC_POST_REC * 1000;
-      const frames = _camRing.filter(fr => fr.t >= lo && fr.t <= hi);
-      NET.route(s.to, { t: 'kcData', frames: frames, killAt: s.killT, cfgs: _kcCfgSnapshot() });
-      _kcSends.splice(i, 1);
+      while (_worldRing.length && performance.now() - _worldRing[0].t > KC_SECONDS * 1000 + 600) _worldRing.shift();
     }
   }
 }
 const killcam = { active: false, mode: 'death', frames: null, world: null, selfPath: null, victim: null, name: '', weapon: null, head: false, dist: 0,
-                  deathPos: new THREE.Vector3(), bt: 0, span: 0, killT: 0, killAbs: 0, killerId: null, killerCfgs: null, started: false,
-                  orbit: 0, killed: false, victimFall: 0, waiting: false, fallbackT: 0, lastFireIdx: -1, _cam: null, _sized: null, _dbgModels: '' };
+                  deathPos: new THREE.Vector3(), bt: 0, span: 0, post: 0, orbit: 0, killed: false, victimFall: 0, waiting: false, fallbackT: 0, lastFireIdx: -1, _cam: null, _sized: null };
 function buildVictimAvatar() {
   removeVictimAvatar();
   const mat = new THREE.MeshLambertMaterial({ map: (typeof mySkinTexture === 'function' && mySkinTexture()) || defaultSkinTex });
@@ -8712,14 +8670,18 @@ function buildVictimAvatar() {
   g.visible = false; scene.add(g); killcam.victim = g;
 }
 function removeVictimAvatar() { if (killcam.victim) { scene.remove(killcam.victim); disposeGroup(killcam.victim); killcam.victim = null; } }
-// Show / hide the "KILLED — RECORDING REPLAY..." overlay (held while the killer captures the post-kill 2s).
-function _kcShowRecording(on) {
-  const r = el('killcamRecording'); if (r) { r.classList.toggle('on', !!on); if (on) { const sk = r.querySelector('.kcrSkip'); if (sk) sk.textContent = 'Press ' + getKeyForAction('jump') + ' to skip'; } }
-  const f = el('killcamFade'); if (f && on) f.style.opacity = '0.9';   // dark backdrop behind the recording text
-}
-// Populate + reveal the replay HUD and arm playback. killcam.span / killcam.killT must already be set.
-function _kcStartPlayUI() {
-  _kcShowRecording(false);
+function beginKillcam(info) {
+  if (gameState.over) return;   // match ended on this kill — go straight to results
+  killcam.active = true; killcam.bt = 0; killcam.post = 0; killcam.killed = false; killcam.victimFall = 0; killcam.orbit = Math.random() * 6.28; killcam.lastFireIdx = -1; killcam._cam = null; killcam._sized = null;
+  killcam.deathPos.copy(player.pos); killcam.name = info.name || (NET.active ? 'Someone' : 'A bot'); killcam.weapon = info.weapon || null; killcam.head = !!info.head;
+  killcam.dist = (info.id && NET.active && NET.players.has(info.id)) ? player.pos.distanceTo(NET.players.get(info.id).pos) : 0;
+  killcam.frames = null; killcam.world = _worldRing.slice(); killcam.selfPath = _camRing.slice();   // the victim's own last-5s path drives the victim avatar
+  killcam.waiting = false; killcam.fallbackT = 0;
+  buildVictimAvatar();
+  const humanKiller = NET.active && info.id && info.id !== 'bot' && (NET.players.has(info.id) || NET.scores.has(info.id)) && info.id !== NET.selfId;
+  if (humanKiller) { killcam.mode = 'replay'; killcam.waiting = true; killcam.fallbackT = 0.7; killcam.span = KC_SECONDS; NET.route(info.id, { t: 'kcReq', from: NET.selfId }); }
+  else { killcam.mode = 'death'; killcam.span = 3; }
+  const f = el('killcamFade'); if (f) { f.style.opacity = '0.95'; setTimeout(() => { f.style.opacity = '0'; }, 220); }
   const ui = el('killcamUI'); if (ui) ui.classList.add('on');
   el('killcamBy').innerHTML = 'KILLED BY <b style="color:#ff8a8a">' + killcam.name + '</b>';
   el('killcamWeapon').innerHTML = (killcam.weapon && WEAPONS[killcam.weapon]) ? (weaponIcon(killcam.weapon) + ' ' + WEAPONS[killcam.weapon].name) : '';
@@ -8729,45 +8691,9 @@ function _kcStartPlayUI() {
   if (killcam.dist > 30) labs.push('<span class="kl long">LONG SHOT</span>');
   el('killcamLabels').innerHTML = labs.join('');
   el('killcamSkip').textContent = 'Press ' + getKeyForAction('jump') + ' to skip';
-  el('killcamBarFill').style.width = '0%';
-  const km = el('killcamKillMark'); if (km) km.style.left = (killcam.span > 0 ? (killcam.killT / killcam.span * 100) : 60).toFixed(1) + '%';   // kill marker at the 3s / 60% point
-  const elim = el('killcamElim'); if (elim) elim.style.opacity = '0';
-  const f = el('killcamFade'); if (f) { f.style.opacity = '0.95'; setTimeout(() => { f.style.opacity = '0'; }, 220); }
-  killcam._dbgModels = ''; killcam.started = true;
-  // DEBUG (Part 1): confirm we're inside the killer's head and their own body model is suppressed.
-  console.log("KILLCAM START — playing killer " + killcam.name + "'s POV. Killer model render disabled: " + (killcam.mode === 'replay' ? 'true' : 'n/a (death-cam orbit)'));
+  el('killcamBarFill').style.width = '0%'; const elim = el('killcamElim'); if (elim) elim.style.opacity = '0';
 }
-// The killer's buffer arrived: size the timeline to it, place the kill at its recorded moment (~3s in).
-function _kcBeginReplay() {
-  const fr = killcam.frames;
-  killcam.span = Math.max(0.5, (fr[fr.length - 1].t - fr[0].t) / 1000);
-  killcam.killT = Math.max(0, Math.min(killcam.span, (killcam.killAbs - fr[0].t) / 1000));   // less than 3s if the killer spawned late
-  killcam._sized = fr; killcam.bt = 0; killcam.killed = false; killcam.lastFireIdx = -1;
-  _kcStartPlayUI();
-}
-function beginKillcam(info) {
-  if (gameState.over) return;   // match ended on this kill — go straight to results
-  Object.assign(killcam, { active: true, bt: 0, killed: false, victimFall: 0, orbit: Math.random() * 6.28, lastFireIdx: -1,
-    _cam: null, _sized: null, frames: null, killAbs: 0, killT: 0, killerCfgs: null, started: false, waiting: false, fallbackT: 0 });
-  killcam.killerId = info.id || null;
-  killcam.deathPos.copy(player.pos); killcam.name = info.name || (NET.active ? 'Someone' : 'A bot'); killcam.weapon = info.weapon || null; killcam.head = !!info.head;
-  killcam.dist = (info.id && NET.active && NET.players.has(info.id)) ? player.pos.distanceTo(NET.players.get(info.id).pos) : 0;
-  killcam.world = _worldRing.slice(); killcam.selfPath = _camRing.slice();   // the victim's own last few seconds drive the victim avatar + bystanders
-  buildVictimAvatar();
-  const humanKiller = NET.active && info.id && info.id !== 'bot' && (NET.players.has(info.id) || NET.scores.has(info.id)) && info.id !== NET.selfId;
-  if (humanKiller) {
-    // Wait for the killer to record 2s of post-kill action, then play back. Hold on the "RECORDING REPLAY..."
-    // overlay meanwhile (≈the 2s the spec describes). Fall back to a death-cam if the buffer never arrives.
-    killcam.mode = 'replay'; killcam.waiting = true; killcam.fallbackT = KC_POST_REC + 1.2; killcam.span = KC_SECONDS; killcam.killT = KC_PRE;
-    NET.route(info.id, { t: 'kcReq', from: NET.selfId });
-    const ui = el('killcamUI'); if (ui) ui.classList.remove('on');
-    _kcShowRecording(true);
-  } else {
-    killcam.mode = 'death'; killcam.span = 4; killcam.killT = 2.4;   // bot / disconnected killer: orbit, kill flash at 60%
-    _kcStartPlayUI();
-  }
-}
-function _kcEnd() { SND.pitch = 1; removeVictimAvatar(); killcam.killerCfgs = null; killcam.started = false; _kcShowRecording(false); }
+function _kcEnd() { SND.pitch = 1; removeVictimAvatar(); }
 function cancelKillcam() { killcam.active = false; killcam.waiting = false; const ui = el('killcamUI'); if (ui) ui.classList.remove('on'); const f = el('killcamFade'); if (f) f.style.opacity = '0'; if (gunMesh) gunMesh.visible = true; _kcEnd(); }
 function finishKillcam() {
   killcam.active = false; const ui = el('killcamUI'); if (ui) ui.classList.remove('on');
@@ -8781,8 +8707,7 @@ function _kcFrameAt(fr, p) {
   return { idx: i, x: a.x + (b.x - a.x) * f2, y: a.y + (b.y - a.y) * f2, z: a.z + (b.z - a.z) * f2,
            yaw: lerpAngle(a.yaw, b.yaw, f2), pitch: a.pitch + (b.pitch - a.pitch) * f2, w: a.w, ads: a.ads, hp: a.hp, am: a.am, cr: a.cr };
 }
-// The exact kill moment: white flash + soft glow burst + blood + "ELIMINATED". Playback CONTINUES past here
-// through the recorded 2s of post-kill action (the screen does NOT cut out).
+// The exact kill moment: white flash + soft glow burst + blood + "ELIMINATED" + start the victim's collapse.
 function onKillMoment() {
   if (killcam.killed) return; killcam.killed = true;
   showKillFlash(killcam.head);
@@ -8791,54 +8716,43 @@ function onKillMoment() {
   spawnExplosionFX(new THREE.Vector3(vp.x, vp.y + 1.0, vp.z), 1.1, killcam.head ? 0xff4d4d : 0xffd27a);
   const elim = el('killcamElim'); if (elim) { elim.textContent = (NET.active ? (NET.selfName || 'YOU') : 'YOU') + ' ELIMINATED'; elim.style.opacity = '1'; }
 }
-// The victim avatar + bystanders live in the VICTIM's clock (which ends at the death), so align them by the
-// kill: at playback time = killT they reach the death moment, regardless of how the killer's buffer is sized.
-function _kcVictimFrac(buf) {
-  const dur = (buf && buf.length >= 2) ? Math.max(0.5, (buf[buf.length - 1].t - buf[0].t) / 1000) : (killcam.span || 1);
-  return Math.max(0, Math.min(1, 1 - (killcam.killT - killcam.bt) / dur));
-}
-function updateVictimAvatar() {
+function updateVictimAvatar(p) {
   const g = killcam.victim, path = killcam.selfPath; if (!g) return;
-  if (!killcam.killed) {
-    if (path && path.length) {
-      const fr = _kcFrameAt(path.length >= 2 ? path : [path[0], path[0]], _kcVictimFrac(path));
-      g.position.set(fr.x, Math.max(0, fr.y - MOVE.eyeHeight), fr.z); g.rotation.set(0, fr.yaw || 0, 0);
-      g.scale.set(1, Math.max(0.55, 1 - 0.4 * (fr.cr || 0)), 1); g.visible = true;
-    }
-  } else {   // collapse over KC_FALL buffer-seconds at the kill, then stay down through the post-kill 2s
-    killcam.victimFall = Math.max(0, Math.min(1, (killcam.bt - killcam.killT) / KC_FALL));
-    g.visible = true; g.rotation.x = -1.45 * killcam.victimFall; g.scale.y = 1;
+  if (!killcam.killed && path && path.length) {
+    const fr = _kcFrameAt(path.length >= 2 ? path : [path[0], path[0]], p);
+    g.position.set(fr.x, Math.max(0, fr.y - MOVE.eyeHeight), fr.z); g.rotation.set(0, fr.yaw || 0, 0);
+    g.scale.set(1, Math.max(0.55, 1 - 0.4 * (fr.cr || 0)), 1); g.visible = true;
+  } else if (killcam.killed) {
+    g.visible = true; g.rotation.x = -1.45 * killcam.victimFall; g.scale.y = 1;   // collapse backward at the kill
   }
 }
 // Drives the whole killcam frame: slow-mo playback that puppets the killer's weapon/sights/HUD/camera + replays the world + victim.
 function killcamApply(dt) {
-  // Phase A — waiting for the killer's post-kill buffer ("RECORDING REPLAY..." overlay holds the screen).
-  if (killcam.waiting) {
-    killcam.fallbackT -= dt;
-    if (killcam.frames && killcam.frames.length >= 2) { killcam.waiting = false; _kcBeginReplay(); }
-    else if (killcam.fallbackT <= 0) { killcam.waiting = false; killcam.mode = 'death'; killcam.span = 4; killcam.killT = 2.4; _kcStartPlayUI(); }
-    else return;   // keep holding the recording overlay
+  if (killcam.waiting) { killcam.fallbackT -= dt; if (killcam.fallbackT <= 0 && !killcam.frames) { killcam.waiting = false; killcam.mode = 'death'; killcam.span = 3; } }
+  if (killcam.mode === 'replay' && killcam.frames && killcam._sized !== killcam.frames) {   // size the replay to the buffer we actually got (partial OK)
+    killcam._sized = killcam.frames; const fr = killcam.frames; killcam.span = Math.max(0.5, Math.min(KC_SECONDS, (fr[fr.length - 1].t - fr[0].t) / 1000));
   }
-  if (!killcam.started) return;   // safety: playback not armed yet
   const replaying = killcam.mode === 'replay' && killcam.frames && killcam.frames.length >= 2;
-  // Advance buffer time: 60% slow-mo, with a brief 25% burst in a small zone AROUND the kill (at the 3s mark).
-  const inKill = killcam.bt >= killcam.killT - KC_KILLZONE && killcam.bt <= killcam.killT + KC_KILLZONE;
-  SND.pitch = !replaying ? 1 : (inKill ? 0.5 : 0.7);
-  killcam.bt += dt * (!replaying ? 1 : (inKill ? KC_KILLSLOW : KC_SLOW));
-  if (!killcam.killed && killcam.bt >= killcam.killT) onKillMoment();   // kill FX at the 3s mark; playback then CONTINUES
-  if (killcam.bt >= killcam.span) { killcam.bt = killcam.span; finishKillcam(); return; }   // played the full 3s+2s → respawn
+  let inKill = false;
+  if (!killcam.killed) {   // advance buffer time with slow-mo (extra-slow near the kill)
+    inKill = replaying && killcam.bt >= killcam.span - KC_KILLZONE;
+    SND.pitch = !replaying ? 1 : (inKill ? 0.5 : 0.7);
+    killcam.bt += dt * (!replaying ? 1 : (inKill ? KC_KILLSLOW : KC_SLOW));
+    if (killcam.bt >= killcam.span) { killcam.bt = killcam.span; onKillMoment(); }
+  } else {   // post-kill hold: death animation, then finish
+    killcam.post += dt; killcam.victimFall = Math.min(1, killcam.post / KC_POST); SND.pitch = replaying ? 0.7 : 1;
+    if (killcam.post >= KC_POST) { finishKillcam(); return; }
+  }
   const p = killcam.span > 0 ? Math.min(1, killcam.bt / killcam.span) : 1;
   // UI: timeline + countdown + slow-mo indicator
-  el('killcamBarFill').style.width = (p * 100).toFixed(1) + '%';
-  const rem = Math.max(0, killcam.span - killcam.bt);
-  let remReal;
-  if (!replaying) remReal = rem;   // death-cam plays at real time
-  else { const zoneAhead = Math.max(0, Math.min(killcam.killT + KC_KILLZONE, killcam.span) - Math.max(killcam.bt, killcam.killT - KC_KILLZONE)); remReal = (rem - zoneAhead) / KC_SLOW + zoneAhead / KC_KILLSLOW; }
+  el('killcamBarFill').style.width = (killcam.killed ? 100 : p * 100).toFixed(1) + '%';
+  const remBuf = Math.max(0, killcam.span - killcam.bt), killBuf = Math.min(remBuf, KC_KILLZONE), normBuf = Math.max(0, remBuf - KC_KILLZONE);
+  const remReal = killcam.killed ? (KC_POST - killcam.post) : (replaying ? normBuf / KC_SLOW + killBuf / KC_KILLSLOW + KC_POST : remBuf + KC_POST);
   const cd = el('killcamCountdown'); if (cd) cd.textContent = 'RESPAWN IN ' + Math.max(1, Math.ceil(remReal));
   const sm = el('killcamSlowmo'); if (sm) sm.textContent = replaying ? (inKill ? '0.25× SLOW-MO' : '0.6× SLOW-MO') : '';
   if (replaying) {
     const fp = _kcFrameAt(killcam.frames, p); killcam._cam = fp;
-    if (fp.w && fp.w !== currentWeaponKey && WEAPONS[fp.w]) { currentWeaponKey = fp.w; buildGunModel(fp.w, killcam.killerCfgs && killcam.killerCfgs[fp.w]); if (gunMesh) gunMesh.position.z = -0.5; }   // weapon swap: rebuild (with the killer's attachments) + dip
+    if (fp.w && fp.w !== currentWeaponKey && WEAPONS[fp.w]) { currentWeaponKey = fp.w; buildGunModel(fp.w); if (gunMesh) gunMesh.position.z = -0.5; }   // weapon swap: rebuild + dip (raises back via the viewmodel anim)
     aiming = !!fp.ads; const tgt = fp.ads ? 1 : 0;
     if (inKill) adsBlend = tgt; else adsBlend += (tgt - adsBlend) * Math.min(1, dt * 12);   // snap ADS at the kill so a scoped kill shows the full scope (no half-zoom)
     const scoped = WEAPONS[fp.w] && WEAPONS[fp.w].sight && /scope/.test(WEAPONS[fp.w].sight);
@@ -8847,15 +8761,14 @@ function killcamApply(dt) {
     if (gunMesh) gunMesh.visible = !(scoped && adsBlend > 0.5);
     player.health = fp.hp; updateHUD();
     if (fp.idx != null && fp.idx !== killcam.lastFireIdx) { for (let k = killcam.lastFireIdx + 1; k <= fp.idx; k++) { if (killcam.frames[k] && killcam.frames[k].f) killcamFireFX(fp); } killcam.lastFireIdx = fp.idx; }
-    killcamWorldReplay();
+    killcamWorldReplay(p);
     camera.position.set(fp.x, fp.y, fp.z); camera.rotation.order = 'YXZ'; camera.rotation.y = fp.yaw; camera.rotation.x = fp.pitch;
   } else {
     killcam.orbit += dt * 0.5; const r = 5, dp = killcam.deathPos;   // death-cam orbit (bots / disconnected killer)
     camera.position.set(dp.x + Math.cos(killcam.orbit) * r, dp.y + 4.5, dp.z + Math.sin(killcam.orbit) * r);
     camera.lookAt(dp.x, dp.y + 0.7, dp.z); if (gunMesh) gunMesh.visible = false;
-    killcamWorldReplay();
   }
-  updateVictimAvatar();
+  updateVictimAvatar(p);
 }
 function killcamFireFX(fp) {
   if (gunFlash) { gunFlash.visible = true; playerFlashTimer = 0.12; }   // muzzle flash hangs a touch longer for slow-mo
@@ -8863,47 +8776,14 @@ function killcamFireFX(fp) {
   spawnTracer(muzzle.clone().addScaledVector(dir, 0.6), muzzle.clone().addScaledVector(dir, 45), { color: TRACER.color.player, life: (TRACER.life.player || 0.1) * 1.8 });
   if (fp.w && WEAPONS[fp.w]) sfxFire(fp.w, muzzle);   // replay the killer's gunshot (positional + pitched down by the slow-mo)
 }
-// Replay the OTHER players (bystanders). In a POV replay the killer IS the camera, so their own body is
-// force-hidden (rendering it on top of the camera was the "tracer person" smear). Interpolates between the
-// recorded keyframes for smooth motion, aligned to the kill like the victim avatar.
-function killcamWorldReplay() {
+function killcamWorldReplay(p) {
   if (!killcam.world || !killcam.world.length || !NET.active) return;
-  const w = killcam.world;
-  if (killcam.mode === 'replay' && killcam.killerId) { const kp = NET.players.get(killcam.killerId); if (kp && kp.avatar) kp.avatar.visible = false; }
-  let placed;
-  if (w.length === 1) placed = _kcPlaceSnap(w[0].ps, null, 0);
-  else {
-    const frac = _kcVictimFrac(w), fpos = frac * (w.length - 1), i = Math.min(w.length - 2, Math.floor(fpos)), f = fpos - i;
-    placed = _kcPlaceSnap(w[i].ps, w[i + 1].ps, f);
+  const w = killcam.world, snap = w[Math.min(w.length - 1, Math.floor(p * (w.length - 1)))]; if (!snap) return;
+  for (const pe of snap.ps) {
+    const rp = NET.players.get(pe.id); if (!rp || !rp.avatar) continue;
+    rp.avatar.visible = true; rp.avatar.position.set(pe.x, pe.y, pe.z); rp.avatar.rotation.y = pe.yaw;
+    rp.renderPos.set(pe.x, pe.y, pe.z); rp.renderYaw = pe.yaw;
   }
-  _kcDebugModels(placed);
-}
-function _kcPlaceSnap(aps, bps, f) {
-  const placed = [], seen = {}, bById = {};
-  if (bps) for (const pe of bps) bById[pe.id] = pe;
-  for (const pe of aps) {
-    seen[pe.id] = 1; const nb = bById[pe.id];
-    if (nb) _kcPlace(pe.id, pe.x + (nb.x - pe.x) * f, pe.y + (nb.y - pe.y) * f, pe.z + (nb.z - pe.z) * f, lerpAngle(pe.yaw, nb.yaw, f), placed);
-    else _kcPlace(pe.id, pe.x, pe.y, pe.z, pe.yaw, placed);
-  }
-  if (bps) for (const pe of bps) if (!seen[pe.id]) _kcPlace(pe.id, pe.x, pe.y, pe.z, pe.yaw, placed);
-  return placed;
-}
-function _kcPlace(id, x, y, z, yaw, placed) {
-  if (killcam.mode === 'replay' && id === killcam.killerId) return;   // never render the killer's own body in their POV killcam
-  const rp = NET.players.get(id); if (!rp || !rp.avatar) return;
-  rp.avatar.visible = true; rp.avatar.position.set(x, y, z); rp.avatar.rotation.y = yaw;
-  rp.renderPos.set(x, y, z); rp.renderYaw = yaw;
-  placed.push(rp.name || id);
-}
-// DEBUG (Part 1): log the set of character models drawn this killcam frame whenever it changes — used to
-// confirm the killer is NOT among them (the bug was the killer's body rendering on top of the camera).
-function _kcDebugModels(placed) {
-  const sig = (placed || []).slice().sort().join(',');
-  if (sig === killcam._dbgModels) return;
-  killcam._dbgModels = sig;
-  console.log('KILLCAM rendered models: [victim(' + (NET.active ? (NET.selfName || 'YOU') : 'YOU') + ')' + (sig ? ', ' + sig : '') + ']'
-    + (killcam.mode === 'replay' ? ' — killer (' + killcam.name + ') hidden' : ' (death-cam)'));
 }
 function endMatch(won) {
   gameState.over = true;
@@ -8922,7 +8802,7 @@ function startMatch() {
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';   // never start paused
   // --- Match settings lock + per-player stat reset (Part 6 / foundation) ---
   MATCH._sudden = false; MATCH._timeLeft = modeTimeLimitSec(); MATCH._hasTime = MATCH._timeLeft > 0; MATCH._ended = false; _mtimeAcc = 0;
-  cancelKillcam(); _camRing.length = 0; _worldRing.length = 0; _kcSends.length = 0;   // fresh killcam buffers + send queue each match
+  cancelKillcam(); _camRing.length = 0; _worldRing.length = 0;   // fresh killcam buffers each match
   flashlightOn = false; liveCfg = {}; applyAllWeaponMags();      // (PART 2) reset flashlight + re-apply weapon configs (mags) for the match
   Object.assign(soloStat, freshStat('YOU'));
   if (gameMode === 'tdm') assignTeams(); else { myTeam = null; if (NET.active) NET.scores.forEach(s => s.team = null); }
@@ -9168,7 +9048,7 @@ function doMatchOver(winnerName, team, extra) {
   MATCH._sudden = false; MATCH._timeLeft = 0; MATCH._hasTime = false;
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; minigunSpin = 0; minigunSteady = false;
-  cancelKillcam(); _kcSends.length = 0;   // a killcam in progress is cut short by the match ending; drop any queued sends
+  cancelKillcam();        // a killcam in progress is cut short by the match ending
   scooterDismountAll();   // eject any scooter rider; freeze the vehicle
   document.exitPointerLock();
   Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); clearMckaylas();
@@ -10099,8 +9979,8 @@ const NET = {
 
       case 'ggset': { ggSetLevel(msg.level); break; }    // host told me my new gun-game level
       case 'kc': { streakOnKill(); break; }              // host credited me a kill -> bump my (local) scorestreak
-      case 'kcReq': { scheduleKillcamSend(msg.from); break; }   // a victim I killed wants my replay — keep recording 2s, then send the 3s+2s buffer
-      case 'kcData': { if (killcam.active && killcam.waiting) { killcam.frames = msg.frames || null; killcam.killAbs = msg.killAt || 0; killcam.killerCfgs = msg.cfgs || null; } break; }   // killer's 3s+2s replay frames arrived
+      case 'kcReq': { this.route(msg.from, { t: 'kcData', frames: _camRing.slice() }); break; }   // a victim wants my full 9s killcam buffer
+      case 'kcData': { if (killcam.active && killcam.waiting) { killcam.frames = msg.frames; killcam.waiting = false; } break; }   // killer's replay frames arrived
       case 'scoot': {                                  // one scooter's state from its current owner (occupant, or host while idle)
         const sc = scooters[msg.i];
         if (sc && !scooterOwns(sc)) {
@@ -11393,7 +11273,7 @@ function animate() {
   updateHeartbeat(dt);     // critical-health heartbeat loop
 
   if (gameState.running) {
-    if (killcam.active) killcamApply(dt);   // Part 5: full-POV death replay (3s before + 2s after the kill) puppets the weapon/sights/HUD/camera
+    if (killcam.active) killcamApply(dt);   // Part 5: 9s full-POV death replay puppets the weapon/sights/HUD/camera
     else if (!riding) updateMovement(dt);   // while riding a scooter, updateScooters drives the player + camera
     if (!killcam.active) updateScooters(dt);   // Part 7: scooter physics / rider input / seat camera / respawn / net sync
     // Bots: the host (or solo) runs the AI; clients just interpolate host snapshots.
@@ -11408,7 +11288,6 @@ function animate() {
     updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
     updateDmgNums(dt);    // Part 3: expire floating damage numbers
     recordCamFrame(dt);   // Part 5: record my camera for others' killcams
-    if (NET.active) processKcSends(dt);   // Part 5/2: flush queued killcam buffers (2s after a kill, or early if I die)
     if (el('scoreboard').style.display === 'flex') refreshScoreboard();   // live scoreboard while TAB is held
     updateRockets(dt);    // rocket projectiles (special weapon)
     updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails

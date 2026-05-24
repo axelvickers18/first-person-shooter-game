@@ -30,8 +30,7 @@
     position: absolute; left: 50%; top: 50%; width: 22px; height: 22px;
     transform: translate(-50%,-50%) rotate(45deg); opacity: 0; transition: opacity .05s;
   }
-  #hitmarker .line { position: absolute; background: #fff; }            /* white = body hit */
-  #hitmarker.hs .line { background: #ff3b3b; }                          /* red = headshot */
+  #hitmarker .line { position: absolute; background: #ff3b3b; }
   #hitmarker .h { top: 50%; left: 0; width: 100%; height: 3px; transform: translateY(-50%); }
   #hitmarker .v { left: 50%; top: 0; height: 100%; width: 3px; transform: translateX(-50%); }
 
@@ -42,13 +41,6 @@
   #scoreLine .dim { color: #cfe3ff; opacity: .7; font-size: 20px; }
   #killLine { font-size: 18px; opacity: .9; margin-top: 2px; }
   #killLine #killCount { color: #ffe600; }
-  #killLine .dim { color: #cfe3ff; opacity: .7; }
-  /* Match timer (top-center) + TDM team-score readout */
-  #matchTimer { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 24px; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.7); display: none; }
-  #matchTimer.low { color: #ff6b6b; }
-  #teamScoreHud { position: absolute; top: 44px; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 12px; font-weight: bold; font-size: 26px; text-shadow: 0 2px 4px rgba(0,0,0,.7); }
-  #teamScoreHud .tA { color: #ff5a5a; } #teamScoreHud .tB { color: #5aa6ff; }
-  #teamScoreHud .vs { font-size: 12px; opacity: .65; letter-spacing: 1px; }
 
   /* Grenade count (bottom-right, under ammo) */
   #grenades { font-size: 15px; font-weight: bold; color: #c8f56b; margin-top: 4px; }
@@ -109,14 +101,9 @@
   #killFeed { position: absolute; top: 18px; right: 18px; text-align: right; font-size: 16px; }
   #killFeed .entry {
     background: rgba(0,0,0,0.35); padding: 4px 10px; margin-bottom: 5px; border-radius: 4px;
-    display: inline-block; opacity: 0; transform: translateX(40px); transition: opacity .2s ease, transform .2s ease;
+    display: inline-block;
   }
-  #killFeed .entry.in { opacity: 1; transform: none; }
-  #killFeed .entry.out { opacity: 0; transform: translateX(40px); }
-  #killFeed .entry.kill-you { border-left: 3px solid #ffe600; }
   #killFeed .entry b { color: #ff5050; }
-  #killFeed .entry b.you { color: #ffe600; }
-  #killFeed .entry .wic { opacity: .9; margin: 0 3px; }
   #killFeed .entry .hs { color: #fff; background: #d62828; padding: 1px 5px; border-radius: 3px; font-size: 12px; margin-left: 4px; }
   #killFeed .entry .wtag { color: #fff; background: #5a3da8; padding: 1px 5px; border-radius: 3px; font-size: 12px; margin-left: 4px; }
   #killFeed .entry .leg { color: #3a2c00; background: #ffd700; padding: 1px 5px; border-radius: 3px; font-size: 12px; margin-left: 4px; font-weight: bold; text-shadow: none; }
@@ -192,40 +179,6 @@
   #kongHud span { color: #fff; }
   #kongMsg { position: absolute; left: 50%; top: 30%; transform: translate(-50%,-50%); z-index: 15; display: none; opacity: 0; transition: opacity .35s;
     font: 800 30px 'Segoe UI', sans-serif; color: #ffcf5a; letter-spacing: 2px; text-shadow: 0 2px 8px #000, 0 0 18px rgba(255,180,40,0.55); pointer-events: none; }
-  #matchBanner { position: absolute; left: 50%; top: 22%; transform: translate(-50%,-50%); z-index: 16; display: none; opacity: 0; transition: opacity .3s;
-    font: 800 40px 'Segoe UI', sans-serif; color: #fff; letter-spacing: 3px; text-shadow: 0 2px 10px #000, 0 0 22px rgba(0,0,0,0.6); pointer-events: none; text-align: center; white-space: pre-line; }
-  /* Killstreak announcer callout (Part 3) */
-  #announcer { position: absolute; left: 50%; top: 16%; transform: translate(-50%,-50%) scale(0.7); z-index: 17; opacity: 0; pointer-events: none;
-    font: 900 46px 'Arial Black', Impact, sans-serif; letter-spacing: 2px; color: #fff; text-align: center;
-    text-shadow: 0 0 6px #000, 0 3px 10px #000; transition: opacity .2s ease, transform .25s cubic-bezier(.2,1.4,.4,1); }
-  #announcer.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-  #announcer.tier-hi { color: #ff5a3c; text-shadow: 0 0 10px #ff3b1e, 0 0 22px rgba(255,60,30,0.7), 0 3px 10px #000; }
-  #announcer.tier-god { color: #ffd34a; text-shadow: 0 0 12px #ffb000, 0 0 26px rgba(255,180,0,0.8), 0 3px 10px #000; }
-  /* Floating damage numbers (Part 3) */
-  .dmgNum { position: absolute; transform: translate(-50%,-50%); font: 800 20px 'Trebuchet MS', sans-serif; color: #fff;
-    text-shadow: 0 2px 4px #000, 0 0 6px rgba(0,0,0,0.8); pointer-events: none; transition: transform .8s ease-out, opacity .8s ease-out; will-change: transform, opacity; }
-  .dmgNum.hs { color: #ff4d4d; } .dmgNum.big { color: #ffe600; }
-  /* Killcam (Part 5) */
-  #killcamFade { position: fixed; inset: 0; background: #000; opacity: 0; z-index: 19; pointer-events: none; transition: opacity .2s; }
-  #killcamUI { position: fixed; inset: 0; z-index: 18; display: none; pointer-events: none; color: #fff; font-family: 'Segoe UI', sans-serif; }
-  #killcamUI.on { display: block; }
-  #killcamTag { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font: 800 22px 'Segoe UI'; letter-spacing: 4px; color: #ff5a5a; text-shadow: 0 2px 6px #000; }
-  #killcamBy { position: absolute; top: calc(12% + 32px); left: 50%; transform: translateX(-50%); font-size: 17px; text-shadow: 0 2px 6px #000; opacity: .95; }
-  #killcamCountdown { position: absolute; bottom: 16%; left: 50%; transform: translateX(-50%); font: 800 26px 'Segoe UI'; text-shadow: 0 2px 8px #000; }
-  #killcamSkip { position: absolute; bottom: calc(16% - 28px); left: 50%; transform: translateX(-50%); font-size: 13px; opacity: .7; }
-  /* darken edges during the killcam for a "spectating" feel */
-  #killcamUI.on::before { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 180px 60px rgba(0,0,0,0.7); }
-  /* Mobility scooter (Part 7) */
-  #scooterPrompt { position: absolute; left: 50%; bottom: 30%; transform: translateX(-50%); z-index: 15; display: none;
-    background: rgba(0,0,0,0.55); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 17px; color: #fff; }
-  #scooterPrompt b { color: #7fe9ff; }
-  #speedLines { position: fixed; inset: 0; pointer-events: none; z-index: 11; opacity: 0; transition: opacity .15s;
-    background: radial-gradient(ellipse at center, transparent 35%, rgba(120,200,255,0.18) 78%, rgba(150,220,255,0.4) 100%); }
-  #scooterHud { position: absolute; bottom: 86px; left: 50%; transform: translateX(-50%); display: none; text-align: center; pointer-events: none; }
-  #scooterHudLabel { font-weight: bold; font-size: 14px; color: #7fe9ff; letter-spacing: 2px; text-shadow: 0 1px 3px #000; }
-  #nosBarBg { width: 220px; height: 12px; background: rgba(0,0,0,0.5); border: 2px solid #000; border-radius: 6px; margin: 3px auto; overflow: hidden; }
-  #nosBar { height: 100%; width: 100%; background: linear-gradient(90deg, #2a7fff, #7fe9ff); transition: width .1s; }
-  #scooterHelp { font-size: 11px; color: #cfe3ff; opacity: .8; }
   #dogCount span { color: #fff; }
   .streakTier { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.42); border: 2px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 6px 8px; margin-bottom: 8px; transition: border-color .2s, opacity .2s, box-shadow .2s; }
   .streakTier .stIcon { font-size: 20px; line-height: 1; filter: grayscale(0.7) brightness(0.7); transition: filter .2s; flex: 0 0 auto; }
@@ -518,17 +471,6 @@
   .setTab.active { background: #28415c; color: #fff; }
   .setPane { display: none; width: min(640px, 92vw); pointer-events: auto; }
   .setPane.active { display: block; }
-  /* Match-settings option rows (Part 6) */
-  #matchOptList { max-height: 52vh; overflow-y: auto; }
-  .moRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 4px; border-bottom: 1px solid #213347; }
-  .moCat { font: 800 12px 'Segoe UI', sans-serif; letter-spacing: 2px; color: #ffe600; margin: 12px 0 2px; padding-bottom: 3px; border-bottom: 1px solid #2c3e54; }
-  .moRow .moName { flex: 0 0 auto; font-size: 14px; color: #d6e4f2; min-width: 150px; }
-  .moOpts { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
-  .moOpt { background: #22354a; color: #cfe0f0; border: 2px solid #3a5572; border-radius: 6px; padding: 4px 9px; font: 700 13px 'Segoe UI', sans-serif; cursor: pointer; }
-  .moOpt:hover { border-color: #6fb4ff; }
-  .moOpt.sel { background: #ffe600; color: #15233a; border-color: #ffe600; }
-  #matchOptList.locked { opacity: .55; pointer-events: none; }
-  #lobbySettingsSummary { font-size: 12px; color: #9fd0ff; opacity: .9; margin-top: 2px; text-align: center; }
   .ctrlScroll { max-height: 52vh; overflow-y: auto; background: rgba(8,16,28,0.45); border: 2px solid #2c3e54; border-radius: 8px; padding: 6px 10px; }
   .ctrlCat { font: 800 12px 'Segoe UI', sans-serif; letter-spacing: 2px; color: #ffe600; margin: 12px 0 4px; padding-bottom: 3px; border-bottom: 1px solid #2c3e54; }
   .ctrlRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 8px; border-radius: 6px; font-size: 14px; color: #d6e4f2; }
@@ -578,59 +520,13 @@
     align-items: center; justify-content: center; pointer-events: none;
     background: rgba(8,24,48,0.55);
   }
-  #scoreboard .sbBox { background: rgba(10,28,56,0.93); border: 3px solid #000; border-radius: 12px; padding: 20px 26px; min-width: 620px; max-width: 92vw; max-height: 88vh; overflow-y: auto; }
-  #scoreboard h2 { font-size: 22px; letter-spacing: 3px; margin-bottom: 2px; color: #ffe600; text-align: center; }
-  #sbSub { text-align: center; font-size: 13px; color: #9fd0ff; opacity: .9; margin-bottom: 12px; letter-spacing: 1px; }
-  #scoreboard table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  #scoreboard th { text-align: right; opacity: .55; font-size: 11px; padding: 0 8px 6px; letter-spacing: 1px; }
-  #scoreboard th.pl { text-align: left; }
-  #scoreboard td { padding: 4px 8px; text-align: right; white-space: nowrap; }
-  #scoreboard td.pl { text-align: left; font-weight: 700; }
-  #scoreboard tr.me td { background: rgba(255,230,0,0.12); }
-  #scoreboard tr.me td.pl { color: #ffe600; }
-  #scoreboard tr.t1 td.pl { color: #ffffff; } #scoreboard tr.t2 td.pl { color: #c4d3e2; } #scoreboard tr.t3 td.pl { color: #93a6ba; }
-  #scoreboard td.rank { opacity: .7; text-align: center; width: 28px; }
-  #scoreboard .sbTeam { font: 800 16px 'Segoe UI', sans-serif; letter-spacing: 2px; margin: 10px 0 4px; display: flex; justify-content: space-between; align-items: baseline; }
-  #scoreboard .sbTeam.red { color: #ff5a5a; } #scoreboard .sbTeam.blue { color: #5aa6ff; }
-  #scoreboard .sbTeam .tt { font-size: 26px; }
-  /* ---- End-of-match RESULTS screen (Part 2) ---- */
-  #resultsScreen { position: fixed; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center;
-    overflow-y: auto; padding: 18px 12px 24px; pointer-events: auto;
-    background: radial-gradient(ellipse at 50% 18%, #16335f 0%, #0a1626 55%, #060c16 100%); color: #fff; font-family: 'Trebuchet MS', system-ui, sans-serif; }
-  #resTop { position: relative; width: min(820px, 96vw); height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-  #resModelHost { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 280px; height: 230px; }
-  #resModelHost canvas { width: 100%; height: 100%; }
-  #resSpotBeam { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 230px; height: 240px;
-    background: linear-gradient(to bottom, rgba(255,245,200,0.32), rgba(255,245,200,0.02) 75%, transparent);
-    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0% 100%); pointer-events: none; filter: blur(2px); }
-  #resWinner { font-size: 44px; letter-spacing: 2px; margin: 0; text-shadow: 0 3px 14px #000, 0 0 26px rgba(255,210,80,0.5); text-align: center; z-index: 2; }
-  #resWinSub { font-size: 15px; opacity: .85; margin-top: 2px; letter-spacing: 1px; z-index: 2; }
-  #resCards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: min(820px, 96vw); margin: 14px 0; }
-  .resCard { background: rgba(12,28,52,0.85); border: 2px solid #2c4a6e; border-radius: 10px; padding: 10px 12px; text-align: center;
-    opacity: 0; transform: scale(0.86) translateY(8px); transition: opacity .3s, transform .3s; }
-  .resCard.show { opacity: 1; transform: none; }
-  .resCard.mvp { grid-column: span 3; border-color: #ffd34a; background: rgba(60,46,10,0.7); }
-  .resCard .rcIco { font-size: 26px; }
-  .resCard .rcAward { font-size: 11px; letter-spacing: 1.5px; color: #9fd0ff; opacity: .85; margin-top: 2px; }
-  .resCard.mvp .rcAward { color: #ffe39a; }
-  .resCard .rcName { font-size: 18px; font-weight: bold; color: #fff; margin-top: 2px; }
-  .resCard .rcVal { font-size: 13px; color: #ffe600; }
-  #resTableWrap { width: min(820px, 96vw); background: rgba(8,18,34,0.6); border: 2px solid #243a55; border-radius: 10px; padding: 8px 14px; }
-  #resTable table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  #resTable th { text-align: right; opacity: .55; font-size: 11px; padding: 0 7px 5px; letter-spacing: 1px; }
-  #resTable th.pl { text-align: left; } #resTable td { padding: 3px 7px; text-align: right; }
-  #resTable td.pl { text-align: left; font-weight: 700; } #resTable td.rank { text-align: center; opacity: .7; }
-  #resTable tr.me td { background: rgba(255,230,0,0.12); } #resTable tr.me td.pl { color: #ffe600; }
-  #resTable .sbTeam { font: 800 15px 'Segoe UI'; letter-spacing: 2px; margin: 8px 0 3px; display: flex; justify-content: space-between; }
-  #resTable .sbTeam.red { color: #ff5a5a; } #resTable .sbTeam.blue { color: #5aa6ff; }
-  #resTable .totals td { border-top: 1px solid #2c4a6e; opacity: .8; font-style: italic; }
-  #resStatsExtra { width: min(820px, 96vw); margin-top: 10px; display: none; background: rgba(8,18,34,0.6); border: 2px solid #243a55; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #cfe0f2; }
-  #resStatsExtra .seRow { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #1a2b40; }
-  #resBtns { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
-  #resCountdown { margin-top: 8px; font-size: 13px; opacity: .7; letter-spacing: 1px; }
-  #resConfetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
-  .confetti { position: absolute; width: 9px; height: 14px; top: -20px; opacity: .9; will-change: transform; animation: confFall linear forwards; }
-  @keyframes confFall { 0% { transform: translateY(-20px) rotate(0deg); } 100% { transform: translateY(102vh) rotate(720deg); } }
+  #scoreboard .sbBox { background: rgba(10,28,56,0.92); border: 3px solid #000; border-radius: 12px; padding: 22px 30px; min-width: 380px; }
+  #scoreboard h2 { font-size: 22px; letter-spacing: 3px; margin-bottom: 12px; color: #ffe600; text-align: center; }
+  #scoreboard table { width: 100%; border-collapse: collapse; font-size: 17px; }
+  #scoreboard th { text-align: left; opacity: .6; font-size: 13px; padding-bottom: 6px; letter-spacing: 1px; }
+  #scoreboard td { padding: 5px 8px; }
+  #scoreboard tr.me td { color: #ffe600; }
+  #scoreboard td.num { text-align: right; font-weight: bold; }
 
   /* tiny "lobby code" reminder shown in-game (top-left under score) */
   #lobbyTag { position: absolute; top: 70px; left: 18px; font-size: 13px; font-weight: bold; color: #8fe3ff; opacity: .85; }
@@ -643,11 +539,9 @@
      ============================================================ -->
 <div id="hud">
   <div id="killCounter">
-    <div id="scoreLine">SCORE <span id="scoreVal">0</span></div>
-    <div id="killLine">KILLS <span id="killCount">0</span> <span class="dim">/ <span id="killTarget">25</span></span></div>
+    <div id="scoreLine">SCORE <span id="scoreVal">0</span> <span class="dim">/ <span id="scoreTarget">2500</span></span></div>
+    <div id="killLine">KILLS <span id="killCount">0</span></div>
   </div>
-  <div id="matchTimer"></div>
-  <div id="teamScoreHud"><span class="tA">0</span><span class="vs">RED · BLUE</span><span class="tB">0</span></div>
   <div id="lobbyTag"></div>
   <div id="killFeed"></div>
   <div id="lootInfo">NEXT LOOT IN: 25s</div>
@@ -689,24 +583,8 @@
   </div>
   <div id="streakLost">STREAK LOST</div>
   <div id="kongMsg">KING KONG SUMMONED</div>
-  <div id="matchBanner"></div>
-  <div id="announcer"></div>
-  <div id="killcamFade"></div>
-  <div id="killcamUI">
-    <div id="killcamTag">KILLCAM</div>
-    <div id="killcamBy"></div>
-    <div id="killcamCountdown"></div>
-    <div id="killcamSkip"></div>
-  </div>
   <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
   <div id="axePrompt">Press <b>E</b> to pick up axe</div>
-  <div id="scooterPrompt">Press <b>E</b> to ride the scooter</div>
-  <div id="speedLines"></div>
-  <div id="scooterHud">
-    <div id="scooterHudLabel">🛵 NOS</div>
-    <div id="nosBarBg"><div id="nosBar"></div></div>
-    <div id="scooterHelp">W/S drive · A/D steer · SPACE = NOS · E dismount</div>
-  </div>
   <div id="invTip"><span id="invTipText">PRESS [I] TO OPEN INVENTORY</span><button id="invTipNever">don't show again</button><button id="invTipX" title="Dismiss">✕</button></div>
 
   <div id="ammoWrap">
@@ -756,8 +634,10 @@
 <div id="scoreboard">
   <div class="sbBox">
     <h2 id="sbTitle">FREE-FOR-ALL</h2>
-    <div id="sbSub"></div>
-    <div id="sbContent"></div>
+    <table>
+      <thead id="sbHead"><tr><th>PLAYER</th><th style="text-align:right">SCORE</th><th style="text-align:right">KILLS</th></tr></thead>
+      <tbody id="sbBody"></tbody>
+    </table>
   </div>
 </div>
 
@@ -927,7 +807,6 @@
     <button class="setTab" data-pane="paneAudio">AUDIO</button>
     <button class="setTab" data-pane="paneVideo">VIDEO</button>
     <button class="setTab" data-pane="paneGameplay">GAMEPLAY</button>
-    <button class="setTab" data-pane="paneMatch">MATCH</button>
   </div>
 
   <!-- CONTROLS tab: remappable keybindings + control options -->
@@ -944,7 +823,6 @@
       <label class="optRow"><span>Sprint — Toggle (vs hold)</span><input type="checkbox" id="optSprintToggle"></label>
       <label class="optRow"><span>Auto-Reload on Empty</span><input type="checkbox" id="optAutoReload"></label>
       <label class="optRow"><span>Show Hit Markers</span><input type="checkbox" id="optHitMarkers"></label>
-      <label class="optRow"><span>Show Damage Numbers</span><input type="checkbox" id="optDmgNumbers"></label>
     </div>
     <div class="ctrlBtns">
       <button class="smallbtn" id="ctrlReset">RESET TO DEFAULT</button>
@@ -993,12 +871,6 @@
     </div>
   </div>
 
-  <div class="setPane" id="paneMatch">
-    <div id="matchHostNote" class="setHint" style="margin-bottom:8px"></div>
-    <div id="matchOptList"></div>
-    <div class="setHint" style="margin-top:6px">Settings lock when the match starts. The current mode (<b id="matchModeName">FFA</b>) is chosen on the lobby/start screen.</div>
-  </div>
-
   <div class="menuRow">
     <button class="smallbtn" id="settingsEditSkin">🎨 EDIT SKIN</button>
     <button class="bigbtn" id="settingsBack">DONE</button>
@@ -1011,7 +883,6 @@
     <h2>PAUSED</h2>
     <div class="pauseWarn">⚠️ Game continues for other players while paused</div>
     <button class="bigbtn" id="pauseResume">RESUME</button>
-    <button class="smallbtn" id="pauseTeamSwitch" style="display:none">⇄ SWITCH TEAM</button>
     <button class="smallbtn" id="pauseSettings">⚙ SETTINGS</button>
     <button class="smallbtn" id="pauseLeave">LEAVE MATCH</button>
   </div>
@@ -1044,11 +915,9 @@
   <div class="lobbyPlayers" id="lobbyPlayers"></div>
   <div style="font-size:14px;opacity:.85">Game mode <span id="lobbyModeHostNote" style="opacity:.7;font-size:12px"></span>:</div>
   <div class="modePick" id="lobbyModePick">
-    <button data-mode="ffa">FREE-FOR-ALL<small>kills to win</small></button>
+    <button data-mode="ffa">FREE-FOR-ALL<small>score to win</small></button>
     <button data-mode="gungame">GUN GAME<small>20-weapon ladder</small></button>
-    <button data-mode="tdm">TEAM DEATHMATCH<small>red vs. blue</small></button>
   </div>
-  <div id="lobbySettingsSummary"></div>
   <div class="menuRow">
     <button class="bigbtn" id="lobbyStart">START MATCH</button>
     <button class="smallbtn" id="lobbySettings">⚙ SETTINGS</button>
@@ -1064,9 +933,8 @@
   <h1>BLOCKOUT<small>LOW-POLY ARENA FPS</small></h1>
   <p>Solo vs. bots. Pick a mode &amp; loadout, then frag.</p>
   <div class="modePick" id="soloModePick">
-    <button data-mode="ffa">FREE-FOR-ALL<small>kills to win</small></button>
+    <button data-mode="ffa">FREE-FOR-ALL<small>score to win</small></button>
     <button data-mode="gungame">GUN GAME<small>20-weapon ladder</small></button>
-    <button data-mode="tdm">TEAM DEATHMATCH<small>red vs. blue</small></button>
   </div>
   <div class="menuRow">
     <button class="bigbtn" id="startButton">CLICK TO PLAY</button>
@@ -1091,28 +959,6 @@
   </div>
 </div>
 
-<!-- ============================================================
-     END-OF-MATCH RESULTS SCREEN (Part 2)
-     ============================================================ -->
-<div id="resultsScreen">
-  <div id="resConfetti"></div>
-  <div id="resTop">
-    <div id="resModelHost"></div>
-    <div id="resSpotBeam"></div>
-    <h1 id="resWinner">YOU WIN</h1>
-    <div id="resWinSub"></div>
-  </div>
-  <div id="resCards"></div>
-  <div id="resTableWrap"><div id="resTable"></div></div>
-  <div id="resStatsExtra"></div>
-  <div id="resBtns">
-    <button class="bigbtn" id="resAgain">PLAY AGAIN</button>
-    <button class="smallbtn" id="resLobby">BACK TO LOBBY</button>
-    <button class="smallbtn" id="resStatsBtn">VIEW MATCH STATS</button>
-  </div>
-  <div id="resCountdown"></div>
-</div>
-
 <!-- Three.js from CDN (r128, no modules / no build tools) -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <!-- PeerJS (WebRTC peer-to-peer) for online private lobbies — uses the free public broker -->
@@ -1129,60 +975,9 @@
    ============================================================================ */
 // Match scoring (improvement #5): the win condition is now a SCORE target,
 // not a kill count. (CHANGED: was "first to 25 kills".)
-const SCORE_TARGET   = 2500;       // (legacy) point target — FFA now ends on a KILL limit (MATCH.ffaKills)
+const SCORE_TARGET   = 2500;       // first to this many points wins the match
 const POINTS_KILL     = 100;       // points awarded per kill
 const POINTS_HEADSHOT = 40;        // bonus added on a headshot kill (headshot kill = 140)
-
-/* ============================================================================
-   MATCH SETTINGS — host-authoritative, adjustable in the lobby, synced to clients,
-   and LOCKED for the duration of a match. (Part 6.)  Persisted in localStorage.
-   ============================================================================ */
-const MATCH = {
-  ffaKills: 25,        // FFA kill limit (15/25/30/40/50/75/100)
-  ffaTime: 10,         // FFA time limit, minutes (5/10/15/20/0=none)
-  ggTime: 15,          // Gun Game time limit, minutes (10/15/20/30/0=none)
-  tdmKills: 75,        // Team Deathmatch team kill limit (30/50/75/100/150)
-  tdmTime: 10,         // Team Deathmatch time limit, minutes (5/10/15/20)
-  friendlyFire: false, // TDM friendly fire (host-controlled)
-  respawnDelay: 2,     // respawn delay, seconds (1/2/3/5)
-  forceLoadout: false, // false = players keep saved loadout; true = everyone starts with the preset default
-  dayNight: 'on',      // 'on' | 'off' | 'day' | 'night'
-  allowKong: true, allowMckayla: true, allowStreaks: true,
-  // --- runtime (computed at match start; never user-set) ---
-  _timeLeft: 0, _hasTime: false, _ended: false,
-  _KEYS: ['ffaKills','ffaTime','ggTime','tdmKills','tdmTime','friendlyFire','respawnDelay','forceLoadout','dayNight','allowKong','allowMckayla','allowStreaks'],
-  payload() { const p = {}; this._KEYS.forEach(k => p[k] = this[k]); return p; },
-  apply(p) { if (p) this._KEYS.forEach(k => { if (p[k] !== undefined) this[k] = p[k]; }); },
-  load() { try { this.apply(JSON.parse(localStorage.getItem('matchSettings_v1'))); } catch (e) {} },
-  save() { try { localStorage.setItem('matchSettings_v1', JSON.stringify(this.payload())); } catch (e) {} }
-};
-MATCH.load();
-// Resolve the active kill target + time limit (seconds) for the current mode.
-function modeKillLimit() { return gameMode === 'tdm' ? MATCH.tdmKills : MATCH.ffaKills; }
-function modeTimeLimitSec() {
-  const m = gameMode === 'gungame' ? MATCH.ggTime : gameMode === 'tdm' ? MATCH.tdmTime : MATCH.ffaTime;
-  return (m && m > 0) ? m * 60 : 0;
-}
-
-/* ---- Per-player aggregate stats (live in NET.scores entries; a solo record stands in offline). ---- */
-function freshStat(name) {
-  return { name: (name || 'Player').slice(0, 14), score: 0, kills: 0, deaths: 0, streak: 0, bestStreak: 0,
-           headshots: 0, meleeKills: 0, streakActs: 0, wkills: {}, level: 1, team: null, ping: 0 };
-}
-const soloStat = freshStat('YOU');                                   // solo (offline) stat record
-function myStatRec() { return NET.active ? NET.scores.get(NET.selfId) : soloStat; }
-function isMeleeWeaponKey(w) { return !!(WEAPONS[w] && (WEAPONS[w].melee || WEAPONS[w].karambit)); }
-// Record one kill on a killer's stat record (kills counted elsewhere; this adds the rich stats).
-function statKill(rec, weapon, headshot, melee) {
-  if (!rec) return;
-  if (headshot) rec.headshots = (rec.headshots || 0) + 1;
-  if (melee || isMeleeWeaponKey(weapon)) rec.meleeKills = (rec.meleeKills || 0) + 1;
-  if (weapon) { rec.wkills = rec.wkills || {}; rec.wkills[weapon] = (rec.wkills[weapon] || 0) + 1; rec.lastWeapon = weapon; }
-  rec.streak = (rec.streak || 0) + 1;
-  if (rec.streak > (rec.bestStreak || 0)) rec.bestStreak = rec.streak;
-}
-function statDeath(rec) { if (!rec) return; rec.deaths = (rec.deaths || 0) + 1; rec.streak = 0; }
-
 const BOT_COUNT   = 8;             // default bot count (overridable in Settings)
 const BOT_MAX     = 16;            // hard cap for the Settings stepper
 const BOT_RESPAWN = 3.0;           // seconds before a dead bot respawns
@@ -1311,11 +1106,7 @@ function setMeleeChoice(t) {
   if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();
   if (typeof updateHUD === 'function') updateHUD();
 }
-let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame' | 'tdm'
-if (gameMode !== 'ffa' && gameMode !== 'gungame' && gameMode !== 'tdm') gameMode = 'ffa';
-let myTeam = null;      // TEAM DEATHMATCH: 'red' | 'blue' for the LOCAL player (null in FFA/GG)
-const TEAMS = { red: { name: 'TEAM RED', color: 0xe23b3b, css: '#ff5a5a', spawnSide: 'yellow' },
-                blue: { name: 'TEAM BLUE', color: 0x3b7fe2, css: '#5aa6ff', spawnSide: 'green' } };
+let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame'
 let ggLevel  = 1;       // the LOCAL player's current gun-game level (1..20)
 let ggKarambit = false; // is the LOCAL player currently holding the karambit (vs their gun)?
 let ffaMain  = 'gg2';   // FFA: the player's chosen main weapon (default Assault Rifle); kept across respawns
@@ -2601,7 +2392,6 @@ buildMapDetails();
    ============================================================================ */
 let timeOfDay = Math.random();                 // randomized start (noon / dusk / midnight / ...)
 let dnFullCycle = 480 + Math.random() * 240;   // 8-12 min for a full cycle (half = day->night = 4-6 min)
-let dnFrozen = false;                           // Part 6: day/night locked (off / force-day / force-night)
 let dnTarget = timeOfDay, dnHasTarget = false; // clients lerp timeOfDay toward dnTarget
 let dnLampF = 0, dnStarF = 0;                  // current lamp-on + star-visibility factors
 // Keyframe stops: sky / fog / fogNear / fogFar / sunColor / sunInt / hemiSky / hemiGround / hemiInt / lamp / star
@@ -2755,8 +2545,8 @@ function applyDayNight() {
 }
 let _dnBeaconT = 0, _dnNetAcc = 0;
 function updateDayNight(dt) {
-  if ((!NET.active || NET.isHost) && !dnFrozen) timeOfDay = (timeOfDay + dt / dnFullCycle) % 1;   // frozen when host forces day/night/off
-  else if (NET.active && !NET.isHost && dnHasTarget) { let d = dnTarget - timeOfDay; if (d > 0.5) d -= 1; else if (d < -0.5) d += 1; timeOfDay = (timeOfDay + d * Math.min(1, dt * 1.5) + 1) % 1; }
+  if (!NET.active || NET.isHost) timeOfDay = (timeOfDay + dt / dnFullCycle) % 1;
+  else if (dnHasTarget) { let d = dnTarget - timeOfDay; if (d > 0.5) d -= 1; else if (d < -0.5) d += 1; timeOfDay = (timeOfDay + d * Math.min(1, dt * 1.5) + 1) % 1; }
   applyDayNight();
   skyGroup.position.copy(camera.getWorldPosition(_dnCamPos));   // keep the sky centred on the camera (= at infinity)
   _dnBeaconT += dt; towerBeacon.material.opacity = dnLampF * ((Math.sin(_dnBeaconT * 2.4) > 0.4) ? 1 : 0.12);   // slow blink, night only
@@ -2937,9 +2727,9 @@ IM.load();
 
 /* Local control OPTIONS (sensitivity, invert-Y, ADS/sprint hold-vs-toggle, auto-reload, hit markers, FOV). */
 const OPT = {
-  sens: 1, sensAds: 1, sensScope: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, dmgNumbers: true, fov: 78,
+  sens: 1, sensAds: 1, sensScope: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, fov: 78,
   load() { try { const o = JSON.parse(localStorage.getItem('controls_opts_v1')); if (o && typeof o === 'object') Object.assign(this, o); } catch (e) {} },
-  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, sensAds: this.sensAds, sensScope: this.sensScope, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, dmgNumbers: this.dmgNumbers, fov: this.fov })); } catch (e) {} }
+  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, sensAds: this.sensAds, sensScope: this.sensScope, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, fov: this.fov })); } catch (e) {} }
 };
 OPT.load();
 DEFAULT_FOV = OPT.fov;     // apply the saved field-of-view
@@ -2962,7 +2752,6 @@ document.addEventListener('pointerlockchange', () => {
 function openPauseMenu() {
   if (paused || !gameState.running || gameState.over) return;
   paused = true; firing = false; firingL = false; aiming = false; saberBlocking = false;
-  const pts = el('pauseTeamSwitch'); if (pts) { pts.style.display = (gameMode === 'tdm' && NET.active) ? '' : 'none'; if (myTeam) pts.textContent = '⇄ SWITCH TO ' + (myTeam === 'red' ? 'BLUE' : 'RED'); }
   el('pauseMenu').style.display = 'flex';
   document.exitPointerLock && document.exitPointerLock();
 }
@@ -3034,7 +2823,7 @@ function gameAction(act, rep) {
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { streakActivate('dogs'); return; }
   if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: dismount > mount scooter > pick up axe > Mckayla > ladder
+  if (act === 'interact' && !rep) { if (tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: pick up a stuck axe > summon Mckayla (in box) > grab a ladder
   if (act === 'reload') { cigCancel(); reload(); }
   if (act === 'inventory' && !rep && gameMode !== 'gungame') { toggleInventory(); return; }
   if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
@@ -4620,17 +4409,15 @@ function tryShoot(akSide, burstFollow) {
   let firstEnd = null, endKind = 0;   // ending FX kind: 0 = air, 1 = wall/object, 2 = body
 
   // Raycast against bots' part-meshes, remote-player avatars, ENEMY dogs, AND world colliders.
-  // TDM (friendly fire off): same-team bots + teammates are excluded, so bullets pass through them.
-  const targets = colliders.concat(botMeshes().filter(m => !ffProtected(null, m.userData.bot && m.userData.bot.team)));
+  const targets = colliders.concat(botMeshes());
   dogMeshes(dogSelfId()).forEach(m => targets.push(m));   // shootable ENEMY dogs (never your own)
   kongMeshes(dogSelfId()).forEach(m => targets.push(m));  // shootable ENEMY King Kongs (never your own ally)
   mckaylaMeshes(dogSelfId()).forEach(m => targets.push(m));   // shootable ENEMY Mckaylas (never your own)
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar && !ffProtected(rp.id)) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
+  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
   // Other players' in-flight RC missiles can be shot down (any direct bullet hit detonates them).
   rcRemote.forEach(o => o.grp.children.forEach(c => { if (c.isMesh) targets.push(c); }));
-  if (scooter && scooter.alive && scooter.group.visible) scooter.group.traverse(o => { if (o.isMesh && o.userData && o.userData.scooter) targets.push(o); });   // the scooter is shootable (200 HP)
 
-  let hitSomething = false, killedSomeone = false, killedHead = false, headHit = false;
+  let hitSomething = false, killedSomeone = false, killedHead = false;
   for (let p = 0; p < w.pellets; p++) {
     const dir = baseDir.clone();
     // Apply random spread cone
@@ -4654,8 +4441,6 @@ function tryShoot(akSide, burstFollow) {
         let dmg = w.damage * (isHead ? w.headMult : 1);
         if (w.falloff) dmg *= ffMul(w.falloff, hit.distance);   // Tactical Shotgun drops off past ~8u
         spawnBlood(hit.point, isHead ? 16 : 9);
-        if (isHead) headHit = true;
-        showDamageNumber(hit.point, dmg, isHead);   // floating damage number (Part 3)
         if (NET.isClient) {
           // host owns the bots — report the hit, just show local feedback
           NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg, head: isHead, weapon: currentWeaponKey, fromId: NET.selfId });
@@ -4673,7 +4458,6 @@ function tryShoot(akSide, burstFollow) {
         let dmg = w.damage * (isHead ? w.headMult : 1);
         if (w.falloff) dmg *= ffMul(w.falloff, hit.distance);   // Tactical Shotgun drops off past ~8u
         spawnBlood(hit.point, isHead ? 16 : 9);
-        if (!ffProtected(ud.remote.id)) { if (isHead) headHit = true; showDamageNumber(hit.point, dmg, isHead); }   // no marker/number for protected teammates
         NET.damageRemote(ud.remote, dmg, isHead, currentWeaponKey, false, origin, dir);   // origin+dir let their saber deflect
       }
       else if (ud.dog && ud.dog.alive && !ud.dog.dying) {
@@ -4701,11 +4485,6 @@ function tryShoot(akSide, burstFollow) {
         NET.route(ud.rcRemoteOwner, { t: 'rcshot', id: ud.rcRemoteOwner, byId: NET.selfId });
         rcRemoteCleanup(ud.rcRemoteOwner);          // remove our local copy immediately
       }
-      else if (ud.scooter) {                        // shot the mobility scooter (200 HP)
-        hitSomething = true; spawnExplosionFX(hit.point, 0.5, 0xffd27a);
-        let dmg = w.damage; if (w.falloff) dmg *= ffMul(w.falloff, hit.distance);
-        damageScooter(dmg);
-      }
       // Impact SFX (first pellet only): flesh/headshot on a body, metal on vehicles/fence, else wall.
       if (p === 0) {
         if ((ud.bot && ud.bot.alive) || (ud.remote && ud.remote.alive)) { endKind = 2; sfxImpact(ud.part === 'head' ? 'head' : 'flesh', hit.point); }
@@ -4730,7 +4509,7 @@ function tryShoot(akSide, burstFollow) {
   if (currentWeaponKey === 'deagle' && ws.ammo <= 0 && ws.reserve <= 0) removeSpecial('deagle');
   else if (ws.ammo <= 0) reload();
 
-  if (hitSomething) showHitMarker(headHit);
+  if (hitSomething) showHitMarker();
   if (killedSomeone) showKillFlash(killedHead);
   updateHUD();
 }
@@ -4977,11 +4756,8 @@ function disposeGroup(group) {
 // dismemberment / dropped guns / new loadout + appearance start fresh.
 function spawnBot(bot) {
   if (bot.group) { scene.remove(bot.group); disposeGroup(bot.group); }
-  bot.teamPip = null;
-  if (gameMode === 'tdm' && !bot.team) bot.team = NET.active ? ((bot.id % 2) ? 'red' : 'blue') : 'blue';   // solo TDM: bots are the enemy (BLUE)
   buildBanditRig(bot);                 // assigns group, parts, materials, weapon
   scene.add(bot.group);
-  updateBotTeamPip(bot);               // TDM: overhead team-color pip
 
   const sp = randomSpawn();
   bot.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
@@ -5481,67 +5257,6 @@ function floatText(worldPos, text, color) {
 }
 
 /* ============================================================================
-   PART 3 — DAMAGE NUMBERS + KILLSTREAK ANNOUNCER (the "dopamine" layer).
-   ============================================================================ */
-// --- Floating damage numbers (stack rapid hits on the same target) ---
-const _dmgNums = [];
-function showDamageNumber(worldPos, dmg, headshot) {
-  if (!OPT.dmgNumbers || dmg <= 0) return;
-  _proj.copy(worldPos).project(camera); if (_proj.z > 1) return;
-  const sx = (_proj.x * 0.5 + 0.5) * window.innerWidth, sy = (-_proj.y * 0.5 + 0.5) * window.innerHeight, now = performance.now();
-  for (const d of _dmgNums) {   // merge into a recent nearby number (same target within 320ms)
-    if (now - d.t < 320 && Math.abs(d.sx - sx) < 60 && Math.abs(d.sy - sy) < 60) {
-      d.total += dmg; d.t = now; d.headshot = d.headshot || headshot; d.life = 0.85; d.sx = sx; d.sy = sy;
-      d.el.textContent = Math.round(d.total);
-      d.el.className = 'dmgNum' + (d.headshot ? ' hs' : (d.total >= 50 ? ' big' : ''));
-      d.el.style.left = sx + 'px'; d.el.style.top = sy + 'px';
-      d.el.style.transition = 'none'; d.el.style.transform = 'translate(-50%,-50%) scale(1.3)'; d.el.style.opacity = '1';
-      requestAnimationFrame(() => { d.el.style.transition = 'transform .85s ease-out, opacity .85s ease-out'; d.el.style.transform = 'translate(-50%,-170%) scale(1)'; d.el.style.opacity = '0'; });
-      return;
-    }
-  }
-  const div = document.createElement('div');
-  div.className = 'dmgNum' + (headshot ? ' hs' : (dmg >= 50 ? ' big' : ''));
-  div.textContent = Math.round(dmg); div.style.left = sx + 'px'; div.style.top = sy + 'px';
-  el('floatLayer').appendChild(div);
-  requestAnimationFrame(() => { div.style.transform = 'translate(-50%,-170%)'; div.style.opacity = '0'; });
-  _dmgNums.push({ el: div, sx, sy, total: dmg, t: now, headshot: !!headshot, life: 0.85 });
-}
-function updateDmgNums(dt) {
-  for (let i = _dmgNums.length - 1; i >= 0; i--) { _dmgNums[i].life -= dt; if (_dmgNums[i].life <= 0) { _dmgNums[i].el.remove(); _dmgNums.splice(i, 1); } }
-}
-
-// --- Killstreak announcer (LOCAL player only): multi-kills (within 4s) + spree milestones ---
-let _multiCount = 0, _multiLast = 0, _announceT = null;
-const SPREE_TIERS = { 3: ['KILLING SPREE', 'hi'], 5: ['RAMPAGE', 'hi'], 7: ['DOMINATING', 'hi'], 10: ['UNSTOPPABLE', 'god'], 15: ['GODLIKE', 'god'], 20: ['WICKED SICK', 'god'], 25: ['M-M-M-MONSTER KILL', 'god'] };
-const MULTI_TIERS = { 2: ['DOUBLE KILL', ''], 3: ['TRIPLE KILL', 'hi'], 4: ['MULTI KILL', 'hi'], 5: ['MONSTER KILL', 'hi'], 6: ['GODLIKE', 'god'], 7: ['UNSTOPPABLE', 'god'] };
-function announceStreakKill() {
-  const now = performance.now();
-  _multiCount = (now - _multiLast < 4000) ? _multiCount + 1 : 1; _multiLast = now;
-  const spree = SPREE_TIERS[STREAK.count];           // exact spree threshold this kill?
-  if (spree) { showAnnouncer(spree[0], spree[1]); sfxAnnouncer(spree[1]); return; }
-  if (_multiCount >= 2) { const m = MULTI_TIERS[Math.min(7, _multiCount)]; showAnnouncer(m[0], m[1]); sfxAnnouncer(m[1] || 'lo'); }
-}
-function announceReset() { _multiCount = 0; _multiLast = 0; }
-function showAnnouncer(text, tier) {
-  const e = el('announcer'); if (!e) return;
-  e.textContent = text; e.className = tier === 'god' ? 'tier-god' : tier === 'hi' ? 'tier-hi' : '';
-  void e.offsetWidth; e.classList.add('show');
-  clearTimeout(_announceT); _announceT = setTimeout(() => e.classList.remove('show'), 1500);
-}
-// Synthesized deep "announcer voice" stinger (bass-heavy formant tones + reverb tail). Words are on screen.
-function sfxAnnouncer(tier) {
-  const base = tier === 'god' ? 70 : tier === 'hi' ? 86 : 104;
-  SND.play2d((ctx, out, t) => {
-    aTone(ctx, out, t, { type: 'sawtooth', f0: base, f1: base * 1.5, dur: 0.5, peak: 0.3, verb: 0.5 });
-    aTone(ctx, out, t, { type: 'sine', f0: base / 2, dur: 0.6, peak: 0.34 });                                   // sub-bass
-    aNoise(ctx, out, t, { dur: 0.5, peak: 0.12, filter: 'bandpass', freq: 700, freq1: 1500, q: 3, verb: 0.6 });   // vocal formant sweep
-    aTone(ctx, out, t + 0.18, { type: 'square', f0: base * 2, f1: base * 1.2, dur: 0.35, peak: 0.15, verb: 0.4 });
-    if (tier === 'god') aTone(ctx, out, t + 0.3, { type: 'sawtooth', f0: base * 3, f1: base * 4, dur: 0.4, peak: 0.18, verb: 0.6 });
-  }, 'voice', 'announcer', 0.95, 0.95);
-}
-
-/* ============================================================================
    7c. EQUIPMENT — frag grenades (throw with G; bounce, fuse, blast)
    ============================================================================ */
 const liveGrenades = [];
@@ -5795,7 +5510,6 @@ function applyBlast(center, radius, maxDmg, weaponTag, opts) {
   const pe = new THREE.Vector3(player.pos.x, player.pos.y + 1, player.pos.z);
   const pdist = pe.distanceTo(center);
   if (player.alive && pdist < radius) hurtPlayer(maxDmg * (1 - pdist / radius));
-  damageScooterRadius(center, radius, maxDmg);   // explosions damage the scooter too
   const shakeRange = opts.shakeRange != null ? opts.shakeRange : GRENADE.shakeRange;
   if (pdist < shakeRange) addShake((opts.shakeMag != null ? opts.shakeMag : 0.13) * (1 - pdist / shakeRange), 0.4);
 }
@@ -5998,7 +5712,6 @@ function ggProjExplode(p, center) {
   // Self splash.
   const pd = Math.hypot(player.pos.x - center.x, player.pos.y + 1 - center.y, player.pos.z - center.z);
   if (player.alive && pd < p.cfg.blastR) hurtPlayer(p.cfg.blastDmg * (1 - pd / p.cfg.blastR));
-  damageScooterRadius(center, p.cfg.blastR, p.cfg.blastDmg);
   addShake(0.18 * Math.max(0, 1 - pd / (p.cfg.blastR * 2)), 0.4);
 }
 function updateGGProjectiles(dt) {
@@ -6199,7 +5912,6 @@ function rcApplyDamage(center, directBot, directRemote) {
   }
   const pd = Math.hypot(player.pos.x - center.x, player.pos.y + 1 - center.y, player.pos.z - center.z);
   if (player.alive && pd < RC.blastR) hurtPlayer(RC.blastDmg * (1 - pd / RC.blastR));
-  damageScooterRadius(center, RC.blastR, RC.blastDmg);
   addShake(0.2 * Math.max(0, 1 - pd / (RC.blastR * 2)), 0.4);
 }
 
@@ -6682,7 +6394,6 @@ function streakOnKill() {
     if (!t.unlocked && !t.consumed && STREAK.count >= t.need) { t.unlocked = true; streakFlashUnlock(t); sfxStreakUnlock(); }
   });
   updateStreakHUD();
-  announceStreakKill();   // Part 3: multi-kill / spree voice + visual callout (local only)
 }
 // Host-authority credit: bump the killer's streak (locally if it's me, else notify that peer).
 function streakCredit(killerId, victimId) {
@@ -6693,7 +6404,7 @@ function streakCredit(killerId, victimId) {
 // Death (or match reset): wipe the streak + forfeit rewards. announce=true shows "STREAK LOST".
 function streakReset(announce) {
   const had = STREAK.count > 0 || STREAK.tiers.some(t => t.unlocked || t.consumed);
-  STREAK.count = 0; announceReset();   // dying breaks the multi-kill/spree announcer chain
+  STREAK.count = 0;
   STREAK.tiers.forEach(t => { t.unlocked = false; t.consumed = false; t.armed = false; });
   saberEnd();
   player.overheal = 0; player.burnT = 0;
@@ -6702,19 +6413,11 @@ function streakReset(announce) {
   if (announce && had) { showStreakLost(); sfxStreakLost(); }
   updateStreakHUD();
 }
-// Record a scorestreak activation (for the end-of-match "most activations" award).
-function noteStreakActivation() {
-  if (!NET.active) { soloStat.streakActs = (soloStat.streakActs || 0) + 1; }
-  else if (NET.isHost) { const s = NET.scores.get(NET.selfId); if (s) s.streakActs = (s.streakActs || 0) + 1; }
-  else NET.route(NET.hostId, { t: 'streakact', id: NET.selfId });
-}
 // Press B / N — activate an unlocked reward (or a soft "denied" if it isn't ready).
 function streakActivate(tierId) {
   const t = STREAK.tiers.find(x => x.id === tierId);
   if (!t || !gameState.running || !player.alive) return;
-  if (!MATCH.allowStreaks) { sfxStreakDenied(); return; }            // host disabled scorestreaks for this match
   if (!t.unlocked || t.consumed) { sfxStreakDenied(); return; }
-  noteStreakActivation();
   if (tierId === 'saberjd') { t.consumed = true; equipSaberJD(); updateStreakHUD(); }
   else if (tierId === 'flame') { equipFlamethrower(); }   // consumed when the fuel tank runs dry (see flameEmpty)
   else if (tierId === 'rcrl') { streakDeployRC(); }   // consumed when the rocket is actually fired (see rcTryLaunch)
@@ -6924,7 +6627,7 @@ let invTipT = 0, invTipSession = false;
 function _invTipNever() { try { return localStorage.getItem('invTipNever') === '1'; } catch (e) { return false; } }
 function _invTipSeen() { try { return parseInt(localStorage.getItem('invTipSeen') || '0', 10) || 0; } catch (e) { return 0; } }
 function maybeShowInvTip(secs, isMatchStart) {
-  if ((gameMode !== 'ffa' && gameMode !== 'tdm') || invTipSession || _invTipNever()) return;
+  if (gameMode !== 'ffa' || invTipSession || _invTipNever()) return;
   if (isMatchStart) { const n = _invTipSeen() + 1; try { localStorage.setItem('invTipSeen', n); } catch (e) {} }
   const nv = el('invTipNever'); if (nv) nv.style.display = (_invTipSeen() >= 5) ? 'inline' : 'none';   // permanent-dismiss option after 5 views
   const it = el('invTipText'); if (it) it.textContent = 'PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY';
@@ -7165,16 +6868,13 @@ function dogOwnerPos(ownerId) {
   const rp = NET.active ? NET.players.get(ownerId) : null;
   return rp ? rp.pos : player.pos;
 }
-// True if `t` is an enemy team relative to the owner's team `oteam` (always true outside TDM).
-function allyEnemyTeam(oteam, t) { return !oteam || !t || t !== oteam; }
-// Every alive enemy of `ownerId`: all bots + all humans except the owner. (TDM: excludes the owner's teammates.)
+// Every alive enemy of `ownerId`: all bots + all humans except the owner.
 function dogTargets(ownerId) {
   const out = [];
-  const oteam = (gameMode === 'tdm') ? teamOf(ownerId) : null;
-  for (const b of bots) if (b.alive && allyEnemyTeam(oteam, b.team)) out.push({ pos: b.pos, kind: 'bot', ref: b });
+  for (const b of bots) if (b.alive) out.push({ pos: b.pos, kind: 'bot', ref: b });
   const sid = dogSelfId();
-  if (player.alive && ownerId !== sid && allyEnemyTeam(oteam, myTeam)) out.push({ pos: player.pos, kind: 'self', ref: player });
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId && allyEnemyTeam(oteam, teamOf(rp.id))) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
+  if (player.alive && ownerId !== sid) out.push({ pos: player.pos, kind: 'self', ref: player });
+  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
   for (const m of mckaylas) if (m.alive && !m.dying && m.ownerId !== ownerId) out.push({ pos: m.pos, kind: 'mck', ref: m });   // enemy Mckaylas are fair game
   return out;
 }
@@ -7430,13 +7130,6 @@ function showKongMsg(text) {
   e.textContent = text; e.style.display = 'block'; requestAnimationFrame(() => e.style.opacity = '1');
   clearTimeout(_kongMsgT); _kongMsgT = setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.style.display = 'none', 400); }, 1800);
 }
-let _bannerT = null;
-// Big center banner (match intro line, SUDDEN DEATH, etc.). Newlines render as separate lines.
-function showCenterBanner(text, color, dur) {
-  const e = el('matchBanner'); if (!e) return;
-  e.textContent = text; e.style.color = color || '#fff'; e.style.display = 'block'; requestAnimationFrame(() => e.style.opacity = '1');
-  clearTimeout(_bannerT); _bannerT = setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.style.display = 'none', 350); }, dur || 3200);
-}
 // Dramatic rise FX + audio, played once per Kong on every machine (it's a major event).
 function kongSummonFX(pos) {
   addShake(0.6, 1.0);
@@ -7456,7 +7149,6 @@ function removeKong(kong) { if (kong.group) { scene.remove(kong.group); disposeG
 // ---- Summon ----
 function requestSummonKong() {
   if (!gameState.running || !player.alive) return;
-  if (!MATCH.allowKong) { showKongMsg('KING KONG DISABLED'); sfxStreakDenied(); return; }   // host disabled it for this match
   const ownerId = dogSelfId();
   if (kongs.some(k => k.ownerId === ownerId && k.alive)) return;   // one Kong at a time
   showKongMsg('KING KONG SUMMONED');
@@ -7736,11 +7428,10 @@ function mckaylaMeshes(excludeOwner) { const out = []; for (const m of mckaylas)
 // Every alive enemy of `ownerId`: bots + humans (not the owner) + enemy King Kongs.
 function mckTargets(ownerId) {
   const out = [];
-  const oteam = (gameMode === 'tdm') ? teamOf(ownerId) : null;
-  for (const b of bots) if (b.alive && allyEnemyTeam(oteam, b.team)) out.push({ pos: b.pos, kind: 'bot', ref: b });
+  for (const b of bots) if (b.alive) out.push({ pos: b.pos, kind: 'bot', ref: b });
   const sid = dogSelfId();
-  if (player.alive && ownerId !== sid && allyEnemyTeam(oteam, myTeam)) out.push({ pos: player.pos, kind: 'self', ref: player });
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId && allyEnemyTeam(oteam, teamOf(rp.id))) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
+  if (player.alive && ownerId !== sid) out.push({ pos: player.pos, kind: 'self', ref: player });
+  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
   for (const k of kongs) if (k.alive && !k.dying && k.ownerId !== ownerId) out.push({ pos: k.pos, kind: 'kong', ref: k });
   return out;
 }
@@ -7850,7 +7541,6 @@ function mckUpdateHUD() {
 // Press E inside the noodle box: summon Mckayla (once per life).
 function tryNoodleSummon() {
   if (!inNoodleBox() || mckaylaSummonedThisLife || !player.alive) return false;
-  if (!MATCH.allowMckayla) { showKongMsg('MCKAYLA DISABLED'); sfxStreakDenied(); return true; }   // host disabled her for this match
   mckaylaSummonedThisLife = true;
   const myId = dogSelfId();
   if (NET.isClient) { NET.route(NET.hostId, { t: 'mcksummon', ownerId: myId }); mckBlossomFX(player.pos.clone().setY(player.pos.y + 1)); sfxMckSummon(); }
@@ -8043,7 +7733,6 @@ function updateHUD() {
   el('reloading').textContent = ws.reloading > 0 ? 'RELOADING…' : '';
   el('scoreVal').textContent = gameState.score;
   el('killCount').textContent = gameState.kills;
-  { const kt = el('killTarget'); if (kt) kt.textContent = modeKillLimit(); }   // FFA/TDM kill limit
   el('grenadeCount').textContent = player.grenades;
   el('grenadeLabel').textContent = throwableType === 'tomahawk' ? 'TOMAHAWKS' : 'GRENADES';
   // Gun-game: show the level prominently, hide score/kills/grenades; melee shows ∞ ammo.
@@ -8052,15 +7741,12 @@ function updateHUD() {
     el('ggLevel').style.display = '';
     el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">⚔ ${MELEE_NAMES[meleeChoice]}</span>` : ``);
     el('killCounter').style.display = 'none'; el('grenades').style.display = 'none'; el('lootInfo').style.display = 'none';
-    el('teamScoreHud').style.display = 'none';
     el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
     el('lethalCount').style.display = 'block'; el('lethalNum').textContent = (player.lethals || 0); el('lethalIco').textContent = (lethalChoice === 'axe' ? '🪓' : '💨');
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
     else if (magSpan) magSpan.style.display = '';
-  } else {   // FFA / TDM: score/kills + impulse grenades (same equipment as gun game), no frag grenades
+  } else {   // FFA: score/kills + impulse grenades (same equipment as gun game), no frag grenades
     el('ggLevel').style.display = 'none'; el('killCounter').style.display = ''; el('grenades').style.display = 'none';
-    const tdm = gameMode === 'tdm';
-    const tsh = el('teamScoreHud'); if (tsh) { tsh.style.display = tdm ? 'flex' : 'none'; if (tdm) { tsh.querySelector('.tA').textContent = teamKills('red'); tsh.querySelector('.tB').textContent = teamKills('blue'); } }
     el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
     el('lethalCount').style.display = 'block'; el('lethalNum').textContent = (player.lethals || 0); el('lethalIco').textContent = (lethalChoice === 'axe' ? '🪓' : '💨');
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
@@ -8088,17 +7774,7 @@ function updateHUD() {
 }
 
 let hitMarkerTimer = 0;
-function showHitMarker(headshot) {
-  if (!OPT.hitMarkers) return;
-  const hm = el('hitmarker'); hm.style.opacity = 1; hm.classList.toggle('hs', !!headshot); hitMarkerTimer = 0.15;
-  sfxHitMarker(!!headshot);   // TINK (body) / DING (headshot)
-}
-function sfxHitMarker(head) {
-  SND.play2d((ctx, out, t) => {
-    aTone(ctx, out, t, { type: 'square', f0: head ? 2000 : 1150, f1: head ? 1500 : 880, dur: 0.05, peak: 0.15 });
-    if (head) aTone(ctx, out, t + 0.015, { type: 'sine', f0: 2700, f1: 2100, dur: 0.06, peak: 0.1 });
-  }, 'ui', 'hitmark', 0.55, 0.09);
-}
+function showHitMarker() { if (!OPT.hitMarkers) return; el('hitmarker').style.opacity = 1; hitMarkerTimer = 0.12; }
 function showKillFlash(headshot) {
   el('killFlash').style.opacity = 0.35;
   setTimeout(() => el('killFlash').style.opacity = 0, 90);
@@ -8113,19 +7789,17 @@ function addKillFeed(text) {
   const feed = el('killFeed');
   const div = document.createElement('div');
   div.className = 'entry';
-  if (/<b[^>]*>YOU<\/b>/.test(text)) div.classList.add('kill-you');   // local player's row gets a yellow accent
   div.innerHTML = text;
   feed.appendChild(div);
-  requestAnimationFrame(() => div.classList.add('in'));               // slide in from the right
-  setTimeout(() => { div.classList.remove('in'); div.classList.add('out'); }, 6000);
-  setTimeout(() => div.remove(), 6300);                               // fade out after 6s
-  while (feed.children.length > 6) feed.removeChild(feed.firstChild);
+  setTimeout(() => div.remove(), 3500);
+  while (feed.children.length > 5) feed.removeChild(feed.firstChild);
 }
 
 /* ============================================================================
    9. MATCH FLOW — kills, win condition, player death/respawn, restart
    ============================================================================ */
 const gameState = { running: false, kills: 0, over: false, score: 0 };
+el('scoreTarget').textContent = SCORE_TARGET;
 
 /* ============================================================================
    9-GG. GUN GAME — weapon-ladder progression (advance on kill, demote on knife)
@@ -8194,7 +7868,6 @@ function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
     kongKillFeed(victimName); return;
   }
   streakCredit(killerId, victimId);   // every kill (any weapon) counts toward the killer's scorestreak
-  if (victimIsPlayer && victimId && NET.scores.has(victimId)) statDeath(NET.scores.get(victimId));   // record the victim's death (results/scoreboard)
   // --- RC ROCKET: tracked separately; the killer NEVER advances / demotes / wins (Option A). ---
   if (weapon === 'rcrl') {
     const killerName = (killerId && NET.scores.has(killerId)) ? NET.scores.get(killerId).name : 'A player';
@@ -8216,7 +7889,6 @@ function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
         ggAnnounceDemote(killerName, vs.name, nv);
       }
     }
-    if (killerId && killerId !== victimId && NET.scores.has(killerId)) statKill(NET.scores.get(killerId), KARAMBIT_KEY, false, true);   // melee-kill stat (no GG advance)
     NET.broadcastScores();
     return;                                                 // karambit never advances the killer
   }
@@ -8224,10 +7896,10 @@ function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
   if (killerId && NET.scores.has(killerId)) {
     const ks = NET.scores.get(killerId), lvl = ks.level || 1;
     if (weapon === GUNGAME_LADDER[lvl - 1]) {
-      ks.kills += 1; statKill(ks, weapon, false, isMeleeWeaponKey(weapon));
+      ks.kills += 1;
       if (lvl >= GUNGAME_MAX) {                              // kill with the level-20 combat knife -> WIN
         NET.broadcastScores();
-        finishMatch({ winner: ks.name });                   // rich results screen
+        NET.broadcast({ t: 'matchover', winner: ks.name }); doMatchOver(ks.name);
         return;
       }
       ks.level = lvl + 1; ggSendLevel(killerId, ks.level); ggAnnounce(ks.name, ks.level, 'up');
@@ -8240,8 +7912,7 @@ function ggHostKill(killerId, weapon, victimIsPlayer, victimId, melee) {
 function ggSoloKill(weapon) {
   if (weapon === 'rcrl') { addKillFeed(`<b>YOU</b> <span class="gg-rc">🚀 [RC]</span> a bot`); return; }   // secret weapon: no progression
   if (weapon !== GUNGAME_LADDER[ggLevel - 1]) return;       // wrong weapon (or karambit): no progress
-  soloStat.kills = (soloStat.kills || 0) + 1; statKill(soloStat, weapon, false, isMeleeWeaponKey(weapon));
-  if (ggLevel >= GUNGAME_MAX) { finishMatch({ winner: 'YOU' }); return; }
+  if (ggLevel >= GUNGAME_MAX) { doMatchOver('YOU'); return; }
   const nl = ggLevel + 1; ggSetLevel(nl); ggAnnounce('YOU', nl, 'up');
 }
 
@@ -8277,15 +7948,13 @@ function onBotKilled(bot, info) {
   if (gameMode === 'gungame') { ggSoloKill(info.weapon); return; }
   gameState.score += pts;
   gameState.kills++;
-  soloStat.score = gameState.score; soloStat.kills = gameState.kills;
-  statKill(soloStat, info.weapon, headshot, isMeleeWeaponKey(info.weapon));   // rich solo stats for the results screen
   let tags = '';
   if (wt) tags += ` <span class="${wt.gold ? 'leg' : 'wtag'}">${wt.label}</span>`;
   if (headshot) tags += ` <span class="hs">HEADSHOT</span>`;
   else if (dism) tags += ` <span class="hs">DISMEMBERED</span>`;
   addKillFeed(`<b>YOU</b> ▸ Bot ${bot.id}${tags}`);
   updateHUD();
-  checkWinCondition();   // FFA: first to the kill limit wins (TDM-solo: team kill limit)
+  if (gameState.score >= SCORE_TARGET) endMatch(true);
 }
 
 function hurtPlayer(dmg) {
@@ -8310,8 +7979,6 @@ function playerDie() {
   if (invOpen) closeInventory();                                   // close the inventory if you die while browsing
   player.alive = false;
   player.health = 0;
-  if (riding) scooterEject(true);                                  // dying while riding the scooter ejects you
-  if (!NET.active) { statDeath(soloStat); if (gameMode === 'tdm') checkWinCondition(); }   // solo: record death + TDM team-kill check
   streakReset(true);                                               // dying wipes the streak + forfeits saber/JD/RC ("STREAK LOST")
   despawnKong(dogSelfId());                                        // loyalty: my King Kong leaves when I fall
   despawnOwnedMckaylas(dogSelfId());                               // loyalty: Mckayla leaves when her summoner falls
@@ -8322,92 +7989,34 @@ function playerDie() {
   } else {
     addKillFeed(`A bot fragged <b>YOU</b>`);
   }
-  const killerInfo = { id: player.lastAttacker, name: player.lastAttackerName, weapon: player.lastAttackerWeapon, head: player.lastAttackerHead };
   player.lastAttacker = null; player.lastAttackerHead = false; player.lastAttackerName = null;
   player.lastAttackerWeapon = null; player.lastAttackerMelee = false;
   updateHUD();
-  beginKillcam(killerInfo);   // Part 5: brief death replay, then doRespawn() (skippable with the jump key)
-}
-// Reset + spawn the player for a fresh life (FFA keeps going; only the kill target ends the match).
-function doRespawn() {
-  if (gameState.over || player.alive) return;
-  const sp = spawnForPlayer();   // TDM: respawn on my team's side, away from the nearest enemy
-  player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
-  player.vel.set(0, 0, 0);
-  player.health = 100; player.alive = true;
-  player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
-  player.impulseT = 0; player.impulseGrace = 0; player.onLadder = false; player.ladder = null;
-  player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
-  player.overheal = 0; saberMode = false; saberBlocking = false; if (_jdVM) _jdVM.visible = false; SaberHum.stop();   // no streak rewards carry into a new life
-  mckaylaSummonedThisLife = false;                    // fresh Mckayla summon available each life
-  player.grenades = throwMaxCarry();                  // refill throwables on respawn
-  WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
-  weaponState.rcrl.ammo = 0; weaponState.rcrl.cooldown = 0;     // RC launcher is streak-only — no respawn ammo
-  rcEquipped = false;                                 // never respawn holding the RC launcher
-  // Both modes respawn onto the main gun (gun-game: current ladder rung; FFA: your chosen main).
-  player.grenades = 0; player.impulses = IMPULSE.maxCarry; player.lethals = LETHAL_MAX; ggKarambit = false;
-  GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].cooldown = 0; weaponState[k].reloading = 0; });
-  weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
-  if (gameMode !== 'gungame' && !WEAPONS[ffaMain]) ffaMain = 'gg2';
-  ggEquip(mainGunKey());
-  updateHUD();
-  maybeShowInvTip(4, false);   // brief inventory reminder on FFA respawn
-}
-
-/* ============================================================================
-   PART 5 — KILLCAM: a brief death replay from the killer's perspective (or a
-   death-cam orbit fallback), skippable with the jump key. Victim-only.
-   ============================================================================ */
-let _camRing = [], _camRingAcc = 0;   // local camera history (~last 3.5s)
-function recordCamFrame(dt) {
-  if (!gameState.running || !player.alive || riding) return;
-  _camRingAcc += dt; if (_camRingAcc < 0.083) return; _camRingAcc = 0;
-  _camRing.push({ x: camera.position.x, y: camera.position.y, z: camera.position.z, yaw: yaw, pitch: pitch, t: performance.now() });
-  if (_camRing.length > 44) _camRing.shift();
-}
-const killcam = { active: false, t: 0, dur: 0, mode: 'death', frames: null, name: '', weapon: null, deathPos: new THREE.Vector3(), waiting: false, fallbackT: 0, orbit: 0 };
-function killcamDuration() { return Math.max(1.6, Math.min(4, (MATCH.respawnDelay || 2) + 1)); }
-function beginKillcam(info) {
-  if (gameState.over) return;   // match ended on this kill — skip straight to the results screen
-  killcam.active = true; killcam.t = 0; killcam.dur = killcamDuration(); killcam.orbit = Math.random() * 6.28;
-  killcam.deathPos.copy(player.pos); killcam.name = info.name || (NET.active ? 'Someone' : 'A bot'); killcam.weapon = info.weapon || null;
-  killcam.frames = null; killcam.waiting = false; killcam.fallbackT = 0;
-  const humanKiller = NET.active && info.id && info.id !== 'bot' && (NET.players.has(info.id) || NET.scores.has(info.id));
-  if (humanKiller && info.id !== NET.selfId) { killcam.mode = 'replay'; killcam.waiting = true; killcam.fallbackT = 0.6; NET.route(info.id, { t: 'kcReq', from: NET.selfId }); }
-  else killcam.mode = 'death';   // bot / unknown killer -> death-cam orbit
-  const f = el('killcamFade'); if (f) { f.style.opacity = '0.92'; setTimeout(() => { f.style.opacity = '0'; }, 200); }
-  const ui = el('killcamUI'); if (ui) ui.classList.add('on');
-  el('killcamBy').innerHTML = 'KILLED BY <b style="color:#ff8a8a">' + killcam.name + '</b>' + (killcam.weapon && WEAPONS[killcam.weapon] ? ' — ' + WEAPONS[killcam.weapon].name : '');
-  el('killcamSkip').textContent = 'Press ' + getKeyForAction('jump') + ' to respawn';
-}
-function cancelKillcam() { killcam.active = false; killcam.waiting = false; const ui = el('killcamUI'); if (ui) ui.classList.remove('on'); const f = el('killcamFade'); if (f) f.style.opacity = '0'; }
-function finishKillcam() {
-  killcam.active = false;
-  const ui = el('killcamUI'); if (ui) ui.classList.remove('on');
-  const f = el('killcamFade'); if (f) { f.style.opacity = '0.92'; setTimeout(() => { f.style.opacity = '0'; }, 280); }   // 1s-ish fade through respawn
-  doRespawn();
-}
-function skipKillcam() { if (killcam.active) finishKillcam(); }
-function updateKillcam(dt) {
-  if (!killcam.active) return;
-  killcam.t += dt;
-  if (killcam.waiting) { killcam.fallbackT -= dt; if (killcam.fallbackT <= 0 && !killcam.frames) { killcam.waiting = false; killcam.mode = 'death'; } }
-  const cd = el('killcamCountdown'); if (cd) cd.textContent = 'RESPAWNING IN ' + Math.max(1, Math.ceil(killcam.dur - killcam.t));
-  if (killcam.mode === 'replay' && killcam.frames && killcam.frames.length >= 2) {
-    const fr = killcam.frames, p = Math.min(0.999, killcam.t / killcam.dur);
-    const want = fr[0].t + p * (fr[fr.length - 1].t - fr[0].t);
-    let i = 0; while (i < fr.length - 2 && fr[i + 1].t < want) i++;
-    const a = fr[i], b = fr[i + 1], f2 = Math.max(0, Math.min(1, (want - a.t) / Math.max(0.001, b.t - a.t)));
-    camera.position.set(a.x + (b.x - a.x) * f2, a.y + (b.y - a.y) * f2, a.z + (b.z - a.z) * f2);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.y = lerpAngle(a.yaw, b.yaw, f2); camera.rotation.x = a.pitch + (b.pitch - a.pitch) * f2;
-  } else {
-    killcam.orbit += dt * 0.5;
-    const r = 5, dp = killcam.deathPos;
-    camera.position.set(dp.x + Math.cos(killcam.orbit) * r, dp.y + 4.5, dp.z + Math.sin(killcam.orbit) * r);
-    camera.lookAt(dp.x, dp.y + 0.7, dp.z);
-  }
-  if (killcam.t >= killcam.dur) finishKillcam();
+  // Quick respawn (FFA keeps going; only the kill target ends the match)
+  setTimeout(() => {
+    if (gameState.over) return;
+    const sp = randomSpawn();
+    player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
+    player.vel.set(0, 0, 0);
+    player.health = 100; player.alive = true;
+    player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
+    player.impulseT = 0; player.impulseGrace = 0; player.onLadder = false; player.ladder = null;
+    player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
+    player.overheal = 0; saberMode = false; saberBlocking = false; if (_jdVM) _jdVM.visible = false; SaberHum.stop();   // no streak rewards carry into a new life
+    mckaylaSummonedThisLife = false;                    // fresh Mckayla summon available each life
+    player.grenades = throwMaxCarry();                  // refill throwables on respawn
+    WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
+    weaponState.rcrl.ammo = 0; weaponState.rcrl.cooldown = 0;     // RC launcher is streak-only — no respawn ammo
+    rcEquipped = false;                                 // never respawn holding the RC launcher
+    // Both modes respawn onto the main gun (gun-game: current ladder rung; FFA: your chosen main).
+    player.grenades = 0; player.impulses = IMPULSE.maxCarry; player.lethals = LETHAL_MAX; ggKarambit = false;
+    GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].cooldown = 0; weaponState[k].reloading = 0; });
+    weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
+    if (gameMode !== 'gungame' && !WEAPONS[ffaMain]) ffaMain = 'gg2';
+    ggEquip(mainGunKey());
+    updateHUD();
+    maybeShowInvTip(4, false);   // brief inventory reminder on FFA respawn
+  }, 1400);
 }
 
 function endMatch(won) {
@@ -8425,16 +8034,11 @@ function endMatch(won) {
 function startMatch() {
   gameState.running = true; gameState.over = false; gameState.kills = 0; gameState.score = 0;
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';   // never start paused
-  // --- Match settings lock + per-player stat reset (Part 6 / foundation) ---
-  MATCH._sudden = false; MATCH._timeLeft = modeTimeLimitSec(); MATCH._hasTime = MATCH._timeLeft > 0; MATCH._ended = false; _mtimeAcc = 0;
-  cancelKillcam(); _camRing.length = 0;   // fresh killcam state each match
-  Object.assign(soloStat, freshStat('YOU'));
-  if (gameMode === 'tdm') assignTeams(); else { myTeam = null; if (NET.active) NET.scores.forEach(s => s.team = null); }
-  if (!NET.active || NET.isHost) { timeOfDay = Math.random(); dnFullCycle = 480 + Math.random() * 240; applyDayNightSetting(); }   // host/solo: randomize the day/night state each match (Part 6 can force it)
+  if (!NET.active || NET.isHost) { timeOfDay = Math.random(); dnFullCycle = 480 + Math.random() * 240; }   // host/solo: randomize the day/night state each match
   mckaylaSummonedThisLife = false;   // fresh Mckayla summon available at match start
   rcResetMatch();   // RC launcher locks again each match (unlock is per-match, not permanent)
-  // Everyone spawns on a real spawn point (team side in TDM), facing the centre of the map.
-  const sp = spawnForPlayer(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
+  // Everyone spawns on a real spawn point, facing the centre of the map.
+  const sp = randomSpawn(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
   player.health = 100; player.alive = true; player.sliding = false; player.launchCd = 0;
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
@@ -8475,15 +8079,13 @@ function startMatch() {
     bots.forEach(b => { if (b.group) { scene.remove(b.group); disposeGroup(b.group); } });
     bots.length = 0;
   }
-  riding = false; spawnScooter();   // Part 7: one mobility scooter on the map each match (state synced; host owns it while idle)
-  el('scooterHud').style.display = 'none'; el('speedLines').style.opacity = 0; el('scooterPrompt').style.display = 'none';
 
   // --- Multiplayer score / lobby state ---
   if (NET.active) {
     player.lastAttacker = null; player.lastAttackerHead = false; player.lastAttackerName = null;
     player.lastAttackerWeapon = null; player.lastAttackerMelee = false;
     NET.ready = true;
-    if (NET.isHost) { NET.scores.forEach(s => { const t = s.team; Object.assign(s, freshStat(s.name)); s.team = t; }); }   // reset all stats; keep team assignment
+    if (NET.isHost) { NET.scores.forEach(s => { s.score = 0; s.kills = 0; s.level = 1; }); }
     el('lobbyTag').textContent = 'LOBBY ' + (NET.code || '');
   } else {
     el('lobbyTag').textContent = '';
@@ -8491,7 +8093,6 @@ function startMatch() {
 
   // --- Loadout: both modes use the same gun-game arsenal + karambit/cigar/impulse/RC.
   // GUN GAME auto-progresses from level 1; FFA lets the player pick a main weapon (key I).
-  if (MATCH.forceLoadout) { ffaMain = 'gg2'; meleeChoice = 'karambit'; lethalChoice = 'smoke'; }   // host forced everyone onto the preset default loadout
   ggKarambit = false;
   GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
   weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
@@ -8511,12 +8112,7 @@ function startMatch() {
   invOpen = false; el('invMenu').classList.add('hidden');   // ensure the inventory menu is closed at match start
   showScreen('__none__');                 // hide every overlay
   el('endScreen').style.display = 'none';
-  el('resultsScreen') && (el('resultsScreen').style.display = 'none');
   SND.init(); SND.resume(); Ambient.start(); sfxCountdown(3);   // start the audio engine + ambience + a "GO" chime
-  // Brief intro banner with the locked match rules (Part 6).
-  const introCol = gameMode === 'tdm' ? (myTeam ? TEAMS[myTeam].css : '#ffe600') : '#ffe600';
-  showCenterBanner((gameMode === 'tdm' ? 'TEAM ' + (myTeam || 'red').toUpperCase() + '\n' : '') + matchSettingsSummary(), introCol, 3400);
-  updateMatchTimerHUD();
   lockPointer();
 }
 
@@ -8593,230 +8189,34 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('mouseover', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && !b.disabled) sfxHover(); });
 document.addEventListener('mousedown', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && !b.disabled && !b.classList.contains('invCard')) sfxClick(); });
 
-/* --- Win conditions (FFA kill limit / TDM team kill limit) — host/solo authoritative --- */
-// Sum of kills for a TDM team. Solo TDM: the local player is RED, all bots are BLUE.
-function teamKills(team) {
-  if (!NET.active) return team === 'red' ? gameState.kills : (soloStat.deaths || 0);
-  let n = 0; NET.scores.forEach(s => { if (s.team === team) n += s.kills; }); return n;
-}
-function teamPlayers(team) { const a = []; if (NET.active) NET.scores.forEach((s, id) => { if (s.team === team) a.push(Object.assign({ id }, s)); }); return a; }
-function checkWinCondition() {
-  if (gameState.over || !gameState.running) return;
-  if (NET.active && !NET.isHost) return;            // only host/solo decide the winner
-  if (gameMode === 'tdm') {
-    const lim = MATCH.tdmKills, rk = teamKills('red'), bk = teamKills('blue');
-    if (MATCH._sudden) { if (rk !== bk) finishMatch({ team: rk > bk ? 'red' : 'blue' }); return; }   // sudden death: next decisive kill ends it
-    const win = rk >= lim ? 'red' : bk >= lim ? 'blue' : null;
-    if (win) finishMatch({ team: win });
-  } else if (gameMode === 'ffa') {
-    if (NET.active) { let w = null; NET.scores.forEach(s => { if (!w && s.kills >= MATCH.ffaKills) w = s; }); if (w) finishMatch({ winner: w.name }); }
-    else if (gameState.kills >= MATCH.ffaKills) finishMatch({ winner: 'YOU' });
-  }
-  // Gun Game's win (level-20 knife kill) is handled in ggHostKill/ggSoloKill.
-}
-// Single host/solo path to end a match. result = { winner } (FFA/GG) or { team } (TDM); byTime optional.
-function finishMatch(result) {
-  if (gameState.over) return;
-  const team = result.team || null;
-  const winnerName = team ? TEAMS[team].name : result.winner;
-  const awards = computeAwards();                    // MVP / highlight cards (Part 2)
-  const rows = scoreboardRows();                     // final ranked table snapshot
-  if (NET.active && NET.isHost) NET.broadcast({ t: 'matchover', winner: winnerName, team, byTime: !!result.byTime, awards, rows });
-  doMatchOver(winnerName, team, { byTime: !!result.byTime, awards, rows });
-}
-// Ranked row snapshot from the authoritative stat records — shared by the Tab scoreboard + results table.
-function scoreboardRows() {
-  let rows;
-  if (NET.active) rows = [...NET.scores.entries()].map(([id, s]) => Object.assign({ id }, s));
-  else rows = [Object.assign({ id: NET.selfId }, soloStat, { name: 'YOU', score: gameState.score, kills: gameState.kills })];
-  if (gameMode === 'gungame') rows.sort((a, b) => (b.level || 1) - (a.level || 1) || b.kills - a.kills);
-  else rows.sort((a, b) => b.kills - a.kills || (b.score || 0) - (a.score || 0));
-  rows.forEach((r, i) => r.rank = i + 1);
-  return rows;
-}
-// MVP + highlight awards for the results screen — computed once on the host/solo, then broadcast.
-function computeAwards() {
-  let recs;
-  if (NET.active) recs = [...NET.scores.values()].map(r => Object.assign({}, r));
-  else recs = [Object.assign({}, soloStat, { name: 'YOU', kills: gameState.kills, score: gameState.score })];
-  if (!recs.length) return null;
-  const best = (getter) => { let b = null, bv = -1; recs.forEach(r => { const v = getter(r) || 0; if (v > bv) { bv = v; b = r; } }); return (b && bv > 0) ? { name: b.name, val: bv } : null; };
-  let topW = null, topWv = 0, topWname = null;
-  recs.forEach(r => { const wk = r.wkills || {}; for (const k in wk) { if (wk[k] > topWv) { topWv = wk[k]; topW = k; topWname = r.name; } } });
-  return {
-    mvp: best(r => r.kills),
-    headshots: best(r => r.headshots),
-    streak: best(r => r.bestStreak),
-    melee: best(r => r.meleeKills),
-    streakActs: best(r => r.streakActs),
-    weapon: (topW && topWv > 0) ? { name: topWname, val: topWv, weapon: topW, wname: (WEAPONS[topW] ? WEAPONS[topW].name : topW) } : null
-  };
-}
-
 /* --- Multiplayer match flow --- */
 function beginMatch() { startMatch(); }                 // clients enter here on the host's "start"
 function hostStartMatch() {                              // host (lobby START or PLAY AGAIN)
   if (!NET.isHost) return;
-  NET.broadcast({ t: 'start', mode: gameMode, cfg: MATCH.payload() });
+  NET.broadcast({ t: 'start', mode: gameMode });
   beginMatch();
 }
-let _matchResult = null;   // last match's result payload (winner/team/awards/rows) for the results screen
-function doMatchOver(winnerName, team, extra) {
-  team = team || null; extra = extra || {};
+function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
-  MATCH._sudden = false; MATCH._timeLeft = 0; MATCH._hasTime = false;
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; minigunSpin = 0; minigunSteady = false;
-  cancelKillcam();        // a killcam in progress is cut short by the match ending
-  scooterDismountAll();   // eject any scooter rider; freeze the vehicle
   document.exitPointerLock();
   Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); clearMckaylas();
-  // Did the local player win? (TDM: my team is the winning team.)
-  const won = team ? (myTeam === team) : ((winnerName && winnerName === NET.selfName) || (!NET.active && winnerName === 'YOU'));
-  _matchResult = { winnerName, team, won, byTime: !!extra.byTime,
-                   awards: extra.awards || computeAwards(), rows: extra.rows || scoreboardRows() };
-  (won ? sfxWin() : sfxLose());           // victory / defeat fanfare
-  showResultsScreen(_matchResult);        // Part 2 — full end-of-match results screen
-}
-// --- Scooter (Part 7) forward state — the vehicle system + real functions are defined further below. ---
-let scooter = null, riding = false;
-/* ============================================================================
-   PART 6 — MATCH TIMER + DAY/NIGHT FORCE. Host/solo authoritative; the host
-   broadcasts the remaining time (~1 Hz) and clients just display it.
-   ============================================================================ */
-let _mtimeAcc = 0;                        // match-timer broadcast accumulator
-function applyDayNightSetting() {
-  const m = MATCH.dayNight;
-  if (m === 'day') { timeOfDay = 0.50; dnFrozen = true; }          // noon
-  else if (m === 'night') { timeOfDay = 0.0; dnFrozen = true; }    // midnight
-  else if (m === 'off') { dnFrozen = true; }                       // freeze at whatever it is now
-  else { dnFrozen = false; }                                       // 'on' = cycle normally
-  applyDayNight();
-}
-function fmtClock(sec) { sec = Math.max(0, Math.ceil(sec)); const m = (sec / 60) | 0, s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
-function updateMatchTimerHUD() {
-  const e = el('matchTimer'); if (!e) return;
-  if (!gameState.running || gameState.over || !MATCH._hasTime) { e.style.display = 'none'; return; }
-  e.style.display = 'block'; e.textContent = MATCH._sudden ? 'SUDDEN DEATH' : fmtClock(MATCH._timeLeft);
-  e.classList.toggle('low', !MATCH._sudden && MATCH._timeLeft <= 30);
-}
-function updateMatchTimer(dt) {
-  if (!gameState.running || gameState.over) return;
-  if (NET.active && !NET.isHost) { updateMatchTimerHUD(); return; }   // clients display the host's broadcast value
-  if (MATCH._hasTime && !MATCH._sudden) {
-    MATCH._timeLeft = Math.max(0, MATCH._timeLeft - dt);
-    if (NET.active && NET.isHost) { _mtimeAcc += dt; if (_mtimeAcc >= 1) { _mtimeAcc = 0; NET.broadcast({ t: 'mtime', s: MATCH._timeLeft, sd: MATCH._sudden }); } }
-    if (MATCH._timeLeft <= 0) onTimeExpired();
+  const won = winnerName && winnerName === NET.selfName;
+  if (!NET.active) (winnerName === 'YOU' ? sfxWin() : sfxLose()); else (won ? sfxWin() : sfxLose());   // victory / defeat fanfare
+  const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
+  if (gameMode === 'gungame') {
+    el('endTitle').textContent = who ? `GUN GAME WINNER: ${who}` : 'GUN GAME OVER';
+    el('endSub').textContent = who === 'YOU' ? `You reached the knife first!` : `${who || 'Someone'} reached the knife first. You got to Level ${ggLevel}/${GUNGAME_MAX}.`;
+    el('restartButton').style.display = (NET.active && NET.isClient) ? 'none' : '';
+    el('endScreen').style.display = 'flex';
+    return;
   }
-  updateMatchTimerHUD();
-}
-// Time ran out: the leader wins (TDM ties go to sudden death — first decisive kill).
-function onTimeExpired() {
-  if (gameState.over) return;
-  if (gameMode === 'tdm') {
-    const rk = teamKills('red'), bk = teamKills('blue');
-    if (rk === bk) { MATCH._sudden = true; showCenterBanner('SUDDEN DEATH', '#ff5a5a'); if (NET.active && NET.isHost) NET.broadcast({ t: 'mtime', s: 0, sd: true }); return; }
-    finishMatch({ team: rk > bk ? 'red' : 'blue', byTime: true });
-  } else if (gameMode === 'gungame') {
-    let best = null; if (NET.active) NET.scores.forEach(s => { if (!best || (s.level || 1) > (best.level || 1) || ((s.level || 1) === (best.level || 1) && s.kills > best.kills)) best = s; });
-    finishMatch({ winner: NET.active ? (best ? best.name : 'YOU') : 'YOU', byTime: true });
-  } else {
-    let best = null; if (NET.active) NET.scores.forEach(s => { if (!best || s.kills > best.kills) best = s; });
-    finishMatch({ winner: NET.active ? (best ? best.name : '') : 'YOU', byTime: true });
-  }
-}
-
-/* ============================================================================
-   PART 4 — TEAM DEATHMATCH: teams, auto-balance, friendly fire, team spawns.
-   RED = yellow-house side (north, +z); BLUE = teal-house side (south, -z).
-   ============================================================================ */
-function teamOf(id) {
-  if (id === (NET.active ? NET.selfId : 'me')) return myTeam;
-  if (NET.active && NET.scores.has(id)) return NET.scores.get(id).team || null;
-  return null;
-}
-// In TDM with friendly fire OFF, my own team is protected from my fire (bullets pass through).
-function ffProtected(id, team) {
-  if (gameMode !== 'tdm' || MATCH.friendlyFire || !myTeam) return false;
-  const t = (team !== undefined) ? team : teamOf(id);
-  return !!t && t === myTeam;
-}
-function sameTeam(a, b) { return !!a && a === b; }
-// Auto-balance teams (host-authoritative). Solo: local player RED, all bots BLUE.
-function assignTeams() {
-  if (!NET.active) { myTeam = 'red'; soloStat.team = 'red'; bots.forEach(b => b.team = 'blue'); return; }
-  if (NET.isHost) {
-    let r = 0, b = 0;
-    NET.scores.forEach(s => { if (s.team === 'red') r++; else if (s.team === 'blue') b++; });
-    NET.scores.forEach(s => { if (s.team !== 'red' && s.team !== 'blue') { if (r <= b) { s.team = 'red'; r++; } else { s.team = 'blue'; b++; } } });
-    const mine = NET.scores.get(NET.selfId); myTeam = mine ? mine.team : 'red';
-    bots.forEach((bt, i) => bt.team = (i % 2 === 0) ? 'red' : 'blue');   // bots split evenly
-    NET.broadcastScores();
-  }   // clients receive their team via the scores broadcast ('scores' handler sets myTeam)
-}
-// Host: move a player to the other team if it keeps teams within 1 (used by the pause-menu switch).
-function requestTeamSwitch() {
-  if (gameMode !== 'tdm' || !NET.active) return false;
-  if (NET.isHost) return hostSwitchTeam(NET.selfId);
-  NET.route(NET.hostId, { t: 'teamswitch', id: NET.selfId }); return true;
-}
-function hostSwitchTeam(id) {
-  const s = NET.scores.get(id); if (!s) return false;
-  const to = s.team === 'red' ? 'blue' : 'red';
-  let toCount = 0, fromCount = 0; NET.scores.forEach(x => { if (x.team === to) toCount++; else if (x.team === s.team) fromCount++; });
-  if (toCount + 1 - (fromCount - 1) > 1) return false;   // would unbalance by >1
-  s.team = to; if (id === NET.selfId) myTeam = to;
-  NET.broadcastScores();
-  return true;
-}
-// Distance from a candidate spawn to the nearest living ENEMY of `team`.
-function nearestEnemyDist(pos, team) {
-  let d = Infinity;
-  const consider = (p, t) => { if (t && t !== team) d = Math.min(d, Math.hypot(p.x - pos.x, p.z - pos.z)); };
-  if (player.alive) consider(player.pos, myTeam);
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive) consider(rp.pos, teamOf(rp.id)); });
-  for (const b of bots) if (b.alive) consider(b.pos, b.team);
-  return d;
-}
-// A spawn on the team's side, biased away from the nearest enemy (spawn protection).
-function teamSpawnPoint(team) {
-  const north = team === 'red';
-  const side = spawnPoints.filter(p => north ? p.z > 15 : p.z < -15);
-  const pool = side.length ? side : spawnPoints;
-  let best = null, bestD = -1;
-  for (let i = 0; i < 10; i++) {
-    const c = pool[(Math.random() * pool.length) | 0];
-    if (spawnBlocked(c)) continue;
-    const d = nearestEnemyDist(c, team);
-    if (d > bestD) { bestD = d; best = c; }
-  }
-  return (best || pool[(Math.random() * pool.length) | 0]).clone();
-}
-// Where the local player should (re)spawn: team side in TDM, anywhere otherwise.
-function spawnForPlayer() { return (gameMode === 'tdm' && myTeam) ? teamSpawnPoint(myTeam) : randomSpawn(); }
-// Build / update / remove a teammate's see-through team outline + overhead chevron.
-function updateTeamMarker(rp) {
-  const wantTeam = (gameMode === 'tdm' && rp.team) ? rp.team : null;
-  const friendly = wantTeam && myTeam && wantTeam === myTeam;
-  if (!wantTeam) { if (rp._teamOutline) { rp.avatar.remove(rp._teamOutline); rp._teamOutline = null; } if (rp._teamChevron) { rp._teamChevron.visible = false; } return; }
-  const col = TEAMS[wantTeam].color;
-  // Overhead team chevron (always visible — through walls — for teammates; LOS-gated for enemies in drawNameSprite).
-  if (!rp._teamChevron) {
-    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const cx = cv.getContext('2d');
-    cx.fillStyle = '#fff'; cx.beginPath(); cx.moveTo(32, 52); cx.lineTo(10, 14); cx.lineTo(54, 14); cx.closePath(); cx.fill();
-    const tex = new THREE.CanvasTexture(cv);
-    const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-    spr.scale.set(0.5, 0.5, 1); spr.position.set(0, 3.05, 0); rp.avatar.add(spr); rp._teamChevron = spr;
-  }
-  rp._teamChevron.material.color.setHex(col);
-  rp._teamChevron.visible = !!friendly;     // friendlies always show the chevron (through walls)
-  // See-through colored silhouette outline for teammates only.
-  if (friendly && !rp._teamOutline) {
-    const g = new THREE.Group();
-    const om = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.22, depthTest: false, side: THREE.BackSide });
-    buildCharacterModel(om, (geo, material, x, y, z) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.scale.setScalar(1.08); g.add(m); return m; });
-    g.renderOrder = 999; rp.avatar.add(g); rp._teamOutline = g;
-  } else if (!friendly && rp._teamOutline) { rp.avatar.remove(rp._teamOutline); disposeGroup(rp._teamOutline); rp._teamOutline = null; }
+  el('endTitle').textContent = (winnerName && winnerName === NET.selfName) ? 'YOU WIN' : (winnerName ? winnerName.toUpperCase() + ' WINS' : 'MATCH OVER');
+  el('endSub').textContent = `Your score: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
+  // Only the host (or solo) can replay; clients wait for the host to start again.
+  el('restartButton').style.display = (NET.active && NET.isClient) ? 'none' : '';
+  el('endScreen').style.display = 'flex';
 }
 
 // --- Menu / lobby button wiring ---
@@ -8856,10 +8256,10 @@ function refreshModeUI() {
   if (el('lobbyModeHostNote')) el('lobbyModeHostNote').textContent = clientLocked ? '(set by host)' : '';
 }
 function setGameMode(mode) {
-  if (mode !== 'ffa' && mode !== 'gungame' && mode !== 'tdm') return;
+  if (mode !== 'ffa' && mode !== 'gungame') return;
   if (NET.active && NET.isClient) return;
   gameMode = mode; localStorage.setItem('blockoutMode', mode);
-  refreshModeUI(); renderMatchPane(); updateLobbySettingsSummary();
+  refreshModeUI();
   if (NET.isHost) NET.broadcastRoster();               // sync the mode to lobby clients
 }
 ['lobbyModePick', 'soloModePick'].forEach(pid => {
@@ -8868,72 +8268,6 @@ function setGameMode(mode) {
 });
 // (refreshModeUI runs lazily via showScreen — NET isn't defined yet at load time)
 
-/* ============================================================================
-   PART 6 — MATCH SETTINGS UI: per-mode option groups (host-editable, client read-only),
-   synced to clients on change, locked during a match, summarized in the lobby + intro banner.
-   ============================================================================ */
-const MATCH_OPTS = {
-  ffa: [['FREE-FOR-ALL', null],
-        ['ffaKills', 'Kill limit', [15, 25, 30, 40, 50, 75, 100]],
-        ['ffaTime', 'Time limit (min)', [5, 10, 15, 20, 0], v => v ? v : 'None']],
-  gungame: [['GUN GAME', null],
-        ['ggTime', 'Time limit (min)', [10, 15, 20, 30, 0], v => v ? v : 'None']],
-  tdm: [['TEAM DEATHMATCH', null],
-        ['tdmKills', 'Team kill limit', [30, 50, 75, 100, 150]],
-        ['tdmTime', 'Time limit (min)', [5, 10, 15, 20]],
-        ['friendlyFire', 'Friendly fire', [false, true], v => v ? 'ON' : 'OFF']],
-  shared: [['SHARED', null],
-        ['respawnDelay', 'Respawn delay (s)', [1, 2, 3, 5]],
-        ['forceLoadout', 'Starting loadout', [false, true], v => v ? 'Preset' : 'Saved'],
-        ['dayNight', 'Day / night', ['on', 'off', 'day', 'night'], v => ({ on: 'Cycle', off: 'Freeze', day: 'Day', night: 'Night' }[v])],
-        ['allowKong', 'King Kong', [true, false], v => v ? 'On' : 'Off'],
-        ['allowMckayla', 'Mckayla', [true, false], v => v ? 'On' : 'Off'],
-        ['allowStreaks', 'Scorestreaks', [true, false], v => v ? 'On' : 'Off']]
-};
-function matchSettingsEditable() { return !gameState.running && (!NET.active || NET.isHost); }   // host/solo, only between matches
-function setMatchOpt(key, val) {
-  if (!matchSettingsEditable()) return;
-  MATCH[key] = val; MATCH.save();
-  renderMatchPane(); updateLobbySettingsSummary();
-  if (NET.active && NET.isHost) NET.broadcast({ t: 'matchcfg', cfg: MATCH.payload() });
-  sfxClick();
-}
-function renderMatchPane() {
-  const list = el('matchOptList'); if (!list) return;
-  const editable = matchSettingsEditable();
-  list.classList.toggle('locked', !editable);
-  const note = el('matchHostNote');
-  if (note) note.innerHTML = (NET.active && NET.isClient) ? '🔒 Match settings are controlled by the <b>host</b>.'
-    : (gameState.running ? '🔒 Settings are locked while a match is in progress.' : 'Adjust the rules for the next match.');
-  const mn = el('matchModeName'); if (mn) mn.textContent = ({ ffa: 'FREE-FOR-ALL', gungame: 'GUN GAME', tdm: 'TEAM DEATHMATCH' }[gameMode] || gameMode);
-  const groups = (MATCH_OPTS[gameMode] || MATCH_OPTS.ffa).concat(MATCH_OPTS.shared);
-  let html = '';
-  for (const row of groups) {
-    if (row[1] === null) { html += `<div class="moCat">${row[0]}</div>`; continue; }
-    const [key, label, opts, fmt] = row;
-    const btns = opts.map(o => {
-      const sel = MATCH[key] === o ? ' sel' : '';
-      const lbl = fmt ? fmt(o) : o;
-      return `<button class="moOpt${sel}" data-key="${key}" data-val="${typeof o}:${o}">${lbl}</button>`;
-    }).join('');
-    html += `<div class="moRow"><span class="moName">${label}</span><span class="moOpts">${btns}</span></div>`;
-  }
-  list.innerHTML = html;
-  list.querySelectorAll('.moOpt').forEach(b => b.onclick = () => {
-    const [type, raw] = b.dataset.val.split(/:(.*)/s);
-    const val = type === 'number' ? parseFloat(raw) : type === 'boolean' ? (raw === 'true') : raw;
-    setMatchOpt(b.dataset.key, val);
-  });
-}
-function matchSettingsSummary() {
-  const parts = [];
-  if (gameMode === 'tdm') { parts.push('TEAM DEATHMATCH'); parts.push(MATCH.tdmKills + ' kills'); if (MATCH.tdmTime) parts.push(MATCH.tdmTime + ' min'); parts.push('FF ' + (MATCH.friendlyFire ? 'ON' : 'OFF')); }
-  else if (gameMode === 'gungame') { parts.push('GUN GAME'); parts.push('20 levels'); if (MATCH.ggTime) parts.push(MATCH.ggTime + ' min'); }
-  else { parts.push('FREE-FOR-ALL'); parts.push(MATCH.ffaKills + ' kills'); if (MATCH.ffaTime) parts.push(MATCH.ffaTime + ' min'); }
-  return parts.join('  •  ');
-}
-function updateLobbySettingsSummary() { const e = el('lobbySettingsSummary'); if (e) e.textContent = matchSettingsSummary(); }
-
 // --- Settings screen ---
 let settingsReturn = 'mainMenu';
 function refreshSettingsUI() {
@@ -8941,7 +8275,7 @@ function refreshSettingsUI() {
   el('throwGrenadeBtn').classList.toggle('selected', throwableType === 'grenade');
   el('throwTomahawkBtn').classList.toggle('selected', throwableType === 'tomahawk');
 }
-function openSettings(from) { settingsReturn = from; refreshSettingsUI(); renderMatchPane(); if (window._refreshAudioSettings) window._refreshAudioSettings(); if (window._renderControls) { window._renderControls(); window._refreshControlOpts(); } setSettingsTab('paneControls'); showScreen('settingsScreen'); }
+function openSettings(from) { settingsReturn = from; refreshSettingsUI(); if (window._refreshAudioSettings) window._refreshAudioSettings(); if (window._renderControls) { window._renderControls(); window._refreshControlOpts(); } setSettingsTab('paneControls'); showScreen('settingsScreen'); }
 el('menuSettings').onclick = () => openSettings('mainMenu');
 el('lobbySettings').onclick = () => openSettings('lobbyScreen');
 el('settingsBack').onclick = () => {
@@ -8953,18 +8287,12 @@ el('settingsBack').onclick = () => {
 function setSettingsTab(paneId) {
   document.querySelectorAll('#settingsScreen .setTab').forEach(t => t.classList.toggle('active', t.dataset.pane === paneId));
   document.querySelectorAll('#settingsScreen .setPane').forEach(p => p.classList.toggle('active', p.id === paneId));
-  if (paneId === 'paneMatch') renderMatchPane();   // refresh editability + selections each time it's opened
 }
 document.querySelectorAll('#settingsScreen .setTab').forEach(tab => tab.onclick = () => { setSettingsTab(tab.dataset.pane); sfxClick(); });
 // Pause-menu buttons.
 el('pauseResume').onclick = () => resumeGame();
 el('pauseSettings').onclick = () => { el('pauseMenu').style.display = 'none'; openSettings('pause'); };
 el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display = 'none'; leaveToMenu(); };
-el('pauseTeamSwitch').onclick = () => {
-  const ok = requestTeamSwitch();
-  el('pauseTeamSwitch').textContent = ok ? 'REQUESTED…' : 'TEAMS WOULD UNBALANCE';
-  if (ok) setTimeout(resumeGame, 350);
-};
 
 /* --- CONTROLS tab: rebindable keybindings + control options (autosaved to localStorage) --- */
 (function setupControlsUI() {
@@ -9036,14 +8364,13 @@ el('pauseTeamSwitch').onclick = () => {
     el('optFov').value = OPT.fov; el('optFovV').textContent = OPT.fov;
     el('optInvertY').checked = OPT.invertY; el('optAdsToggle').checked = OPT.adsToggle; el('optSprintToggle').checked = OPT.sprintToggle;
     el('optAutoReload').checked = OPT.autoReload; el('optHitMarkers').checked = OPT.hitMarkers;
-    if (el('optDmgNumbers')) el('optDmgNumbers').checked = OPT.dmgNumbers;
   }
   el('optSens').addEventListener('input', () => { OPT.sens = Math.max(0.1, Math.min(5, el('optSens').value / 100)); el('optSensV').textContent = OPT.sens.toFixed(1) + 'x'; OPT.save(); });
   el('optSensAds').addEventListener('input', () => { OPT.sensAds = Math.max(0.1, Math.min(2, el('optSensAds').value / 100)); el('optSensAdsV').textContent = OPT.sensAds.toFixed(1) + 'x'; OPT.save(); });
   el('optSensScope').addEventListener('input', () => { OPT.sensScope = Math.max(0.1, Math.min(2, el('optSensScope').value / 100)); el('optSensScopeV').textContent = OPT.sensScope.toFixed(1) + 'x'; OPT.save(); });
   el('optFov').addEventListener('input', () => { OPT.fov = Math.max(60, Math.min(120, parseInt(el('optFov').value, 10) || 78)); el('optFovV').textContent = OPT.fov; DEFAULT_FOV = OPT.fov; if (!aiming) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); } OPT.save(); });
   const tog = (id, key) => el(id).addEventListener('change', () => { OPT[key] = el(id).checked; if (key === 'sprintToggle') sprintLatch = false; OPT.save(); sfxClick(); });
-  tog('optInvertY', 'invertY'); tog('optAdsToggle', 'adsToggle'); tog('optSprintToggle', 'sprintToggle'); tog('optAutoReload', 'autoReload'); tog('optHitMarkers', 'hitMarkers'); tog('optDmgNumbers', 'dmgNumbers');
+  tog('optInvertY', 'invertY'); tog('optAdsToggle', 'adsToggle'); tog('optSprintToggle', 'sprintToggle'); tog('optAutoReload', 'autoReload'); tog('optHitMarkers', 'hitMarkers');
 
   window._renderControls = renderControls; window._refreshControlOpts = refreshControlOpts;
   renderControls(); refreshControlOpts();
@@ -9216,7 +8543,7 @@ const NET = {
     el('lobbyCode').textContent = this.code;
     this.peer = new Peer(this.selfId, { debug: 1 });
     this.peer.on('open', () => {
-      this.scores.set(this.selfId, freshStat(this.selfName));
+      this.scores.set(this.selfId, { name: this.selfName, score: 0, kills: 0 });
       this.color = this.nextColor();
       if (mySkinDataURL()) skinDataCache[this.selfId] = mySkinDataURL();   // cache own skin to serve to joiners
       setNetStatus('lobbyStatus', 'Lobby is live — share the code!');
@@ -9290,14 +8617,13 @@ const NET = {
   broadcastRoster() {
     const list = [];
     this.scores.forEach((s, id) => list.push({ id, name: s.name, host: id === this.hostId, color: id === this.selfId ? this.color : (this.players.get(id) || {}).color }));
-    this.broadcast({ t: 'roster', code: this.code, list, mode: gameMode, cfg: MATCH.payload() });
+    this.broadcast({ t: 'roster', code: this.code, list, mode: gameMode });
   },
 
   /* ---------------- SCORES ---------------- */
   initScores() {},
   broadcastScores() {
-    const list = []; this.scores.forEach((s, id) => list.push({ id, name: s.name, score: s.score, kills: s.kills,
-      deaths: s.deaths || 0, streak: s.streak || 0, bestStreak: s.bestStreak || 0, level: s.level || 1, team: s.team || null, ping: s.ping || 0, lw: s.lastWeapon || null }));
+    const list = []; this.scores.forEach((s, id) => list.push({ id, name: s.name, score: s.score, kills: s.kills, level: s.level || 1 }));
     this.broadcast({ t: 'scores', list });
   },
 
@@ -9331,12 +8657,9 @@ const NET = {
     const mine = this.scores.get(this.selfId);
     if (mine) {
       gameState.score = mine.score; gameState.kills = mine.kills;
-      if (gameMode === 'tdm' && mine.team) myTeam = mine.team;   // adopt my assigned team
       // safety resync: if a ggset was missed, the authoritative score level wins
       if (gameMode === 'gungame' && mine.level && mine.level !== ggLevel && !this.isHost) ggSetLevel(mine.level);
     }
-    // keep remote avatars' team in sync for friendly-fire + outlines
-    if (gameMode === 'tdm') this.players.forEach((rp, id) => { const s = this.scores.get(id); if (s) rp.team = s.team; });
     updateHUD(); refreshScoreboard();
   },
   // Host-only: credit a kill, announce it, broadcast scores, check win.
@@ -9347,21 +8670,19 @@ const NET = {
     let killerName = 'A bot';
     if (killerId && this.scores.has(killerId)) {
       const s = this.scores.get(killerId); s.score += pts; s.kills += 1; killerName = s.name;
-      statKill(s, opts.weapon, opts.headshot, opts.melee);
     } else if (killerId === 'bot') killerName = 'A bot';
-    if (opts.victimId && this.scores.has(opts.victimId)) statDeath(this.scores.get(opts.victimId));   // record the victim's death
-    streakCredit(killerId);   // FFA/TDM: every credited kill bumps the killer's scorestreak
+    streakCredit(killerId);   // FFA: every credited kill bumps the killer's scorestreak
     const html = buildKillFeed(killerName, victimName, opts);
     addKillFeed(html); this.broadcast({ t: 'feed', html });
     this.broadcastScores(); this.applyScoresLocal();
-    checkWinCondition();      // FFA kill limit / TDM team kill limit
+    let winner = null; this.scores.forEach((s) => { if (!winner && s.score >= SCORE_TARGET) winner = s; });
+    if (winner) { this.broadcast({ t: 'matchover', winner: winner.name }); doMatchOver(winner.name); }
   },
 
   /* ---------------- DAMAGE ROUTING ---------------- */
   // I shot a remote player's avatar -> tell them to take damage (they're authoritative on their HP).
   // weapon/melee ride along so the host can validate gun-game progression & demotion.
   damageRemote(rp, dmg, head, weapon, melee, origin, dir) {
-    if (ffProtected(rp.id)) return;   // TDM, friendly fire OFF: a teammate takes no damage (and no karambit demotion)
     const m = { t: 'youhit', dmg, head: !!head, fromId: this.selfId, fromName: this.selfName, weapon: weapon || null, melee: !!melee };
     // Direct bullets ride their trajectory along so the target's saber can decide to deflect.
     if (origin && dir) { m.ox = origin.x; m.oy = origin.y; m.oz = origin.z; m.dx = dir.x; m.dy = dir.y; m.dz = dir.z; }
@@ -9371,7 +8692,7 @@ const NET = {
   reportDeath(byId, head, weapon, melee) {
     if (this.isHost) {
       if (gameMode === 'gungame') ggHostKill(byId, weapon, true, this.selfId, !!melee);
-      else this.awardKill(byId, POINTS_KILL + (head ? POINTS_HEADSHOT : 0), this.selfName, { headshot: head, weapon, melee: !!melee, victimId: this.selfId });
+      else this.awardKill(byId, POINTS_KILL + (head ? POINTS_HEADSHOT : 0), this.selfName, { headshot: head });
     } else {
       this.route(this.hostId, { t: 'killed', byId, head: !!head, victimId: this.selfId, weapon: weapon || null, melee: !!melee });
     }
@@ -9402,7 +8723,7 @@ const NET = {
   },
   broadcastBots() {
     const list = [];
-    for (const b of bots) list.push({ id: b.id, x: b.pos.x, y: b.pos.y, z: b.pos.z, yaw: b.yawFacing || 0, alive: !!b.alive, tm: b.team || null });
+    for (const b of bots) list.push({ id: b.id, x: b.pos.x, y: b.pos.y, z: b.pos.z, yaw: b.yawFacing || 0, alive: !!b.alive });
     // include the loot-crate state so every player sees the green block
     this.broadcast({ t: 'bots', list, loot: { active: lootActive, x: lootPos.x, y: lootBaseY, z: lootPos.z } });
   },
@@ -9416,7 +8737,7 @@ const NET = {
       /* ---- HOST handlers ---- */
       case 'hello': {                                  // a client joined
         if (this.rosterList().length >= 10) { if (conn) conn.send({ t: 'lobbyfull' }); break; }   // LOBBY FULL — cap at 10 players
-        this.scores.set(msg.id, freshStat(msg.name));
+        this.scores.set(msg.id, { name: (msg.name || 'Player').slice(0, 14), score: 0, kills: 0, level: 1 });
         const rp = this.ensurePlayer(msg.id, msg.name); rp.color = rp.color || this.nextColor();
         sfxJoin();   // friendly "ding" when a player joins the lobby
         this.broadcastRoster(); renderRoster();
@@ -9446,7 +8767,7 @@ const NET = {
         despawnOwnedDogs(msg.victimId); despawnKong(msg.victimId);   // their attack dogs + King Kong leave when they fall
         if (gameMode === 'gungame') { ggHostKill(msg.byId, msg.weapon, true, msg.victimId, !!msg.melee); break; }
         const victim = this.scores.get(msg.victimId);
-        this.awardKill(msg.byId, POINTS_KILL + (msg.head ? POINTS_HEADSHOT : 0), victim ? victim.name : 'Player', { headshot: msg.head, weapon: msg.weapon, melee: !!msg.melee, victimId: msg.victimId });
+        this.awardKill(msg.byId, POINTS_KILL + (msg.head ? POINTS_HEADSHOT : 0), victim ? victim.name : 'Player', { headshot: msg.head });
         break;
       }
       case 'dogsummon': { if (this.isHost) summonDogs(msg.ownerId); break; }   // a client deployed their 10-kill dogs
@@ -9456,8 +8777,8 @@ const NET = {
       case 'route': { this.route(msg.to, msg.msg); break; }   // forward client->client
 
       /* ---- CLIENT handlers ---- */
-      case 'roster': { this.code = msg.code; el('lobbyCode').textContent = this.code; if (msg.mode) { gameMode = msg.mode; refreshModeUI(); } if (msg.cfg) { MATCH.apply(msg.cfg); if (typeof renderMatchPane === 'function') renderMatchPane(); updateLobbySettingsSummary(); } this.applyRoster(msg.list); break; }
-      case 'start': { if (msg.mode) gameMode = msg.mode; if (msg.cfg) MATCH.apply(msg.cfg); beginMatch(); break; }
+      case 'roster': { this.code = msg.code; el('lobbyCode').textContent = this.code; if (msg.mode) { gameMode = msg.mode; refreshModeUI(); } this.applyRoster(msg.list); break; }
+      case 'start': { if (msg.mode) gameMode = msg.mode; beginMatch(); break; }
       case 'players': { this.applyPlayers(msg.list); break; }
       case 'bots': { applyBotsSnapshot(msg.list); applyClientLoot(msg.loot); break; }
       case 'kdogs': { applyDogsSnapshot(msg.list); break; }   // host -> clients: attack-dog positions/state
@@ -9482,16 +8803,9 @@ const NET = {
         grantSpecial(msg.key); updateHUD();
         break;
       }
-      case 'scores': {
-        msg.list.forEach(s => { const r = this.scores.get(s.id) || freshStat(s.name);
-          r.name = s.name; r.score = s.score; r.kills = s.kills; r.deaths = s.deaths || 0; r.streak = s.streak || 0;
-          r.bestStreak = s.bestStreak || 0; r.level = s.level || 1; r.team = s.team || null; r.ping = s.ping || 0; r.lastWeapon = s.lw || r.lastWeapon; this.scores.set(s.id, r); });
-        [...this.scores.keys()].forEach(id => { if (!msg.list.find(s => s.id === id)) this.scores.delete(id); });
-        if (gameMode === 'tdm') { const mine = this.scores.get(this.selfId); if (mine && mine.team) myTeam = mine.team; }
-        this.applyScoresLocal(); break;
-      }
+      case 'scores': { this.scores.clear(); msg.list.forEach(s => this.scores.set(s.id, { name: s.name, score: s.score, kills: s.kills, level: s.level || 1 })); this.applyScoresLocal(); break; }
       case 'feed': { addKillFeed(msg.html); break; }
-      case 'matchover': { doMatchOver(msg.winner, msg.team || null, { byTime: !!msg.byTime, awards: msg.awards || null, rows: msg.rows || null }); break; }
+      case 'matchover': { doMatchOver(msg.winner); break; }
       case 'proj': {                                   // a peer fired a projectile — render-only copy
         spawnGGProjectile(msg.pt, new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), false, msg.pt);
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
@@ -9574,16 +8888,6 @@ const NET = {
         if (!this.isHost) { dnTarget = msg.tod; dnHasTarget = true; if (msg.cyc) dnFullCycle = msg.cyc; }
         break;
       }
-      case 'mtime': {                                  // host -> clients: remaining match time + sudden-death flag
-        if (!this.isHost) { MATCH._timeLeft = msg.s; MATCH._hasTime = true; MATCH._sudden = !!msg.sd; updateMatchTimerHUD(); }
-        break;
-      }
-      case 'ping': { if (!this.isHost) this.route(this.hostId, { t: 'pong', id: this.selfId, ts: msg.ts }); break; }   // RTT probe -> reply
-      case 'pong': { if (this.isHost) { const s = this.scores.get(msg.id); if (s) s.ping = Math.round(performance.now() - msg.ts); } break; }
-      case 'matchcfg': {                               // host -> clients: updated match settings (lobby)
-        if (!this.isHost) { MATCH.apply(msg.cfg); if (typeof renderMatchPane === 'function') renderMatchPane(); updateLobbySettingsSummary(); sfxNotify(); setNetStatus('lobbyStatus', 'Settings updated by host.'); }
-        break;
-      }
       case 'boost': {                                  // a peer triggered a boost pad — dim it + whoosh (their flight syncs via pmove)
         const pad = boostPads[msg.i];
         if (pad) { pad.cd = BOOST.cooldown; sfxBoostLaunch(new THREE.Vector3(pad.x, pad.y, pad.z)); }
@@ -9594,21 +8898,6 @@ const NET = {
 
       case 'ggset': { ggSetLevel(msg.level); break; }    // host told me my new gun-game level
       case 'kc': { streakOnKill(); break; }              // host credited me a kill -> bump my (local) scorestreak
-      case 'kcReq': { this.route(msg.from, { t: 'kcData', frames: _camRing.slice(-30) }); break; }   // a victim wants my killcam frames
-      case 'kcData': { if (killcam.active && killcam.waiting) { killcam.frames = msg.frames; killcam.waiting = false; } break; }   // killer's replay frames arrived
-      case 'scoot': {                                  // scooter state from its current owner (occupant, or host while idle)
-        if (scooter && !scooterOwns()) {
-          scooter.pos.set(msg.x, msg.y, msg.z); scooter.yaw = msg.yaw; scooter.nos = msg.nos; scooter.hp = msg.hp; scooter.nosOn = msg.on;
-          if (riding && msg.occ && msg.occ !== NET.selfId) scooterDismount();   // someone else claimed it
-          scooter.occupant = msg.occ;
-          if (scooter.alive !== msg.alive) { scooter.alive = msg.alive; scooter.group.visible = msg.alive; if (msg.alive) respawnScooter(); }
-        }
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay
-        break;
-      }
-      case 'scoothit': { if (scooterOwns()) damageScooter(msg.dmg); break; }   // a shooter routed scooter damage to the owner
-      case 'streakact': { if (this.isHost) { const s = this.scores.get(msg.id); if (s) s.streakActs = (s.streakActs || 0) + 1; } break; }   // a player activated a scorestreak (results award)
-      case 'teamswitch': { if (this.isHost) hostSwitchTeam(msg.id); break; }   // TDM: a client asked to switch teams (host validates balance)
       case 'burn': { if (player.alive) player.burnT = FLAME.burnDur; break; }   // an enemy flamethrower set me alight
 
       /* ---- both: I got shot ---- */
@@ -9639,7 +8928,7 @@ const NET = {
       if (p.id === this.selfId) continue;
       keep.add(p.id);
       const rp = this.ensurePlayer(p.id, p.name); if (p.color != null) rp.color = p.color;
-      this.scores.set(p.id, this.scores.get(p.id) || freshStat(p.name));
+      this.scores.set(p.id, this.scores.get(p.id) || { name: p.name, score: 0, kills: 0, level: 1 });
     }
     // drop anyone who left
     [...this.players.keys()].forEach(id => { if (!keep.has(id)) this.removePlayer(id); });
@@ -9795,8 +9084,7 @@ function drawNameSprite(rp) {
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 80;
   const ctx = cv.getContext('2d');
   ctx.font = 'bold 30px Trebuchet MS, Arial'; ctx.textAlign = 'center';
-  ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-  ctx.fillStyle = (gameMode === 'tdm' && rp.team) ? TEAMS[rp.team].css : '#fff';   // team-tinted nameplate
+  ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.fillStyle = '#fff';
   ctx.strokeText(rp.name, 128, 30); ctx.fillText(rp.name, 128, 30);
   // health bar
   const hp = Math.max(0, Math.min(100, rp.health)) / 100;
@@ -9899,25 +9187,8 @@ function lerpRemotePlayers(dt) {
     // Flamethrower spray (visible from all angles) + on-fire flame tell for remote players.
     if (rp.flm && rp.weaponMesh) { const o = rp.weaponMesh.getWorldPosition(new THREE.Vector3()); const aim = new THREE.Vector3(-Math.sin(rp.renderYaw), 0, -Math.cos(rp.renderYaw)); flameSprayFX(o, aim); }
     if (rp.brn) burnFX(new THREE.Vector3(rp.pos.x, rp.pos.y + 1.0, rp.pos.z), 1.4);
-    // TEAM DEATHMATCH: sync team, build/refresh the team outline + chevron, and gate enemy nameplate by line-of-sight.
-    if (gameMode === 'tdm') {
-      const s = NET.scores.get(rp.id); rp.team = s ? s.team : rp.team;
-      updateTeamMarker(rp);
-      const enemy = rp.team && myTeam && rp.team !== myTeam;
-      if (rp.nameSprite) rp.nameSprite.visible = enemy ? remoteInSight(rp) : true;   // enemies only show their tag when seen
-    } else if (rp._teamChevron || rp._teamOutline) { updateTeamMarker(rp); if (rp.nameSprite) rp.nameSprite.visible = true; }
-    if (Math.round(rp.health) !== rp._lastNameHp || rp._lastNameTeam !== rp.team) { rp._lastNameTeam = rp.team; drawNameSprite(rp); }
+    if (Math.round(rp.health) !== rp._lastNameHp) drawNameSprite(rp);
   });
-}
-// Rough line-of-sight from the camera to a remote player (used to gate enemy nameplates in TDM).
-function remoteInSight(rp) {
-  const cam = camera.position, tp = new THREE.Vector3(rp.pos.x, rp.pos.y + 1.4, rp.pos.z);
-  const dir = tp.clone().sub(cam); const dist = dir.length(); if (dist < 0.1) return true; dir.normalize();
-  // must be roughly in front of the camera
-  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-  if (fwd.dot(dir) < 0.2) return false;
-  const ray = new THREE.Raycaster(cam, dir, 0.3, dist - 0.6);
-  return ray.intersectObjects(colliders, false).length === 0;   // no wall between us
 }
 
 /* ---- Bots on a client are render-only ghosts driven by host snapshots ---- */
@@ -9925,8 +9196,7 @@ function applyBotsSnapshot(list) {
   for (const e of list) {
     let bot = bots.find(b => b.id === e.id);
     if (!bot) { bot = { id: e.id, pos: new THREE.Vector3(), vel: new THREE.Vector3(), health: 100, alive: true, group: null }; bots.push(bot); }
-    if (e.tm) bot.team = e.tm;
-    if (!bot.group) { spawnBot(bot); } else updateBotTeamPip(bot);
+    if (!bot.group) { spawnBot(bot); }
     bot.targetPos = bot.targetPos || new THREE.Vector3();
     bot.targetPos.set(e.x, e.y, e.z); bot.targetYaw = e.yaw;
     if (e.alive && !bot.alive && bot.materials) bot.materials.forEach(m => { m.opacity = 1; m.transparent = false; });
@@ -9944,15 +9214,6 @@ function lerpClientBots(dt) {
   }
 }
 
-// TDM: a small overhead cone above each bot, colored by team (depth-test off so it reads through walls).
-function updateBotTeamPip(bot) {
-  if (gameMode !== 'tdm' || !bot.team) { if (bot.teamPip) bot.teamPip.visible = false; return; }
-  if (!bot.teamPip && bot.group) {
-    const pip = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.3, 4), new THREE.MeshBasicMaterial({ depthTest: false, transparent: true }));
-    pip.rotation.x = Math.PI; pip.position.set(0, 2.45, 0); pip.renderOrder = 998; bot.group.add(pip); bot.teamPip = pip;
-  }
-  if (bot.teamPip) { bot.teamPip.visible = true; bot.teamPip.material.color.setHex(TEAMS[bot.team].color); }
-}
 /* ---- Bot targeting: nearest living human (local player + remote players) ---- */
 function humanTargets() {
   if (!NET.active) return player.alive ? [player] : [];
@@ -9963,13 +9224,10 @@ function humanTargets() {
 }
 function nearestHuman(bot) {
   let best = null, bd = Infinity;
-  for (const h of humanTargets()) {
-    if (gameMode === 'tdm' && bot && bot.team) { const ht = (h === player) ? myTeam : teamOf(h.id); if (ht && ht === bot.team) continue; }   // skip teammates
-    const d = bot.pos.distanceTo(h.pos); if (d < bd) { bd = d; best = h; }
-  }
+  for (const h of humanTargets()) { const d = bot.pos.distanceTo(h.pos); if (d < bd) { bd = d; best = h; } }
   return best;
 }
-// Bot landed a shot on `target` (a human). Route the damage to the right place. (TDM: bots only target enemies.)
+// Bot landed a shot on `target` (a human). Route the damage to the right place.
 function damageHuman(target, dmg) {
   if (target === player) { player.lastAttacker = 'bot'; player.lastAttackerHead = false; player.lastAttackerName = 'A bot'; hurtPlayer(dmg); }
   else if (target && target.id != null) NET.route(target.id, { t: 'youhit', dmg, head: false, fromId: 'bot', fromName: 'A bot' });
@@ -9981,201 +9239,37 @@ function buildKillFeed(killer, victim, opts) {
   let tags = '';
   const wt = WEAPON_TAGS[opts.weapon];
   if (wt) tags += ` <span class="${wt.gold ? 'leg' : 'wtag'}">${wt.label}</span>`;
-  if (opts.dism) tags += ` <span class="hs">DISMEMBERED</span>`;
-  const k = (killer === NET.selfName) ? '<b class="you">YOU</b>' : killer;
-  const v = (victim === NET.selfName) ? '<b class="you">YOU</b>' : victim;
-  const skull = opts.headshot ? '💀' : '';                              // headshot marker
-  const longshot = (opts.dist && opts.dist > 30) ? '↗' : '';            // long-range kill marker
-  return `${k} <span class="wic">${weaponIcon(opts.weapon)}${skull}${longshot}</span> ${v}${tags}`;
+  if (opts.headshot) tags += ` <span class="hs">HEADSHOT</span>`;
+  else if (opts.dism) tags += ` <span class="hs">DISMEMBERED</span>`;
+  const k = (killer === NET.selfName) ? '<b>YOU</b>' : killer;
+  const v = (victim === NET.selfName) ? '<b>YOU</b>' : victim;
+  return `${k} ▸ ${v}${tags}`;
 }
 
 /* ---- Live scoreboard (hold TAB) ---- */
-// Small emoji icon for a kill weapon (used in the scoreboard "LAST" column + kill feed polish).
-function weaponIcon(key) {
-  if (!key) return '·';
-  if (key === 'tomahawk' || key === 'axe') return '🪓';
-  if (key === 'flame') return '🔥';
-  if (key === 'saber') return '⚔️';
-  if (key === 'rcrl') return '🚀';
-  if (key === 'kongbanana' || key === 'kongmelee') return '🦍';
-  if (key === 'dogbite') return '🐕';
-  const w = WEAPONS[key];
-  if (!w) return '🔫';
-  if (w.melee || w.karambit) return '🔪';
-  if (w.explosive) return '💥';
-  if (w.sight && /scope/.test(w.sight)) return '🎯';
-  return '🔫';
-}
-function _kd(r) { return ((r.kills || 0) / Math.max(1, r.deaths || 0)).toFixed(2); }
-function _sbRow(r, rankClass, isGG) {
-  const me = r.id === (NET.active ? NET.selfId : 'me');
-  const crown = r.rank === 1 ? '👑 ' : '';
-  const flame = (r.streak || 0) >= 3 ? ' 🔥' : '';
-  const ping = (NET.active && !me) ? (r.ping ? r.ping + 'ms' : '—') : '—';
-  const scoreCol = isGG ? ((r.level || 1) + ' / ' + GUNGAME_MAX) : (r.kills || 0);
-  return `<tr class="${me ? 'me ' : ''}${rankClass}">`
-    + `<td class="rank">${r.rank || ''}</td>`
-    + `<td class="pl">${crown}${me ? 'YOU' : r.name}${flame}</td>`
-    + `<td>${scoreCol}</td><td>${r.kills || 0}</td><td>${r.deaths || 0}</td><td>${_kd(r)}</td>`
-    + `<td>${r.streak || 0}</td><td>${ping}</td><td>${weaponIcon(r.lastWeapon)}</td></tr>`;
-}
-function _sbTable(rows, isGG) {
-  const head = `<thead><tr><th class="rank">#</th><th class="pl">PLAYER</th><th>${isGG ? 'LEVEL' : 'SCORE'}</th><th>K</th><th>D</th><th>K/D</th><th>STRK</th><th>PING</th><th>LAST</th></tr></thead>`;
-  const body = rows.map((r, i) => _sbRow(r, i < 3 ? 't' + (i + 1) : '', isGG)).join('') || `<tr><td class="pl" colspan="9" style="opacity:.5">—</td></tr>`;
-  return `<table>${head}<tbody>${body}</tbody></table>`;
-}
 function refreshScoreboard() {
-  const content = el('sbContent'); if (!content) return;
-  const title = el('sbTitle'), sub = el('sbSub');
-  const isGG = gameMode === 'gungame';
-  const rows = scoreboardRows();   // ranked snapshot
-  const timeStr = MATCH._hasTime ? (MATCH._sudden ? ' • SUDDEN DEATH' : ' • ' + fmtClock(MATCH._timeLeft) + ' left') : '';
-  if (gameMode === 'tdm') {
-    if (title) title.textContent = 'TEAM DEATHMATCH';
-    const rk = teamKills('red'), bk = teamKills('blue');
-    if (sub) sub.textContent = `${rk} – ${bk} • first to ${MATCH.tdmKills}${timeStr}`;
-    const red = rows.filter(r => r.team === 'red'), blue = rows.filter(r => r.team === 'blue'), other = rows.filter(r => r.team !== 'red' && r.team !== 'blue');
-    red.forEach((r, i) => r.rank = i + 1); blue.forEach((r, i) => r.rank = i + 1);
-    let html = `<div class="sbTeam red"><span>TEAM RED</span><span class="tt">${rk}</span></div>` + _sbTable(red, false);
-    html += `<div class="sbTeam blue"><span>TEAM BLUE</span><span class="tt">${bk}</span></div>` + _sbTable(blue, false);
-    if (other.length) html += _sbTable(other, false);
-    content.innerHTML = html;
+  const body = el('sbBody'); if (!body) return;
+  const head = el('sbHead'), title = el('sbTitle');
+  const rows = [...NET.scores.entries()].map(([id, s]) => ({ id, ...s }));
+  if (gameMode === 'gungame') {
+    // GUN GAME: show each player's weapon level instead of score/kills.
+    if (!NET.active) { rows.length = 0; rows.push({ id: NET.selfId, name: 'YOU', level: ggLevel }); }
+    rows.sort((a, b) => (b.level || 1) - (a.level || 1));
+    if (title) title.textContent = 'GUN GAME';
+    if (head) head.innerHTML = '<tr><th>PLAYER</th><th style="text-align:right">LEVEL</th></tr>';
+    body.innerHTML = rows.map(r =>
+      `<tr class="${r.id === NET.selfId ? 'me' : ''}"><td>${r.id === NET.selfId ? 'YOU' : r.name}</td><td class="num">${r.level || 1} / ${GUNGAME_MAX}</td></tr>`
+    ).join('');
     return;
   }
-  if (title) title.textContent = isGG ? 'GUN GAME' : 'FREE-FOR-ALL';
-  if (sub) sub.textContent = (isGG ? `First to Level ${GUNGAME_MAX}` : `${rows[0] ? rows[0].kills : 0} / ${MATCH.ffaKills} kills`) + timeStr;
-  content.innerHTML = _sbTable(rows, isGG);
+  if (!NET.active) { rows.length = 0; rows.push({ id: NET.selfId, name: 'YOU', score: gameState.score, kills: gameState.kills }); }
+  rows.sort((a, b) => b.score - a.score);
+  if (title) title.textContent = 'FREE-FOR-ALL';
+  if (head) head.innerHTML = '<tr><th>PLAYER</th><th style="text-align:right">SCORE</th><th style="text-align:right">KILLS</th></tr>';
+  body.innerHTML = rows.map(r =>
+    `<tr class="${r.id === NET.selfId ? 'me' : ''}"><td>${r.id === NET.selfId ? 'YOU' : r.name}</td><td class="num">${r.score}</td><td class="num">${r.kills}</td></tr>`
+  ).join('');
 }
-
-/* ============================================================================
-   PART 2 — END-OF-MATCH RESULTS SCREEN
-   ============================================================================ */
-function sfxApplause() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 2.2, peak: 0.16, filter: 'bandpass', freq: 1700, freq1: 1300, q: 0.5, verb: 0.5 }); for (let i = 0; i < 36; i++) aNoise(ctx, out, t + Math.random() * 1.8, { dur: 0.04, peak: 0.05, filter: 'highpass', freq: 2600 }); }, 'ui', 'applause', 0.85, 2.3); }
-function sfxCardReveal() { SND.play2d((ctx, out, t) => aChime(ctx, out, t, [880, 1320], 0.05, 0.18, 0.22, 'sine'), 'ui', 'card', 0.7, 0.3); }
-
-// Mini 3D winner stage: victory pose (arms + weapon raised), spotlight, slow turntable.
-const ResultStage = (() => {
-  let inited = false, renderer, scene, cam, raf = 0, spin = 0; const groups = [];
-  function init() {
-    if (inited) return; inited = true;
-    scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x20242e, 1.1));
-    const dl = new THREE.DirectionalLight(0xfff0d8, 1.0); dl.position.set(2, 8, 5); scene.add(dl);
-    const sl = new THREE.SpotLight(0xfff2cc, 1.5, 32, 0.55, 0.6); sl.position.set(0, 9, 3); sl.target.position.set(0, 1.1, 0); scene.add(sl); scene.add(sl.target);
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    el('resModelHost').appendChild(renderer.domElement);
-    cam = new THREE.PerspectiveCamera(40, 280 / 230, 0.1, 100); cam.position.set(0, 1.5, 5.2); cam.lookAt(0, 1.1, 0);
-  }
-  function clear() { for (const g of groups) { scene.remove(g); disposeGroup(g); } groups.length = 0; }
-  function show(winners) {
-    init(); clear();
-    const host = el('resModelHost'), w = host.clientWidth || 280, h = host.clientHeight || 230;
-    renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix();
-    const n = winners.length, spread = n > 1 ? 1.8 : 0;
-    winners.forEach((wn, i) => {
-      const g = new THREE.Group(), isSelf = wn.id === (NET.active ? NET.selfId : 'me');
-      const tex = skinCache[wn.id] || (isSelf ? mySkinTexture() : null) || defaultSkinTex;
-      const mat = new THREE.MeshLambertMaterial({ map: tex });
-      let armL = null, armR = null;
-      buildCharacterModel(mat, (geo, material, x, y, z, name) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); g.add(m); if (name === 'armL') armL = m; if (name === 'armR') armR = m; return m; });
-      if (armL) { armL.rotation.z = 2.2; armL.position.set(-0.42, 1.5, 0); }   // victory: arms thrown up
-      if (armR) { armR.rotation.z = -2.2; armR.position.set(0.42, 1.5, 0); }
-      const wk = wn.weapon || 'gg2';
-      if (WEAPONS[wk] && !WEAPONS[wk].melee && !WEAPONS[wk].rc) { const gun = buildThirdPersonWeapon(wk); gun.position.set(0.6, 1.85, 0.15); gun.rotation.z = -0.7; g.add(gun); }   // weapon held high
-      g.position.set((i - (n - 1) / 2) * spread, 0, 0); g.scale.setScalar(n > 1 ? 0.82 : 1);
-      scene.add(g); groups.push(g);
-    });
-    cancelAnimationFrame(raf); loop();
-  }
-  function loop() { raf = requestAnimationFrame(loop); spin += 0.012; groups.forEach((g, i) => g.rotation.y = Math.sin(spin + i * 1.3) * 0.45); if (renderer) renderer.render(scene, cam); }
-  function stop() { cancelAnimationFrame(raf); raf = 0; }
-  return { show, stop };
-})();
-
-let _resCountdownT = null;
-function weaponForRow(r) {
-  if (r.id === (NET.active ? NET.selfId : 'me')) return mainGunKey();
-  const rp = NET.active ? NET.players.get(r.id) : null; return (rp && rp.weapon) || r.lastWeapon || 'gg2';
-}
-function resultsWinnerList(result) {
-  const rows = result.rows || scoreboardRows();
-  if (result.team) return rows.filter(r => r.team === result.team).slice(0, 3).map(r => ({ id: r.id, name: r.name, weapon: weaponForRow(r) }));
-  const top = rows[0] || { id: (NET.active ? NET.selfId : 'me'), name: 'YOU' };
-  return [{ id: top.id, name: top.name, weapon: weaponForRow(top) }];
-}
-function buildResultCards(a) {
-  const host = el('resCards'); if (!host) return; host.innerHTML = '';
-  if (!a) return;
-  const cards = [];
-  if (a.mvp) cards.push(['mvp', '🏆', 'MVP — MOST KILLS', a.mvp.name, a.mvp.val + ' kills']);
-  if (a.weapon) cards.push(['', weaponIcon(a.weapon.weapon), 'TOP ' + a.weapon.wname, a.weapon.name, a.weapon.val + ' kills']);
-  if (a.streak) cards.push(['', '🔥', 'LONGEST KILLSTREAK', a.streak.name, a.streak.val + ' in a row']);
-  if (a.melee) cards.push(['', '🔪', 'MOST MELEE KILLS', a.melee.name, a.melee.val + ' knives']);
-  if (a.headshots) cards.push(['', '🎯', 'MOST HEADSHOTS', a.headshots.name, a.headshots.val + ' HS']);
-  if (a.streakActs) cards.push(['', '⚡', 'MOST SCORESTREAKS', a.streakActs.name, a.streakActs.val + ' used']);
-  cards.forEach((c, i) => {
-    const d = document.createElement('div'); d.className = 'resCard' + (c[0] ? ' ' + c[0] : '');
-    d.innerHTML = `<div class="rcIco">${c[1]}</div><div class="rcAward">${c[2]}</div><div class="rcName">${c[3]}</div><div class="rcVal">${c[4]}</div>`;
-    host.appendChild(d);
-    setTimeout(() => { d.classList.add('show'); sfxCardReveal(); }, 450 + i * 340);
-  });
-}
-function resultsTableHTML() {
-  const rows = scoreboardRows();
-  if (gameMode === 'tdm') {
-    const red = rows.filter(r => r.team === 'red'), blue = rows.filter(r => r.team === 'blue');
-    red.forEach((r, i) => r.rank = i + 1); blue.forEach((r, i) => r.rank = i + 1);
-    return `<div class="sbTeam red"><span>TEAM RED</span><span>${teamKills('red')}</span></div>` + _sbTable(red, false)
-         + `<div class="sbTeam blue"><span>TEAM BLUE</span><span>${teamKills('blue')}</span></div>` + _sbTable(blue, false);
-  }
-  return _sbTable(rows, gameMode === 'gungame');
-}
-function resultsExtraHTML() {
-  const rows = scoreboardRows(); let k = 0, d = 0, hs = 0, mk = 0, sa = 0;
-  rows.forEach(r => { k += r.kills || 0; d += r.deaths || 0; hs += r.headshots || 0; mk += r.meleeKills || 0; sa += r.streakActs || 0; });
-  const row = (a, b) => `<div class="seRow"><span>${a}</span><span>${b}</span></div>`;
-  return `<h3 style="margin:0 0 6px">MATCH TOTALS</h3>` + row('Total kills', k) + row('Total deaths', d) + row('Total headshots', hs) + row('Total knife kills', mk) + row('Scorestreaks used', sa) + row('Players', rows.length);
-}
-function spawnConfetti(cols) {
-  const host = el('resConfetti'); if (!host) return; host.innerHTML = '';
-  for (let i = 0; i < 90; i++) {
-    const p = document.createElement('div'); p.className = 'confetti';
-    p.style.left = (Math.random() * 100) + 'vw'; p.style.background = cols[i % cols.length];
-    const dur = 2.5 + Math.random() * 2.5; p.style.animationDuration = dur + 's'; p.style.animationDelay = (Math.random() * 0.8) + 's';
-    host.appendChild(p); setTimeout(() => p.remove(), (dur + 1.2) * 1000);
-  }
-}
-function hideResults() { clearInterval(_resCountdownT); ResultStage.stop(); const r = el('resultsScreen'); if (r) r.style.display = 'none'; const c = el('resConfetti'); if (c) c.innerHTML = ''; }
-function resultsPlayAgain() { hideResults(); if (!NET.active) startMatch(); else if (NET.isHost) hostStartMatch(); }
-function resultsToLobby() {
-  hideResults();
-  if (NET.active) { gameState.running = false; gameState.over = false; document.exitPointerLock && document.exitPointerLock(); showScreen('lobbyScreen'); }
-  else leaveToMenu();
-}
-function showResultsScreen(result) {
-  result = result || _matchResult || { rows: scoreboardRows() }; _matchResult = result;
-  const wt = el('resWinner'), ws = el('resWinSub');
-  if (result.team) { wt.textContent = TEAMS[result.team].name + ' WINS!'; wt.style.color = TEAMS[result.team].css; }
-  else { const who = result.won ? 'YOU WIN!' : (result.winnerName ? result.winnerName.toUpperCase() + ' WINS!' : 'MATCH OVER'); wt.textContent = who; wt.style.color = '#ffd34a'; }
-  ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary();
-  try { ResultStage.show(resultsWinnerList(result)); } catch (e) {}
-  buildResultCards(result.awards || computeAwards());
-  el('resTable').innerHTML = resultsTableHTML();
-  el('resStatsExtra').innerHTML = resultsExtraHTML(); el('resStatsExtra').style.display = 'none'; el('resStatsBtn').textContent = 'VIEW MATCH STATS';
-  el('resAgain').style.display = (NET.active && NET.isClient) ? 'none' : '';
-  spawnConfetti(result.team ? [TEAMS[result.team].css, '#ffffff', '#ffe600'] : (result.won ? ['#ffe600', '#ff5a5a', '#5aa6ff', '#fff'] : ['#5aa6ff', '#9fd0ff', '#ffffff']));
-  setTimeout(() => { sfxApplause(); }, 240);
-  el('resultsScreen').style.display = 'flex';
-  document.exitPointerLock && document.exitPointerLock();
-  let cd = 30; const cde = el('resCountdown'); if (cde) cde.textContent = 'Returning to lobby in ' + cd + 's…';
-  clearInterval(_resCountdownT);
-  _resCountdownT = setInterval(() => { cd--; if (cd <= 0) { clearInterval(_resCountdownT); resultsToLobby(); } else if (cde) cde.textContent = 'Returning to lobby in ' + cd + 's…'; }, 1000);
-}
-// Results-screen buttons
-if (el('resAgain')) el('resAgain').onclick = () => resultsPlayAgain();
-if (el('resLobby')) el('resLobby').onclick = () => resultsToLobby();
-if (el('resStatsBtn')) el('resStatsBtn').onclick = () => { const e = el('resStatsExtra'); const open = e.style.display === 'none'; e.style.display = open ? 'block' : 'none'; el('resStatsBtn').textContent = open ? 'HIDE MATCH STATS' : 'VIEW MATCH STATS'; sfxClick(); };
 
 /* ---- Lobby roster UI ---- */
 function renderRoster() {
@@ -10188,7 +9282,6 @@ function renderRoster() {
   const meEl = wrap.querySelector('.pl[data-self="true"]');
   if (meEl) { meEl.style.cursor = 'pointer'; meEl.title = 'Customize your skin'; meEl.onclick = () => SkinCreator.open('lobbyScreen'); }
   if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();   // re-render the 3D stage when the party changes
-  updateLobbySettingsSummary();
 }
 function setNetStatus(id, text, isErr) {
   const e = el(id); if (!e) return; e.textContent = text; e.classList.toggle('err', !!isErr);
@@ -10203,8 +9296,6 @@ function showScreen(id) {
   if (typeof refreshModeUI === 'function') refreshModeUI();
 }
 function leaveToMenu() {
-  cancelKillcam();
-  scooterDismountAll(); if (scooter && scooter.group) { scene.remove(scooter.group); disposeGroup(scooter.group); scooter = null; }
   NET.reset();
   Ambient.stop();   // silence the in-match ambience back at the menu
   rcResetMatch();   // lock the RC launcher + clear any missiles when leaving to the lobby
@@ -10232,14 +9323,11 @@ function netTick(dt) {
   } else if (NET.isHost) {
     if (NET._sendAcc >= 0.05) { NET._sendAcc = 0; NET.broadcastPlayers(); }
     if (NET._botAcc >= 0.066) { NET._botAcc = 0; NET.broadcastBots(); }     // ~15 Hz
-    NET._pingAcc = (NET._pingAcc || 0) + dt;
-    if (NET._pingAcc >= 2) { NET._pingAcc = 0; NET.broadcast({ t: 'ping', ts: performance.now() }); }   // RTT probe for the scoreboard PING column
   }
 }
 
 /* ---- Hold the Scoreboard key (default TAB) to see the live free-for-all scoreboard ---- */
 document.addEventListener('keydown', (e) => {
-  if (killcam.active && IM.codeAction(e.code) === 'jump') { e.preventDefault(); skipKillcam(); return; }   // Part 5: skip the killcam / respawn now
   if (IM.codeAction(e.code) === 'scoreboard' && gameState.running && !paused) { e.preventDefault(); refreshScoreboard(); el('scoreboard').style.display = 'flex'; }
 });
 document.addEventListener('keyup', (e) => {
@@ -10557,167 +9645,6 @@ const SkinCreator = (() => {
 /* ============================================================================
    10. GAME LOOP
    ============================================================================ */
-/* ============================================================================
-   PART 7 — MOBILITY SCOOTER (Walmart-style retiree scooter with two NOS tanks).
-   One spawns on the map; mount with the interact key, drive WASD, SPACE for NOS,
-   fire while seated. 200 HP, respawns 60s after destruction. The occupant owns
-   its physics + broadcasts state; the host owns it while idle.
-   ============================================================================ */
-const SCOOTER = { base: 4.2, reverse: 2.2, turn: 1.9, nosSpeed: 17, nosDrain: 25, maxNos: 100, hp: 200, respawn: 60, mountDist: 3.6, seatEye: 1.0 };
-const SCOOTER_SPAWN = new THREE.Vector3(16, 0, 18);   // front yard, between the houses + castle
-function scooterOwns() { return !NET.active || (scooter && (scooter.occupant ? scooter.occupant === NET.selfId : NET.isHost)); }
-function _scLed(line1, line2, color) {
-  const u = scooter && scooter.group && scooter.group.userData; if (!u || !u.ledCtx) return;
-  const c = u.ledCtx; c.fillStyle = '#0a0400'; c.fillRect(0, 0, 128, 64);
-  c.fillStyle = color || '#ff5a3c'; c.textAlign = 'center'; c.font = 'bold 22px monospace'; c.fillText(line1, 64, 27);
-  c.font = 'bold 18px monospace'; c.fillText(line2 || '', 64, 52); u.ledTex.needsUpdate = true;
-}
-function buildScooterModel() {
-  const grp = new THREE.Group(); grp.userData = {};
-  const dark = new THREE.MeshLambertMaterial({ color: 0x222831, flatShading: true });
-  const blue = new THREE.MeshLambertMaterial({ color: 0x2a6fdf, flatShading: true });
-  const black = new THREE.MeshLambertMaterial({ color: 0x111316, flatShading: true });
-  const chrome = new THREE.MeshLambertMaterial({ color: 0x9aa6b2, flatShading: true });
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.22, 1.9), dark); deck.position.y = 0.5; deck.userData = { scooter: true }; grp.add(deck);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.42, 1.2), blue); body.position.set(0, 0.72, -0.1); body.userData = { scooter: true }; grp.add(body);
-  const wheels = [];
-  [[-0.55, -0.8], [0.55, -0.8], [-0.55, 0.8], [0.55, 0.8]].forEach(([wx, wz]) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.18, 12), black); w.rotation.z = Math.PI / 2; w.position.set(wx, 0.3, wz); grp.add(w); wheels.push(w); });
-  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.16, 0.7), black); seat.position.set(0, 0.98, 0.15); seat.userData = { scooter: true }; grp.add(seat);
-  const back = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.5, 0.14), black); back.position.set(0, 1.25, 0.5); grp.add(back);
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 8), chrome); col.position.set(0, 1.0, -0.85); col.rotation.x = -0.22; grp.add(col);
-  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.74, 8), chrome); bar.rotation.z = Math.PI / 2; bar.position.set(0, 1.46, -0.96); grp.add(bar);
-  const basket = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.36), new THREE.MeshLambertMaterial({ color: 0xcfd6dd, flatShading: true, wireframe: true })); basket.position.set(0, 1.12, -1.06); grp.add(basket);
-  const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; grp.userData.ledCtx = cv.getContext('2d'); grp.userData.ledTex = new THREE.CanvasTexture(cv);
-  const led = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.18), new THREE.MeshBasicMaterial({ map: grp.userData.ledTex })); led.position.set(0, 1.5, -0.86); led.rotation.x = -0.22; grp.add(led);
-  const tanks = [];
-  [-0.26, 0.26].forEach(tx => {
-    const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.82, 12), new THREE.MeshLambertMaterial({ color: 0x18b6ff, emissive: 0x0a4a7a, emissiveIntensity: 0.55, flatShading: true, transparent: true })); tank.position.set(tx, 1.36, 0.64); grp.add(tank);
-    const valve = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.16, 8), chrome); valve.position.set(tx, 1.84, 0.64); grp.add(valve);
-    const hose = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 6), black); hose.position.set(tx, 1.0, 0.46); hose.rotation.x = 0.6; grp.add(hose);
-    const lc = document.createElement('canvas'); lc.width = 64; lc.height = 32; const lx = lc.getContext('2d'); lx.fillStyle = '#fff'; lx.font = 'bold 19px Arial'; lx.textAlign = 'center'; lx.fillText('N₂O', 32, 22);
-    const lab = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lc), transparent: true })); lab.scale.set(0.3, 0.15, 1); lab.position.set(tx, 1.52, 0.47); grp.add(lab);
-    tanks.push(tank);
-  });
-  const jet = new THREE.Mesh(new THREE.ConeGeometry(0.24, 1.5, 10), new THREE.MeshBasicMaterial({ color: 0x6fd3ff, transparent: true, opacity: 0.85 })); jet.rotation.x = Math.PI / 2; jet.position.set(0, 0.7, 1.5); jet.visible = false; grp.add(jet);
-  grp.userData.tanks = tanks; grp.userData.led = led; grp.userData.jet = jet; grp.userData.wheels = wheels;
-  return grp;
-}
-function spawnScooter() {
-  if (scooter && scooter.group) { scene.remove(scooter.group); disposeGroup(scooter.group); }
-  const grp = buildScooterModel(), sp = SCOOTER_SPAWN, y = groundHeightAt(sp.x, sp.z, 0.3);
-  scooter = { group: grp, pos: new THREE.Vector3(sp.x, y, sp.z), yaw: 0, speed: 0, nos: SCOOTER.maxNos, hp: SCOOTER.hp,
-              alive: true, occupant: null, nosOn: false, respawnT: 0, rpos: new THREE.Vector3(sp.x, y, sp.z), ryaw: 0, netAcc: 0, _wheel: 0, _nosSndT: 0 };
-  grp.position.copy(scooter.pos); scene.add(grp); _scLed('SPEED', '0%');
-}
-function respawnScooter() {
-  const sp = SCOOTER_SPAWN, y = groundHeightAt(sp.x, sp.z, 0.3);
-  scooter.alive = true; scooter.hp = SCOOTER.hp; scooter.nos = SCOOTER.maxNos; scooter.speed = 0; scooter.nosOn = false; scooter.occupant = null;
-  scooter.pos.set(sp.x, y, sp.z); scooter.yaw = 0; scooter.rpos.copy(scooter.pos); scooter.group.visible = true; scooter.group.position.copy(scooter.pos);
-  scooter.group.userData.tanks.forEach(t => t.material.opacity = 1); _scLed('SPEED', '0%');
-}
-function tryMountScooter() {
-  if (!scooter || !scooter.alive || scooter.occupant || riding || !player.alive || player.onLadder) return false;
-  if (player.pos.distanceTo(scooter.pos) > SCOOTER.mountDist) return false;
-  scooter.occupant = NET.active ? NET.selfId : 'me'; riding = true; scooter.yaw = yaw; scooter.speed = 0;
-  if (saberBlocking) saberBlocking = false;
-  sfxScooterMount(scooter.pos); el('scooterHud').style.display = 'block'; el('scooterPrompt').style.display = 'none';
-  if (NET.active) scooterBroadcast();
-  return true;
-}
-function scooterDismount() {
-  if (!riding) return;
-  riding = false;
-  const side = new THREE.Vector3(-Math.cos(scooter.yaw), 0, Math.sin(scooter.yaw)).multiplyScalar(1.5);
-  const dx = scooter.pos.x + side.x, dz = scooter.pos.z + side.z;
-  player.pos.set(dx, groundHeightAt(dx, dz, 0.5), dz); player.vel.set(0, 0, 0); player.eye = MOVE.eyeHeight;
-  scooter.speed = 0; scooter.nosOn = false; if (scooter.occupant === (NET.active ? NET.selfId : 'me')) scooter.occupant = null;
-  el('scooterHud').style.display = 'none'; el('speedLines').style.opacity = 0;
-  if (NET.active) scooterBroadcast();
-}
-function scooterEject() { if (riding) scooterDismount(); }
-function scooterDismountAll() {
-  if (riding) { riding = false; el('scooterHud').style.display = 'none'; el('speedLines').style.opacity = 0; player.eye = MOVE.eyeHeight; }
-  if (scooter) { scooter.occupant = null; scooter.nosOn = false; scooter.speed = 0; }
-}
-function scooterBroadcast() {
-  if (!NET.active || !scooter) return;
-  NET.broadcast({ t: 'scoot', x: scooter.pos.x, y: scooter.pos.y, z: scooter.pos.z, yaw: scooter.yaw, nos: scooter.nos, hp: scooter.hp, occ: scooter.occupant, on: scooter.nosOn, alive: scooter.alive });
-}
-function damageScooter(dmg) {
-  if (!scooter || !scooter.alive) return;
-  if (NET.active && !scooterOwns()) { NET.route(scooter.occupant || NET.hostId, { t: 'scoothit', dmg }); return; }
-  scooter.hp -= dmg; if (scooter.hp <= 0) destroyScooter(); else if (NET.active) scooterBroadcast();
-}
-function damageScooterRadius(center, R, dmg) {
-  if (!scooter || !scooter.alive) return;
-  const d = Math.hypot(scooter.pos.x - center.x, (scooter.pos.y + 0.7) - center.y, scooter.pos.z - center.z);
-  if (d < R) damageScooter(dmg * (1 - d / R));
-}
-function destroyScooter() {
-  if (!scooter || !scooter.alive) return;
-  scooter.alive = false; scooter.hp = 0; scooter.nosOn = false; scooter.speed = 0;
-  spawnExplosionFX(scooter.pos.clone().setY(scooter.pos.y + 0.8), 4.2, 0xffc14a);
-  spawnExplosionFX(scooter.pos.clone().setY(scooter.pos.y + 1.4), 2.6, 0x6fd3ff);   // NOS ignites blue
-  sfxExplosion('rc', scooter.pos);
-  const wasRiding = riding;
-  if (wasRiding) { scooterDismount(); hurtPlayer(50); }   // rider takes 50 HP + is ejected
-  scooter.group.visible = false; scooter.respawnT = SCOOTER.respawn; scooter.occupant = null;
-  if (NET.active && (scooterOwns() || wasRiding)) scooterBroadcast();
-}
-// NOS audio: a sustained whoosh + low roar (re-triggered while boosting).
-function sfxNos(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.5, peak: 0.4, filter: 'bandpass', freq: 600, freq1: 2600, q: 0.6 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 90, f1: 150, dur: 0.5, peak: 0.3 }); }, pos || player.pos, 'weapons', 'nos', 0.95, 0.5); }
-function sfxScooterMount(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 220, f1: 330, dur: 0.18, peak: 0.2 }); aNoise(ctx, out, t, { dur: 0.2, peak: 0.12, filter: 'lowpass', freq: 800 }); }, pos || player.pos, 'ui', 'scoot', 0.7, 0.22); }
-// Local rider input + physics + seat camera.
-function scooterDrive(dt) {
-  const fwd = IM.down('moveForward'), back = IM.down('moveBackward'), left = IM.down('moveLeft'), right = IM.down('moveRight'), boost = IM.down('jump');
-  scooter.nosOn = false;
-  if (boost && scooter.nos > 0 && !paused) { scooter.nosOn = true; scooter.nos = Math.max(0, scooter.nos - SCOOTER.nosDrain * dt); }
-  let target = scooter.nosOn ? SCOOTER.nosSpeed : fwd ? SCOOTER.base : back ? -SCOOTER.reverse : 0;
-  if (paused) target = 0;
-  const r = scooter.nosOn ? 6 : (target !== 0 ? 1.8 : 4);   // ~2s to base; snappy under NOS; coast to stop
-  scooter.speed += (target - scooter.speed) * Math.min(1, dt * r);
-  const steer = (left ? 1 : 0) - (right ? 1 : 0);
-  scooter.yaw += steer * SCOOTER.turn * dt * (0.45 + Math.min(1, Math.abs(scooter.speed) / SCOOTER.base));
-  const dir = new THREE.Vector3(-Math.sin(scooter.yaw), 0, -Math.cos(scooter.yaw)), step = scooter.speed * dt;
-  if (Math.abs(step) > 0.001) {
-    const from = new THREE.Vector3(scooter.pos.x, scooter.pos.y + 0.7, scooter.pos.z), rd = dir.clone().multiplyScalar(Math.sign(step));
-    if (new THREE.Raycaster(from, rd, 0, Math.abs(step) + 0.7).intersectObjects(colliders, false).length) scooter.speed *= 0.25;   // wall ahead: bleed speed
-    else { scooter.pos.x = Math.max(-ARENA + 2, Math.min(ARENA - 2, scooter.pos.x + dir.x * step)); scooter.pos.z = Math.max(-ARENA + 2, Math.min(ARENA - 2, scooter.pos.z + dir.z * step)); }
-  }
-  scooter.pos.y = groundHeightAt(scooter.pos.x, scooter.pos.z, 0.3);
-  player.pos.set(scooter.pos.x, scooter.pos.y, scooter.pos.z); player.vel.set(0, 0, 0); player.onGround = true; player.diving = false; player.crouching = false;
-  recoilPitch += (0 - recoilPitch) * Math.min(1, dt * 10); recoilYaw += (0 - recoilYaw) * Math.min(1, dt * 10);
-  player.eye += (SCOOTER.seatEye - player.eye) * Math.min(1, dt * 10);
-  if (scooter.nosOn) addShake(0.025, 0.06);
-  let sx = 0, sy = 0; if (shakeTime > 0) { sx = (Math.random() - 0.5) * shakeMag; sy = (Math.random() - 0.5) * shakeMag; }
-  camera.position.set(scooter.pos.x, scooter.pos.y + player.eye + 0.35, scooter.pos.z);
-  camera.rotation.order = 'YXZ'; camera.rotation.y = yaw + recoilYaw + sx; camera.rotation.x = pitch + recoilPitch + sy;
-  el('speedLines').style.opacity = scooter.nosOn ? 0.9 : 0;
-  el('nosBar').style.width = (scooter.nos / SCOOTER.maxNos * 100) + '%';
-  if (scooter.nos <= 0) _scLed('NOS', 'EMPTY', '#ff3b30');
-  else _scLed(scooter.nosOn ? 'NOS!' : 'SPEED', Math.round(Math.abs(scooter.speed) / SCOOTER.nosSpeed * 100) + '%', scooter.nosOn ? '#6fd3ff' : '#ff5a3c');
-  if (scooter.nosOn) { scooter._nosSndT -= dt; if (scooter._nosSndT <= 0) { sfxNos(scooter.pos); scooter._nosSndT = 0.4; } }
-}
-function updateScooter(dt) {
-  if (!scooter) return;
-  if (!scooter.alive) {   // destroyed: owner counts down the respawn
-    if (scooterOwns()) { scooter.respawnT -= dt; if (scooter.respawnT <= 0) { respawnScooter(); if (NET.active) scooterBroadcast(); } }
-    el('scooterPrompt').style.display = 'none';
-    return;
-  }
-  if (riding) scooterDrive(dt);
-  else if (NET.active && !scooterOwns()) { scooter.rpos.lerp(scooter.pos, Math.min(1, dt * 12)); scooter.ryaw = lerpAngle(scooter.ryaw, scooter.yaw, Math.min(1, dt * 12)); }
-  else { scooter.rpos.copy(scooter.pos); scooter.ryaw = scooter.yaw; }
-  const rp = riding ? scooter.pos : scooter.rpos, ry = riding ? scooter.yaw : scooter.ryaw;
-  scooter.group.position.copy(rp); scooter.group.rotation.y = ry;
-  const u = scooter.group.userData;
-  scooter._wheel += dt * (scooter.speed || 0) * 1.3; u.wheels.forEach(w => w.rotation.x = scooter._wheel);
-  u.jet.visible = !!scooter.nosOn; if (scooter.nosOn) u.jet.scale.set(0.8 + Math.random() * 0.5, 0.8 + Math.random() * 0.6, 1);
-  const nf = Math.max(0.18, scooter.nos / SCOOTER.maxNos); u.tanks.forEach(t => { t.material.opacity = 0.3 + 0.7 * nf; });
-  if (NET.active && scooterOwns()) { scooter.netAcc += dt; if (scooter.netAcc >= 0.066) { scooter.netAcc = 0; scooterBroadcast(); } }
-  if (!riding) { const near = player.alive && gameState.running && !scooter.occupant && player.pos.distanceTo(scooter.pos) < SCOOTER.mountDist; const p = el('scooterPrompt'); if (p) { p.style.display = near ? 'block' : 'none'; if (near) p.innerHTML = 'Press <b>' + getKeyForAction('interact') + '</b> to ride the scooter'; } }
-}
-
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
@@ -10728,8 +9655,7 @@ function animate() {
   updateHeartbeat(dt);     // critical-health heartbeat loop
 
   if (gameState.running) {
-    if (!riding) updateMovement(dt);   // while riding the scooter, updateScooter drives the player + camera
-    updateScooter(dt);                 // Part 7: scooter physics / rider input / seat camera / respawn / net sync
+    updateMovement(dt);
     // Bots: the host (or solo) runs the AI; clients just interpolate host snapshots.
     if (!NET.active || NET.isHost) updateBots(dt);
     else lerpClientBots(dt);
@@ -10739,10 +9665,6 @@ function animate() {
     updateTomahawks(dt);  // thrown tomahawks / lethal throwing axes (flight + stick + pickup)
     updateSmokes(dt);     // lethal smoke grenades: canister settle + view-blocking smoke cloud
     updateInvTip(dt);     // fade the "PRESS I" inventory hint
-    updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
-    updateDmgNums(dt);    // Part 3: expire floating damage numbers
-    recordCamFrame(dt);   // Part 5: record my camera for others' killcams
-    if (el('scoreboard').style.display === 'flex') refreshScoreboard();   // live scoreboard while TAB is held
     updateRockets(dt);    // rocket projectiles (special weapon)
     updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails
     rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles
@@ -10919,8 +9841,6 @@ function animate() {
   updateDebris(dt);    // detached limbs / heads / dropped guns
   updateTracers(dt);   // pooled bullet tracers fade-out
   updateLocalLaser(dt); // own laser-sight beam (hipfire weapons)
-  updateKillcam(dt);   // Part 5: drive the camera through the death replay (final camera authority)
-  if (killcam.active && gunMesh) gunMesh.visible = false;   // hide the first-person weapon during the killcam
 
   // SECRET RC: when the nose cam is live, render it fullscreen + a corner picture-in-picture
   // of the body's view. The thermal/scanline HUD overlay shows only then.

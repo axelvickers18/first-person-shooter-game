@@ -421,41 +421,6 @@
   .audMute { display: block; margin-top: 10px; font-size: 14px; cursor: pointer; color: #cfe0f0; }
   .audMute input { pointer-events: auto; transform: scale(1.3); margin-right: 6px; vertical-align: middle; }
 
-  /* In-match PAUSE menu */
-  #pauseMenu { position: fixed; inset: 0; z-index: 21; display: none; align-items: center; justify-content: center; background: rgba(8,16,28,0.62); pointer-events: auto; }
-  .pauseBox { display: flex; flex-direction: column; align-items: center; gap: 12px; background: #16202e; border: 2px solid #2c3e54; border-radius: 12px; padding: 28px 40px; box-shadow: 0 18px 60px rgba(0,0,0,0.6); }
-  .pauseBox h2 { font: 800 34px 'Segoe UI', sans-serif; letter-spacing: 3px; color: #fff; }
-  .pauseWarn { color: #ffcf5a; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-
-  /* SETTINGS tabs + CONTROLS keybinding list */
-  #settingsScreen { overflow: auto; padding: 24px 0; justify-content: flex-start; }
-  .setTabs { display: flex; gap: 6px; margin-bottom: 6px; pointer-events: auto; }
-  .setTab { background: #1b2a3c; color: #aec3da; border: 2px solid #2c3e54; border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px 18px; font: 700 14px 'Segoe UI', sans-serif; letter-spacing: 1px; cursor: pointer; }
-  .setTab.active { background: #28415c; color: #fff; }
-  .setPane { display: none; width: min(640px, 92vw); pointer-events: auto; }
-  .setPane.active { display: block; }
-  .ctrlScroll { max-height: 52vh; overflow-y: auto; background: rgba(8,16,28,0.45); border: 2px solid #2c3e54; border-radius: 8px; padding: 6px 10px; }
-  .ctrlCat { font: 800 12px 'Segoe UI', sans-serif; letter-spacing: 2px; color: #ffe600; margin: 12px 0 4px; padding-bottom: 3px; border-bottom: 1px solid #2c3e54; }
-  .ctrlRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 8px; border-radius: 6px; font-size: 14px; color: #d6e4f2; }
-  .ctrlRow:hover { background: rgba(80,140,200,0.14); }
-  .ctrlRow .cName { flex: 1; }
-  .ctrlRow .cNote { color: #7f96ad; font-size: 11px; margin-left: 6px; }
-  .ctrlKey { min-width: 96px; text-align: center; background: #22354a; color: #fff; border: 2px solid #3a5572; border-radius: 6px; padding: 4px 10px; font-weight: 700; cursor: pointer; user-select: none; }
-  .ctrlKey:hover { border-color: #6fb4ff; }
-  .ctrlKey.rebinding { border-color: #ffe600; color: #ffe600; animation: rebindPulse 0.8s ease-in-out infinite; }
-  .ctrlKey.unbound { color: #ff5a5a; border-color: #7a2a2a; }
-  @keyframes rebindPulse { 0%,100% { box-shadow: 0 0 0 rgba(255,230,0,0); } 50% { box-shadow: 0 0 12px rgba(255,230,0,0.8); } }
-  #ctrlConflict { display: none; margin: 8px 0; padding: 8px 12px; border-radius: 8px; background: #3a2a10; border: 2px solid #c89a2a; color: #ffe0a0; font-size: 14px; pointer-events: auto; }
-  #ctrlConflict button { margin-left: 8px; }
-  .ctrlBtns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 12px; pointer-events: auto; }
-  .ctrlOpts { margin-top: 10px; border-top: 1px solid #2c3e54; padding-top: 8px; }
-  .optRow { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 14px; color: #d6e4f2; }
-  .optRow > span:first-child { flex: 1; }
-  .optRow input[type=range] { width: 180px; pointer-events: auto; accent-color: #34d058; }
-  .optRow input[type=checkbox] { pointer-events: auto; transform: scale(1.3); }
-  .optRow select { pointer-events: auto; background: #22354a; color: #fff; border: 1px solid #3a5572; border-radius: 5px; padding: 3px 6px; }
-  .optVal { width: 46px; text-align: right; color: #ffe600; font-weight: bold; }
-
   /* Game-mode picker (lobby + solo) */
   .modePick { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
   .modePick button {
@@ -751,88 +716,36 @@
      SETTINGS SCREEN — bot count + throwable choice
      ============================================================ -->
 <div id="settingsScreen" class="overlay hidden">
-  <h1>SETTINGS</h1>
-  <div class="setTabs">
-    <button class="setTab active" data-pane="paneControls">CONTROLS</button>
-    <button class="setTab" data-pane="paneAudio">AUDIO</button>
-    <button class="setTab" data-pane="paneVideo">VIDEO</button>
-    <button class="setTab" data-pane="paneGameplay">GAMEPLAY</button>
-  </div>
-
-  <!-- CONTROLS tab: remappable keybindings + control options -->
-  <div class="setPane active" id="paneControls">
-    <div id="ctrlConflict"></div>
-    <div class="ctrlScroll" id="ctrlList"></div>
-    <div class="ctrlOpts">
-      <div class="optRow"><span>Mouse Sensitivity</span><input type="range" id="optSens" min="10" max="500" step="5"><span class="optVal" id="optSensV">1.0x</span></div>
-      <div class="optRow"><span>Field of View</span><input type="range" id="optFov" min="60" max="120" step="1"><span class="optVal" id="optFovV">78</span></div>
-      <label class="optRow"><span>Invert Mouse Y</span><input type="checkbox" id="optInvertY"></label>
-      <label class="optRow"><span>ADS — Toggle (vs hold)</span><input type="checkbox" id="optAdsToggle"></label>
-      <label class="optRow"><span>Sprint — Toggle (vs hold)</span><input type="checkbox" id="optSprintToggle"></label>
-      <label class="optRow"><span>Auto-Reload on Empty</span><input type="checkbox" id="optAutoReload"></label>
-      <label class="optRow"><span>Show Hit Markers</span><input type="checkbox" id="optHitMarkers"></label>
+  <h1>SETTINGS<small>MATCH OPTIONS</small></h1>
+  <div class="setBlock">
+    <div class="setLabel">BOTS <span class="setHint">(host / solo only)</span></div>
+    <div class="stepper">
+      <button class="smallbtn" id="botMinus">–</button>
+      <span id="botCountVal">8</span>
+      <button class="smallbtn" id="botPlus">+</button>
     </div>
-    <div class="ctrlBtns">
-      <button class="smallbtn" id="ctrlReset">RESET TO DEFAULT</button>
-      <button class="smallbtn" id="ctrlSavePreset">SAVE AS PRESET</button>
-      <span style="display:flex;align-items:center;gap:6px;color:#aec3da;font-size:13px;pointer-events:auto">LOAD PRESET
-        <select id="ctrlPreset"><option value="default">Default</option><option value="southpaw">Southpaw</option><option value="custom">Custom</option></select>
-      </span>
-    </div>
+    <div class="setHint">0 = pure player free-for-all, up to 16 bots.</div>
   </div>
-
-  <!-- AUDIO tab -->
-  <div class="setPane" id="paneAudio">
-    <div class="setBlock" id="audioBlock">
-      <div class="audRow"><span>Master</span><input type="range" id="volmaster" min="0" max="100"><span class="audVal" id="volmasterV">50</span></div>
-      <div class="audRow"><span>Weapons</span><input type="range" id="volweapons" min="0" max="100"><span class="audVal" id="volweaponsV">100</span></div>
-      <div class="audRow"><span>Footsteps</span><input type="range" id="volfootsteps" min="0" max="100"><span class="audVal" id="volfootstepsV">85</span></div>
-      <div class="audRow"><span>UI</span><input type="range" id="volui" min="0" max="100"><span class="audVal" id="voluiV">70</span></div>
-      <div class="audRow"><span>Ambient</span><input type="range" id="volambient" min="0" max="100"><span class="audVal" id="volambientV">45</span></div>
-      <label class="audMute"><input type="checkbox" id="muteToggle"> Mute all</label>
+  <div class="setBlock">
+    <div class="setLabel">THROWABLE</div>
+    <div class="weaponPick" id="throwPick">
+      <button data-throw="grenade" id="throwGrenadeBtn">FRAG GRENADE<small>lob • area blast</small></button>
+      <button data-throw="tomahawk" id="throwTomahawkBtn">TOMAHAWK<small>fast • direct hit one-shot</small></button>
     </div>
+    <div class="setHint">Press <b>G</b> in-game to throw your chosen weapon.</div>
   </div>
-
-  <!-- VIDEO tab (placeholder) -->
-  <div class="setPane" id="paneVideo">
-    <div class="setHint" style="padding:24px;text-align:center;font-size:15px">Video / graphics options coming soon.</div>
+  <div class="setBlock" id="audioBlock">
+    <div class="setLabel">AUDIO</div>
+    <div class="audRow"><span>Master</span><input type="range" id="volmaster" min="0" max="100"><span class="audVal" id="volmasterV">50</span></div>
+    <div class="audRow"><span>Weapons</span><input type="range" id="volweapons" min="0" max="100"><span class="audVal" id="volweaponsV">100</span></div>
+    <div class="audRow"><span>Footsteps</span><input type="range" id="volfootsteps" min="0" max="100"><span class="audVal" id="volfootstepsV">85</span></div>
+    <div class="audRow"><span>UI</span><input type="range" id="volui" min="0" max="100"><span class="audVal" id="voluiV">70</span></div>
+    <div class="audRow"><span>Ambient</span><input type="range" id="volambient" min="0" max="100"><span class="audVal" id="volambientV">45</span></div>
+    <label class="audMute"><input type="checkbox" id="muteToggle"> Mute all</label>
   </div>
-
-  <!-- GAMEPLAY tab: match options (bots + throwable) -->
-  <div class="setPane" id="paneGameplay">
-    <div class="setBlock">
-      <div class="setLabel">BOTS <span class="setHint">(host / solo only)</span></div>
-      <div class="stepper">
-        <button class="smallbtn" id="botMinus">–</button>
-        <span id="botCountVal">8</span>
-        <button class="smallbtn" id="botPlus">+</button>
-      </div>
-      <div class="setHint">0 = pure player free-for-all, up to 16 bots.</div>
-    </div>
-    <div class="setBlock">
-      <div class="setLabel">THROWABLE</div>
-      <div class="weaponPick" id="throwPick">
-        <button data-throw="grenade" id="throwGrenadeBtn">FRAG GRENADE<small>lob • area blast</small></button>
-        <button data-throw="tomahawk" id="throwTomahawkBtn">TOMAHAWK<small>fast • direct hit one-shot</small></button>
-      </div>
-      <div class="setHint">Press your <b>Throw</b> key (G) in-game.</div>
-    </div>
-  </div>
-
   <div class="menuRow">
     <button class="smallbtn" id="settingsEditSkin">🎨 EDIT SKIN</button>
     <button class="bigbtn" id="settingsBack">DONE</button>
-  </div>
-</div>
-
-<!-- In-match PAUSE menu (semi-transparent — the match keeps running for everyone else) -->
-<div id="pauseMenu">
-  <div class="pauseBox">
-    <h2>PAUSED</h2>
-    <div class="pauseWarn">⚠️ Game continues for other players while paused</div>
-    <button class="bigbtn" id="pauseResume">RESUME</button>
-    <button class="smallbtn" id="pauseSettings">⚙ SETTINGS</button>
-    <button class="smallbtn" id="pauseLeave">LEAVE MATCH</button>
   </div>
 </div>
 
@@ -1256,7 +1169,7 @@ scene.background = new THREE.Color(0x87ceeb);        // bright sky blue
 scene.fog = new THREE.Fog(0x87ceeb, 180, 420);       // pushed back for the bigger map
 
 const camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.1, 1000);
-let DEFAULT_FOV = 78; const ADS_FOV = 55;            // hipfire (adjustable via the FOV option) / generic aim-down-sights
+const DEFAULT_FOV = 78, ADS_FOV = 55;                // hipfire / generic aim-down-sights
 
 // Lighting: soft ambient + one sun casting clean shadows (flat-shaded look)
 scene.add(new THREE.HemisphereLight(0xffffff, 0x6688aa, 0.85));
@@ -2326,214 +2239,95 @@ const keys = {};
 let yaw = 0, pitch = 0;            // look angles
 let recoilPitch = 0, recoilYaw = 0;
 let pointerLocked = false;
-let paused = false;                // pause/settings menu open mid-match: local input disabled (game keeps running)
 const SENS = 0.0022;
-
-/* ============================================================================
-   INPUT MANAGER — central action→key binding map. All gameplay input goes through
-   IM.down(action) (held) / IM.codeAction(code) (press dispatch), so remapping a key in
-   the Controls menu instantly works everywhere. Bindings + options persist in localStorage.
-   Codes are KeyboardEvent.code values, or pseudo-codes for the mouse: Mouse0 (L), Mouse2 (R),
-   Mouse1 (M), WheelUp, WheelDown.
-   ============================================================================ */
-const IM = {
-  defaults: {
-    moveForward: 'KeyW', moveBackward: 'KeyS', moveLeft: 'KeyA', moveRight: 'KeyD', jump: 'Space', sprint: 'ShiftLeft', crouch: 'KeyC',
-    weapon1: 'Digit1', weapon2: 'Digit2', karambit: 'Digit3', equipRC: 'Digit0', fire: 'Mouse0', ads: 'Mouse2', reload: 'KeyR', prevWeapon: 'WheelUp', nextWeapon: 'WheelDown',
-    use: 'KeyQ', grenade: 'KeyG', interact: 'KeyE',
-    saber: 'KeyB', flamethrower: 'KeyV', rcStreak: 'KeyN', dogs: 'KeyM', kong: 'Equal',
-    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter'
-  },
-  // Movement keys can't be left unbound (the player must be able to move). ESC always reaches the menu.
-  CRITICAL: ['moveForward', 'moveBackward', 'moveLeft', 'moveRight'],
-  // Ordered UI layout: ['CATEGORY', null] header rows, else [action, label, note].
-  ROWS: [
-    ['MOVEMENT', null],
-    ['moveForward', 'Move Forward'], ['moveBackward', 'Move Backward'], ['moveLeft', 'Move Left'], ['moveRight', 'Move Right'],
-    ['jump', 'Jump'], ['sprint', 'Sprint'], ['crouch', 'Crouch / Dive (sprint + key)'],
-    ['WEAPONS / EQUIPMENT', null],
-    ['weapon1', 'Main Weapon Slot 1'], ['weapon2', 'Main Weapon Slot 2'], ['karambit', 'Equip Karambit'], ['equipRC', 'Equip RC Launcher', 'when unlocked'],
-    ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['reload', 'Reload'], ['prevWeapon', 'Previous Weapon'], ['nextWeapon', 'Next Weapon'],
-    ['CONSUMABLES / ABILITIES', null],
-    ['use', 'Use Cigar / Drink Jack Daniels'], ['grenade', 'Throw Impulse Grenade'], ['interact', 'Interact / Climb Ladder'],
-    ['SCORESTREAKS', null],
-    ['saber', 'Saber + Jack Daniels', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
-    ['UI / MENUS', null],
-    ['inventory', 'Inventory / FFA Loadout'], ['pause', 'Pause / Settings'], ['scoreboard', 'Scoreboard'], ['chat', 'Chat']
-  ],
-  PRESETS: {
-    default: {},   // = defaults (filled in load)
-    southpaw: { moveForward: 'ArrowUp', moveBackward: 'ArrowDown', moveLeft: 'ArrowLeft', moveRight: 'ArrowRight' }
-  },
-  bind: {},
-  load() {
-    this.PRESETS.default = Object.assign({}, this.defaults);
-    this.bind = Object.assign({}, this.defaults);
-    try { const b = JSON.parse(localStorage.getItem('controls_v1')); if (b && typeof b === 'object') Object.assign(this.bind, b); } catch (e) {}
-  },
-  save() { try { localStorage.setItem('controls_v1', JSON.stringify(this.bind)); } catch (e) {} },
-  saveCustom() { try { localStorage.setItem('controls_custom_v1', JSON.stringify(this.bind)); } catch (e) {} },
-  resetDefault() { this.bind = Object.assign({}, this.defaults); this.save(); },
-  loadPreset(name) {
-    if (name === 'custom') { let c = null; try { c = JSON.parse(localStorage.getItem('controls_custom_v1')); } catch (e) {} this.bind = Object.assign({}, this.defaults, c || {}); }
-    else this.bind = Object.assign({}, this.defaults, this.PRESETS[name] || {});
-    this.save();
-  },
-  down(action) { return !!keys[this.bind[action]]; },                 // held (keyboard)
-  codeAction(code) { for (const a in this.bind) if (this.bind[a] === code) return a; return null; },   // reverse lookup
-  keyLabel(code) {
-    if (!code) return '(Not Bound)';
-    const m = { Space: 'Space', ShiftLeft: 'Shift', ShiftRight: 'Shift', ControlLeft: 'Ctrl', ControlRight: 'Ctrl', AltLeft: 'Alt', AltRight: 'Alt', Tab: 'Tab', Enter: 'Enter', Escape: 'ESC', Backspace: 'Backspace', CapsLock: 'Caps',
-      Mouse0: 'L Mouse', Mouse2: 'R Mouse', Mouse1: 'M Mouse', WheelUp: 'M Wheel ↑', WheelDown: 'M Wheel ↓', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' };
-    if (m[code]) return m[code];
-    let mm; if (mm = code.match(/^Key([A-Z])$/)) return mm[1];
-    if (mm = code.match(/^Digit([0-9])$/)) return mm[1];
-    if (mm = code.match(/^Numpad(.+)$/)) return 'Num ' + mm[1];
-    if (/^F\d+$/.test(code)) return code;
-    return code;
-  }
-};
-IM.load();
-
-/* Local control OPTIONS (sensitivity, invert-Y, ADS/sprint hold-vs-toggle, auto-reload, hit markers, FOV). */
-const OPT = {
-  sens: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, fov: 78,
-  load() { try { const o = JSON.parse(localStorage.getItem('controls_opts_v1')); if (o && typeof o === 'object') Object.assign(this, o); } catch (e) {} },
-  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, fov: this.fov })); } catch (e) {} }
-};
-OPT.load();
-DEFAULT_FOV = OPT.fov;     // apply the saved field-of-view
-let sprintLatch = false;   // sprint toggle-mode latched state (held checks read sprint OR this)
 
 const canvas = renderer.domElement;
 function lockPointer() { canvas.requestPointerLock(); }
 
 document.addEventListener('pointerlockchange', () => {
   pointerLocked = (document.pointerLockElement === canvas);
-  if (!pointerLocked) {
-    clearInput();   // ESC / lost lock: don't leave keys held
-    // Pressing ESC (or otherwise losing the lock) mid-match with no menu open → open the pause menu.
-    setTimeout(() => {
-      if (!pointerLocked && gameState.running && !gameState.over && !paused && !invOpen && el('settingsScreen').classList.contains('hidden') && el('skinCreator').classList.contains('hidden')) openPauseMenu();
-    }, 40);
-  }
+  if (!pointerLocked) clearInput();   // ESC / lost lock: don't leave keys held
 });
-// --- In-match PAUSE menu (the game keeps running for everyone else; local input is disabled) ---
-function openPauseMenu() {
-  if (paused || !gameState.running || gameState.over) return;
-  paused = true; firing = false; firingL = false; aiming = false; saberBlocking = false;
-  el('pauseMenu').style.display = 'flex';
-  document.exitPointerLock && document.exitPointerLock();
-}
-function resumeGame() {
-  paused = false; el('pauseMenu').style.display = 'none'; el('settingsScreen').classList.add('hidden');
-  if (gameState.running && player.alive) lockPointer();
-}
 document.addEventListener('mousemove', (e) => {
-  if (!pointerLocked || paused) return;
+  if (!pointerLocked) return;
   if (rcActive) { rcSteerX += e.movementX; rcSteerY += e.movementY; return; }   // piloting: mouse steers the missile
-  // Scope lowers sensitivity (improvement #1); gun-game ADS scales it by zoom (aimSensMult);
-  // OPT.sens is the player's sensitivity multiplier; OPT.invertY flips the vertical look.
-  const s = SENS * OPT.sens * (1 - scopeBlend * (1 - SCOPE.sensMult)) * aimSensMult;
+  // Scope lowers sensitivity (improvement #1); gun-game ADS scales it by zoom (aimSensMult).
+  const s = SENS * (1 - scopeBlend * (1 - SCOPE.sensMult)) * aimSensMult;
   yaw   -= e.movementX * s;
-  pitch -= e.movementY * s * (OPT.invertY ? -1 : 1);
+  pitch -= e.movementY * s;
   pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
   // Red-dot parallax: the dot lags a fast turn by a few px (clamped), then re-centers.
   rdParX = Math.max(-5, Math.min(5, rdParX - e.movementX * 0.03));
   rdParY = Math.max(-5, Math.min(5, rdParY - e.movementY * 0.03));
 });
 
-let firing = false, firingL = false;   // firing = fire input; firingL = ADS-input akimbo left pistol
-function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo); }
-
-// --- Fire / ADS press+release (shared by mouse + key bindings, so Fire/ADS can be remapped) ---
-function firePress() {
-  if (rcActive) { if (rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: fire = manual detonate
-  if (cigSmoking) { cigCancel(); return; }                                        // smoking: fire cancels (weapon holstered)
-  if (player.onLadder) return;
-  firing = true; tryShoot(akimboEquipped() ? 'R' : undefined);
-}
-function fireRelease() { firing = false; }
-function adsPress() {
-  if (rcActive || cigSmoking || player.onLadder) return;
-  if (akimboEquipped()) { firingL = true; tryShoot('L'); return; }
-  if (currentWeaponKey === KARAMBIT_KEY) { meleeAttack(-1); return; }
-  if (currentWeaponKey === 'saber') { saberBlocking = true; return; }
-  if (OPT.adsToggle) { aiming = !aiming; if (ggAdsInfo()) sfxADS(aiming, aiming && ggAdsInfo().kind === 'scope'); }
-  else { if (!aiming && ggAdsInfo()) { const i = ggAdsInfo(); sfxADS(true, i && i.kind === 'scope'); } aiming = true; }
-}
-function adsRelease() {
-  firingL = false; saberBlocking = false;
-  if (OPT.adsToggle) return;                            // toggle mode: keep `aiming` until tapped again
-  if (aiming && ggAdsInfo()) sfxADS(false);
-  aiming = false;
-}
-// One-shot gameplay actions (shared by keydown + mouse-bound triggers). `rep` = key auto-repeat.
-function gameAction(act, rep) {
-  if (act === 'crouch' && !rep) crouchKey();
-  if (player.diving) return;                                            // no reload / swap / grenade mid-dive
-  if (act === 'saber' && !rep) { streakActivate('saberjd'); return; }
-  if (act === 'flamethrower' && !rep) { streakActivate('flame'); return; }
-  if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
-  if (act === 'dogs' && !rep) { streakActivate('dogs'); return; }
-  if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) tryGrabLadder();
-  if (act === 'reload') { cigCancel(); reload(); }
-  if (act === 'inventory' && !rep && gameMode !== 'gungame') { toggleInventory(); return; }
-  if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
-  else if (act === 'karambit' || act === 'prevWeapon' || act === 'nextWeapon') { if (cigSmoking) cigCancel(); ggSetKarambit(!ggKarambit); }   // 2-slot: main <-> karambit
-  if (act === 'sprint') { if (OPT.sprintToggle) sprintLatch = !sprintLatch; if (!ggHeavyScopedNow()) startSlide(); }
-  if (act === 'grenade') throwImpulse();
-}
-// Held sprint state for breath-hold / RC-boost (raw key in hold mode, latched in toggle mode).
-function sprintDown() { return OPT.sprintToggle ? sprintLatch : IM.down('sprint'); }
-
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
-  if (!gameState.running || paused) return;
-  const act = IM.codeAction(e.code);
-  if (invOpen) { if (act === 'inventory' && !e.repeat) toggleInventory(); return; }   // inventory open: only the inventory key closes it
-  if (!act) return;
-  // SECRET: summon King Kong (works even while piloting). Ignored while a text input is focused.
-  if (act === 'kong' && !e.repeat) { const ae = document.activeElement; if (!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable))) requestSummonKong(); return; }
-  if (act === 'fire' && !e.repeat) { firePress(); return; }   // Fire remapped to a key
-  if (act === 'ads' && !e.repeat) { adsPress(); return; }     // ADS remapped to a key
-  if (rcActive) return;   // piloting a missile: only kong/boost/brake apply (handled elsewhere)
-  gameAction(act, e.repeat);
+  if (!gameState.running) return;
+  if (invOpen) { if (e.code === 'KeyI' && !e.repeat) toggleInventory(); return; }   // inventory open: only I closes it (ESC handled separately)
+  // SECRET: "=" summons King Kong (boss-tier ally). Ignored while a text input is focused.
+  if (e.code === 'Equal' && !e.repeat) { const ae = document.activeElement; if (!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable))) requestSummonKong(); return; }
+  if (rcActive) return;   // piloting a missile: keys stay tracked (boost/brake) but no body actions fire
+  // C: HOLD to crouch (released => stand; handled each frame in updateMovement). A press
+  // while sprinting still triggers a DIVE.
+  if (e.code === 'KeyC' && !e.repeat) crouchKey();
+  if (player.diving) return;                                            // no reload / swap / grenade / jump mid-dive
+  // SCORESTREAK rewards: B = saber + Jack Daniels (3 kills), N = RC rocket launcher (5 kills).
+  if (e.code === 'KeyB' && !e.repeat) { streakActivate('saberjd'); return; }
+  if (e.code === 'KeyV' && !e.repeat) { streakActivate('flame'); return; }
+  if (e.code === 'KeyN' && !e.repeat) { streakActivate('rcrl'); return; }
+  if (e.code === 'KeyM' && !e.repeat) { streakActivate('dogs'); return; }
+  // Q: drink from the Jack Daniels bottle while saber+JD is active; otherwise light a cigar.
+  if (e.code === 'KeyQ' && !e.repeat) { if (saberMode) drinkJD(); else useCigar(); }
+  if (e.code === 'KeyE' && !e.repeat) tryGrabLadder();                  // grab a watchtower ladder
+  if (e.code === 'KeyR') { cigCancel(); reload(); }                     // reloading cancels a cigar in progress
+  if (e.code === 'KeyI' && !e.repeat && gameMode !== 'gungame') { toggleInventory(); return; }   // FFA: weapon inventory
+  // Two-slot loadout (both modes): 1/2 = main weapon, 3 = karambit. (FFA picks its main via "I".)
+  if (e.code === 'Digit1' || e.code === 'Digit2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
+  else if (e.code === 'Digit3') { if (cigSmoking) cigCancel(); ggSetKarambit(!ggKarambit); }
+  // SHIFT slides — unless you're scoped through the heavy sniper, where it holds breath instead.
+  if (e.code === 'ShiftLeft' && !ggHeavyScopedNow()) startSlide();
+  if (e.code === 'KeyG') throwImpulse();   // impulse grenades are the G equipment (both modes)
 });
 document.addEventListener('keyup', (e) => {
   keys[e.code] = false;
-  const act = IM.codeAction(e.code);
-  if (act === 'fire') fireRelease();
-  else if (act === 'ads') adsRelease();
+  // Releasing C stands you back up automatically (handled in updateMovement; subject to the
+  // ceiling check + post-dive recovery), so nothing special is needed here.
 });
 
-// Clear all input when focus is lost / pointer lock drops, so keys never get "stuck".
-function clearInput() { for (const k in keys) keys[k] = false; firing = false; firingL = false; aiming = false; sprintLatch = false; }
+// Clear all input when focus is lost / pointer lock drops, so keys never get
+// "stuck" after alt-tab, window blur, or pressing ESC. (WASD fix robustness.)
+function clearInput() { for (const k in keys) keys[k] = false; firing = false; firingL = false; aiming = false; }
 window.addEventListener('blur', clearInput);
 
-const MOUSE_CODE = { 0: 'Mouse0', 1: 'Mouse1', 2: 'Mouse2' };
+let firing = false, firingL = false;   // firing = LMB; firingL = RMB (akimbo left pistol only)
+function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo); }
 document.addEventListener('mousedown', (e) => {
-  if (!gameState.running || !pointerLocked || paused) return;
-  const act = IM.codeAction(MOUSE_CODE[e.button]); if (!act) return;
-  if (act === 'fire') firePress();
-  else if (act === 'ads') adsPress();
-  else if (act === 'kong') requestSummonKong();
-  else if (!rcActive) gameAction(act, false);
+  if (!gameState.running || !pointerLocked) return;
+  if (rcActive) { if (e.button === 0 && rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: LMB = manual detonate
+  if (cigSmoking) { if (e.button === 0) cigCancel(); return; }   // smoking: LMB cancels (weapon holstered); RMB/ADS blocked
+  if (player.onLadder) return;   // climbing: hands occupied — no fire / ADS / melee
+  if (e.button === 0) { firing = true; tryShoot(akimboEquipped() ? 'R' : undefined); }
+  // Right-click: akimbo fires the LEFT pistol; karambit does a backhand slash; saber raises a
+  // block stance (50% damage taken, 70% move speed); else ADS.
+  if (e.button === 2) {
+    if (akimboEquipped()) { firingL = true; tryShoot('L'); }
+    else if (currentWeaponKey === KARAMBIT_KEY) meleeAttack(-1);
+    else if (currentWeaponKey === 'saber') saberBlocking = true;
+    else { if (!aiming && ggAdsInfo()) { const i = ggAdsInfo(); sfxADS(true, i && i.kind === 'scope'); } aiming = true; }   // weapon-raise / scope-click on ADS in
+  }
 });
 document.addEventListener('mouseup', (e) => {
-  const act = IM.codeAction(MOUSE_CODE[e.button]);
-  if (act === 'fire') fireRelease();
-  else if (act === 'ads') adsRelease();
+  if (e.button === 0) firing = false;
+  if (e.button === 2) { if (aiming && ggAdsInfo()) sfxADS(false); firingL = false; aiming = false; saberBlocking = false; }   // reverse swish on ADS out
 });
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// Mouse wheel → whatever action is bound to WheelUp/WheelDown (default prev/next weapon = 2-slot swap).
+// Mouse-wheel weapon switch
 document.addEventListener('wheel', (e) => {
-  if (!gameState.running || player.diving || paused) return;
-  const act = IM.codeAction(e.deltaY < 0 ? 'WheelUp' : 'WheelDown'); if (!act) return;
-  if (act === 'prevWeapon' || act === 'nextWeapon' || act === 'karambit') { cigCancel(); ggSetKarambit(!ggKarambit); }
-  else if (!rcActive) gameAction(act, false);
+  if (!gameState.running || player.diving) return;                      // no weapon swap mid-dive
+  cigCancel();                                                          // switching weapons cancels a cigar in progress
+  ggSetKarambit(!ggKarambit);                                          // both modes: two slots — main gun <-> karambit
 });
 
 window.addEventListener('resize', () => {
@@ -2906,7 +2700,6 @@ function ggSpeedMult() {
 
 function updateMovement(dt) {
   if (!player.alive) return;
-  if (paused) { player.vel.x = 0; player.vel.z = 0; return; }   // pause/settings menu open: stand still (game keeps running for others)
 
   // Piloting an RC missile: the body stands still (fully shootable). Keep its camera pinned
   // so the picture-in-picture still shows the body's view, but take no movement input.
@@ -2922,13 +2715,13 @@ function updateMovement(dt) {
   // physics (you can't fire/ADS/grenade while climbing — handled at the input sites).
   if (player.onLadder) {
     const L = player.ladder;
-    if (IM.down('jump') && !player.jumpHeld) {               // jump off the ladder
+    if (keys['Space'] && !player.jumpHeld) {                 // jump off the ladder
       player.onLadder = false; player.ladder = null; player.jumpHeld = true;
       player.vel.set(-L.outX * 3.5, MOVE.jumpVel * 0.55, -L.outZ * 3.5); player.onGround = false;
       // fall through to normal movement this frame with the hop velocity
     } else {
-      player.jumpHeld = IM.down('jump');
-      let cv = 0; if (IM.down('moveForward')) cv += LADDER_SPEED; if (IM.down('moveBackward')) cv -= LADDER_SPEED;   // left/right do nothing (no sidestep)
+      player.jumpHeld = keys['Space'];
+      let cv = 0; if (keys['KeyW']) cv += LADDER_SPEED; if (keys['KeyS']) cv -= LADDER_SPEED;   // A/D do nothing (no sidestep)
       player.pos.y += cv * dt; player.pos.x = L.x; player.pos.z = L.z; player.vel.set(0, 0, 0);
       // Hand-on-rung tap each ~0.55 units climbed.
       if (cv !== 0) { player._ladTap = (player._ladTap || 0) + Math.abs(cv) * dt; if (player._ladTap >= 0.55) { player._ladTap = 0; sfxLadderTap(player.pos.clone().setY(player.pos.y + 1)); } }
@@ -2968,7 +2761,7 @@ function updateMovement(dt) {
   // crouched (so a dive lands low), then you auto-stand unless C is still held. A low ceiling
   // forces you to stay crouched until you move clear (prevents clipping).
   if (!player.diving) {
-    player.crouching = (player.diveRecover > 0) ? true : IM.down('crouch');
+    player.crouching = (player.diveRecover > 0) ? true : !!keys['KeyC'];
     if (!player.crouching && player.crouchBlend > 0.05 && !canStand()) player.crouching = true;
   }
   // Smooth crouch amount (drives eye height, body height, and the networked hitbox). ~150ms.
@@ -2988,10 +2781,10 @@ function updateMovement(dt) {
   const f = horizontalForward(), r = horizontalRight();
   let wx = 0, wz = 0;
   if (!invOpen) {
-    if (IM.down('moveForward'))  { wx += f.x; wz += f.z; }
-    if (IM.down('moveBackward')) { wx -= f.x; wz -= f.z; }
-    if (IM.down('moveRight'))    { wx += r.x; wz += r.z; }
-    if (IM.down('moveLeft'))     { wx -= r.x; wz -= r.z; }
+    if (keys['KeyW']) { wx += f.x; wz += f.z; }
+    if (keys['KeyS']) { wx -= f.x; wz -= f.z; }
+    if (keys['KeyD']) { wx += r.x; wz += r.z; }
+    if (keys['KeyA']) { wx -= r.x; wz -= r.z; }
   }
   const wishDir = new THREE.Vector3(wx, 0, wz);
   const hasInput = wishDir.lengthSq() > 0;
@@ -3005,7 +2798,7 @@ function updateMovement(dt) {
 
   // Jump (with double jump). Bunny hop: jumping skips this frame's friction.
   let jumpedThisFrame = false;
-  const wantJump = IM.down('jump');
+  const wantJump = keys['Space'];
   if (wantJump && !player.jumpHeld && !player.crouching && !player.diving) {   // jump disabled while crouched / diving
     // Lightsaber "force jump": ~2.5x height + 4s fall-damage immunity (stacks with pads/impulse/dive).
     const saberJump = (currentWeaponKey === 'saber');
@@ -3160,7 +2953,7 @@ function updateMovement(dt) {
   aimSensMult = ggAdsActive ? 0.60 : 1;
 
   // Hold-breath (heavy sniper): SHIFT steadies the scope for ~3s, then must recover ~3s.
-  if (adsScopedHeavy && sprintDown() && ggBreath > 0) { ggBreathHeld = true; ggBreath = Math.max(0, ggBreath - dt); }
+  if (adsScopedHeavy && keys['ShiftLeft'] && ggBreath > 0) { ggBreathHeld = true; ggBreath = Math.max(0, ggBreath - dt); }
   else { ggBreathHeld = false; ggBreath = Math.min(GG_BREATH_MAX, ggBreath + dt); }
 
   // Apply look + recoil (+ screen shake)
@@ -3772,7 +3565,7 @@ function tryShoot(akSide) {
     if (ws.reloading > 0) return;
     const cdK = side === 'L' ? 'cdL' : 'cdR', amK = side === 'L' ? 'ammoL' : 'ammoR';
     if (ws[cdK] > 0) return;
-    if (ws[amK] <= 0) { sfxEmpty(); if (OPT.autoReload) reload(); return; }
+    if (ws[amK] <= 0) { sfxEmpty(); reload(); return; }
     ws[amK]--; ws[cdK] = w.fireRate; ws.ammo = ws.ammoL + ws.ammoR;
   } else {
     if (ws.cooldown > 0) return;
@@ -3780,7 +3573,7 @@ function tryShoot(akSide) {
       if (ws.shellReload && ws.ammo > 0) { ws.reloading = 0; ws.shellReload = false; }  // pump: firing cancels the shell reload
       else return;
     }
-    if (ws.ammo <= 0) { sfxEmpty(); if (OPT.autoReload) reload(); return; }
+    if (ws.ammo <= 0) { sfxEmpty(); reload(); return; }
     ws.ammo--;
     ws.cooldown = w.fireRate;
   }
@@ -5286,7 +5079,7 @@ function rcUpdate(dt) {
   // world-up. That removes the roll-drift that used to make pitch feel intermittently inverted.
   if (rcCamLive) {
     const maxTurn = RC.turnRate * dt;
-    const dPitch = Math.max(-maxTurn, Math.min(maxTurn, (OPT.invertY ? rcSteerY : -rcSteerY) * RC.steerSens));   // mouse-up = climb (or invert via OPT.invertY)
+    const dPitch = Math.max(-maxTurn, Math.min(maxTurn, -rcSteerY * RC.steerSens));   // sign = -1, always
     const dYaw   = Math.max(-maxTurn, Math.min(maxTurn, -rcSteerX * RC.steerSens));
     m.yaw += dYaw;
     m.pitch += dPitch;
@@ -5304,7 +5097,7 @@ function rcUpdate(dt) {
   // Speed: ramp launch -> cruise; SHIFT boosts (2x fuel drain), CTRL brakes.
   let targetSpeed = RC.launchSpeed + (RC.cruiseSpeed - RC.launchSpeed) * Math.min(1, m.age / RC.rampTime);
   let drain = dt;
-  if (rcCamLive && sprintDown()) { targetSpeed = RC.boostSpeed; drain = dt * RC.boostDrain; }
+  if (rcCamLive && keys['ShiftLeft']) { targetSpeed = RC.boostSpeed; drain = dt * RC.boostDrain; }
   else if (rcCamLive && keys['ControlLeft']) { targetSpeed = RC.brakeSpeed; }
   m.speed += (targetSpeed - m.speed) * Math.min(1, dt * 3);
   m.fuel -= drain;
@@ -6823,7 +6616,7 @@ function updateHUD() {
 }
 
 let hitMarkerTimer = 0;
-function showHitMarker() { if (!OPT.hitMarkers) return; el('hitmarker').style.opacity = 1; hitMarkerTimer = 0.12; }
+function showHitMarker() { el('hitmarker').style.opacity = 1; hitMarkerTimer = 0.12; }
 function showKillFlash(headshot) {
   el('killFlash').style.opacity = 0.35;
   setTimeout(() => el('killFlash').style.opacity = 0, 90);
@@ -7068,7 +6861,6 @@ function playerDie() {
 function endMatch(won) {
   gameState.over = true;
   gameState.running = false;
-  paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
   Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); (won ? sfxWin() : sfxLose());
@@ -7079,7 +6871,6 @@ function endMatch(won) {
 
 function startMatch() {
   gameState.running = true; gameState.over = false; gameState.kills = 0; gameState.score = 0;
-  paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';   // never start paused
   rcResetMatch();   // RC launcher locks again each match (unlock is per-match, not permanent)
   // Everyone spawns on a real spawn point, facing the centre of the map.
   const sp = randomSpawn(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
@@ -7214,15 +7005,7 @@ function toggleInventory() {
 }
 function closeInventory() { if (invOpen) { invOpen = false; el('invMenu').classList.add('hidden'); if (gameState.running && player.alive) lockPointer(); } }
 buildInventory();
-// Pause-key (default ESC) toggles the in-match pause menu — and closes the inventory/settings first.
-document.addEventListener('keydown', (e) => {
-  if (e.repeat || IM.codeAction(e.code) !== 'pause') return;
-  if (invOpen) { closeInventory(); return; }
-  if (!el('skinCreator').classList.contains('hidden')) return;             // skin creator has its own close
-  if (!el('settingsScreen').classList.contains('hidden')) { el('settingsBack').click(); return; }   // DONE out of settings
-  if (!gameState.running || gameState.over) return;
-  if (paused) resumeGame(); else openPauseMenu();
-});
+document.addEventListener('keydown', (e) => { if (e.code === 'Escape' && invOpen) closeInventory(); });
 
 // --- Audio: unlock the engine on the first user gesture (browser policy) + delegated UI sounds ---
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { SND.init(); SND.resume(); }));
@@ -7238,7 +7021,6 @@ function hostStartMatch() {                              // host (lobby START or
 }
 function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
-  paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';
   aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
   Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs();
@@ -7315,101 +7097,10 @@ function refreshSettingsUI() {
   el('throwGrenadeBtn').classList.toggle('selected', throwableType === 'grenade');
   el('throwTomahawkBtn').classList.toggle('selected', throwableType === 'tomahawk');
 }
-function openSettings(from) { settingsReturn = from; refreshSettingsUI(); if (window._refreshAudioSettings) window._refreshAudioSettings(); if (window._renderControls) { window._renderControls(); window._refreshControlOpts(); } setSettingsTab('paneControls'); showScreen('settingsScreen'); }
+function openSettings(from) { settingsReturn = from; refreshSettingsUI(); if (window._refreshAudioSettings) window._refreshAudioSettings(); showScreen('settingsScreen'); }
 el('menuSettings').onclick = () => openSettings('mainMenu');
 el('lobbySettings').onclick = () => openSettings('lobbyScreen');
-el('settingsBack').onclick = () => {
-  if (settingsReturn === 'pause') { el('settingsScreen').classList.add('hidden'); el('pauseMenu').style.display = 'flex'; }   // back to the in-match pause menu
-  else showScreen(settingsReturn);
-};
-// Settings tab switching.
-function setSettingsTab(paneId) {
-  document.querySelectorAll('#settingsScreen .setTab').forEach(t => t.classList.toggle('active', t.dataset.pane === paneId));
-  document.querySelectorAll('#settingsScreen .setPane').forEach(p => p.classList.toggle('active', p.id === paneId));
-}
-document.querySelectorAll('#settingsScreen .setTab').forEach(tab => tab.onclick = () => { setSettingsTab(tab.dataset.pane); sfxClick(); });
-// Pause-menu buttons.
-el('pauseResume').onclick = () => resumeGame();
-el('pauseSettings').onclick = () => { el('pauseMenu').style.display = 'none'; openSettings('pause'); };
-el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display = 'none'; leaveToMenu(); };
-
-/* --- CONTROLS tab: rebindable keybindings + control options (autosaved to localStorage) --- */
-(function setupControlsUI() {
-  let rebindAction = null, pendingConflict = null;
-  const labelFor = (a) => { const r = IM.ROWS.find(x => x[0] === a); return r ? r[1] : a; };
-  function hideConflict() { pendingConflict = null; const cc = el('ctrlConflict'); cc.style.display = 'none'; cc.innerHTML = ''; }
-  function cancelRebind() { rebindAction = null; hideConflict(); renderControls(); }
-  function renderControls() {
-    const list = el('ctrlList'); list.innerHTML = '';
-    IM.ROWS.forEach(([a, label, note]) => {
-      if (label === null) { const h = document.createElement('div'); h.className = 'ctrlCat'; h.textContent = a; list.appendChild(h); return; }
-      const row = document.createElement('div'); row.className = 'ctrlRow';
-      row.innerHTML = `<span class="cName">${label}${note ? ' <span class="cNote">(' + note + ')</span>' : ''}</span>`;
-      const kb = document.createElement('div'); kb.className = 'ctrlKey'; kb.dataset.action = a;
-      const code = IM.bind[a];
-      if (rebindAction === a) { kb.textContent = 'Press any key…'; kb.classList.add('rebinding'); }
-      else { kb.textContent = IM.keyLabel(code); if (!code) kb.classList.add('unbound'); }
-      kb.onclick = () => { if (!pendingConflict) { rebindAction = a; renderControls(); } };
-      row.appendChild(kb); list.appendChild(row);
-    });
-  }
-  function applyBind(action, code) { IM.bind[action] = code; IM.save(); rebindAction = null; hideConflict(); renderControls(); sfxClick(); }
-  function tryBind(action, code) {
-    const owner = IM.codeAction(code);
-    if (owner === action) { applyBind(action, code); return; }
-    if (owner && IM.CRITICAL.indexOf(owner) !== -1) {   // movement keys can't be unbound (so can't be stolen)
-      pendingConflict = {}; const cc = el('ctrlConflict'); cc.style.display = 'block';
-      cc.textContent = `${IM.keyLabel(code)} is bound to "${labelFor(owner)}", which cannot be unbound.`;
-      sfxNotify(); setTimeout(cancelRebind, 1700); return;
-    }
-    if (owner) {   // conflict with a non-critical action: ask to replace
-      pendingConflict = { action, code, oldAction: owner }; rebindAction = null; renderControls();
-      const cc = el('ctrlConflict'); cc.style.display = 'block';
-      cc.innerHTML = `<b>${IM.keyLabel(code)}</b> is already bound to <b>${labelFor(owner)}</b>. Replace? `;
-      const mk = (t, fn) => { const b = document.createElement('button'); b.className = 'smallbtn'; b.textContent = t; b.onclick = fn; return b; };
-      cc.appendChild(mk('YES', () => { IM.bind[owner] = ''; applyBind(action, code); }));   // old action becomes unbound (red)
-      cc.appendChild(mk('NO', cancelRebind));
-      sfxNotify(); return;
-    }
-    applyBind(action, code);
-  }
-  // Capture the next input while rebinding (capture phase + stopPropagation so gameplay never sees it).
-  window.addEventListener('keydown', (e) => {
-    if (!rebindAction || pendingConflict) return;
-    e.preventDefault(); e.stopPropagation();
-    if (e.code === 'Escape') { cancelRebind(); return; }   // ESC cancels rebind
-    tryBind(rebindAction, e.code);
-  }, true);
-  window.addEventListener('mousedown', (e) => {
-    if (!rebindAction || pendingConflict) return;
-    if (e.target.closest && e.target.closest('.ctrlKey, button, select, input')) return;   // UI clicks don't bind
-    e.preventDefault(); e.stopPropagation();
-    tryBind(rebindAction, ({ 0: 'Mouse0', 1: 'Mouse1', 2: 'Mouse2' })[e.button] || 'Mouse0');
-  }, true);
-  window.addEventListener('wheel', (e) => {
-    if (!rebindAction || pendingConflict) return;
-    e.preventDefault(); e.stopPropagation();
-    tryBind(rebindAction, e.deltaY < 0 ? 'WheelUp' : 'WheelDown');
-  }, { capture: true, passive: false });
-  el('ctrlReset').onclick = () => { IM.resetDefault(); cancelRebind(); renderControls(); sfxClick(); };
-  el('ctrlSavePreset').onclick = () => { IM.saveCustom(); el('ctrlPreset').value = 'custom'; sfxClick(); };
-  el('ctrlPreset').onchange = () => { IM.loadPreset(el('ctrlPreset').value); cancelRebind(); renderControls(); sfxClick(); };
-
-  // --- Control OPTIONS (sensitivity / FOV / invert-Y / toggles / auto-reload / hit markers) ---
-  function refreshControlOpts() {
-    el('optSens').value = Math.round(OPT.sens * 100); el('optSensV').textContent = OPT.sens.toFixed(1) + 'x';
-    el('optFov').value = OPT.fov; el('optFovV').textContent = OPT.fov;
-    el('optInvertY').checked = OPT.invertY; el('optAdsToggle').checked = OPT.adsToggle; el('optSprintToggle').checked = OPT.sprintToggle;
-    el('optAutoReload').checked = OPT.autoReload; el('optHitMarkers').checked = OPT.hitMarkers;
-  }
-  el('optSens').addEventListener('input', () => { OPT.sens = Math.max(0.1, Math.min(5, el('optSens').value / 100)); el('optSensV').textContent = OPT.sens.toFixed(1) + 'x'; OPT.save(); });
-  el('optFov').addEventListener('input', () => { OPT.fov = Math.max(60, Math.min(120, parseInt(el('optFov').value, 10) || 78)); el('optFovV').textContent = OPT.fov; DEFAULT_FOV = OPT.fov; if (!aiming) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); } OPT.save(); });
-  const tog = (id, key) => el(id).addEventListener('change', () => { OPT[key] = el(id).checked; if (key === 'sprintToggle') sprintLatch = false; OPT.save(); sfxClick(); });
-  tog('optInvertY', 'invertY'); tog('optAdsToggle', 'adsToggle'); tog('optSprintToggle', 'sprintToggle'); tog('optAutoReload', 'autoReload'); tog('optHitMarkers', 'hitMarkers');
-
-  window._renderControls = renderControls; window._refreshControlOpts = refreshControlOpts;
-  renderControls(); refreshControlOpts();
-})();
+el('settingsBack').onclick = () => showScreen(settingsReturn);
 // Skin creator access: main menu, and "Edit Skin" inside Settings (applies next respawn).
 el('menuSkin').onclick = () => SkinCreator.open('mainMenu');
 el('settingsEditSkin').onclick = () => SkinCreator.open(settingsReturn);
@@ -8259,12 +7950,12 @@ function netTick(dt) {
   }
 }
 
-/* ---- Hold the Scoreboard key (default TAB) to see the live free-for-all scoreboard ---- */
+/* ---- Hold TAB to see the live free-for-all scoreboard ---- */
 document.addEventListener('keydown', (e) => {
-  if (IM.codeAction(e.code) === 'scoreboard' && gameState.running && !paused) { e.preventDefault(); refreshScoreboard(); el('scoreboard').style.display = 'flex'; }
+  if (e.code === 'Tab') { e.preventDefault(); refreshScoreboard(); el('scoreboard').style.display = 'flex'; }
 });
 document.addEventListener('keyup', (e) => {
-  if (IM.codeAction(e.code) === 'scoreboard') { e.preventDefault(); el('scoreboard').style.display = 'none'; }
+  if (e.code === 'Tab') { e.preventDefault(); el('scoreboard').style.display = 'none'; }
 });
 
 /* ============================================================================
@@ -8528,9 +8219,8 @@ function animate() {
         if (ws.reloading <= 0) { finishReload(key); updateHUD(); }
       }
     }
-    // Firing: akimbo fires each held button's pistol; other autos fire on hold. (Not while paused.)
-    if (paused) { /* menu open: hold nothing */ }
-    else if (akimboEquipped()) {
+    // Firing: akimbo fires each held button's pistol; other autos fire on hold.
+    if (akimboEquipped()) {
       if (firing)  tryShoot('R');
       if (firingL) tryShoot('L');
     } else if (firing && WEAPONS[currentWeaponKey].auto) tryShoot();

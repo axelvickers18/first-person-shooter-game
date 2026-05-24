@@ -763,6 +763,10 @@
     <button data-mode="ffa">FREE-FOR-ALL<small>score to win</small></button>
     <button data-mode="gungame">GUN GAME<small>20-weapon ladder</small></button>
   </div>
+  <div id="lobbyWeaponWrap">
+    <div style="font-size:14px;opacity:.85">Choose your starting weapon:</div>
+    <div class="weaponPick" id="lobbyWeaponPick"></div>
+  </div>
   <div class="menuRow">
     <button class="bigbtn" id="lobbyStart">START MATCH</button>
     <button class="smallbtn" id="lobbySettings">⚙ SETTINGS</button>
@@ -780,6 +784,10 @@
   <div class="modePick" id="soloModePick">
     <button data-mode="ffa">FREE-FOR-ALL<small>score to win</small></button>
     <button data-mode="gungame">GUN GAME<small>20-weapon ladder</small></button>
+  </div>
+  <div id="soloWeaponWrap">
+    <div style="font-size:14px;opacity:.85">Choose your starting weapon:</div>
+    <div class="weaponPick" id="weaponPick"></div>
   </div>
   <div class="menuRow">
     <button class="bigbtn" id="startButton">CLICK TO PLAY</button>
@@ -1761,59 +1769,29 @@ addBox(15, 0.2, 40, 1.2, 0.4, 0.7, 0xcc8844, { noCollide: true });     // tipped
 // --- WATCHTOWER (left flank): weathered-wood high-ground sniper perch with a climbable ladder.
 // Tall enough to see over the houses' second floors; tucked near the -X fence with clearance
 // so players can still run past it on either side. Ladder faces map centre (+X). ---
-// Tall multi-level fortified outpost (the premier sniper spot). 6x6 footprint, THREE levels:
-// ground (open legs + ladder), a small enclosed MID room (~midY), and a walled TOP platform with
-// shooting windows + crenellations + a partial metal roof + a central antenna pole. Full-height
-// ladder from the ground to the top, with a mid-platform step-off (press E while passing it).
 function buildWatchtower(cx, cz) {
-  const wood = 0x9a7a4a, woodDk = 0x6f5733, woodLt = 0xb39463, metal = 0x6f6f6f, metalDk = 0x4e4e52, rust = 0x6e4226;
-  const half = 3.0, midY = 7.5, topY = 15.0, legW = 0.55;
-  // 4 corner legs (solid) the full height + metal reinforcement straps + rust streaks (decor).
-  [[-half, -half], [-half, half], [half, -half], [half, half]].forEach(([lx, lz]) => {
-    addBox(cx + lx, 0, cz + lz, legW, topY, legW, woodDk);
-    [3, 7.5, 11.5].forEach(sy => addBox(cx + lx, sy, cz + lz, legW + 0.12, 0.25, legW + 0.12, metalDk, { noCollide: true }));
-    addBox(cx + lx + 0.02, 5, cz + lz, 0.06, 1.6, 0.06, rust, { noCollide: true });
-  });
-  // Diagonal cross-braces between legs (decor) for the truss look.
-  [1.6, 5.5, 9.5, 13].forEach(by => {
-    addBox(cx, by, cz - half, half * 2, 0.22, 0.2, wood, { noCollide: true });
-    addBox(cx, by + 0.9, cz + half, half * 2, 0.22, 0.2, wood, { noCollide: true });
-    addBox(cx - half, by, cz, 0.2, 0.22, half * 2, wood, { noCollide: true });
-    addBox(cx + half, by + 0.9, cz, 0.2, 0.22, half * 2, wood, { noCollide: true });
-  });
-  // ----- MID PLATFORM: small enclosed room; the +X side (toward the boost pad/centre) is open. -----
-  addBox(cx, midY - 0.3, cz, half * 2 + 0.6, 0.3, half * 2 + 0.6, wood);   // floor (top = midY)
-  const mWallH = 2.4, mTop = midY + mWallH, mw = 1.6;
-  panelWall('z', cx - half - 0.2, cz - half - 0.3, cz + half + 0.3, midY, mTop, 0.25, woodLt, [{ a0: cz - mw / 2, a1: cz + mw / 2, y0: midY + 0.7, y1: mTop - 0.4 }]);   // back (-X) wall + window
-  [cz - half - 0.2, cz + half + 0.2].forEach(pz =>
-    panelWall('x', pz, cx - half - 0.3, cx + half + 0.3, midY, mTop, 0.25, woodLt, [{ a0: cx - mw / 2, a1: cx + mw / 2, y0: midY + 0.7, y1: mTop - 0.4 }]));   // side walls + windows
-  panelWall('z', cx + half + 0.2, cz - half - 0.3, cz + half + 0.3, midY, midY + 0.7, 0.2, woodLt, [{ a0: cz - 1.0, a1: cz + 1.0, y0: midY, y1: midY + 0.7 }]);   // open +X side: low rail with an entry gap
-  // ----- TOP PLATFORM: full walls + shooting windows on all 4 sides + crenellations. -----
-  addBox(cx, topY - 0.3, cz, half * 2 + 0.7, 0.3, half * 2 + 0.7, wood);   // floor (top = topY)
-  const tWallH = 1.6, tTop = topY + tWallH, gw = 1.8;
+  const wood = 0x9a7a4a, woodDk = 0x6f5733, metal = 0x707070, half = 2.0, platY = 9.0;
+  [[-half, -half], [-half, half], [half, -half], [half, half]].forEach(([lx, lz]) =>
+    addBox(cx + lx, 0, cz + lz, 0.5, platY, 0.5, woodDk));              // 4 support legs (solid)
+  addBox(cx, 1.8, cz - half, half * 2, 0.25, 0.22, wood, { noCollide: true });   // cross-braces (decor)
+  addBox(cx, 4.4, cz + half, half * 2, 0.25, 0.22, wood, { noCollide: true });
+  addBox(cx - half, 3.2, cz, 0.22, 0.25, half * 2, wood, { noCollide: true });
+  addBox(cx, platY - 0.3, cz, half * 2 + 0.7, 0.3, half * 2 + 0.7, wood);        // platform floor (solid; top = platY)
+  // Low perimeter walls (crouch cover) with a shooting window centred on each side.
+  const wallH = 1.4, wTop = platY + wallH, gw = 1.7;
   [cx - half - 0.25, cx + half + 0.25].forEach(px =>
-    panelWall('z', px, cz - half - 0.35, cz + half + 0.35, topY, tTop, 0.25, wood, [{ a0: cz - gw / 2, a1: cz + gw / 2, y0: topY + 0.45, y1: tTop }]));
+    panelWall('z', px, cz - half - 0.35, cz + half + 0.35, platY, wTop, 0.25, wood, [{ a0: cz - gw / 2, a1: cz + gw / 2, y0: platY + 0.45, y1: wTop }]));
   [cz - half - 0.25, cz + half + 0.25].forEach(pz =>
-    panelWall('x', pz, cx - half - 0.35, cx + half + 0.35, topY, tTop, 0.25, wood, [{ a0: cx - gw / 2, a1: cx + gw / 2, y0: topY + 0.45, y1: tTop }]));
-  const merl = (x, z) => addBox(x, tTop, z, 0.5, 0.5, 0.5, woodDk, { noCollide: true });   // merlons (crouch cover)
-  for (let a = -half; a <= half + 0.01; a += 1.2) { merl(cx + a, cz - half - 0.25); merl(cx + a, cz + half + 0.25); merl(cx - half - 0.25, cz + a); merl(cx + half + 0.25, cz + a); }
-  // Partial corrugated-metal roof over the back (-X) half — blocks RC dives there; +X stays open sky.
-  addBox(cx - half * 0.5, tTop + 2.3, cz, half + 0.4, 0.3, half * 2 + 0.7, metalDk);
-  for (let rz = cz - half; rz <= cz + half + 0.01; rz += 0.5) { const r = new THREE.Mesh(new THREE.BoxGeometry(half + 0.5, 0.08, 0.42), flatMat(metal)); r.position.set(cx - half * 0.5, tTop + 2.5, rz); r.rotation.x = 0.12; scene.add(r); }
-  cyl(cx, tTop + 3.0, cz, 0.09, 6.0, metal);                                   // central antenna/lookout pole (cosmetic)
-  addBox(cx, tTop + 5.6, cz, 1.2, 0.06, 0.06, metalDk, { noCollide: true });    // antenna crossbar
-  // Atmosphere props (cosmetic): a folded chair + radio on the mid platform, binoculars up top.
-  addBox(cx - 1.4, midY, cz - 1.4, 0.5, 0.05, 0.5, 0x3a4a5a, { noCollide: true }); addBox(cx - 1.55, midY + 0.05, cz - 1.6, 0.5, 0.55, 0.05, 0x3a4a5a, { noCollide: true });
-  addBox(cx - 0.9, midY, cz - 1.5, 0.3, 0.26, 0.2, 0x2a2a2a, { noCollide: true });
-  addBox(cx + 1.2, topY, cz + 1.2, 0.3, 0.12, 0.16, 0x1a1a1a, { noCollide: true });
-  // ----- LADDER: full height (ground -> top), +X face, with a mid-platform exit (E while passing it). -----
-  const lx = cx + half + 0.5;
-  [cz - 0.55, cz + 0.55].forEach(rz => addBox(lx, 0, rz, 0.12, topY, 0.12, woodDk, { noCollide: true }));   // 2 rails
-  for (let y = 0.5; y < topY; y += 0.55) { const m = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.1, 0.1), flatMat(metal)); m.position.set(lx, y, cz); scene.add(m); }
-  ladders.push({ x: lx, z: cz, bottom: 0, top: topY, cx, cz, outX: 1, outZ: 0, midY });   // W climbs to top; E at midY steps onto the mid platform
-  return { cx, cz, platY: topY, midY };
+    panelWall('x', pz, cx - half - 0.35, cx + half + 0.35, platY, wTop, 0.25, wood, [{ a0: cx - gw / 2, a1: cx + gw / 2, y0: platY + 0.45, y1: wTop }]));
+  // Ladder on the +X face (toward map centre): rails + metal rungs (visual; no collision so the
+  // climb zone is enterable). Registered in `ladders` for the E-to-climb mechanic.
+  const lx = cx + half + 0.45;
+  [cz - 0.55, cz + 0.55].forEach(rz => addBox(lx, 0, rz, 0.12, platY, 0.12, woodDk, { noCollide: true }));   // 2 rails
+  for (let y = 0.5; y < platY; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.1, 0.1), flatMat(metal)); m.position.set(lx, y, cz); scene.add(m); }
+  ladders.push({ x: lx, z: cz, bottom: 0, top: platY, cx, cz, outX: 1, outZ: 0 });   // step onto platform (toward cx) at the top; step out (+X) at the bottom
+  return { cx, cz, platY };
 }
-const watchtower = buildWatchtower(-69, 0);   // taller multi-level outpost on the left flank (highest point on the map)
+const watchtower = buildWatchtower(-69, 0);   // same size — shifted to keep its proportional spot on the (bigger) left flank
 
 /* --- BOOST PADS: glowing kinetic launch pads. Step on one to get flung high upward while
    keeping your horizontal momentum (arc forward) or straight up if standing still. Per-pad
@@ -1970,140 +1948,6 @@ desert.rotation.x = -Math.PI / 2; desert.position.y = -0.12; scene.add(desert);
 [[-40, 58, -28], [32, 64, 38], [4, 70, 6], [-22, 60, 30]].forEach(([cx, cy, cz]) => {   // clouds
   const m = new THREE.Mesh(new THREE.BoxGeometry(24, 2, 13), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 })); m.position.set(cx, cy, cz); scene.add(m);
 });
-
-/* ============================================================================
-   MAP DETAILS — extra cover + Cold-War suburban dressing (flat-shaded, collision via
-   addBox/solids). Animated bits (oil-drum flames, the flag) live in updateMapFx().
-   ============================================================================ */
-const mapFlames = [];   // burning oil drums: { flame, inner, pos, t, smokeT }
-let mapFlag = null;     // American flag: { segs, pos, t }
-const mapPuddles = [];  // street puddles (cosmetic)
-// New positional ambience: oil-drum fire crackle + flag flap.
-function sfxFireCrackle(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.3, peak: 0.12, filter: 'bandpass', freq: 500, freq1: 1400, q: 0.5 }); for (let i = 0; i < 3; i++) aNoise(ctx, out, t + Math.random() * 0.25, { dur: 0.03, peak: 0.1, filter: 'highpass', freq: 3000 }); }, pos, 'ambient', 'fire', 0.5, 0.3); }
-function sfxFlagFlap(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.25, peak: 0.1, filter: 'bandpass', freq: 300, freq1: 900, q: 0.4 }), pos, 'ambient', 'flag', 0.4, 0.26); }
-
-function buildMapDetails() {
-  // 1. SANDBAG BUNKERS — chest-high khaki stacks for crouch cover (mid-flank areas).
-  function sandbagBunker(x, z) {
-    const tan = 0xb6a87a, tanDk = 0x9a8c5e, sb = (sx, sy, sz) => addBox(sx, sy, sz, 1.0, 0.5, 0.6, Math.random() < 0.5 ? tan : tanDk);
-    sb(x - 1.0, 0, z); sb(x, 0, z); sb(x + 1.0, 0, z);
-    sb(x - 0.5, 0.5, z + 0.05); sb(x + 0.5, 0.5, z - 0.05); sb(x, 1.0, z);
-    sb(x - 1.45, 0, z + 0.7); sb(x + 1.45, 0, z - 0.7);
-  }
-  [[-28, 22], [28, -22], [-30, -28], [32, 28]].forEach(([x, z]) => sandbagBunker(x, z));
-
-  // 2. SHIPPING CONTAINER — rusted orange, open both ends (run through), climbable roof via crates.
-  (function shippingContainer(x, z) {
-    const rust = 0xb5552a, rustDk = 0x8a3f1e, frame = 0x6a3416, L = 7, W = 2.6, H = 2.6;
-    addBox(x - W / 2, 0, z, 0.25, H, L, rust); addBox(x + W / 2, 0, z, 0.25, H, L, rust);   // long side walls
-    addBox(x, H, z, W + 0.1, 0.25, L + 0.1, rustDk);                                          // roof (stand on top)
-    for (let rz = z - L / 2 + 0.4; rz < z + L / 2; rz += 0.6) addBox(x, H + 0.13, rz, W, 0.05, 0.12, frame, { noCollide: true });
-    [z - L / 2, z + L / 2].forEach(ez => addBox(x, 0, ez, W + 0.12, H + 0.1, 0.1, frame, { noCollide: true }));   // open door frames
-    addBox(x + W / 2 + 1.3, 0, z + 1.6, 1.4, 1.4, 1.4, 0x8a6a3a); addBox(x + W / 2 + 1.3, 1.4, z + 1.6, 1.2, 1.0, 1.2, 0x9a7a44);   // climbing crate steps
-  })(24, 16);
-
-  // 3. JERSEY BARRIERS — gray crouch-height concrete; a row along the street + driveway singles.
-  function jersey(x, z, alongZ) { addBox(x, 0, z, alongZ ? 0.55 : 2.2, 1.0, alongZ ? 2.2 : 0.55, 0x9a9a9a); }
-  [[15.5, -5, true], [15.5, 0, true], [15.5, 5, true], [-13, 40, false], [13, -40, false], [-20, 6, true]].forEach(([x, z, a]) => jersey(x, z, a));
-
-  // 4. WOODEN CRATES — varied sizes; some clusters double as height (stand on the big ones).
-  function crate(x, z, s) { addBox(x, 0, z, s, s, s, s > 1.5 ? 0x8a6a3a : 0x9c7a46); }
-  [[22.5, 12, 1.6], [26, 12.5, 1.2], [24, 10.5, 0.9], [-14, 44, 1.3], [14, -44, 1.0], [-34, 18, 1.6], [34, -18, 1.2], [-40, -20, 0.9], [40, 22, 1.3], [4, 19, 1.0]].forEach(([x, z, s]) => crate(x, z, s));
-
-  // 5. ABANDONED TIRES — dark torus rings stacked over a hidden solid core (low cover).
-  function tireStack(x, z) {
-    const n = 2 + (Math.random() < 0.5 ? 1 : 0);
-    addBox(x, 0, z, 0.84, n * 0.34 + 0.06, 0.84, 0x141416);   // solid core (hidden inside the rings)
-    for (let i = 0; i < n; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.17, 8, 14), flatMat(0x18181a)); t.rotation.x = Math.PI / 2; t.position.set(x, 0.18 + i * 0.34, z); scene.add(t); }
-  }
-  [[-8, 12], [12, -13], [-12, 52], [12, -52], [0, -20]].forEach(([x, z]) => tireStack(x, z));
-
-  // 6. STREET LAMPS — tall poles lining the street, warm light box on top (thin vertical cover).
-  function streetLamp(x, z) {
-    addBox(x, 0, z, 0.18, 7, 0.18, 0x3a3a3a);
-    addBox(x, 6.6, z + (x < 0 ? 0.6 : -0.6), 0.16, 0.16, 1.0, 0x3a3a3a, { noCollide: true });
-    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), new THREE.MeshBasicMaterial({ color: 0xffd98a })); lamp.position.set(x, 6.5, z + (x < 0 ? 1.1 : -1.1)); scene.add(lamp);
-  }
-  [[-13, -40], [-13, 0], [-13, 40], [13, -40], [13, 0], [13, 40]].forEach(([x, z]) => streetLamp(x, z));
-
-  // 7. BILLBOARD — climbable retro sign behind a house (lower vantage than the watchtower).
-  (function billboard(bx, bz) {
-    const wood = 0x7a5a36, woodDk = 0x5a4226, metal = 0x6f6f6f, platY = 7.0;
-    [bx - 2.6, bx + 2.6].forEach(lx => addBox(lx, 0, bz, 0.5, platY, 0.5, woodDk));     // legs
-    addBox(bx, platY - 0.3, bz, 6.6, 0.3, 2.6, wood);                                   // platform (stand on it)
-    panelWall('z', bz + 1.25, bx - 3.3, bx + 3.3, platY, platY + 0.7, 0.18, wood, [{ a0: bx - 0.9, a1: bx + 0.9, y0: platY, y1: platY + 0.7 }]);  // front rail w/ entry gap
-    addBox(bx, platY, bz - 0.7, 7.2, 4.2, 0.4, 0xb8a878);                               // big sign panel (faces +Z / map centre)
-    addBox(bx, platY + 2.7, bz - 0.45, 5.4, 0.95, 0.06, 0xcc4422, { noCollide: true });  // red banner
-    addBox(bx, platY + 1.4, bz - 0.45, 4.6, 0.55, 0.06, 0xeeeecc, { noCollide: true });  // white "WELCOME TO NUKETOWN" strip
-    const lx = bx + 2.0, lz = bz + 1.45;
-    [lx - 0.5, lx + 0.5].forEach(rx => addBox(rx, 0, lz, 0.1, platY, 0.1, woodDk, { noCollide: true }));   // service ladder rails
-    for (let y = 0.5; y < platY; y += 0.55) { const m = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.09, 0.09), flatMat(metal)); m.position.set(lx, y, lz); scene.add(m); }
-    ladders.push({ x: lx, z: lz, bottom: 0, top: platY, cx: lx, cz: bz, outX: 0, outZ: 1 });   // climb to the billboard platform
-  })(22, -78);
-
-  // 8. PHONE BOOTHS — red, 3 walls + roof, open side toward the lawn (one per house front yard).
-  function phoneBooth(x, z, face) {   // face = +1 open toward +Z, -1 open toward -Z
-    const red = 0xb02a2a, redDk = 0x801f1f, W = 1.1, H = 2.4, t = 0.14;
-    addBox(x, 0, z, W, 0.14, W, redDk); addBox(x, H, z, W + 0.12, 0.2, W + 0.12, red);
-    addBox(x - W / 2, 0, z, t, H, W, red); addBox(x + W / 2, 0, z, t, H, W, red);   // side walls
-    addBox(x, 0, z - face * W / 2, W, H, t, red);                                    // back wall (open side stays clear)
-  }
-  phoneBooth(-16, 47, -1); phoneBooth(16, -47, 1);
-
-  // 9. ROAD MARKINGS — dashed lane lines, a crosswalk between the houses, a STOP sign.
-  for (let z = -60; z <= 60; z += 8) { addBox(-4, -0.01, z, 0.4, 0.04, 2.6, 0xeeeee0, { noCollide: true }); addBox(4, -0.01, z, 0.4, 0.04, 2.6, 0xeeeee0, { noCollide: true }); }
-  for (let cx2 = -12; cx2 <= 12; cx2 += 3) addBox(cx2, -0.01, 0, 1.3, 0.04, 4, 0xe6e6d6, { noCollide: true });
-  addBox(13, 0, 44, 0.16, 3, 0.16, 0x555555);   // stop-sign post (solid)
-  const stop = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.1, 8), new THREE.MeshBasicMaterial({ color: 0xcc2222 })); stop.rotation.x = Math.PI / 2; stop.position.set(13, 3, 44); scene.add(stop);
-
-  // 10. POWER LINES — poles + slung cables along the far -X edge (cables have no collision).
-  const polePos = [-40, -15, 15, 40], ppx = -80;
-  polePos.forEach(pz => { addBox(ppx, 0, pz, 0.3, 9, 0.3, 0x4a3a2a); addBox(ppx, 8, pz, 2.6, 0.2, 0.2, 0x4a3a2a, { noCollide: true }); });
-  for (let i = 0; i < polePos.length - 1; i++) { const z0 = polePos[i], z1 = polePos[i + 1], len = z1 - z0; [-0.95, 0.95].forEach(off => { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, len, 5), flatMat(0x111111)); c.rotation.x = Math.PI / 2; c.position.set(ppx + off, 7.6, (z0 + z1) / 2); scene.add(c); }); }
-
-  // 11. AMERICAN FLAG — pole + a 3-segment flag that waves gently (animated in updateMapFx).
-  addBox(6, 0, 24, 0.2, 10, 0.2, 0xdadada);
-  const flagGrp = new THREE.Group(); flagGrp.position.set(6.1, 9.2, 24); const segs = [];
-  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.0, 0.05), flatMat(i === 0 ? 0xcc2222 : (i % 2 ? 0xeeeeee : 0x2a3a8a))); s.position.set(0.36 + i * 0.72, -0.55, 0); flagGrp.add(s); segs.push(s); }
-  scene.add(flagGrp); mapFlag = { segs, pos: new THREE.Vector3(6, 9, 24), t: 0 };
-
-  // 12. WEATHERING — subtle darker grime patches on house/structure faces (cosmetic).
-  [[-6, 4, 48.9], [5, 6, 48.9], [-5, 5, -48.9], [6, 3.5, -48.9], [-65.5, 6, 2], [56, 5, -3]].forEach(([x, y, z]) => {
-    const p = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 0.05), new THREE.MeshLambertMaterial({ color: 0x000000, transparent: true, opacity: 0.16 })); p.position.set(x, y, z); scene.add(p);
-  });
-
-  // 13. PUDDLES — flat, faintly reflective dark discs on the street (cosmetic).
-  [[-4, -10], [5, 15], [-6, 35], [8, -30]].forEach(([x, z]) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 0.04, 16), new THREE.MeshLambertMaterial({ color: 0x2a3a4a, transparent: true, opacity: 0.7 })); p.position.set(x, 0.03, z); scene.add(p); mapPuddles.push({ mesh: p }); });
-
-  // 14. BURNING OIL DRUMS — solid drum + flickering flame + light (cover + a small fire).
-  function oilDrum(x, z) {
-    addBox(x, 0, z, 0.95, 1.4, 0.95, 0x7a4a28);
-    addBox(x, 1.0, z, 1.02, 0.1, 1.02, 0x4a2e16, { noCollide: true });
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.9, 8), new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true, opacity: 0.9 })); flame.position.set(x, 1.9, z); scene.add(flame);
-    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 8), new THREE.MeshBasicMaterial({ color: 0xffe24a, transparent: true, opacity: 0.95 })); inner.position.set(x, 1.85, z); scene.add(inner);
-    mapFlames.push({ flame, inner, pos: new THREE.Vector3(x, 1.7, z), t: Math.random() * 2, smokeT: Math.random() * 2 });
-  }
-  [[-34, -12], [36, 14], [-22, 38]].forEach(([x, z]) => oilDrum(x, z));
-}
-buildMapDetails();
-// Per-frame map ambience: oil-drum flame flicker + fire crackle, flag wave + flap (distance-gated).
-function updateMapFx(dt) {
-  for (const f of mapFlames) {
-    const s = 0.8 + Math.random() * 0.4;
-    f.flame.scale.set(s, 0.9 + Math.random() * 0.3, s); f.inner.scale.set(s, 1, s);
-    f.flame.material.opacity = 0.8 + Math.random() * 0.2;
-    if (SND.lpos) {
-      const d2 = f.pos.distanceToSquared(SND.lpos);
-      f.t -= dt; if (f.t <= 0) { f.t = 0.35 + Math.random() * 0.3; if (d2 < 1600) sfxFireCrackle(f.pos); }
-      f.smokeT -= dt; if (f.smokeT <= 0) { f.smokeT = 0.8 + Math.random() * 1.0; if (d2 < 900) spawnSmokePuff(f.pos.clone().setY(f.pos.y + 0.9), 0x3a3a3a, 0.12, 0.7); }
-    }
-  }
-  if (mapFlag) {
-    mapFlag.t += dt;
-    mapFlag.segs.forEach((s, i) => { s.rotation.y = Math.sin(mapFlag.t * 2.2 + i * 0.9) * 0.35; });
-    if (SND.lpos) { mapFlag._a = (mapFlag._a || 2) - dt; if (mapFlag._a <= 0) { mapFlag._a = 2 + Math.random() * 2; if (mapFlag.pos.distanceToSquared(SND.lpos) < 900) sfxFlagFlap(mapFlag.pos); } }
-  }
-}
 
 // --- Cover positions bots hide behind (vehicles + flank props) ---
 const cratePositions = [[-10, 8], [10, -9], [-48, 20], [48, 16], [-44, 0], [44, 0], [18, -42]];
@@ -2557,15 +2401,7 @@ function nearestLadder() {
 // E pressed near a ladder: grab it (snap to the ladder line; climb with W/S, drop with Space/E).
 function tryGrabLadder() {
   if (!gameState.running || !player.alive || player.diving || rcActive || cigSmoking) return;
-  if (player.onLadder) {
-    const Lc = player.ladder;
-    // Passing a mid-platform? E steps OFF onto it (toward the tower centre) instead of dropping in place.
-    if (Lc && Lc.midY != null && Math.abs(player.pos.y - Lc.midY) < 1.1) {
-      player.pos.set(Lc.cx, Lc.midY, Lc.cz); player.onLadder = false; player.ladder = null; player.onGround = true; sfxLand(player.pos, 0.7);
-      console.log('[ladder] stepped onto MID platform at y=' + Lc.midY.toFixed(2)); return;
-    }
-    player.onLadder = false; player.ladder = null; console.log('[ladder] E pressed -> detached at y=' + player.pos.y.toFixed(2)); return;   // E elsewhere disengages
-  }
+  if (player.onLadder) { player.onLadder = false; player.ladder = null; console.log('[ladder] E pressed -> detached at y=' + player.pos.y.toFixed(2)); return; }   // E again disengages
   const L = nearestLadder();
   console.log('[ladder] E pressed, near ladder=' + !!L + (L ? ' dist=' + Math.hypot(player.pos.x - L.x, player.pos.z - L.z).toFixed(2) : ''));
   if (!L) return;
@@ -6399,8 +6235,26 @@ function startMatch() {
 }
 
 // --- Weapon picker (mounted on both the solo start screen and the lobby) ---
-// (FFA starting-weapon picker removed — FFA players spawn with the Assault Rifle and press I in-match
-//  to open the inventory and choose any weapon. The throwable picker below is unrelated and kept.)
+let selectedStartWeapon = 'pistol';
+const weaponPickWraps = [];
+function mountWeaponPicker(containerId) {
+  const wrap = el(containerId); if (!wrap) return;
+  wrap.innerHTML = ''; weaponPickWraps.push(wrap);
+  WEAPON_ORDER.forEach((key, i) => {
+    const w = WEAPONS[key];
+    const b = document.createElement('button');
+    b.dataset.key = key;
+    b.innerHTML = `${i+1}. ${w.name}<small>DMG ${w.damage} • MAG ${w.mag}</small>`;
+    if (key === selectedStartWeapon) b.classList.add('selected');
+    b.onclick = () => {
+      selectedStartWeapon = key;
+      weaponPickWraps.forEach(wp => [...wp.children].forEach(c => c.classList.toggle('selected', c.dataset.key === key)));
+    };
+    wrap.appendChild(b);
+  });
+}
+mountWeaponPicker('weaponPick');
+mountWeaponPicker('lobbyWeaponPick');
 
 /* --- FFA weapon inventory (press I): pick any of the 20 ladder weapons as your main --- */
 let invOpen = false;
@@ -6523,6 +6377,9 @@ function refreshModeUI() {
     const wrap = el(pid); if (!wrap) return;
     [...wrap.children].forEach(b => b.classList.toggle('selected', b.dataset.mode === gameMode));
   });
+  const gg = gameMode === 'gungame';
+  if (el('soloWeaponWrap'))  el('soloWeaponWrap').style.display  = gg ? 'none' : '';
+  if (el('lobbyWeaponWrap')) el('lobbyWeaponWrap').style.display = gg ? 'none' : '';
   const clientLocked = NET.active && NET.isClient;     // only host/solo choose the mode
   if (el('lobbyModePick')) el('lobbyModePick').classList.toggle('locked', clientLocked);
   if (el('lobbyModeHostNote')) el('lobbyModeHostNote').textContent = clientLocked ? '(set by host)' : '';
@@ -7779,7 +7636,6 @@ function animate() {
   updateDecals(dt);
   updateExplosions(dt);
   updateForceRings(dt);   // saber force-jump energy rings
-  updateMapFx(dt);        // oil-drum flames + flag wave + positional fire/flap ambience
   updateDebris(dt);    // detached limbs / heads / dropped guns
   updateTracers(dt);   // pooled bullet tracers fade-out
 

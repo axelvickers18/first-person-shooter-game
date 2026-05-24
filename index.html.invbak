@@ -49,7 +49,6 @@
   #crouchInd { font-size: 13px; font-weight: bold; letter-spacing: 1px; color: #8fd0ff; margin-top: 3px; opacity: 0; transition: opacity .12s; }
   /* Impulse-grenade count near the ammo counter (gun game) */
   #impulseCount { font-size: 14px; font-weight: bold; color: #8fe9ff; margin-top: 3px; display: none; }
-  #lethalCount { font-size: 14px; font-weight: bold; color: #ffd27a; margin-top: 3px; display: none; }
   #impulseCount span { color: #fff; }
   /* Cigar self-heal availability near the ammo counter (all modes) */
   #cigarCount { font-size: 14px; font-weight: bold; color: #e0c08a; margin-top: 3px; display: none; transition: opacity .15s; }
@@ -153,10 +152,9 @@
   #kongHud { font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #ffcf5a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
   #mckHud { font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #7af0a0; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
   #mckHud span { color: #fff; }
-  #noodlePrompt, #axePrompt { position: absolute; left: 50%; bottom: 26%; transform: translateX(-50%); z-index: 15; display: none;
+  #noodlePrompt { position: absolute; left: 50%; bottom: 26%; transform: translateX(-50%); z-index: 15; display: none;
     font: 800 18px 'Segoe UI', sans-serif; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 6px #000; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 8px 14px; pointer-events: none; }
-  #axePrompt { bottom: 32%; }
-  #noodlePrompt b, #axePrompt b { color: #ffd34a; }
+  #noodlePrompt b { color: #ffd34a; }
   #lobbyStage { width: min(880px, 92vw); height: 290px; margin: 2px auto; border-radius: 12px; overflow: hidden; position: relative;
     background: linear-gradient(180deg, #10141c, #080a10); border: 2px solid rgba(120,150,220,0.28); box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
   #lobbyStage canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
@@ -394,20 +392,6 @@
   .invCard.equipped { background: #34d058; color: #fff; outline: 3px solid #fff; }
   .invCard.equipped small { color: #eafff0; }
   .invCard.equipped .eqTag { display: block; }
-  .invTabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
-  .invTab { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.16); color: #b8c2cc; font-weight: 800; letter-spacing: 1px; font-size: 13px; padding: 7px 16px; border-radius: 8px 8px 0 0; cursor: pointer; }
-  .invTab:hover { border-color: rgba(127,233,255,0.6); }
-  .invTab.active { border-color: #7fe9ff; background: rgba(40,90,120,0.5); color: #fff; }
-  .invPane { display: none; }
-  .invPane.active { display: block; }
-  .invBigRow { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; padding: 10px; }
-  .invBigCard { background: rgba(0,0,0,0.42); border: 3px solid rgba(255,255,255,0.16); border-radius: 12px; padding: 14px 18px; color: #cdd6e0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 190px; transition: border-color .15s, background .15s, transform .15s; }
-  .invBigCard:hover { transform: translateY(-3px); border-color: rgba(127,233,255,0.7); }
-  .invBigCard.sel { border-color: #7fe9ff; background: rgba(40,90,120,0.55); color: #fff; }
-  .invBigCard canvas { width: 120px; height: 90px; }
-  .invBigCard b { font-size: 16px; letter-spacing: 1px; }
-  .invBigCard small { font-size: 11px; color: #9aa6b2; }
-  .invBigCard.sel small { color: #cfe8ff; }
   .controls-hint { font-size: 13px; opacity: .85; }
 
   /* ---- Multiplayer lobby UI ---- */
@@ -579,7 +563,6 @@
   <div id="streakLost">STREAK LOST</div>
   <div id="kongMsg">KING KONG SUMMONED</div>
   <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
-  <div id="axePrompt">Press <b>E</b> to pick up axe</div>
 
   <div id="ammoWrap">
     <div id="ggLevel"></div>
@@ -589,7 +572,6 @@
     <div id="grenades"><span id="grenadeLabel">GRENADES</span> <span id="grenadeCount">2</span></div>
     <div id="crouchInd">▼ CROUCHED</div>
     <div id="impulseCount">💥 IMPULSE <span id="impulseNum">2</span></div>
-    <div id="lethalCount"><span id="lethalIco">💨</span> LETHAL <span id="lethalNum">2</span></div>
     <div id="cigarCount">🚬 <span id="cigarNum">1</span></div>
   </div>
 </div>
@@ -612,16 +594,9 @@
 
 <!-- FFA weapon inventory (press I) — pick your main weapon; game keeps running -->
 <div id="invMenu" class="hidden">
-  <h2>INVENTORY</h2>
-  <div class="invTabs">
-    <button class="invTab active" data-pane="paneMain">MAIN WEAPON</button>
-    <button class="invTab" data-pane="paneMelee">MELEE</button>
-    <button class="invTab" data-pane="paneLethal">LETHAL</button>
-  </div>
-  <div class="invHint" id="invHint">Click a weapon to equip it as your main • full ammo on swap • press I or ESC to close</div>
-  <div id="paneMain" class="invPane active"><div id="invGrid" class="invGrid"></div></div>
-  <div id="paneMelee" class="invPane"><div id="invMeleeRow" class="invBigRow"></div></div>
-  <div id="paneLethal" class="invPane"><div id="invLethalRow" class="invBigRow"></div></div>
+  <h2>WEAPON INVENTORY</h2>
+  <div class="invHint">Click a weapon to equip it as your main (keys 1 / 2) • full ammo on swap • press I or ESC to close</div>
+  <div id="invGrid" class="invGrid"></div>
 </div>
 
 <!-- Multiplayer scoreboard (hold TAB) -->
@@ -728,7 +703,7 @@
     <button class="smallbtn" id="menuSkin">🎨 CUSTOMIZE SKIN</button>
     <button class="smallbtn" id="menuSettings">⚙ SETTINGS</button>
   </div>
-  <!-- melee selection moved into the in-game inventory (I key → MELEE tab) -->
+  <div class="meleeSect"><div class="meleeHdr">MELEE KNIFE</div><div class="meleeRow" id="menuMelee"></div></div>
   <p class="controls-hint">Host a lobby to get a 5-letter code, share it with friends, and they join from anywhere online.</p>
 </div>
 
@@ -905,7 +880,7 @@
     <div id="lobbyCode" class="lobbyCode" title="click to copy">-----</div>
   </div>
   <div id="lobbyStage" title="Click your character to customize your skin"></div>
-  <!-- melee selection moved into the in-game inventory (I key → MELEE tab) -->
+  <div class="meleeSect"><div class="meleeHdr">MELEE KNIFE</div><div class="meleeRow" id="lobbyMelee"></div></div>
   <div class="lobbyPlayers" id="lobbyPlayers"></div>
   <div style="font-size:14px;opacity:.85">Game mode <span id="lobbyModeHostNote" style="opacity:.7;font-size:12px"></span>:</div>
   <div class="modePick" id="lobbyModePick">
@@ -1096,7 +1071,7 @@ function setMeleeChoice(t) {
   meleeChoice = t; try { localStorage.setItem('meleeChoice_v1', t); } catch (e) {}
   if (changed && NET.active) NET.broadcast({ t: 'melee', id: NET.selfId, mc: t });
   if (changed && currentWeaponKey === KARAMBIT_KEY && gameState.running) ggEquip(KARAMBIT_KEY);   // rebuild the held viewmodel
-  if (typeof refreshInvPanes === 'function') refreshInvPanes();
+  if (typeof refreshMeleePickers === 'function') refreshMeleePickers();
   if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();
   if (typeof updateHUD === 'function') updateHUD();
 }
@@ -1295,13 +1270,6 @@ const TOMAHAWK = {
   headMult: 1.0,      // already lethal; head not special
   life: 5.0           // seconds before it despawns
 };
-
-// --- LETHAL throwable selection (chosen in the inventory, thrown with H, 2 per life) ---
-const LETHAL_MAX = 2;
-const LETHAL_NAMES = { smoke: 'SMOKE GRENADE', axe: 'THROWING AXE' };
-let lethalChoice = 'smoke';
-try { const _lc = localStorage.getItem('lethalChoice_v1'); if (_lc === 'smoke' || _lc === 'axe') lethalChoice = _lc; } catch (e) {}
-function setLethalChoice(t) { if (t !== 'smoke' && t !== 'axe') return; lethalChoice = t; try { localStorage.setItem('lethalChoice_v1', t); } catch (e) {} if (typeof refreshInvPanes === 'function') refreshInvPanes(); if (typeof updateHUD === 'function') updateHUD(); }
 
 // --- Bullet-tracer styling (improvement #1) ---
 // One entry per weapon (+ 'bot' for enemy fire). life = seconds before fade-out;
@@ -2664,7 +2632,7 @@ const IM = {
   defaults: {
     moveForward: 'KeyW', moveBackward: 'KeyS', moveLeft: 'KeyA', moveRight: 'KeyD', jump: 'Space', sprint: 'ShiftLeft', crouch: 'KeyC',
     weapon1: 'Digit1', weapon2: 'Digit2', karambit: 'Digit3', equipRC: 'Digit0', fire: 'Mouse0', ads: 'Mouse2', reload: 'KeyR', prevWeapon: 'WheelUp', nextWeapon: 'WheelDown', toggleLaser: 'KeyL',
-    use: 'KeyQ', grenade: 'KeyG', lethal: 'KeyH', interact: 'KeyE',
+    use: 'KeyQ', grenade: 'KeyG', interact: 'KeyE',
     saber: 'KeyB', flamethrower: 'KeyV', rcStreak: 'KeyN', dogs: 'KeyM', kong: 'Equal',
     inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter'
   },
@@ -2679,7 +2647,7 @@ const IM = {
     ['weapon1', 'Main Weapon Slot 1'], ['weapon2', 'Main Weapon Slot 2'], ['karambit', 'Equip Karambit'], ['equipRC', 'Equip RC Launcher', 'when unlocked'],
     ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['reload', 'Reload'], ['prevWeapon', 'Previous Weapon'], ['nextWeapon', 'Next Weapon'], ['toggleLaser', 'Toggle Laser Sight', 'laser weapons'],
     ['CONSUMABLES / ABILITIES', null],
-    ['use', 'Use Cigar / Drink Jack Daniels'], ['grenade', 'Throw Impulse Grenade'], ['lethal', 'Throw Lethal (Smoke / Axe)'], ['interact', 'Interact / Climb Ladder'],
+    ['use', 'Use Cigar / Drink Jack Daniels'], ['grenade', 'Throw Impulse Grenade'], ['interact', 'Interact / Climb Ladder'],
     ['SCORESTREAKS', null],
     ['saber', 'Saber + Jack Daniels', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
     ['UI / MENUS', null],
@@ -2817,14 +2785,13 @@ function gameAction(act, rep) {
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { streakActivate('dogs'); return; }
   if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) { if (tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: pick up a stuck axe > summon Mckayla (in box) > grab a ladder
+  if (act === 'interact' && !rep) { if (!tryNoodleSummon()) tryGrabLadder(); }   // E inside the noodle box summons Mckayla, else grab a ladder
   if (act === 'reload') { cigCancel(); reload(); }
   if (act === 'inventory' && !rep && gameMode !== 'gungame') { toggleInventory(); return; }
   if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
   else if (act === 'karambit' || act === 'prevWeapon' || act === 'nextWeapon') { if (cigSmoking) cigCancel(); ggSetKarambit(!ggKarambit); }   // 2-slot: main <-> karambit
   if (act === 'sprint') { if (OPT.sprintToggle) sprintLatch = !sprintLatch; if (!ggHeavyScopedNow()) startSlide(); }
   if (act === 'grenade') throwImpulse();
-  if (act === 'lethal') throwLethal();
   if (act === 'toggleLaser' && !rep) { laserOn = !laserOn; sfxADS(laserOn); }   // hide/show your laser tactically
 }
 // Held sprint state for breath-hold / RC-boost (raw key in hold mode, latched in toggle mode).
@@ -3793,55 +3760,46 @@ function buildWeaponMesh(key, variant) {
     g.userData.meleeType = mv;
     const seg = (x, y, z, sx, sy, sz, mat, rx) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; g.add(m); return m; };
     if (mv === 'm9') {
-      // M9 BAYONET — long blade-heavy clip-point blade, FORWARD grip; prominent spine serrations, fuller, bayonet ring.
-      const blade = new THREE.MeshPhongMaterial({ color: 0x2c2e34, specular: 0xaab2bc, shininess: 70, flatShading: true });   // matte black w/ subtle shine
-      const steel = new THREE.MeshPhongMaterial({ color: 0xc6ccd4, specular: 0xffffff, shininess: 130, flatShading: true });   // bright metal (edge/ring/teeth)
-      const grip = new THREE.MeshPhongMaterial({ color: 0x1a2218, specular: 0x3a402f, shininess: 14, flatShading: true });     // dark green-black ridged grip
-      seg(0, -0.05, 0.17, 0.062, 0.075, 0.3, grip);                      // ergonomic handle
-      for (let i = 0; i < 3; i++) seg(0, -0.088, 0.08 + i * 0.085, 0.067, 0.016, 0.03, steel);   // finger-groove ridges (cross-hatch hint)
-      seg(0, -0.05, 0.335, 0.092, 0.092, 0.05, steel);                   // flat metal pommel cap
-      seg(0, -0.082, 0.335, 0.016, 0.016, 0.094, blade);                 // lanyard hole (dark slot through the pommel)
-      seg(0, 0.0, 0.0, 0.19, 0.05, 0.08, grip);                          // finger guard
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.02, 10, 18), steel); ring.position.set(0, 0.0, -0.07); ring.rotation.x = Math.PI / 2; g.add(ring);   // iconic bayonet attachment ring (metallic)
-      seg(0, 0.075, -0.52, 0.05, 0.135, 0.94, blade, -0.1);              // long, blade-heavy blade
-      seg(0.027, 0.075, -0.52, 0.009, 0.135, 0.94, steel, -0.1);         // honed bottom edge (catches light)
-      seg(-0.01, 0.075, -0.5, 0.02, 0.05, 0.66, grip, -0.1);             // fuller / blood groove down the center
-      seg(0, 0.17, -1.0, 0.036, 0.08, 0.22, steel, -0.55);               // pronounced clip-point tip (spine drops to the point)
-      for (let i = 0; i < 9; i++) seg(0, 0.04 + i * 0.013, -0.12 - i * 0.052, 0.056, 0.04, 0.034, steel, -0.1);   // 9 prominent saw teeth on the spine
-      muzzleZ = -1.0;
+      // M9 BAYONET — long straight clip-point blade in a FORWARD grip (blade up-forward), spine serrations + bayonet ring.
+      const blade = new THREE.MeshPhongMaterial({ color: 0x26282c, specular: 0x9aa2ac, shininess: 60, flatShading: true });   // matte black
+      const edge = new THREE.MeshPhongMaterial({ color: 0xd8dee6, specular: 0xffffff, shininess: 120, flatShading: true });
+      const grip = new THREE.MeshPhongMaterial({ color: 0x141414, specular: 0x333333, shininess: 16, flatShading: true });
+      seg(0, -0.05, 0.16, 0.06, 0.07, 0.26, grip);                       // ridged handle
+      seg(0, -0.05, 0.30, 0.085, 0.085, 0.05, grip);                     // metal pommel cap
+      seg(0, 0.0, 0.0, 0.17, 0.045, 0.07, grip);                         // finger guard
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.015, 8, 16), grip); ring.position.set(0, 0.0, -0.05); ring.rotation.x = Math.PI / 2; g.add(ring);   // bayonet attachment ring
+      seg(0, 0.07, -0.42, 0.045, 0.11, 0.74, blade, -0.12);              // long straight blade (forward + up)
+      seg(0.024, 0.07, -0.42, 0.008, 0.11, 0.74, edge, -0.12);           // honed bottom edge
+      seg(0, 0.135, -0.75, 0.03, 0.06, 0.16, edge, -0.5);                // clipped point tip + top swedge
+      for (let i = 0; i < 5; i++) seg(0, 0.025 + i * 0.012, -0.085 - i * 0.05, 0.052, 0.03, 0.028, edge, -0.12);   // saw-tooth serrations on the spine
+      muzzleZ = -0.74;
     } else if (mv === 'butterfly') {
-      // BUTTERFLY / BALISONG — open: two-tone skeletal handles (cutouts + latch), spear-point blue-tinted blade, pivot pin.
-      const blade = new THREE.MeshPhongMaterial({ color: 0xbcc8dc, specular: 0xffffff, shininess: 130, flatShading: true });
-      const hA = new THREE.MeshPhongMaterial({ color: 0xaab2bc, specular: 0xeaf0f6, shininess: 90, flatShading: true });   // lighter handle
-      const hB = new THREE.MeshPhongMaterial({ color: 0x6a7079, specular: 0xaab2bc, shininess: 70, flatShading: true });   // darker handle
-      const dark = new THREE.MeshPhongMaterial({ color: 0x222630, flatShading: true });
-      seg(0.05, -0.02, 0.17, 0.04, 0.05, 0.36, hA); seg(-0.05, -0.02, 0.17, 0.04, 0.05, 0.36, hB);   // two distinct (two-tone) handles
-      for (let i = 0; i < 3; i++) { seg(0.05, -0.02, 0.07 + i * 0.1, 0.022, 0.026, 0.04, dark); seg(-0.05, -0.02, 0.07 + i * 0.1, 0.022, 0.026, 0.04, dark); }   // skeletal cutout holes
-      seg(0.05, -0.02, 0.345, 0.05, 0.03, 0.04, hA); seg(0.05, 0.012, 0.345, 0.012, 0.04, 0.02, dark);   // locking latch (bite-handle end)
-      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.18, 10), hA); pin.rotation.z = Math.PI / 2; pin.position.set(0, -0.02, -0.02); g.add(pin);   // visible pivot pin
-      seg(0, 0.02, -0.4, 0.04, 0.088, 0.7, blade, -0.05);                // spear-point blade
-      seg(0, 0.052, -0.72, 0.026, 0.062, 0.14, blade, -0.4);             // point
-      seg(0.022, 0.02, -0.4, 0.006, 0.088, 0.7, new THREE.MeshBasicMaterial({ color: 0xbfe6ff }), -0.05);   // bright blue-tinted edge
-      seg(0, 0.05, -0.1, 0.02, 0.02, 0.02, dark);                        // small blade stamping near the base
-      muzzleZ = -0.7;
+      // BUTTERFLY / BALISONG — deployed (open): two skeletal steel handles + a spear-point chrome-blue blade, pivot pin.
+      const blade = new THREE.MeshPhongMaterial({ color: 0xcdd8e6, specular: 0xffffff, shininess: 120, flatShading: true });
+      const steel = new THREE.MeshPhongMaterial({ color: 0x9aa2ac, specular: 0xdfe8f0, shininess: 80, flatShading: true });
+      seg(0.05, -0.02, 0.16, 0.04, 0.05, 0.34, steel); seg(-0.05, -0.02, 0.16, 0.04, 0.05, 0.34, steel);   // two parallel handles
+      seg(0.05, -0.02, 0.0, 0.045, 0.055, 0.06, steel); seg(-0.05, -0.02, 0.0, 0.045, 0.055, 0.06, steel); // handle heads
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.17, 10), steel); pin.rotation.z = Math.PI / 2; pin.position.set(0, -0.02, -0.02); g.add(pin);   // pivot pin
+      seg(0, 0.02, -0.38, 0.04, 0.085, 0.66, blade, -0.05);              // spear-point blade forward
+      seg(0, 0.05, -0.68, 0.026, 0.06, 0.13, blade, -0.4);               // point
+      seg(0.022, 0.02, -0.38, 0.006, 0.085, 0.66, new THREE.MeshBasicMaterial({ color: 0xbfe6ff }), -0.05);   // bright blue-tinted edge
+      muzzleZ = -0.66;
     } else {
-      // KARAMBIT (overhaul) — REVERSE GRIP: ~90° tiger-claw hook, double swedge, fuller, contoured grip, prominent silver ring.
+      // KARAMBIT (overhaul) — REVERSE GRIP: dramatic forward tiger-claw hook, fuller, G10 grip, prominent silver ring.
       const blade = new THREE.MeshPhongMaterial({ color: 0x8a929c, specular: 0xdfe8f0, shininess: 90, flatShading: true });   // gunmetal
       const edge = new THREE.MeshPhongMaterial({ color: 0xeef4fa, specular: 0xffffff, shininess: 120, flatShading: true });
       const grip = new THREE.MeshPhongMaterial({ color: 0x14141a, specular: 0x333333, shininess: 18, flatShading: true });
       const ringMat = new THREE.MeshPhongMaterial({ color: 0xc8ccd2, specular: 0xffffff, shininess: 150, flatShading: true });   // silver
-      seg(0, 0.09, 0.17, 0.07, 0.092, 0.32, grip, 0.22);                 // contoured handle
-      for (let i = 0; i < 2; i++) seg(0.034, 0.09, 0.1 + i * 0.12, 0.012, 0.05, 0.04, blade, 0.22);   // decorative handle grooves
-      seg(0, 0.12, 0.02, 0.055, 0.055, 0.1, grip, 0.22);                 // bolster
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.082, 0.02, 12, 22), ringMat); ring.position.set(0, 0.045, 0.39); ring.rotation.y = Math.PI / 2; g.add(ring);   // prominent, clearly-separate silver finger ring
-      seg(0, -0.03, 0.06, 0.055, 0.14, 0.09, blade, 0.4);                // ~90° forward tiger-claw hook
-      seg(0, -0.15, 0.02, 0.05, 0.14, 0.085, blade, 0.85);
-      seg(0, -0.27, -0.09, 0.045, 0.13, 0.075, blade, 1.3);
-      seg(0, -0.37, -0.24, 0.038, 0.12, 0.065, blade, 1.8);
-      seg(0, -0.4, -0.38, 0.026, 0.095, 0.05, edge, 2.25);               // very sharp hooked tip
-      seg(0.026, -0.19, -0.04, 0.008, 0.14, 0.085, edge, 0.85);          // honed inner edge
-      seg(-0.024, -0.19, -0.04, 0.007, 0.12, 0.08, edge, 0.85);          // double swedge (false edge on the outer back)
-      seg(0, -0.15, -0.005, 0.014, 0.05, 0.085, grip, 0.85);             // fuller / blood groove
+      seg(0, 0.08, 0.16, 0.07, 0.09, 0.30, grip, 0.22);                  // G10 handle
+      seg(0, 0.11, 0.02, 0.055, 0.055, 0.10, grip, 0.22);                // bolster
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.074, 0.018, 12, 20), ringMat); ring.position.set(0, 0.05, 0.35); ring.rotation.y = Math.PI / 2; g.add(ring);   // prominent silver finger ring
+      seg(0, -0.04, 0.05, 0.055, 0.14, 0.09, blade, 0.45);               // dramatic forward hook (tighter curve)
+      seg(0, -0.16, 0.0, 0.05, 0.14, 0.085, blade, 0.9);
+      seg(0, -0.28, -0.10, 0.045, 0.13, 0.075, blade, 1.3);
+      seg(0, -0.38, -0.24, 0.038, 0.12, 0.065, blade, 1.75);
+      seg(0, -0.41, -0.37, 0.026, 0.095, 0.05, edge, 2.15);              // sharp hooked tip
+      seg(0.026, -0.20, -0.05, 0.008, 0.14, 0.085, edge, 0.9);           // honed inner edge
+      seg(0, -0.16, -0.005, 0.014, 0.05, 0.085, grip, 0.9);              // blood groove / fuller
       muzzleZ = -0.22;
     }
     const trail = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.6),
@@ -4280,9 +4238,9 @@ function meleeAttack(swingDir) {
 function meleeEquipPose(g, mt, e) {   // e: 0 (just drawn from below) -> 1 (settled in ready pose)
   const k = 1 - e;
   g.position.set(0.32, -0.28 - k * 0.55, -0.6);
-  if (mt === 'm9') g.rotation.set(k * 0.2, 0.04 + Math.sin(k * Math.PI * 2) * 0.7, 0);                     // rise + left-then-right inspect tilt
-  else if (mt === 'butterfly') g.rotation.set(k * Math.PI * 10, 0.04, Math.sin(k * Math.PI * 5) * 0.3);    // elaborate ~5-flip balisong sequence
-  else g.rotation.set(0, 0.04, k * -Math.PI * 4);                                                          // karambit: 360 spin + flourish around the ring
+  if (mt === 'm9') g.rotation.set(k * 0.25, 0.04 + Math.sin(k * Math.PI * 3) * 0.6, k * 0.15);            // rise + side-to-side inspect tilt
+  else if (mt === 'butterfly') g.rotation.set(k * Math.PI * 6, 0.04, Math.sin(k * Math.PI * 4) * 0.4);    // elaborate balisong flips
+  else g.rotation.set(0, 0.04, k * -Math.PI * 4);                                                          // karambit: spinning twirl around the ring
 }
 function meleeSwingPose(g, mt, s, dir) {   // s: 0 -> 1 -> 0 across the swing
   if (mt === 'm9') { g.position.set(0.32 - 0.05 * s, -0.28 - 0.04 * s, -0.6 - 0.34 * s); g.rotation.set(0.95 * s, 0.04, 0.18 * s); }        // downward/forward stab
@@ -4292,7 +4250,7 @@ function meleeSwingPose(g, mt, s, dir) {   // s: 0 -> 1 -> 0 across the swing
 function meleeInspectPose(g, mt, e) {   // e: 0 -> 1 full inspect cycle
   g.position.set(0.30, -0.26 + Math.sin(e * Math.PI) * 0.04, -0.55);
   if (mt === 'm9') g.rotation.set(0.1, 0.04 + Math.sin(e * Math.PI * 2) * 0.7, 0);          // tilt the blade side to side
-  else if (mt === 'butterfly') g.rotation.set(e * Math.PI * 4, 0.04, 0);                     // flip closed and back open (2-flip flourish)
+  else if (mt === 'butterfly') g.rotation.set(e * Math.PI * 2, 0.04, 0);                     // flip closed and back open
   else g.rotation.set(0, 0.04, Math.sin(e * Math.PI) * -Math.PI * 2);                        // karambit spins once on the ring
 }
 
@@ -5277,17 +5235,10 @@ function throwTomahawk(pos, dir) {
 }
 function updateTomahawks(dt) {
   const lim = ARENA - 1;
-  let promptAxe = null;
   for (let i = liveTomahawks.length - 1; i >= 0; i--) {
     const t = liveTomahawks[i];
-    const owned = t.owned !== false;                // remote-rendered copies don't deal damage
     t.life -= dt;
-    if (t.stuck) {                                  // stuck in a surface/body: linger, allow pickup, then fade
-      if (t.pickup && player.alive && lethalChoice === 'axe' && (player.lethals || 0) < LETHAL_MAX) {
-        const d = t.pos.distanceTo(player.pos);
-        if (d < 1.3) { axePickup(t, i); continue; }                // walk-over pickup (gain back one axe)
-        else if (d < 2.8 && (!promptAxe || d < promptAxe)) promptAxe = d;
-      }
+    if (t.stuck) {                                  // landed: linger briefly, then fade out
       if (t.life <= 0) { scene.remove(t.mesh); disposeGroup(t.mesh); liveTomahawks.splice(i, 1); }
       continue;
     }
@@ -5296,28 +5247,34 @@ function updateTomahawks(dt) {
     t.spin += TOMAHAWK.spin * dt;
     t.mesh.position.copy(t.pos);
     t.mesh.rotation.set(t.spin, Math.atan2(t.vel.x, t.vel.z), 0);
-    t._whT = (t._whT || 0) - dt; if (t._whT <= 0) { t._whT = 0.2; sfxAxeWhistle(t.pos); }   // spinning whistle in flight
-    // --- Direct hit (owner only): bots (host adjudicates / client reports) + remote players ---
+
+    // --- Direct hit on a bot (host adjudicates; client reports) ---
     let hit = false;
-    if (owned) {
-      for (const bot of bots) {
-        if (!bot.alive) continue;
-        const bp = new THREE.Vector3(bot.pos.x, bot.pos.y + 1.1, bot.pos.z);
-        if (bp.distanceTo(t.pos) < TOMAHAWK.hitRadius) {
-          spawnBlood(t.pos, 16);
-          if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: TOMAHAWK.damage, head: false, weapon: 'tomahawk', fromId: NET.selfId });
-          else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, TOMAHAWK.damage, t.vel.clone().setY(0).normalize(), null, { weapon: 'tomahawk', dist: 4 }); if (NET.isHost) NET.botCredit = null; }
-          showHitMarker(); sfxAxeHit(t.pos); hit = true; break;
+    for (const bot of bots) {
+      if (!bot.alive) continue;
+      const bp = new THREE.Vector3(bot.pos.x, bot.pos.y + 1.1, bot.pos.z);
+      if (bp.distanceTo(t.pos) < TOMAHAWK.hitRadius) {
+        spawnBlood(t.pos, 16);
+        if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: TOMAHAWK.damage, head: false, weapon: 'tomahawk', fromId: NET.selfId });
+        else {
+          if (NET.isHost) NET.botCredit = NET.selfId;
+          damageBot(bot, TOMAHAWK.damage, t.vel.clone().setY(0).normalize(), null, { weapon: 'tomahawk', dist: 4 });
+          if (NET.isHost) NET.botCredit = null;
         }
+        showHitMarker(); hit = true; break;
       }
-      if (!hit && NET.active) NET.players.forEach(rp => {
+    }
+    // --- Direct hit on a remote player ---
+    if (!hit && NET.active) {
+      NET.players.forEach(rp => {
         if (hit || !rp.alive) return;
         const pp = new THREE.Vector3(rp.pos.x, rp.pos.y + 1.1, rp.pos.z);
-        if (pp.distanceTo(t.pos) < TOMAHAWK.hitRadius) { spawnBlood(t.pos, 16); NET.damageRemote(rp, TOMAHAWK.damage, false); showHitMarker(); sfxAxeHit(t.pos); hit = true; }
+        if (pp.distanceTo(t.pos) < TOMAHAWK.hitRadius) { spawnBlood(t.pos, 16); NET.damageRemote(rp, TOMAHAWK.damage, false); showHitMarker(); hit = true; }
       });
     }
-    if (hit) { t.stuck = true; t.pickup = false; t.life = 1.0; t.mesh.position.copy(t.pos); continue; }   // stick in the body briefly, no pickup off a corpse
-    // --- Stick into the ground / walls / arena edges (then pickup-able for ~3s) ---
+    if (hit) { scene.remove(t.mesh); disposeGroup(t.mesh); liveTomahawks.splice(i, 1); continue; }
+
+    // --- Stick into the ground / walls / arena edges ---
     const gh = groundHeightAt(t.pos.x, t.pos.z, t.pos.y);
     let land = false;
     if (t.pos.y < gh + 0.15) { t.pos.y = gh + 0.15; land = true; }
@@ -5326,89 +5283,9 @@ function updateTomahawks(dt) {
       if (t.pos.y < s.max.y && t.pos.y > s.min.y &&
           t.pos.x > s.min.x && t.pos.x < s.max.x && t.pos.z > s.min.z && t.pos.z < s.max.z) { land = true; break; }
     }
-    if (land || t.life <= 0) { t.stuck = true; t.pickup = true; t.life = 3.0; t.mesh.position.copy(t.pos); sfxAxeStick(t.pos); }
-  }
-  const ap = el('axePrompt'); if (ap) ap.style.display = (promptAxe != null && gameState.running) ? 'block' : 'none';
-}
-function axePickup(t, i) { scene.remove(t.mesh); disposeGroup(t.mesh); liveTomahawks.splice(i, 1); player.lethals = Math.min(LETHAL_MAX, (player.lethals || 0) + 1); sfxAxePickup(player.pos); updateHUD(); }
-function tryPickupAxe() {   // E near a stuck axe also picks it up
-  if (lethalChoice !== 'axe' || (player.lethals || 0) >= LETHAL_MAX) return false;
-  for (let i = liveTomahawks.length - 1; i >= 0; i--) { const t = liveTomahawks[i]; if (t.stuck && t.pickup && t.pos.distanceTo(player.pos) < 2.8) { axePickup(t, i); return true; } }
-  return false;
-}
-// LETHAL — Throwing Axe (reuses the spinning tomahawk model/physics) + networked render copies for peers.
-function throwAxe(pos, dir) {
-  const mesh = buildTomahawkMesh(); mesh.position.copy(pos); scene.add(mesh);
-  const vel = dir.normalize().multiplyScalar(TOMAHAWK.throwVel); vel.y += TOMAHAWK.upArc;
-  liveTomahawks.push({ mesh, pos: pos.clone(), vel, life: TOMAHAWK.life, spin: 0, stuck: false, owned: true, ownerId: NET.selfId, pickup: false });
-  sfxAxeThrow(pos);
-  if (NET.active) NET.broadcast({ t: 'axe', id: NET.selfId, x: pos.x, y: pos.y, z: pos.z, vx: vel.x, vy: vel.y, vz: vel.z });
-}
-function spawnRemoteAxe(pos, vel) {   // render-only copy a peer threw (no damage)
-  const mesh = buildTomahawkMesh(); mesh.position.copy(pos); scene.add(mesh);
-  liveTomahawks.push({ mesh, pos: pos.clone(), vel: vel.clone(), life: TOMAHAWK.life, spin: 0, stuck: false, owned: false, pickup: false });
-}
-
-// LETHAL — Smoke Grenade: a thrown canister that settles, erupts a synced view-blocking smoke cloud.
-const liveSmokeNades = [], smokeClouds = [];
-let _smokeTex = null;
-function smokePuffTexture() {
-  if (_smokeTex) return _smokeTex;
-  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
-  const g = x.createRadialGradient(32, 32, 2, 32, 32, 31); g.addColorStop(0, 'rgba(246,246,250,0.95)'); g.addColorStop(0.55, 'rgba(232,233,238,0.72)'); g.addColorStop(1, 'rgba(226,228,234,0)');
-  x.fillStyle = g; x.fillRect(0, 0, 64, 64); _smokeTex = new THREE.CanvasTexture(c); return _smokeTex;
-}
-function buildSmokeCanister() {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.26, 10), new THREE.MeshLambertMaterial({ color: 0x2a2e34, flatShading: true })); g.add(body);
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.04, 10), new THREE.MeshLambertMaterial({ color: 0x6a6f76, flatShading: true })); cap.position.y = 0.15; g.add(cap);
-  return g;
-}
-function throwSmoke(pos, dir) {
-  const mesh = buildSmokeCanister(); mesh.position.copy(pos); scene.add(mesh);
-  const vel = dir.normalize().multiplyScalar(26); vel.y += 6;
-  liveSmokeNades.push({ mesh, pos: pos.clone(), vel, life: 6, restT: 0 });
-  sfxSmokeThrow(pos);
-}
-function spawnSmokeCloud(center, networked) {
-  const tex = smokePuffTexture(), parts = [];
-  for (let i = 0; i < 32; i++) {
-    const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false, fog: false }));
-    const off = new THREE.Vector3((Math.random() - 0.5) * 9, Math.random() * 4, (Math.random() - 0.5) * 9);
-    m.position.copy(center).add(off.clone().multiplyScalar(0.25)); m.scale.setScalar(3); scene.add(m);
-    parts.push({ spr: m, base: center.clone(), off, sc: 6 + Math.random() * 4 });
-  }
-  smokeClouds.push({ parts, t: 0, dur: 18 });
-  sfxSmokeHiss(center);
-  if (networked && NET.active) NET.broadcast({ t: 'smoke', id: NET.selfId, x: center.x, y: center.y, z: center.z });
-}
-function updateSmokes(dt) {
-  const lim = ARENA - 1, damp = 0.45;
-  for (let i = liveSmokeNades.length - 1; i >= 0; i--) {
-    const s = liveSmokeNades[i]; s.life -= dt; s.vel.y -= 30 * dt; s.pos.addScaledVector(s.vel, dt);
-    const gh = groundHeightAt(s.pos.x, s.pos.z, s.pos.y); let resting = false;
-    if (s.pos.y < gh + 0.13) { s.pos.y = gh + 0.13; if (s.vel.y < 0) { s.vel.y = -s.vel.y * damp; s.vel.x *= 0.6; s.vel.z *= 0.6; } if (Math.hypot(s.vel.x, s.vel.y, s.vel.z) < 1.4) resting = true; }
-    s.pos.x = Math.max(-lim, Math.min(lim, s.pos.x)); s.pos.z = Math.max(-lim, Math.min(lim, s.pos.z));
-    s.mesh.position.copy(s.pos); s.mesh.rotation.x += dt * 5;
-    s.restT = resting ? s.restT + dt : 0;
-    if (s.restT >= 1.0 || s.life <= 0) { scene.remove(s.mesh); disposeGroup(s.mesh); liveSmokeNades.splice(i, 1); spawnSmokeCloud(s.pos.clone().setY(gh + 0.8), true); }
-  }
-  for (let i = smokeClouds.length - 1; i >= 0; i--) {
-    const c = smokeClouds[i]; c.t += dt;
-    const erupt = Math.min(1, c.t / 2);                                  // form over ~2s
-    const fade = c.t > 15 ? Math.max(0, 1 - (c.t - 15) / 3) : 1;          // hold to 15s, fade over 3s (18s total)
-    for (const p of c.parts) { p.spr.position.copy(p.base).add(p.off.clone().multiplyScalar(0.25 + 0.75 * erupt)); p.spr.scale.setScalar(3 + (p.sc - 3) * erupt); p.spr.material.opacity = 0.88 * erupt * fade; }
-    if (c.t >= c.dur) { for (const p of c.parts) { scene.remove(p.spr); p.spr.material.dispose(); } smokeClouds.splice(i, 1); }
+    if (land || t.life <= 0) { t.stuck = true; t.life = Math.min(t.life, 1.6); t.mesh.position.copy(t.pos); }
   }
 }
-// LETHAL audio: throwing-axe (throw/whistle/stick/hit/pickup) + smoke (throw/hiss).
-function sfxAxeThrow(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.18, peak: 0.36, filter: 'bandpass', freq: 900, freq1: 2200, q: 0.9 }); }, pos, 'weapons', 'axethrow', 0.7, 0.18); }
-function sfxAxeWhistle(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 1700, f1: 1300, dur: 0.12, peak: 0.07 }); }, pos, 'weapons', 'axewh', 0.5, 0.1); }
-function sfxAxeStick(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 320, f1: 140, dur: 0.08, peak: 0.32 }); aNoise(ctx, out, t, { dur: 0.07, peak: 0.3, filter: 'lowpass', freq: 1400 }); }, pos, 'weapons', 'axestick', 0.8, 0.1); }
-function sfxAxeHit(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 150, f1: 60, dur: 0.12, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.1, peak: 0.4, filter: 'lowpass', freq: 650 }); }, pos, 'weapons', 'axehit', 0.9, 0.12); }
-function sfxAxePickup(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 700, f1: 1100, dur: 0.06, peak: 0.18 }); }, pos, 'weapons', 'axepick', 0.6, 0.1); }
-function sfxSmokeThrow(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.16, peak: 0.3, filter: 'bandpass', freq: 700, freq1: 1500, q: 0.8 }); }, pos, 'weapons', 'smokethrow', 0.6, 0.16); }
-function sfxSmokeHiss(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 1.6, peak: 0.26, filter: 'highpass', freq: 3200, rate: 1.2 }); aNoise(ctx, out, t + 0.2, { dur: 1.2, peak: 0.16, filter: 'bandpass', freq: 2400, q: 0.6 }); }, pos, 'weapons', 'smokehiss', 0.8, 1.6); }
 
 // How many throwables a fresh life carries (depends on the chosen throwable).
 function throwMaxCarry() { return throwableType === 'tomahawk' ? TOMAHAWK.maxCarry : GRENADE.maxCarry; }
@@ -6086,17 +5963,6 @@ function throwImpulse() {
   sfxImpulseThrow(origin);                                      // whoosh + cylinder rattle
   if (gunMesh) gunMesh.position.z = -0.35;                      // little throw pop on the viewmodel
   if (NET.active) NET.broadcast({ t: 'imp', s: 'spawn', id: NET.selfId, x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
-  updateHUD();
-}
-// H: throw the player's chosen LETHAL (smoke grenade or throwing axe). 2 per life.
-function throwLethal() {
-  if (!gameState.running || !player.alive || (player.lethals || 0) <= 0 || player.onLadder || cigSmoking) return;
-  player.lethals--;
-  const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
-  const dir = camera.getWorldDirection(new THREE.Vector3());
-  if (lethalChoice === 'axe') throwAxe(origin, dir.clone());
-  else throwSmoke(origin, dir.clone());
-  if (gunMesh) gunMesh.position.z = -0.35;                      // throw pop on the viewmodel
   updateHUD();
 }
 // Bright cyan canister with glowing accent rings (kept distinct from any frag grenade).
@@ -7701,13 +7567,11 @@ function updateHUD() {
     el('ggLevel').innerHTML = `LEVEL ${ggLevel} / ${GUNGAME_MAX}` + (ggKarambit ? ` <span class="gg-karambit">⚔ ${MELEE_NAMES[meleeChoice]}</span>` : ``);
     el('killCounter').style.display = 'none'; el('grenades').style.display = 'none'; el('lootInfo').style.display = 'none';
     el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
-    el('lethalCount').style.display = 'block'; el('lethalNum').textContent = (player.lethals || 0); el('lethalIco').textContent = (lethalChoice === 'axe' ? '🪓' : '💨');
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
     else if (magSpan) magSpan.style.display = '';
   } else {   // FFA: score/kills + impulse grenades (same equipment as gun game), no frag grenades
     el('ggLevel').style.display = 'none'; el('killCounter').style.display = ''; el('grenades').style.display = 'none';
     el('impulseCount').style.display = 'block'; el('impulseNum').textContent = player.impulses;
-    el('lethalCount').style.display = 'block'; el('lethalNum').textContent = (player.lethals || 0); el('lethalIco').textContent = (lethalChoice === 'axe' ? '🪓' : '💨');
     if (w.melee) { el('ammoCur').textContent = '∞'; if (magSpan) magSpan.style.display = 'none'; }
     else if (magSpan) magSpan.style.display = '';
   }
@@ -7968,7 +7832,7 @@ function playerDie() {
     weaponState.rcrl.ammo = 0; weaponState.rcrl.cooldown = 0;     // RC launcher is streak-only — no respawn ammo
     rcEquipped = false;                                 // never respawn holding the RC launcher
     // Both modes respawn onto the main gun (gun-game: current ladder rung; FFA: your chosen main).
-    player.grenades = 0; player.impulses = IMPULSE.maxCarry; player.lethals = LETHAL_MAX; ggKarambit = false;
+    player.grenades = 0; player.impulses = IMPULSE.maxCarry; ggKarambit = false;
     GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].cooldown = 0; weaponState[k].reloading = 0; });
     weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
     if (gameMode !== 'gungame' && !WEAPONS[ffaMain]) ffaMain = 'gg2';
@@ -8052,7 +7916,7 @@ function startMatch() {
   GUNGAME_LADDER.forEach(k => { weaponState[k].ammo = WEAPONS[k].mag; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
   weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // akimbo re-splits its mag on first shot
   weaponState[KARAMBIT_KEY].cooldown = 0; weaponState[KARAMBIT_KEY].reloading = 0;
-  player.grenades = 0; player.impulses = IMPULSE.maxCarry; player.lethals = LETHAL_MAX;  // impulse grenades are the G equipment (both modes)
+  player.grenades = 0; player.impulses = IMPULSE.maxCarry;  // impulse grenades are the G equipment (both modes)
   if (gameMode === 'gungame') {
     ggLevel = 1;
     ggEquip('gg1');                                  // start on the level-1 gun
@@ -8116,7 +7980,7 @@ function toggleInventory() {
   invOpen = !invOpen;
   if (invOpen) {
     cigCancel();
-    setInvTab('paneMain'); refreshInvPanes();
+    refreshInventory();
     el('invMenu').classList.remove('hidden');
     sfxInvOpen();                                            // tactical tab-open
     document.exitPointerLock && document.exitPointerLock();   // free the cursor (game keeps running)
@@ -8332,51 +8196,27 @@ el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display
 el('menuSkin').onclick = () => SkinCreator.open('mainMenu');
 el('settingsEditSkin').onclick = () => SkinCreator.open(settingsReturn);
 // --- MELEE picker UI (main menu + lobby): 3 cards with line-art icons; click to select + persist. ---
-// Line-art icons for the inventory MELEE + LETHAL cards (drawn to a 120x90 canvas).
 function meleeIconCanvas(type) {
-  const c = document.createElement('canvas'); c.width = 120; c.height = 90; const x = c.getContext('2d');
-  x.strokeStyle = '#dfe8f0'; x.lineCap = 'round'; x.lineJoin = 'round';
-  if (type === 'karambit') { x.lineWidth = 8; x.beginPath(); x.arc(66, 40, 34, 0.5, 3.3); x.stroke(); x.lineWidth = 5; x.beginPath(); x.arc(86, 70, 12, 0, 7); x.stroke(); }   // hook + finger ring
-  else if (type === 'm9') { x.lineWidth = 9; x.beginPath(); x.moveTo(22, 78); x.lineTo(98, 16); x.stroke(); x.lineWidth = 15; x.beginPath(); x.moveTo(16, 82); x.lineTo(36, 66); x.stroke(); x.lineWidth = 2; for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(66 - i * 7, 38 + i * 5); x.lineTo(74 - i * 7, 30 + i * 5); x.stroke(); } }   // blade + handle + serrations
-  else { x.lineWidth = 7; x.beginPath(); x.moveTo(20, 72); x.lineTo(100, 18); x.stroke(); x.lineWidth = 6; x.beginPath(); x.moveTo(22, 38); x.lineTo(66, 76); x.stroke(); x.beginPath(); x.moveTo(36, 24); x.lineTo(74, 60); x.stroke(); }   // butterfly handles + blade
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d');
+  x.strokeStyle = '#dfe8f0'; x.lineWidth = 4; x.lineCap = 'round'; x.lineJoin = 'round';
+  if (type === 'karambit') { x.beginPath(); x.arc(38, 30, 22, 0.5, 3.3); x.stroke(); x.lineWidth = 3; x.beginPath(); x.arc(48, 48, 8, 0, 7); x.stroke(); }           // hooked blade + finger ring
+  else if (type === 'm9') { x.beginPath(); x.moveTo(14, 54); x.lineTo(52, 12); x.stroke(); x.lineWidth = 8; x.beginPath(); x.moveTo(12, 56); x.lineTo(24, 44); x.stroke(); }   // long straight blade + handle
+  else { x.beginPath(); x.moveTo(14, 50); x.lineTo(52, 14); x.stroke(); x.beginPath(); x.moveTo(14, 28); x.lineTo(40, 52); x.stroke(); }                                       // butterfly handles + blade
   return c;
 }
-function lethalIconCanvas(type) {
-  const c = document.createElement('canvas'); c.width = 120; c.height = 90; const x = c.getContext('2d');
-  if (type === 'smoke') { x.fillStyle = 'rgba(225,228,234,0.85)'; [[52, 50, 24], [74, 46, 20], [62, 34, 18], [44, 40, 15], [82, 56, 14]].forEach(([cx, cy, r]) => { x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); }); x.strokeStyle = '#8a9098'; x.lineWidth = 5; x.beginPath(); x.moveTo(56, 64); x.lineTo(56, 82); x.stroke(); }   // smoke puffs + canister
-  else { x.strokeStyle = '#b07a3a'; x.lineWidth = 9; x.lineCap = 'round'; x.beginPath(); x.moveTo(36, 82); x.lineTo(76, 22); x.stroke(); x.fillStyle = '#aab0b8'; x.beginPath(); x.moveTo(70, 12); x.quadraticCurveTo(100, 22, 92, 48); x.quadraticCurveTo(80, 40, 66, 30); x.closePath(); x.fill(); }   // wooden handle + steel axe head
-  return c;
+function buildMeleePicker(id) {
+  const wrap = el(id); if (!wrap) return; wrap.innerHTML = '';
+  MELEE_TYPES.forEach(t => {
+    const b = document.createElement('button'); b.className = 'meleeCard'; b.dataset.melee = t;
+    b.appendChild(meleeIconCanvas(t));
+    const lab = document.createElement('div'); lab.className = 'mLab'; lab.textContent = MELEE_NAMES[t]; b.appendChild(lab);
+    b.onclick = () => { setMeleeChoice(t); sfxMeleeEquip(t); };
+    wrap.appendChild(b);
+  });
+  refreshMeleePickers();
 }
-const MELEE_DESC = { m9: 'Combat knife', karambit: 'Curved tactical', butterfly: 'Folding flip knife' };
-const LETHAL_DESC = { smoke: 'Blocks line of sight • 2/life', axe: 'One-shot • retrievable • 2/life' };
-function _bigCard(cls, key, icon, name, desc, onclick) {
-  const b = document.createElement('button'); b.className = 'invBigCard'; b.dataset[cls] = key;
-  b.appendChild(icon);
-  const nm = document.createElement('b'); nm.textContent = name; b.appendChild(nm);
-  const ds = document.createElement('small'); ds.textContent = desc; b.appendChild(ds);
-  b.onclick = onclick; return b;
-}
-function buildInvMelee() {
-  const wrap = el('invMeleeRow'); if (!wrap) return; wrap.innerHTML = '';
-  MELEE_TYPES.forEach(t => wrap.appendChild(_bigCard('melee', t, meleeIconCanvas(t), MELEE_NAMES[t], MELEE_DESC[t], () => { setMeleeChoice(t); sfxMeleeEquip(t); closeInventory(); })));
-}
-function buildInvLethal() {
-  const wrap = el('invLethalRow'); if (!wrap) return; wrap.innerHTML = '';
-  ['smoke', 'axe'].forEach(t => wrap.appendChild(_bigCard('lethal', t, lethalIconCanvas(t), LETHAL_NAMES[t], LETHAL_DESC[t], () => { setLethalChoice(t); sfxInvSelect(); closeInventory(); })));
-}
-function refreshInvPanes() {
-  refreshInventory();
-  document.querySelectorAll('#invMeleeRow .invBigCard').forEach(b => b.classList.toggle('sel', b.dataset.melee === meleeChoice));
-  document.querySelectorAll('#invLethalRow .invBigCard').forEach(b => b.classList.toggle('sel', b.dataset.lethal === lethalChoice));
-}
-function setInvTab(pane) {
-  document.querySelectorAll('#invMenu .invTab').forEach(t => t.classList.toggle('active', t.dataset.pane === pane));
-  document.querySelectorAll('#invMenu .invPane').forEach(p => p.classList.toggle('active', p.id === pane));
-  const hints = { paneMain: 'Click a weapon to equip it as your main • full ammo on swap • I/ESC to close', paneMelee: 'Pick your melee (key 3) — identical stats, different style & animations', paneLethal: 'Pick your lethal (key H) — 2 per life' };
-  const h = el('invHint'); if (h) h.textContent = hints[pane] || '';
-}
-document.querySelectorAll('#invMenu .invTab').forEach(t => t.onclick = () => { setInvTab(t.dataset.pane); sfxMenu(true); });
-buildInvMelee(); buildInvLethal();
+function refreshMeleePickers() { document.querySelectorAll('.meleeCard').forEach(b => b.classList.toggle('sel', b.dataset.melee === meleeChoice)); }
+buildMeleePicker('menuMelee'); buildMeleePicker('lobbyMelee');
 function setBotCount(n) {
   botCount = Math.max(0, Math.min(BOT_MAX, n));
   localStorage.setItem('blockoutBots', botCount);
@@ -8773,16 +8613,6 @@ const NET = {
       }
       case 'rcshot': {                                 // my RC missile was shot down — detonate it where it is
         if (msg.id === this.selfId && (rcActive || rcMissile)) rcDetonate(null, null, null, false);
-        break;
-      }
-      case 'axe': {                                    // a peer threw a lethal axe — render a flying copy (no damage locally)
-        if (msg.id !== this.selfId) spawnRemoteAxe(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz));
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
-        break;
-      }
-      case 'smoke': {                                  // a peer's smoke grenade erupted — spawn the cloud locally
-        if (msg.id !== this.selfId) spawnSmokeCloud(new THREE.Vector3(msg.x, msg.y, msg.z), false);
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
         break;
       }
       case 'imp': {                                    // a peer's impulse grenade (throw / stick / detonation)
@@ -9612,8 +9442,7 @@ function animate() {
     if (NET.active) lerpRemotePlayers(dt);   // smooth other humans toward their net positions
     netTick(dt);                             // send/relay positions
     updateGrenades(dt);   // frag grenade physics + fuse
-    updateTomahawks(dt);  // thrown tomahawks / lethal throwing axes (flight + stick + pickup)
-    updateSmokes(dt);     // lethal smoke grenades: canister settle + view-blocking smoke cloud
+    updateTomahawks(dt);  // thrown tomahawks (alternate throwable)
     updateRockets(dt);    // rocket projectiles (special weapon)
     updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails
     rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles
@@ -9695,7 +9524,7 @@ function animate() {
           gunMesh.rotation.z += (0 - gunMesh.rotation.z) * Math.min(1, dt * 12);
           if (trail) trail.material.opacity = 0;
           // CS:GO-style idle inspect every ~15-20s of standing still (purely cosmetic).
-          if (moving < 0.5) { karInspectClock += dt; if (karInspectClock > 30 + Math.random() * 15) { karInspectClock = 0; karInspectDur = (mt === 'butterfly' ? 1.4 : mt === 'karambit' ? 1.1 : 0.9); karInspectT = karInspectDur; (mt === 'butterfly' ? sfxMeleeEquip('butterfly') : sfxMeleeSwing(mt)); } }
+          if (moving < 0.5) { karInspectClock += dt; if (karInspectClock > 15 + Math.random() * 5) { karInspectClock = 0; karInspectDur = (mt === 'butterfly' ? 1.2 : mt === 'karambit' ? 1.0 : 0.9); karInspectT = karInspectDur; sfxMeleeSwing(mt); } }
           else karInspectClock = 0;
         }
       } else if (currentWeaponKey === 'saber') {

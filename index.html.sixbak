@@ -150,14 +150,6 @@
   #streakCount { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #ffe600; text-shadow: 0 2px 3px #000; margin-bottom: 8px; }
   #dogCount { font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #ff8a7a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
   #kongHud { font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #ffcf5a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
-  #mckHud { font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #7af0a0; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
-  #mckHud span { color: #fff; }
-  #noodlePrompt { position: absolute; left: 50%; bottom: 26%; transform: translateX(-50%); z-index: 15; display: none;
-    font: 800 18px 'Segoe UI', sans-serif; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 6px #000; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 8px 14px; pointer-events: none; }
-  #noodlePrompt b { color: #ffd34a; }
-  #lobbyStage { width: min(880px, 92vw); height: 290px; margin: 2px auto; border-radius: 12px; overflow: hidden; position: relative;
-    background: linear-gradient(180deg, #10141c, #080a10); border: 2px solid rgba(120,150,220,0.28); box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
-  #lobbyStage canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
   #flameFuelWrap { font-size: 12px; font-weight: 800; letter-spacing: .5px; color: #ff9a3a; text-shadow: 0 2px 3px #000; margin-top: 6px; display: none; }
   #flameFuelBg { width: 150px; height: 11px; background: rgba(0,0,0,0.45); border: 2px solid #000; border-radius: 4px; margin-top: 2px; }
   #flameFuelBar { height: 100%; width: 100%; background: linear-gradient(90deg,#ff3a1a,#ffd23a); border-radius: 2px; transition: width .1s; }
@@ -549,12 +541,10 @@
     </div>
     <div id="dogCount">🐕 KIRKS AVENGERS: <span id="dogNum">0</span>/20</div>
     <div id="kongHud">🦍 KONG: <span id="kongHpNum">1000</span>/1000</div>
-    <div id="mckHud">⚔️ MCKAYLA: <span id="mckHpNum">200</span>/200</div>
     <div id="flameFuelWrap">🔥 FUEL <div id="flameFuelBg"><div id="flameFuelBar"></div></div></div>
   </div>
   <div id="streakLost">STREAK LOST</div>
   <div id="kongMsg">KING KONG SUMMONED</div>
-  <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
 
   <div id="ammoWrap">
     <div id="ggLevel"></div>
@@ -774,9 +764,7 @@
     <div id="ctrlConflict"></div>
     <div class="ctrlScroll" id="ctrlList"></div>
     <div class="ctrlOpts">
-      <div class="optRow"><span>Hipfire Sensitivity</span><input type="range" id="optSens" min="10" max="500" step="5"><span class="optVal" id="optSensV">1.0x</span></div>
-      <div class="optRow"><span>ADS Sensitivity (× zoom-scaled)</span><input type="range" id="optSensAds" min="10" max="200" step="5"><span class="optVal" id="optSensAdsV">1.0x</span></div>
-      <div class="optRow"><span>Scope Sensitivity (high-zoom optics)</span><input type="range" id="optSensScope" min="10" max="200" step="5"><span class="optVal" id="optSensScopeV">1.0x</span></div>
+      <div class="optRow"><span>Mouse Sensitivity</span><input type="range" id="optSens" min="10" max="500" step="5"><span class="optVal" id="optSensV">1.0x</span></div>
       <div class="optRow"><span>Field of View</span><input type="range" id="optFov" min="60" max="120" step="1"><span class="optVal" id="optFovV">78</span></div>
       <label class="optRow"><span>Invert Mouse Y</span><input type="checkbox" id="optInvertY"></label>
       <label class="optRow"><span>ADS — Toggle (vs hold)</span><input type="checkbox" id="optAdsToggle"></label>
@@ -870,7 +858,6 @@
     <div style="font-size:14px;opacity:.8;letter-spacing:2px;margin-bottom:6px">SHARE THIS CODE</div>
     <div id="lobbyCode" class="lobbyCode" title="click to copy">-----</div>
   </div>
-  <div id="lobbyStage" title="Click your character to customize your skin"></div>
   <div class="lobbyPlayers" id="lobbyPlayers"></div>
   <div style="font-size:14px;opacity:.85">Game mode <span id="lobbyModeHostNote" style="opacity:.7;font-size:12px"></span>:</div>
   <div class="modePick" id="lobbyModePick">
@@ -1034,7 +1021,6 @@ const GUNGAME_WEAPONS = {
   gg23: { name:"HEAVY SNIPER",     baseModel:"heavysniper", color:0x33384a, damage:200,fireRate:1.80,  mag:3,  reload:4.5, spreadBase:0.001,spreadGrow:0.0,  spreadMax:0.006, recoil:0.085,pellets:1,range:600,headMult:1.75,auto:false, kongDmg:100 },
   gg24: { name:"BULLPUP RIFLE",    baseModel:"bullpup",     color:0x394032, damage:22, fireRate:0.0909, mag:25, reload:2.0, spreadBase:0.012,spreadGrow:0.009,spreadMax:0.075, recoil:0.012,pellets:1,range:280,headMult:1.8, auto:true },
   gg25: { name:"SUPPRESSED SMG",   baseModel:"suppressedsmg",color:0x1c1c20,damage:18, fireRate:0.0833, mag:30, reload:2.2, spreadBase:0.016,spreadGrow:0.010,spreadMax:0.110, recoil:0.008,pellets:1,range:150,headMult:1.6, auto:true, suppressed:true },
-  gg26: { name:"MINIGUN",          baseModel:"minigun",     color:0x2a2a2e, damage:18, fireRate:0.04,   mag:100,reload:8.0, spreadBase:0.050,spreadGrow:0.010,spreadMax:0.200, recoil:0.010,pellets:1,range:200,headMult:1.4, auto:true, minigun:true, spinup:0.8, winddown:1.0 },
   // KARAMBIT — a permanent second slot in gun game (NOT on the ladder). A curved
   // reverse-grip hook blade: fast one-hit melee that DEMOTES the victim (the killer
   // never advances, and it can't win). See `karambit:true` checks below.
@@ -1046,7 +1032,7 @@ const GUNGAME_LADDER = ["gg1","gg2","gg3","gg4","gg5","gg6","gg7","gg8","gg9","g
                         "gg11","gg12","gg13","gg14","gg15","gg16","gg17","gg18","gg19","gg20"];
 const GUNGAME_MAX = GUNGAME_LADDER.length;   // 20
 // FFA-only extra weapons: selectable from the I-key inventory but NEVER on the gun-game ladder.
-const FFA_ONLY_WEAPONS = ["gg21", "gg22", "gg23", "gg24", "gg25", "gg26"];
+const FFA_ONLY_WEAPONS = ["gg21", "gg22", "gg23", "gg24", "gg25"];
 const KARAMBIT_KEY = "karambit";
 let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame'
 let ggLevel  = 1;       // the LOCAL player's current gun-game level (1..20)
@@ -1084,8 +1070,7 @@ const GG_SPEC = {
   gg22: { speed:1.05, sight:'iron',        zoom:1.3,  reload:1.8, rstyle:'mag',  model:'microsmg' },
   gg23: { speed:0.65, sight:'scope_heavy', zoom:10.0, reload:4.5, rstyle:'bolt', model:'heavysniper', boltShot:true },
   gg24: { speed:0.95, sight:'holo',        zoom:1.5,  reload:2.0, rstyle:'mag',  model:'bullpup' },
-  gg25: { speed:1.00, sight:'minidot',     zoom:1.35, reload:2.2, rstyle:'mag',  model:'suppressedsmg' },
-  gg26: { speed:0.50, sight:'none',        zoom:1.0,  reload:8.0, rstyle:'belt', model:'minigun', noads:true }
+  gg25: { speed:1.00, sight:'minidot',     zoom:1.35, reload:2.2, rstyle:'mag',  model:'suppressedsmg' }
 };
 for (const k in GG_SPEC) {
   const s = GG_SPEC[k], w = WEAPONS[k];
@@ -1167,7 +1152,7 @@ const GG_SCOPE = {
 
 // --- LASER SIGHTS: hipfire-focused weapons project a bright red beam + a bright dot where it lands. ---
 // Value = beam brightness (the Suppressed SMG gets a DIM 30% IR-style laser so it doesn't break stealth).
-const LASER_WEAPONS = { gg3: 1, gg6: 1, gg7: 1, gg13: 1, gg17: 1, gg21: 1, gg22: 1, gg25: 0.3, gg26: 1 };
+const LASER_WEAPONS = { gg3: 1, gg6: 1, gg7: 1, gg13: 1, gg17: 1, gg21: 1, gg22: 1, gg25: 0.3 };
 let laserOn = true;   // master toggle (default ON), rebindable to L in the Controls menu
 function hasLaser(key) { return LASER_WEAPONS[key] != null; }
 
@@ -1255,7 +1240,7 @@ const TRACER = {
            gg3:0xff8a1a, gg22:0xff8a1a, gg13:0xff8a1a,                                  // orange (SMG / micro SMG / machine pistol)
            gg6:0xff5418, gg7:0xff5418,                                                  // orange-red (shotguns)
            gg8:0x35dd55, gg9:0x35dd55, gg23:0x35dd55,                                   // green (DMR / bolt + heavy sniper)
-           gg14:0xffe23a, gg15:0xffe23a, gg16:0xffe23a, gg17:0xffe23a, gg18:0xffe23a, gg25:0xffe23a, gg26:0xffb330 },  // yellow pistols/akimbo/suppressed; minigun yellow-orange
+           gg14:0xffe23a, gg15:0xffe23a, gg16:0xffe23a, gg17:0xffe23a, gg18:0xffe23a, gg25:0xffe23a },  // yellow (pistols / akimbo / suppressed)
   life:  { pistol:0.10, smg:0.09, shotgun:0.08, sniper:0.16,
            laser:0.25, deagle:0.13, bot:0.10, def:0.10,
            gg8:0.16, gg9:0.20, gg23:0.22 },          // sniper tracers linger (more visible at range)
@@ -1435,7 +1420,6 @@ const GUN_SFX = {
   gg21: { f: 120, dur: 0.16, noise: 0.9, nf: 1700, peak: 0.66, verb: 0.4 },   // Tactical Shotgun — punchy boom
   gg22: { f: 300, dur: 0.045,noise: 0.5, nf: 3600, peak: 0.40 },              // PDW / Micro SMG — tiny fast pop
   gg24: { f: 175, dur: 0.085,noise: 0.62,nf: 2600, peak: 0.56 },              // Bullpup Rifle — punchy mid
-  gg26: { f: 58,  dur: 0.11, noise: 1.0, nf: 1000, peak: 0.72, verb: 0.5 },   // Minigun — deep menacing BRRRT
 };
 // Build the fire SFX for a weapon (layered tone + sub + powder noise + optional tail/ring).
 function buildGunFire(key) {
@@ -1490,9 +1474,6 @@ function sfxFire(weaponKey, pos, side) {
   if (side && pos) { const off = SND.lright.clone().multiplyScalar(side === 'L' ? -1.5 : 1.5); pos = pos.clone().add(off); }
   SND.play3d(b, pos, cat, 'fire' + (weaponKey || ''), 1.0, 0.3);
 }
-// MINIGUN spin-up (rising electric whine) + wind-down (descending whirr) — audible across the map.
-function sfxMinigunSpin(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 90, f1: 520, dur: 0.8, peak: 0.34 }); aTone(ctx, out, t, { type: 'square', f0: 60, f1: 300, dur: 0.8, peak: 0.18 }); aNoise(ctx, out, t, { dur: 0.8, peak: 0.18, filter: 'bandpass', freq: 400, freq1: 1400, q: 0.7 }); }, pos || playerEarPos(), 'weapons', 'minspin', 0.9, 0.8); }
-function sfxMinigunDown(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 480, f1: 70, dur: 1.0, peak: 0.28 }); aNoise(ctx, out, t, { dur: 1.0, peak: 0.16, filter: 'bandpass', freq: 1200, freq1: 300, q: 0.7 }); }, pos || playerEarPos(), 'weapons', 'mindown', 0.8, 1.0); }
 
 /* --- EXPLOSIONS / impulse / projectile flight + impacts --- */
 function sfxExplosion(kind, pos) {
@@ -2354,56 +2335,6 @@ mapFlames.forEach(fl => addNightGlow(fl.pos.x, fl.pos.y + 0.4, fl.pos.z, 1.5, 1.
 const towerBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff2020, transparent: true, opacity: 0, depthWrite: false }));
 towerBeacon.position.set(watchtower.cx, watchtower.platY + 8.2, watchtower.cz); scene.add(towerBeacon);
 
-// LIGHT TOWERS — tall floodlight poles that auto-switch on at night (driven by the day/night lamp factor).
-const lightTowers = [];
-function buildLightTower(x, z) {
-  const poleH = 7.0;   // ~4 player heights
-  addBox(x, 0, z, 0.32, poleH, 0.32, 0x6a6a72, { mat: 'metal' });                       // gray metal pole (thin vertical cover)
-  [[0.55, 0], [-0.55, 0], [0, 0.55]].forEach(([dx, dz]) => addBox(x + dx, 0, z + dz, 0.12, 1.3, 0.12, 0x55555c, { noCollide: true, mat: 'metal' }));   // base struts
-  const fix = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.7, 0.55), new THREE.MeshLambertMaterial({ color: 0x3a3a40, flatShading: true }));
-  fix.position.set(x, poleH - 0.25, z); fix.rotation.x = 0.5; scene.add(fix);            // chunky angular floodlight housing
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.52, 0.08), new THREE.MeshBasicMaterial({ color: 0xfff2c0, transparent: true, opacity: 0.18 }));
-  glass.position.set(x, poleH - 0.5, z + 0.3); glass.rotation.x = 0.5; scene.add(glass); // emissive glass face (the lamp)
-  const shaft = new THREE.Mesh(new THREE.ConeGeometry(11, poleH, 22, 1, true), new THREE.MeshBasicMaterial({ color: 0xffeec0, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-  shaft.position.set(x, poleH / 2, z); scene.add(shaft);                                 // volumetric shaft (apex at fixture, base on ground)
-  const disc = new THREE.Mesh(new THREE.CircleGeometry(11, 26), new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-  disc.rotation.x = -Math.PI / 2; disc.position.set(x, 0.06, z); scene.add(disc);        // lit ground pool (~12u radius)
-  const spot = new THREE.SpotLight(0xfff2d0, 0, 26, 0.62, 0.45, 1.2); spot.position.set(x, poleH - 0.4, z); spot.target.position.set(x, 0, z); spot.castShadow = false;
-  scene.add(spot); scene.add(spot.target);                                               // real downward cone — actually lights players standing in it
-  lightTowers.push({ glass, shaft, disc, spot });
-}
-[[13, 48], [13, -48], [10, 8], [46, 10], [-58, 14]].forEach(([x, z]) => buildLightTower(x, z));   // 2 house yards + central street + castle + watchtower
-
-// THE NOODLE BOX — a giant Chinese-takeout box on the left flank you can WALK INSIDE to summon Mckayla.
-let noodleBox = null;
-(function buildNoodleBox() {
-  const cx = -40, cz = 30, W = 3.2, D = 3.2, H = 4.0, t = 0.16, hx = W / 2, hz = D / 2, doorW = 1.5;
-  const paper = 0xf2ede2;                                       // off-white waxed paper
-  addBox(cx, 0, cz, W, 0.08, D, paper, { noCollide: true });    // interior floor (cosmetic)
-  addBox(cx - hx, 0, cz, t, H, D, paper);                       // back wall (-X)
-  addBox(cx, 0, cz - hz, W, H, t, paper);                       // side wall (-Z)
-  addBox(cx, 0, cz + hz, W, H, t, paper);                       // side wall (+Z)
-  const segD = (D - doorW) / 2;                                 // front wall (+X) split around a doorway gap
-  addBox(cx + hx, 0, cz - hz + segD / 2, t, H, segD, paper);
-  addBox(cx + hx, 0, cz + hz - segD / 2, t, H, segD, paper);
-  addBox(cx + hx, H - 0.9, cz, t, 0.9, doorW, paper, { noCollide: true });   // lintel above the doorway
-  for (let s = 0; s < 4; s++) {                                 // folded paper flaps around the top rim
-    const ang = s * Math.PI / 2;
-    const flap = new THREE.Mesh(new THREE.BoxGeometry(W * 0.92, 0.06, D * 0.46), new THREE.MeshLambertMaterial({ color: paper, flatShading: true }));
-    flap.position.set(cx - Math.sin(ang) * D * 0.26, H + 0.16, cz + Math.cos(ang) * D * 0.26); flap.rotation.y = ang; flap.rotation.x = -0.6; scene.add(flap);
-  }
-  addBox(cx - 0.62, H, cz, 0.05, 0.7, 0.05, 0x9a9a9a, { noCollide: true });  // wire handle (two posts + a top bar)
-  addBox(cx + 0.62, H, cz, 0.05, 0.7, 0.05, 0x9a9a9a, { noCollide: true });
-  addBox(cx, H + 0.66, cz, 1.3, 0.05, 0.05, 0x9a9a9a, { noCollide: true });
-  [cz - hz - 0.02, cz + hz + 0.02].forEach(pz => { for (let k = 0; k < 3; k++) { const w2 = 1.7 - k * 0.42; const m = new THREE.Mesh(new THREE.BoxGeometry(w2, 0.13, 0.04), new THREE.MeshBasicMaterial({ color: 0xcc2222 })); m.position.set(cx, H * 0.5 + k * 0.5, pz); scene.add(m); } });   // red pagoda motif
-  noodleBox = { cx, cz, minX: cx - hx, maxX: cx + hx, minZ: cz - hz, maxZ: cz + hz, H };
-})();
-function inNoodleBox() {
-  if (!noodleBox || !player.alive) return false;
-  const b = noodleBox, m = 0.35;
-  return player.pos.x > b.minX + m && player.pos.x < b.maxX - m && player.pos.z > b.minZ + m && player.pos.z < b.maxZ - m && player.pos.y < b.H - 0.5;
-}
-
 // Apply the current time-of-day to the scene (interpolate the two surrounding stops).
 function applyDayNight() {
   const t = ((timeOfDay % 1) + 1) % 1;
@@ -2421,7 +2352,6 @@ function applyDayNight() {
   for (const g of nightGlows) g.mesh.material.opacity = g.max * dnLampF;
   for (const l of streetLamps) l.material.color.copy(_dnLampDay).lerp(_dnLampNight, dnLampF);   // bulbs: off in day, warm at night
   const fm = flatMat(0xF2C61F); fm.emissive.setHex(0xF2C61F); fm.emissiveIntensity = dnLampF * 0.42;   // hazard fence stays subtly visible
-  for (const lt of lightTowers) { lt.glass.material.opacity = 0.18 + 0.75 * dnLampF; lt.shaft.material.opacity = 0.10 * dnLampF; lt.disc.material.opacity = 0.22 * dnLampF; lt.spot.intensity = 1.7 * dnLampF; }   // floodlights on at night
 }
 let _dnBeaconT = 0, _dnNetAcc = 0;
 function updateDayNight(dt) {
@@ -2607,9 +2537,9 @@ IM.load();
 
 /* Local control OPTIONS (sensitivity, invert-Y, ADS/sprint hold-vs-toggle, auto-reload, hit markers, FOV). */
 const OPT = {
-  sens: 1, sensAds: 1, sensScope: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, fov: 78,
+  sens: 1, invertY: false, adsToggle: false, sprintToggle: false, autoReload: true, hitMarkers: true, fov: 78,
   load() { try { const o = JSON.parse(localStorage.getItem('controls_opts_v1')); if (o && typeof o === 'object') Object.assign(this, o); } catch (e) {} },
-  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, sensAds: this.sensAds, sensScope: this.sensScope, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, fov: this.fov })); } catch (e) {} }
+  save() { try { localStorage.setItem('controls_opts_v1', JSON.stringify({ sens: this.sens, invertY: this.invertY, adsToggle: this.adsToggle, sprintToggle: this.sprintToggle, autoReload: this.autoReload, hitMarkers: this.hitMarkers, fov: this.fov })); } catch (e) {} }
 };
 OPT.load();
 DEFAULT_FOV = OPT.fov;     // apply the saved field-of-view
@@ -2642,15 +2572,9 @@ function resumeGame() {
 document.addEventListener('mousemove', (e) => {
   if (!pointerLocked || paused) return;
   if (rcActive) { rcSteerX += e.movementX; rcSteerY += e.movementY; return; }   // piloting: mouse steers the missile
-  // ZOOM-SCALED (uniform) sensitivity: at hipfire = base; when aiming/scoped, scale by the LIVE
-  // FOV ratio (camera.fov / DEFAULT_FOV) so a given mouse move covers the SAME screen distance at
-  // any zoom — feels identical from SMG hipfire to a 10x heavy-sniper scope. The ADS multiplier
-  // applies to every aimed state; the scope multiplier layers on top only for high-zoom optics.
-  let s = SENS * OPT.sens;
-  if (camera.fov < DEFAULT_FOV - 0.5) {
-    s *= (camera.fov / DEFAULT_FOV) * OPT.sensAds;
-    if (scopedHighZoom) s *= OPT.sensScope;
-  }
+  // Scope lowers sensitivity (improvement #1); gun-game ADS scales it by zoom (aimSensMult);
+  // OPT.sens is the player's sensitivity multiplier; OPT.invertY flips the vertical look.
+  const s = SENS * OPT.sens * (1 - scopeBlend * (1 - SCOPE.sensMult)) * aimSensMult;
   yaw   -= e.movementX * s;
   pitch -= e.movementY * s * (OPT.invertY ? -1 : 1);
   pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
@@ -2660,7 +2584,6 @@ document.addEventListener('mousemove', (e) => {
 });
 
 let firing = false, firingL = false;   // firing = fire input; firingL = ADS-input akimbo left pistol
-let minigunSpin = 0, minigunSpinAngle = 0, minigunSteady = false;   // minigun barrel spin-up (0..1), barrel angle, steady stance
 function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].akimbo); }
 
 // --- Fire / ADS press+release (shared by mouse + key bindings, so Fire/ADS can be remapped) ---
@@ -2668,28 +2591,19 @@ function firePress() {
   if (rcActive) { if (rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: fire = manual detonate
   if (cigSmoking) { cigCancel(); return; }                                        // smoking: fire cancels (weapon holstered)
   if (player.onLadder) return;
-  firing = true;
-  if (WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun) {   // minigun spins up first (no instant shot)
-    if (minigunSpin <= 0.02) { sfxMinigunSpin(playerEarPos()); if (NET.active) NET.broadcast({ t: 'minspin', id: NET.selfId, x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z }); }
-    return;
-  }
-  tryShoot(akimboEquipped() ? 'R' : undefined);
+  firing = true; tryShoot(akimboEquipped() ? 'R' : undefined);
 }
-function fireRelease() {
-  if (firing && WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun && minigunSpin > 0.05) sfxMinigunDown(playerEarPos());
-  firing = false;
-}
+function fireRelease() { firing = false; }
 function adsPress() {
   if (rcActive || cigSmoking || player.onLadder) return;
   if (akimboEquipped()) { firingL = true; tryShoot('L'); return; }
   if (currentWeaponKey === KARAMBIT_KEY) { meleeAttack(-1); return; }
   if (currentWeaponKey === 'saber') { saberBlocking = true; return; }
-  if (WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun) { minigunSteady = true; return; }   // steady stance: tighter spread, rooted in place
   if (OPT.adsToggle) { aiming = !aiming; if (ggAdsInfo()) sfxADS(aiming, aiming && ggAdsInfo().kind === 'scope'); }
   else { if (!aiming && ggAdsInfo()) { const i = ggAdsInfo(); sfxADS(true, i && i.kind === 'scope'); } aiming = true; }
 }
 function adsRelease() {
-  firingL = false; saberBlocking = false; minigunSteady = false;
+  firingL = false; saberBlocking = false;
   if (OPT.adsToggle) return;                            // toggle mode: keep `aiming` until tapped again
   if (aiming && ggAdsInfo()) sfxADS(false);
   aiming = false;
@@ -2703,7 +2617,7 @@ function gameAction(act, rep) {
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { streakActivate('dogs'); return; }
   if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) { if (!tryNoodleSummon()) tryGrabLadder(); }   // E inside the noodle box summons Mckayla, else grab a ladder
+  if (act === 'interact' && !rep) tryGrabLadder();
   if (act === 'reload') { cigCancel(); reload(); }
   if (act === 'inventory' && !rep && gameMode !== 'gungame') { toggleInventory(); return; }
   if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
@@ -2736,7 +2650,7 @@ document.addEventListener('keyup', (e) => {
 });
 
 // Clear all input when focus is lost / pointer lock drops, so keys never get "stuck".
-function clearInput() { for (const k in keys) keys[k] = false; firing = false; firingL = false; aiming = false; sprintLatch = false; minigunSteady = false; }
+function clearInput() { for (const k in keys) keys[k] = false; firing = false; firingL = false; aiming = false; sprintLatch = false; }
 window.addEventListener('blur', clearInput);
 
 const MOUSE_CODE = { 0: 'Mouse0', 1: 'Mouse1', 2: 'Mouse2' };
@@ -2815,8 +2729,7 @@ let shakeMag = 0;       // screen-shake magnitude
 
 // GUN GAME aim-down-sights state (per-weapon zoom + sight overlays).
 let adsBlend = 0;       // 0..1 how aimed-in we are with the current gun-game weapon
-let aimSensMult = 1;    // (legacy) mouse-sensitivity multiplier from ADS zoom — superseded by zoom-scaling
-let scopedHighZoom = false;   // true while looking through a high-zoom optic (scope) — gates OPT.sensScope
+let aimSensMult = 1;    // mouse-sensitivity multiplier from ADS zoom
 let ggSwayClock = 0;    // breath-sway phase for the 8x sniper scope
 let rdParX = 0, rdParY = 0;   // red-dot reticle parallax offset (px), lags fast turns then re-centers
 const GG_BREATH_MAX = 3;      // seconds of steady "held breath" available on the heavy sniper scope
@@ -3079,7 +2992,7 @@ function updateLadderPrompt() {
 function crouchKey() {
   if (!player.alive || player.diving) return;
   const spd = Math.hypot(player.vel.x, player.vel.z);
-  const runNow = MOVE.groundSpeed * Math.max(0.4, ggSpeedMult()) * (minigunSteady ? 0 : 1);   // weapon's max WALK/RUN speed (minigun steady stance roots you)
+  const runNow = MOVE.groundSpeed * Math.max(0.4, ggSpeedMult());   // weapon's max WALK/RUN speed
   if (player.onGround && player.diveRecover <= 0 && spd >= MOVE.diveTrigger * runNow) startDive();
 }
 function startDive() {
@@ -3384,10 +3297,8 @@ function updateMovement(dt) {
   // Blend the gun-game ADS amount (drives model raise, FOV, overlays). ~150ms in/out.
   adsBlend += ((ggAdsActive ? 1 : 0) - adsBlend) * Math.min(1, dt * 13);
   if (adsBlend < 0.001) adsBlend = 0;
-  // Sensitivity is zoom-scaled live in the mousemove handler; just flag high-zoom optics here so the
-  // separate Scope-sensitivity multiplier can apply on top (scopes = thermal/heavy/javelin + FFA sniper).
-  aimSensMult = ggAdsActive ? 0.60 : 1;   // (legacy, unused by the new formula)
-  scopedHighZoom = (ggAdsActive && ggAds.kind === 'scope') || !!scopeTarget;
+  // Sensitivity: all gun-game ADS snaps to 60% (instant on, instant off).
+  aimSensMult = ggAdsActive ? 0.60 : 1;
 
   // Hold-breath (heavy sniper): SHIFT steadies the scope for ~3s, then must recover ~3s.
   if (adsScopedHeavy && sprintDown() && ggBreath > 0) { ggBreathHeld = true; ggBreath = Math.max(0, ggBreath - dt); }
@@ -3803,18 +3714,6 @@ function buildWeaponMesh(key) {
     body(0,-0.05,0.15,0.06,0.09,0.18,0x202022);    // mag
     body(0,0.0,0.24,0.06,0.10,0.16,0x141416);      // stock
     muzzleZ = -0.66;
-  } else if (model === 'minigun') {
-    // MINIGUN — 6 rotating barrels on a spinner hub, chunky housing, grip, side ammo-belt feed, red stripe.
-    body(0,0,0.0,0.26,0.26,0.5,0x2a2a2e);            // central housing
-    body(0,-0.16,0.16,0.10,0.18,0.16,0x18181a);     // grip
-    body(0,0.0,0.30,0.30,0.28,0.22,0x202024);       // rear feed housing
-    body(0.30,0.02,0.28,0.14,0.30,0.22,0x14141a);   // side ammo-belt feed (visible third-person)
-    body(0,0.16,-0.1,0.20,0.05,0.22,0xcc2222,true); // red warning stripe on top
-    const barrels = new THREE.Group(); barrels.name = 'miniBarrels'; barrels.position.set(0, 0, -0.2);
-    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, r = 0.08; const bb = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), flatMat(0x3a3a40)); bb.rotation.x = Math.PI / 2; bb.position.set(Math.cos(a) * r, Math.sin(a) * r, -0.35); barrels.add(bb); }
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 12), flatMat(0x14141a)); hub.rotation.x = Math.PI / 2; hub.position.set(0, 0, -0.04); barrels.add(hub);
-    g.add(barrels); g.userData.barrels = barrels;
-    muzzleZ = -0.92;
   }
   // Iron-sight weapons get a visible rear notch + front post so the ADS picture reads.
   if (GG_IRON[key]) addIronSights(g, GG_IRON[key]);
@@ -4219,8 +4118,7 @@ function tryShoot(akSide, burstFollow) {
     return;
   }
 
-  let effSpread = (aiming ? currentSpread * 0.4 : currentSpread) + (akimbo ? AKIMBO_SPREAD : 0);
-  if (minigunSteady) effSpread *= 0.7;   // minigun steady stance: 30% tighter spread
+  const effSpread = (aiming ? currentSpread * 0.4 : currentSpread) + (akimbo ? AKIMBO_SPREAD : 0);
   const muzzle = akimbo ? akimboMuzzleWorld(side) : gunMuzzleWorld();
   // Explosive gun-game tiers get a fat orange beam (and a blast FX on impact below).
   const tColor = w.explosive ? 0xffb030 : (TRACER.color[currentWeaponKey] != null ? TRACER.color[currentWeaponKey] : TRACER.color.def);
@@ -4236,7 +4134,6 @@ function tryShoot(akSide, burstFollow) {
   const targets = colliders.concat(botMeshes());
   dogMeshes(dogSelfId()).forEach(m => targets.push(m));   // shootable ENEMY dogs (never your own)
   kongMeshes(dogSelfId()).forEach(m => targets.push(m));  // shootable ENEMY King Kongs (never your own ally)
-  mckaylaMeshes(dogSelfId()).forEach(m => targets.push(m));   // shootable ENEMY Mckaylas (never your own)
   if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.avatar) rp.avatar.children.forEach(c => { if (c.userData && c.userData.remote) targets.push(c); }); });
   // Other players' in-flight RC missiles can be shot down (any direct bullet hit detonates them).
   rcRemote.forEach(o => o.grp.children.forEach(c => { if (c.isMesh) targets.push(c); }));
@@ -4296,12 +4193,6 @@ function tryShoot(akSide, burstFollow) {
         if (NET.isClient) NET.route(NET.hostId, { t: 'konghit', kongId: ud.kong.id, dmg: (w.kongDmg || w.damage), fromId: NET.selfId });
         else damageKong(ud.kong, (w.kongDmg || w.damage), dogSelfId());
       }
-      else if (ud.mck && ud.mck.alive && !ud.mck.dying) {
-        // Shot an enemy's Mckayla — host applies the damage (clients route it for validation).
-        hitSomething = true; spawnBlood(hit.point, 10);
-        if (NET.isClient) NET.route(NET.hostId, { t: 'mckhit', mckId: ud.mck.id, dmg: w.damage });
-        else damageMckayla(ud.mck, w.damage);
-      }
       else if (ud.rcRemoteOwner) {
         // Shot down someone's RC missile: pop a flash here + tell the owner to detonate it.
         hitSomething = true;
@@ -4312,7 +4203,7 @@ function tryShoot(akSide, burstFollow) {
       // Impact SFX (first pellet only): flesh/headshot on a body, metal on vehicles/fence, else wall.
       if (p === 0) {
         if ((ud.bot && ud.bot.alive) || (ud.remote && ud.remote.alive)) { endKind = 2; sfxImpact(ud.part === 'head' ? 'head' : 'flesh', hit.point); }
-        else if (ud.dog || ud.kong || ud.mck) endKind = 2;
+        else if (ud.dog || ud.kong) endKind = 2;
         else if (!ud.rcRemoteOwner) { endKind = 1; sfxImpact(ud.mat === 'metal' ? 'metal' : 'wall', hit.point); }
       }
     }
@@ -5243,11 +5134,6 @@ function applyBlast(center, radius, maxDmg, weaponTag, opts) {
       if (!k.alive || k.dying) continue;
       const kd = new THREE.Vector3(k.pos.x, k.pos.y + 4.5, k.pos.z).distanceTo(center);
       if (kd < radius) damageKong(k, maxDmg * (1 - kd / radius), null);
-    }
-    for (const m of mckaylas) {
-      if (!m.alive || m.dying) continue;
-      const md = new THREE.Vector3(m.pos.x, m.pos.y + 0.8, m.pos.z).distanceTo(center);
-      if (md < radius) damageMckayla(m, maxDmg * (1 - md / radius));   // explosions/bananas hurt Mckayla too
     }
   }
   const pe = new THREE.Vector3(player.pos.x, player.pos.y + 1, player.pos.z);
@@ -6572,7 +6458,6 @@ function dogTargets(ownerId) {
   const sid = dogSelfId();
   if (player.alive && ownerId !== sid) out.push({ pos: player.pos, kind: 'self', ref: player });
   if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
-  for (const m of mckaylas) if (m.alive && !m.dying && m.ownerId !== ownerId) out.push({ pos: m.pos, kind: 'mck', ref: m });   // enemy Mckaylas are fair game
   return out;
 }
 // Local player pressed M: play the summon fanfare, then summon (host/solo) or ask the host to.
@@ -6612,8 +6497,6 @@ function dogBite(dog, tgt) {
     hurtPlayer(DOG.biteDmg);
   } else if (tgt.kind === 'remote') {
     NET.route(tgt.ref.id, { t: 'youhit', dmg: DOG.biteDmg, head: false, fromId: dog.ownerId, fromName: 'Kirks Avengers', weapon: 'dogbite', melee: false });
-  } else if (tgt.kind === 'mck') {
-    damageMckayla(tgt.ref, DOG.biteDmg);   // other players' dogs can bite Mckayla
   }
 }
 // Host/solo per-dog AI: pick the nearest enemy, chase + bite it; if none, follow the owner.
@@ -7047,196 +6930,6 @@ function clearKongs() {
   kongUpdateHUD();
 }
 
-/* ============================================================================
-   MCKAYLA — the secret katana-warrior ally summoned from inside the Noodle Box (press E).
-   One per life per player. HOST/solo runs her AI; clients render host snapshots. She seeks the
-   nearest enemy (bots + enemy humans + enemy King Kong), one-shots players with the katana, and
-   chips 80 HP/slash off an enemy Kong. Modeled on the Kirks Avengers attack-dog system.
-   ============================================================================ */
-const MCK = { hp: 200, walk: 11 * 1.4, sprint: 11 * 1.7, sprintRange: 15, follow: 11, accel: 28,
-              slashRange: 2.5, slashCd: 0.8, kongDmg: 80, deathFade: 1.2, scale: 0.8 };
-const mckaylas = [];
-let mckIdSeq = 1, mckNetAcc = 0, mckaylaSummonedThisLife = false;
-
-function buildMckaylaMesh() {
-  const g = new THREE.Group();
-  const skinM = new THREE.MeshLambertMaterial({ color: 0xe8c6a4, flatShading: true });
-  const kimono = new THREE.MeshLambertMaterial({ color: 0x7a1f2b, flatShading: true });   // dark red short kimono
-  const dark = new THREE.MeshLambertMaterial({ color: 0x16161b, flatShading: true });      // black hair / leggings / sash
-  const steel = new THREE.MeshLambertMaterial({ color: 0xccd4de, flatShading: true });
-  const box = (w, h, d, x, y, z, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
-  box(0.5, 0.55, 0.5, 0, 0.5, 0, dark);            // legs / leggings
-  box(0.7, 0.62, 0.45, 0, 1.06, 0, kimono);         // torso
-  box(0.74, 0.12, 0.48, 0, 0.8, 0, dark);           // belt sash
-  const armL = box(0.16, 0.5, 0.16, -0.42, 1.12, 0, kimono);
-  const armR = box(0.16, 0.5, 0.16, 0.42, 1.12, 0, skinM);     // sword arm
-  box(0.42, 0.42, 0.42, 0, 1.62, 0, skinM);          // head
-  box(0.5, 0.46, 0.16, 0, 1.62, -0.27, dark);        // hair (back of head)
-  const hair = box(0.46, 0.95, 0.13, 0, 1.18, -0.33, dark);    // long flowing hair
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2fff6a });
-  box(0.09, 0.09, 0.04, -0.1, 1.66, 0.22, eyeMat); box(0.09, 0.09, 0.04, 0.1, 1.66, 0.22, eyeMat);   // bright green eyes
-  const kat = new THREE.Group();                     // katana — handle + guard + steel blade + glowing blue edge
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.32), dark); grip.position.z = 0.15; kat.add(grip);
-  kat.add(new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.17, 0.04), new THREE.MeshLambertMaterial({ color: 0x2a2a30, flatShading: true })));
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.075, 1.1), steel); blade.position.z = -0.62; kat.add(blade);
-  const edge = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 1.04), new THREE.MeshBasicMaterial({ color: 0xbfe6ff })); edge.position.set(0, 0.04, -0.62); kat.add(edge);
-  kat.position.set(0.5, 1.0, 0.12); kat.rotation.x = -0.35; g.add(kat); g.userData.katana = kat;
-  const trail = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.85), new THREE.MeshBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
-  trail.position.set(0.45, 1.05, -0.35); g.add(trail); g.userData.trail = trail;
-  g.userData.armR = armR; g.userData.armL = armL; g.userData.hair = hair;
-  g.scale.setScalar(MCK.scale);   // ~80% height — she's little
-  return g;
-}
-function drawMckTag(mck) {
-  if (!mck.tagCanvas) { mck.tagCanvas = document.createElement('canvas'); mck.tagCanvas.width = 256; mck.tagCanvas.height = 64; mck.tagTex = new THREE.CanvasTexture(mck.tagCanvas); const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: mck.tagTex, transparent: true, depthTest: false })); spr.scale.set(2.4 / MCK.scale, 0.6 / MCK.scale, 1); spr.position.y = 2.9; mck.group.add(spr); mck.tagSprite = spr; }
-  const c = mck.tagCanvas, x = c.getContext('2d'); x.clearRect(0, 0, 256, 64);
-  x.font = 'bold 26px Segoe UI, sans-serif'; x.textAlign = 'center'; x.lineWidth = 4; x.strokeStyle = '#000'; x.fillStyle = '#fff';
-  x.strokeText('MCKAYLA', 128, 24); x.fillText('MCKAYLA', 128, 24);
-  const frac = Math.max(0, mck.health / MCK.hp);
-  x.fillStyle = '#000'; x.fillRect(60, 38, 136, 14); x.fillStyle = frac > 0.4 ? '#37e06a' : '#e04a3a'; x.fillRect(62, 40, 132 * frac, 10);
-  mck.tagTex.needsUpdate = true; mck._lastHp = Math.round(mck.health);
-}
-function attachMckaylaMesh(mck) { mck.group = buildMckaylaMesh(); mck.group.position.copy(mck.pos); scene.add(mck.group); mck.group.traverse(o => { if (o.isMesh) o.userData.mck = mck; }); drawMckTag(mck); }
-function removeMckayla(mck) { if (mck.group) { scene.remove(mck.group); disposeGroup(mck.group); mck.group = null; } }
-function clearMckaylas() { for (const m of mckaylas) removeMckayla(m); mckaylas.length = 0; mckUpdateHUD(); }
-// Shootable part-meshes of every ENEMY Mckayla (never the shooter's own).
-function mckaylaMeshes(excludeOwner) { const out = []; for (const m of mckaylas) if (m.alive && !m.dying && m.ownerId !== excludeOwner && m.group) m.group.traverse(o => { if (o.isMesh) out.push(o); }); return out; }
-// Every alive enemy of `ownerId`: bots + humans (not the owner) + enemy King Kongs.
-function mckTargets(ownerId) {
-  const out = [];
-  for (const b of bots) if (b.alive) out.push({ pos: b.pos, kind: 'bot', ref: b });
-  const sid = dogSelfId();
-  if (player.alive && ownerId !== sid) out.push({ pos: player.pos, kind: 'self', ref: player });
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && rp.id !== ownerId) out.push({ pos: rp.pos, kind: 'remote', ref: rp }); });
-  for (const k of kongs) if (k.alive && !k.dying && k.ownerId !== ownerId) out.push({ pos: k.pos, kind: 'kong', ref: k });
-  return out;
-}
-function summonMckayla(ownerId) {
-  const op = dogOwnerPos(ownerId), fx = op.x + 1.6, fz = op.z + 1.0;
-  const mck = { id: mckIdSeq++, ownerId, pos: new THREE.Vector3(fx, groundHeightAt(fx, fz, 1), fz), vel: new THREE.Vector3(),
-                yaw: 0, health: MCK.hp, alive: true, dying: false, deathT: MCK.deathFade, state: 'idle',
-                swingCd: 0, swingT: 0, swingDir: 1, legPhase: Math.random() * 6.28, _lastHp: -1, _huhT: 1 + Math.random() * 2 };
-  attachMckaylaMesh(mck); mckaylas.push(mck); mckBlossomFX(mck.pos); sfxMckSummon(); mckUpdateHUD();
-}
-function despawnOwnedMckaylas(ownerId) {
-  if (NET.active && !NET.isHost) return;
-  for (let i = mckaylas.length - 1; i >= 0; i--) if (mckaylas[i].ownerId === ownerId) { removeMckayla(mckaylas[i]); mckaylas.splice(i, 1); }
-  mckUpdateHUD();
-}
-function damageMckayla(mck, dmg) {
-  if (!mck || !mck.alive || mck.dying) return;
-  mck.health -= dmg; drawMckTag(mck); mckUpdateHUD();
-  if (mck.health > 0) sfxMckHurt(mck.pos);
-  else { mck.health = 0; mck.alive = false; mck.dying = true; mck.deathT = MCK.deathFade; sfxMckDeath(mck.pos); spawnBlood(mck.pos.clone().setY(mck.pos.y + 0.8), 12); }
-}
-function mckSlash(mck, tgt) {
-  mck.swingDir = -mck.swingDir; mck.swingT = 0.3; sfxMckSlash(mck.pos);
-  if (tgt.kind === 'bot') { if (NET.isHost) NET.botCredit = mck.ownerId; damageBot(tgt.ref, 9999, new THREE.Vector3(0, 0, 1), null, { weapon: 'katana', melee: true }); if (NET.isHost) NET.botCredit = null; spawnBlood(new THREE.Vector3(tgt.ref.pos.x, tgt.ref.pos.y + 1.2, tgt.ref.pos.z), 14); sfxMckHit(mck.pos); }
-  else if (tgt.kind === 'self') { player.lastAttacker = mck.ownerId; player.lastAttackerName = 'Mckayla'; player.lastAttackerWeapon = 'katana'; player.lastAttackerMelee = true; hurtPlayer(9999); sfxMckHit(mck.pos); }
-  else if (tgt.kind === 'remote') { NET.route(tgt.ref.id, { t: 'youhit', dmg: 9999, head: false, fromId: mck.ownerId, fromName: 'Mckayla', weapon: 'katana', melee: true }); sfxMckHit(mck.pos); }
-  else if (tgt.kind === 'kong') { damageKong(tgt.ref, MCK.kongDmg, mck.ownerId); sfxMckHit(mck.pos); }
-}
-function mckAI(mck, dt) {
-  const enemies = mckTargets(mck.ownerId);
-  let tgt = null, td = Infinity; for (const e of enemies) { const d = mck.pos.distanceTo(e.pos); if (d < td) { td = d; tgt = e; } }
-  let desired = new THREE.Vector3(), speed = 0, faceP = null;
-  mck.swingCd -= dt; if (mck.swingT > 0) mck.swingT -= dt;
-  if (tgt) {
-    faceP = tgt.pos;
-    mck.state = td <= MCK.slashRange + 0.3 ? 'slash' : 'chase';
-    if (td > MCK.slashRange) { desired.subVectors(tgt.pos, mck.pos); desired.y = 0; desired.normalize(); speed = td < MCK.sprintRange ? MCK.sprint : MCK.walk; }
-    if (td <= MCK.slashRange && mck.swingCd <= 0) { mckSlash(mck, tgt); mck.swingCd = MCK.slashCd; }
-  } else {
-    const op = dogOwnerPos(mck.ownerId), d = mck.pos.distanceTo(op);
-    mck.state = d > 5.5 ? 'follow' : 'idle';
-    if (d > 5) { desired.subVectors(op, mck.pos); desired.y = 0; desired.normalize(); speed = MCK.follow; faceP = op; }
-  }
-  const maxDelta = MCK.accel * dt, lim = ARENA - 2;
-  mck.vel.x = approach(mck.vel.x, desired.x * speed, maxDelta);
-  mck.vel.z = approach(mck.vel.z, desired.z * speed, maxDelta);
-  mck.pos.x = Math.max(-lim, Math.min(lim, mck.pos.x + mck.vel.x * dt));
-  mck.pos.z = Math.max(-lim, Math.min(lim, mck.pos.z + mck.vel.z * dt));
-  resolveHorizontal(mck.pos, 1.6);                       // obstacle avoidance — slide along walls/vehicles
-  mck.pos.y = groundHeightAt(mck.pos.x, mck.pos.z, mck.pos.y + 0.5);
-  let ty = mck.yaw; if (faceP) ty = Math.atan2(faceP.x - mck.pos.x, faceP.z - mck.pos.z); else if (Math.hypot(mck.vel.x, mck.vel.z) > 0.2) ty = Math.atan2(mck.vel.x, mck.vel.z);
-  let dy = ty - mck.yaw; while (dy > Math.PI) dy -= 6.283; while (dy < -Math.PI) dy += 6.283; mck.yaw += dy * Math.min(1, dt * 9);
-  mck.group.position.copy(mck.pos); mck.group.rotation.y = mck.yaw;
-  if (speed >= MCK.sprint) { mck._huhT -= dt; if (mck._huhT <= 0) { mck._huhT = 2 + Math.random() * 2; sfxMckHuh(mck.pos); } }   // battle exhale while closing in
-}
-function mckClientLerp(mck, dt) {
-  const t = Math.min(1, dt * 12);
-  mck.pos.lerp(mck.tpos, t); mck.yaw = lerpAngle(mck.yaw, mck.tyaw, t);
-  mck.group.position.copy(mck.pos); mck.group.rotation.y = mck.yaw;
-  if (mck.swingT > 0) mck.swingT -= dt;
-}
-function mckDeathAnim(mck, dt) { if (mck.group) { mck.group.rotation.z += (1.4 - mck.group.rotation.z) * Math.min(1, dt * 6); mck.group.scale.setScalar(MCK.scale * Math.max(0.02, mck.deathT / MCK.deathFade)); } }
-function mckAnimate(mck, dt) {
-  const g = mck.group; if (!g) return;
-  const moving = Math.hypot(mck.vel.x, mck.vel.z) > 0.6;
-  mck.legPhase += dt * (moving ? 12 : 3);
-  if (g.userData.hair) g.userData.hair.rotation.x = -0.1 + Math.sin(mck.legPhase * 0.5) * (moving ? 0.18 : 0.05);
-  const kat = g.userData.katana, trail = g.userData.trail, sp = mck.swingT > 0 ? (mck.swingT / 0.3) : 0;
-  if (kat) kat.rotation.z = mck.swingDir * sp * 1.6;
-  if (g.userData.armR) g.userData.armR.rotation.x = -sp * 1.2;
-  if (trail) trail.material.opacity = sp * 0.6;
-  if (Math.round(mck.health) !== mck._lastHp) drawMckTag(mck);
-}
-function updateMckaylas(dt) {
-  const sim = !NET.active || NET.isHost;
-  if (sim) {
-    for (let i = mckaylas.length - 1; i >= 0; i--) {
-      const m = mckaylas[i];
-      if (m.dying) { mckDeathAnim(m, dt); m.deathT -= dt; if (m.deathT <= 0) { removeMckayla(m); mckaylas.splice(i, 1); mckUpdateHUD(); } continue; }
-      if (!m.alive) { removeMckayla(m); mckaylas.splice(i, 1); mckUpdateHUD(); continue; }
-      mckAI(m, dt);
-    }
-    if (NET.active) { mckNetAcc += dt; if (mckNetAcc >= 0.06) { mckNetAcc = 0; NET.broadcast({ t: 'mcks', list: mckaylas.map(m => ({ id: m.id, o: m.ownerId, x: m.pos.x, y: m.pos.y, z: m.pos.z, yaw: m.yaw, st: m.state, hp: m.health, sw: m.swingT > 0 ? 1 : 0, dy: !!m.dying })) }); } }
-  } else {
-    for (let i = mckaylas.length - 1; i >= 0; i--) { const m = mckaylas[i]; if (m._remove) { removeMckayla(m); mckaylas.splice(i, 1); continue; } mckClientLerp(m, dt); }
-  }
-  for (const m of mckaylas) mckAnimate(m, dt);
-  const np = el('noodlePrompt'); if (np) np.style.display = (gameState.running && inNoodleBox() && !mckaylaSummonedThisLife) ? 'block' : 'none';
-  mckUpdateHUD();
-}
-function applyMckaylasSnapshot(list) {
-  const seen = {};
-  for (const e of list) {
-    seen[e.id] = true;
-    let m = mckaylas.find(x => x.id === e.id);
-    if (!m) { m = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, swingT: 0, swingDir: 1, legPhase: Math.random() * 6.28, _lastHp: -1 }; attachMckaylaMesh(m); mckaylas.push(m); }
-    m.tpos.set(e.x, e.y, e.z); m.tyaw = e.yaw; m.state = e.st; m.dying = e.dy; if (e.sw) m.swingT = 0.3;
-    if (m.health !== e.hp) { m.health = e.hp; drawMckTag(m); }
-  }
-  for (const m of mckaylas) if (!seen[m.id]) m._remove = true;
-  mckUpdateHUD();
-}
-function mckUpdateHUD() {
-  const myId = dogSelfId(), mine = mckaylas.find(m => m.ownerId === myId && m.alive && !m.dying), wrap = el('mckHud');
-  if (wrap) { if (mine) { wrap.style.display = 'block'; el('mckHpNum').textContent = Math.max(0, Math.ceil(mine.health)); } else wrap.style.display = 'none'; }
-}
-// Press E inside the noodle box: summon Mckayla (once per life).
-function tryNoodleSummon() {
-  if (!inNoodleBox() || mckaylaSummonedThisLife || !player.alive) return false;
-  mckaylaSummonedThisLife = true;
-  const myId = dogSelfId();
-  if (NET.isClient) { NET.route(NET.hostId, { t: 'mcksummon', ownerId: myId }); mckBlossomFX(player.pos.clone().setY(player.pos.y + 1)); sfxMckSummon(); }
-  else summonMckayla(myId);
-  showKongMsg('MCKAYLA: SUMMONED');
-  return true;
-}
-// Cherry-blossom petal swirl + soft pink flash at a summon point.
-function mckBlossomFX(pos) {
-  spawnExplosionFX(pos.clone().setY(pos.y + 0.9), 1.4, 0xffd0e8);
-  for (let i = 0; i < 12; i++) spawnSmokePuff(pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.3, Math.random() * 1.8, (Math.random() - 0.5) * 1.3)), 0xffb0d8, 0.12, 0.9);
-}
-// Mckayla audio: soft Japanese chime + cherry-blossom whoosh on summon; katana slashes + battle cries.
-function sfxMckSummon() { SND.play2d((ctx, out, t) => { aChime(ctx, out, t, [1320, 1760, 2640], 0.08, 0.5, 0.22, 'sine'); aNoise(ctx, out, t, { dur: 0.7, peak: 0.16, filter: 'bandpass', freq: 1800, freq1: 600, q: 0.7 }); }, 'voice', 'mcksum', 0.9, 0.7); }
-function sfxMckSlash(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.16, peak: 0.34, filter: 'bandpass', freq: 1400, freq1: 3200, q: 1.1 }); aTone(ctx, out, t, { type: 'sine', f0: 1800, f1: 800, dur: 0.1, peak: 0.1 }); }, pos, 'weapons', 'mckslash', 0.8, 0.16); }
-function sfxMckHit(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'triangle', f0: 2600, f1: 1400, dur: 0.14, peak: 0.22 }); aNoise(ctx, out, t, { dur: 0.06, peak: 0.18, filter: 'lowpass', freq: 1000 }); aTone(ctx, out, t + 0.05, { type: 'sine', f0: 700, f1: 1100, dur: 0.12, peak: 0.14 }); }, pos, 'voice', 'mckhit', 0.8, 0.18); }
-function sfxMckHurt(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 620, f1: 320, dur: 0.16, peak: 0.2 }), pos, 'voice', 'mckhurt', 0.7, 0.2); }
-function sfxMckHuh(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.12, peak: 0.22, filter: 'bandpass', freq: 500, freq1: 900, q: 0.8 }), pos, 'voice', 'mckhuh', 0.6, 0.2); }
-function sfxMckDeath(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 520, f1: 180, dur: 0.4, peak: 0.26 }); aTone(ctx, out, t + 0.18, { type: 'triangle', f0: 1800, f1: 700, dur: 0.2, peak: 0.14 }); }, pos, 'voice', 'mckdeath', 0.85, 0.5); }
-
 // ---- Banana projectiles ----
 function spawnBanana(pos, vel, ownerId, owned) {
   const mesh = buildBananaMesh(); mesh.position.copy(pos); scene.add(mesh);
@@ -7655,7 +7348,6 @@ function playerDie() {
   player.health = 0;
   streakReset(true);                                               // dying wipes the streak + forfeits saber/JD/RC ("STREAK LOST")
   despawnKong(dogSelfId());                                        // loyalty: my King Kong leaves when I fall
-  despawnOwnedMckaylas(dogSelfId());                               // loyalty: Mckayla leaves when her summoner falls
   if (NET.active) {
     // tell the host who killed me so they get credit (and everyone sees the feed)
     NET.reportDeath(player.lastAttacker, player.lastAttackerHead, player.lastAttackerWeapon, player.lastAttackerMelee);
@@ -7677,7 +7369,6 @@ function playerDie() {
     player.impulseT = 0; player.impulseGrace = 0; player.onLadder = false; player.ladder = null;
     player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
     player.overheal = 0; saberMode = false; saberBlocking = false; if (_jdVM) _jdVM.visible = false; SaberHum.stop();   // no streak rewards carry into a new life
-    mckaylaSummonedThisLife = false;                    // fresh Mckayla summon available each life
     player.grenades = throwMaxCarry();                  // refill throwables on respawn
     WEAPON_ORDER.forEach(k => weaponState[k].ammo = WEAPONS[k].mag);
     weaponState.rcrl.ammo = 0; weaponState.rcrl.cooldown = 0;     // RC launcher is streak-only — no respawn ammo
@@ -7696,9 +7387,9 @@ function endMatch(won) {
   gameState.over = true;
   gameState.running = false;
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';
-  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; minigunSpin = 0; minigunSteady = false;   // clear scope so the end screen isn't dimmed
+  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;   // clear scope so the end screen isn't dimmed
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); clearMckaylas(); (won ? sfxWin() : sfxLose());
+  Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); (won ? sfxWin() : sfxLose());
   el('endTitle').textContent = won ? 'YOU WIN' : 'MATCH OVER';
   el('endSub').textContent = `Final: ${gameState.score} pts • ${gameState.kills} kills (target ${SCORE_TARGET}).`;
   el('endScreen').style.display = 'flex';
@@ -7708,7 +7399,6 @@ function startMatch() {
   gameState.running = true; gameState.over = false; gameState.kills = 0; gameState.score = 0;
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';   // never start paused
   if (!NET.active || NET.isHost) { timeOfDay = Math.random(); dnFullCycle = 480 + Math.random() * 240; }   // host/solo: randomize the day/night state each match
-  mckaylaSummonedThisLife = false;   // fresh Mckayla summon available at match start
   rcResetMatch();   // RC launcher locks again each match (unlock is per-match, not permanent)
   // Everyone spawns on a real spawn point, facing the centre of the map.
   const sp = randomSpawn(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
@@ -7717,10 +7407,10 @@ function startMatch() {
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.impulseT = 0; player.impulseGrace = 0;
   player.cigar = CIGAR.maxCarry; cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;   // fresh cigar; clear any prior smoke
-  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; clearDogs(); clearKongs(); clearMckaylas(); streakReset(false);   // fresh scorestreak + no leftover dogs
+  saberMode = false; saberBlocking = false; player.overheal = 0; SaberHum.stop(); if (_jdVM) _jdVM.visible = false; clearDogs(); clearKongs(); streakReset(false);   // fresh scorestreak + no leftover dogs
   player.grenades = throwMaxCarry();
   yaw = Math.atan2(sp.x, sp.z); pitch = 0; recoilPitch = 0; recoilYaw = 0;   // look toward map centre
-  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; minigunSpin = 0; minigunSteady = false; shakeTime = 0; shakeMag = 0;
+  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; shakeTime = 0; shakeMag = 0;
   // Clear any leftover thrown grenades / tomahawks / explosion FX from a previous match
   liveGrenades.forEach(g => scene.remove(g.mesh)); liveGrenades.length = 0;
   liveTomahawks.forEach(t => { scene.remove(t.mesh); disposeGroup(t.mesh); }); liveTomahawks.length = 0;
@@ -7868,9 +7558,9 @@ function hostStartMatch() {                              // host (lobby START or
 function doMatchOver(winnerName) {
   gameState.over = true; gameState.running = false;
   paused = false; if (el('pauseMenu')) el('pauseMenu').style.display = 'none';
-  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1; minigunSpin = 0; minigunSteady = false;
+  aiming = false; scopeBlend = 0; scopePunch = 0; adsBlend = 0; aimSensMult = 1;
   document.exitPointerLock();
-  Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); clearMckaylas();
+  Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs();
   const won = winnerName && winnerName === NET.selfName;
   if (!NET.active) (winnerName === 'YOU' ? sfxWin() : sfxLose()); else (won ? sfxWin() : sfxLose());   // victory / defeat fanfare
   const who = (winnerName && winnerName === NET.selfName) ? 'YOU' : winnerName;
@@ -8027,15 +7717,11 @@ el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display
   // --- Control OPTIONS (sensitivity / FOV / invert-Y / toggles / auto-reload / hit markers) ---
   function refreshControlOpts() {
     el('optSens').value = Math.round(OPT.sens * 100); el('optSensV').textContent = OPT.sens.toFixed(1) + 'x';
-    el('optSensAds').value = Math.round(OPT.sensAds * 100); el('optSensAdsV').textContent = OPT.sensAds.toFixed(1) + 'x';
-    el('optSensScope').value = Math.round(OPT.sensScope * 100); el('optSensScopeV').textContent = OPT.sensScope.toFixed(1) + 'x';
     el('optFov').value = OPT.fov; el('optFovV').textContent = OPT.fov;
     el('optInvertY').checked = OPT.invertY; el('optAdsToggle').checked = OPT.adsToggle; el('optSprintToggle').checked = OPT.sprintToggle;
     el('optAutoReload').checked = OPT.autoReload; el('optHitMarkers').checked = OPT.hitMarkers;
   }
   el('optSens').addEventListener('input', () => { OPT.sens = Math.max(0.1, Math.min(5, el('optSens').value / 100)); el('optSensV').textContent = OPT.sens.toFixed(1) + 'x'; OPT.save(); });
-  el('optSensAds').addEventListener('input', () => { OPT.sensAds = Math.max(0.1, Math.min(2, el('optSensAds').value / 100)); el('optSensAdsV').textContent = OPT.sensAds.toFixed(1) + 'x'; OPT.save(); });
-  el('optSensScope').addEventListener('input', () => { OPT.sensScope = Math.max(0.1, Math.min(2, el('optSensScope').value / 100)); el('optSensScopeV').textContent = OPT.sensScope.toFixed(1) + 'x'; OPT.save(); });
   el('optFov').addEventListener('input', () => { OPT.fov = Math.max(60, Math.min(120, parseInt(el('optFov').value, 10) || 78)); el('optFovV').textContent = OPT.fov; DEFAULT_FOV = OPT.fov; if (!aiming) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); } OPT.save(); });
   const tog = (id, key) => el(id).addEventListener('change', () => { OPT[key] = el(id).checked; if (key === 'sprintToggle') sprintLatch = false; OPT.save(); sfxClick(); });
   tog('optInvertY', 'invertY'); tog('optAdsToggle', 'adsToggle'); tog('optSprintToggle', 'sprintToggle'); tog('optAutoReload', 'autoReload'); tog('optHitMarkers', 'hitMarkers');
@@ -8354,7 +8040,6 @@ const NET = {
     switch (msg.t) {
       /* ---- HOST handlers ---- */
       case 'hello': {                                  // a client joined
-        if (this.rosterList().length >= 10) { if (conn) conn.send({ t: 'lobbyfull' }); break; }   // LOBBY FULL — cap at 10 players
         this.scores.set(msg.id, { name: (msg.name || 'Player').slice(0, 14), score: 0, kills: 0, level: 1 });
         const rp = this.ensurePlayer(msg.id, msg.name); rp.color = rp.color || this.nextColor();
         sfxJoin();   // friendly "ding" when a player joins the lobby
@@ -8364,7 +8049,6 @@ const NET = {
         if (conn) conn.send({ t: 'daynight', tod: timeOfDay, cyc: dnFullCycle });   // hand the newcomer the current time-of-day
         break;
       }
-      case 'lobbyfull': { setNetStatus('lobbyStatus', 'LOBBY FULL — that lobby already has 10 players.', true); setTimeout(() => leaveToMenu(), 1600); break; }   // host rejected us
       case 'pmove': {                                  // client position update
         const rp = this.ensurePlayer(msg.id, msg.name);
         rp.apply(msg);
@@ -8401,9 +8085,6 @@ const NET = {
       case 'bots': { applyBotsSnapshot(msg.list); applyClientLoot(msg.loot); break; }
       case 'kdogs': { applyDogsSnapshot(msg.list); break; }   // host -> clients: attack-dog positions/state
       case 'kongs': { applyKongsSnapshot(msg.list); break; }  // host -> clients: King Kong positions/state
-      case 'mcksummon': { if (this.isHost) summonMckayla(msg.ownerId); break; }   // a client summoned their Mckayla
-      case 'mckhit': { if (this.isHost) { const m = mckaylas.find(x => x.id === msg.mckId); if (m) damageMckayla(m, msg.dmg); } break; }   // a client shot an enemy Mckayla
-      case 'mcks': { applyMckaylasSnapshot(msg.list); break; }   // host -> clients: Mckayla positions/state
       case 'banana': { spawnBanana(new THREE.Vector3(msg.x, msg.y, msg.z), new THREE.Vector3(msg.vx, msg.vy, msg.vz), msg.o, false); break; }   // render-only banana copy
       case 'kongmsg': { showKongMsg(msg.m); break; }          // host -> me: Kong summon/fall/kill notification
       case 'lootgrab': {                               // a client walked into the crate
@@ -8474,11 +8155,6 @@ const NET = {
       case 'fire': {                                   // a peer fired — play their weapon's shot at their position
         if (msg.id !== this.selfId) sfxFire(msg.w, new THREE.Vector3(msg.x, msg.y, msg.z), msg.sd || null);
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }   // relay to other clients
-        break;
-      }
-      case 'minspin': {                                // a peer started spinning up their minigun (heard map-wide)
-        if (msg.id !== this.selfId) sfxMinigunSpin(new THREE.Vector3(msg.x, msg.y, msg.z));
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
         break;
       }
       case 'trace': {                                  // a peer's bullet tracer — render it locally (visual only)
@@ -8752,7 +8428,6 @@ function lerpRemotePlayers(dt) {
     if (rp.nameSprite) { const sy = rp.avatar.scale.y || 1; rp.nameSprite.scale.set(2.2, 0.7 / sy, 1); rp.nameSprite.position.y = 2.55 / sy; }   // keep tag upright + above head
     // Third-person held weapon: rebuild on weapon change, then pose for aim/reload/climb/saber-block.
     updateRemoteWeapon(rp);
-    { const mb = rp.weaponMesh && rp.weaponMesh.getObjectByName('miniBarrels'); if (mb) mb.rotation.z += dt * 16; }   // spin a remote minigun's barrels
     if (rp.weaponMesh) {
       const wm = rp.weaponMesh, sy = rp.avatar.scale.y || 1;
       wm.scale.set(1, 1 / sy, 1);                               // un-squash from the crouch scale (it still lowers)
@@ -8882,7 +8557,6 @@ function renderRoster() {
   // Click your own roster entry to open the skin creator.
   const meEl = wrap.querySelector('.pl[data-self="true"]');
   if (meEl) { meEl.style.cursor = 'pointer'; meEl.title = 'Customize your skin'; meEl.onclick = () => SkinCreator.open('lobbyScreen'); }
-  if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();   // re-render the 3D stage when the party changes
 }
 function setNetStatus(id, text, isErr) {
   const e = el(id); if (!e) return; e.textContent = text; e.classList.toggle('err', !!isErr);
@@ -8892,7 +8566,6 @@ function setNetStatus(id, text, isErr) {
 function showScreen(id) {
   ['mainMenu', 'joinScreen', 'lobbyScreen', 'startScreen', 'settingsScreen'].forEach(s => el(s).classList.toggle('hidden', s !== id));
   el('endScreen').style.display = 'none';
-  if (typeof LobbyStage !== 'undefined') { if (id === 'lobbyScreen') LobbyStage.open(); else LobbyStage.close(); }   // 3D character stage runs only in the lobby
   if (id !== '__none__') sfxMenu(true);   // soft swoosh on opening a menu (silent until audio is unlocked)
   if (typeof refreshModeUI === 'function') refreshModeUI();
 }
@@ -8938,97 +8611,6 @@ document.addEventListener('keyup', (e) => {
 /* ============================================================================
    9e. SKIN CREATOR — paint the character model (own mini-renderer + tools)
    ============================================================================ */
-/* ============================================================================
-   LOBBY CHARACTER DISPLAY — a Fortnite-style waiting-room stage. Each player's
-   character (custom skin + equipped main weapon + holstered karambit) stands on a
-   low-poly platform with a name label + HOST badge, idle animation, and a 1s intro
-   camera sweep. Click your own character to open the skin creator; click another to
-   see their name + weapon. Separate scene/renderer that only runs while the lobby is
-   open — reuses the already-synced skins (skinCache) + weapons (rosterList / ffaMain).
-   ============================================================================ */
-let _mySkinTex = null, _mySkinURL = null;
-function mySkinTexture() {   // the LOCAL player's custom skin as a live texture (or the blank mannequin)
-  const url = (typeof mySkinDataURL === 'function') ? mySkinDataURL() : null;
-  if (!url) return defaultSkinTex;
-  if (url !== _mySkinURL) { _mySkinURL = url; _mySkinTex = new THREE.Texture(); if (THREE.SRGBColorSpace !== undefined) _mySkinTex.colorSpace = THREE.SRGBColorSpace; const img = new Image(); img.onload = () => { _mySkinTex.image = img; _mySkinTex.needsUpdate = true; }; img.src = url; }
-  return _mySkinTex || defaultSkinTex;
-}
-const LobbyStage = (() => {
-  let inited = false, isOpen = false, renderer, scene, cam, raf = 0, sweep = 0;
-  const chars = [], ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  function init() {
-    if (inited) return; inited = true;
-    scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x20242e, 1.05));
-    const dl = new THREE.DirectionalLight(0xfff0d8, 0.85); dl.position.set(4, 8, 6); scene.add(dl);
-    const dl2 = new THREE.DirectionalLight(0x6a8cff, 0.4); dl2.position.set(-5, 3, -4); scene.add(dl2);
-    const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.5, 0.5, 36), new THREE.MeshLambertMaterial({ color: 0x232a36, flatShading: true })); plat.position.y = -0.25; scene.add(plat);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(6.8, 0.08, 8, 44), new THREE.MeshBasicMaterial({ color: 0x4a7aff })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.02; scene.add(ring);
-    const host = el('lobbyStage');
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    host.insertBefore(renderer.domElement, host.firstChild);
-    cam = new THREE.PerspectiveCamera(42, 2, 0.1, 100);
-    renderer.domElement.addEventListener('click', onClick);
-  }
-  function resize() { const host = el('lobbyStage'); if (!host || !renderer) return; const w = host.clientWidth || 700, h = host.clientHeight || 290; renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
-  function makeLabel(text, isHost) {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
-    x.textAlign = 'center'; x.lineWidth = 5; x.strokeStyle = '#000';
-    x.font = 'bold 28px Segoe UI, sans-serif'; x.fillStyle = '#fff'; x.strokeText(text, 128, 30); x.fillText(text, 128, 30);
-    if (isHost) { x.font = 'bold 16px Segoe UI'; x.fillStyle = '#ffd34a'; x.strokeText('★ HOST', 128, 54); x.fillText('★ HOST', 128, 54); }
-    return new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
-  }
-  function clearChars() { for (const c of chars) { scene.remove(c.group); disposeGroup(c.group); } chars.length = 0; }
-  function build() {
-    if (!inited) return; clearChars();
-    const self = NET.selfId || 'me';
-    const list = NET.active ? NET.rosterList() : [{ id: self, name: NET.selfName || 'YOU', host: true }];
-    const n = list.length, spread = n > 1 ? Math.min(2.0, 11 / (n - 1)) : 0;
-    list.forEach((p, i) => {
-      const g = new THREE.Group(), isSelf = (p.id === self);
-      const skinTex = skinCache[p.id] || (isSelf ? mySkinTexture() : null) || defaultSkinTex;
-      const mat = new THREE.MeshLambertMaterial({ map: skinTex });
-      let head = null;
-      buildCharacterModel(mat, (geo, material, x, y, z, name) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); g.add(m); if (name === 'head') head = m; return m; });
-      const wk = isSelf ? mainGunKey() : ((NET.players.get(p.id) || {}).weapon || ffaMain || 'gg2');
-      if (WEAPONS[wk] && !WEAPONS[wk].melee && !WEAPONS[wk].rc) { const w = buildThirdPersonWeapon(wk); w.position.set(0.42, 1.26, 0.34); g.add(w); }   // equipped main weapon
-      const kar = buildThirdPersonWeapon('karambit'); kar.position.set(-0.46, 0.95, 0.12); kar.scale.setScalar(0.7); g.add(kar);   // holstered karambit
-      const label = makeLabel(p.name + (isSelf ? ' (you)' : ''), p.host); label.scale.set(2.3, 0.58, 1); label.position.y = 2.55; g.add(label);
-      const x = (i - (n - 1) / 2) * spread;
-      g.position.set(x, 0, 0); g.userData = { id: p.id, self: isSelf, phase: Math.random() * 6.28, head, baseRot: -x * 0.06 }; g.rotation.y = g.userData.baseRot;
-      scene.add(g); chars.push({ group: g, id: p.id, name: p.name, weapon: wk });
-    });
-    resize();
-  }
-  function onClick(e) {
-    if (!renderer) return;
-    const r = renderer.domElement.getBoundingClientRect();
-    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(ndc, cam);
-    for (const c of chars) {
-      if (ray.intersectObject(c.group, true).length) {
-        if (c.group.userData.self) SkinCreator.open('lobbyScreen');   // your own character → skin creator
-        else setNetStatus('lobbyStatus', c.name + ' — ' + ((WEAPONS[c.weapon] && WEAPONS[c.weapon].name) || 'WEAPON'));   // others → name + weapon
-        return;
-      }
-    }
-  }
-  function loop() {
-    raf = requestAnimationFrame(loop);
-    const t = performance.now() / 1000;
-    for (const c of chars) { const u = c.group.userData; c.group.position.y = Math.sin(t * 1.6 + u.phase) * 0.03; c.group.rotation.y = u.baseRot + Math.sin(t * 0.5 + u.phase) * 0.08; if (u.head) u.head.rotation.y = Math.sin(t * 0.35 + u.phase) * 0.4; }   // idle breathe + sway + head turn
-    if (sweep > 0) sweep = Math.max(0, sweep - 0.016);
-    const k = sweep; cam.position.set(-k * 9, 2.4 + k * 0.8, 10 - k * 1.2); cam.lookAt(0, 1.15, 0);   // 1s intro sweep, then settle
-    if (renderer) renderer.render(scene, cam);
-  }
-  return {
-    open() { try { init(); build(); isOpen = true; sweep = 1.0; resize(); if (!raf) loop(); } catch (e) {} },
-    refresh() { if (isOpen) { try { build(); } catch (e) {} } },
-    close() { isOpen = false; if (raf) { cancelAnimationFrame(raf); raf = 0; } if (inited) clearChars(); }
-  };
-})();
-
 const SkinCreator = (() => {
   let inited = false, open = false, returnScreen = 'mainMenu', dirty = false;
   let renderer, scene, cam, char, raf = 0, spinIn = 0;
@@ -9272,7 +8854,6 @@ function animate() {
     updateDeflectedBullets(dt);   // saber-reflected bullets in flight
     updateDogs(dt);       // Kirks Avengers attack dogs (host AI / client render)
     updateKongs(dt);      // King Kong boss-ally (host AI / client render) + banana projectiles
-    updateMckaylas(dt);   // Mckayla katana ally (host AI / client render)
     updateFlamethrower(dt);   // flamethrower spray/fuel + burn status ticks
     if (impulseThrowT > 0) impulseThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill)
@@ -9288,20 +8869,12 @@ function animate() {
         if (ws.reloading <= 0) { finishReload(key); updateHUD(); }
       }
     }
-    // Minigun: barrels spin up over `spinup`s before any bullets fire, and wind down ~1s after release.
-    const isMini = !!(WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun);
-    if (isMini && firing && player.alive && !paused) minigunSpin = Math.min(1, minigunSpin + dt / WEAPONS[currentWeaponKey].spinup);
-    else minigunSpin = Math.max(0, minigunSpin - dt);
-    minigunSpinAngle += minigunSpin * dt * 26;
-    if (!isMini) minigunSteady = false;
-    if (gunMesh && gunMesh.userData.barrels) gunMesh.userData.barrels.rotation.z = minigunSpinAngle;
     // Firing: akimbo fires each held button's pistol; other autos fire on hold. (Not while paused.)
     if (paused) { /* menu open: hold nothing */ }
     else if (akimboEquipped()) {
       if (firing)  tryShoot('R');
       if (firingL) tryShoot('L');
-    } else if (isMini) { if (firing && minigunSpin >= 1) { tryShoot(); addShake(0.06, 0.08); } }   // fires only once fully spun up (heavy continuous shake)
-    else if (firing && WEAPONS[currentWeaponKey].auto) tryShoot();
+    } else if (firing && WEAPONS[currentWeaponKey].auto) tryShoot();
     updateBurstQueue(dt);   // fire any queued burst follow-up shells (Tactical Shotgun)
 
     // Throwing knives passively regenerate (refill over ~2s when idle).

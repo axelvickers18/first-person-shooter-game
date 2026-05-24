@@ -150,9 +150,6 @@
   #streakCount { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #ffe600; text-shadow: 0 2px 3px #000; margin-bottom: 8px; }
   #dogCount { font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #ff8a7a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
   #kongHud { font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #ffcf5a; text-shadow: 0 2px 3px #000; margin-top: 4px; display: none; }
-  #flameFuelWrap { font-size: 12px; font-weight: 800; letter-spacing: .5px; color: #ff9a3a; text-shadow: 0 2px 3px #000; margin-top: 6px; display: none; }
-  #flameFuelBg { width: 150px; height: 11px; background: rgba(0,0,0,0.45); border: 2px solid #000; border-radius: 4px; margin-top: 2px; }
-  #flameFuelBar { height: 100%; width: 100%; background: linear-gradient(90deg,#ff3a1a,#ffd23a); border-radius: 2px; transition: width .1s; }
   #kongHud span { color: #fff; }
   #kongMsg { position: absolute; left: 50%; top: 30%; transform: translate(-50%,-50%); z-index: 15; display: none; opacity: 0; transition: opacity .35s;
     font: 800 30px 'Segoe UI', sans-serif; color: #ffcf5a; letter-spacing: 2px; text-shadow: 0 2px 8px #000, 0 0 18px rgba(255,180,40,0.55); pointer-events: none; }
@@ -493,20 +490,15 @@
       <div class="stBody"><div class="stLabel">3 · SABER + JACK</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 3</div></div>
     </div>
     <div class="streakTier locked" id="streakTier1">
-      <div class="stIcon">🔥</div>
-      <div class="stBody"><div class="stLabel">4 · FLAMETHROWER</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 4</div></div>
-    </div>
-    <div class="streakTier locked" id="streakTier2">
       <div class="stIcon">🚀</div>
       <div class="stBody"><div class="stLabel">5 · RC ROCKET</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 5</div></div>
     </div>
-    <div class="streakTier locked" id="streakTier3">
+    <div class="streakTier locked" id="streakTier2">
       <div class="stIcon">🐕</div>
       <div class="stBody"><div class="stLabel">10 · 20 KIRKS AVENGERS</div><div class="stProgBg"><div class="stProg"></div></div><div class="stReady">0 / 10</div></div>
     </div>
     <div id="dogCount">🐕 KIRKS AVENGERS: <span id="dogNum">0</span>/20</div>
     <div id="kongHud">🦍 KONG: <span id="kongHpNum">1000</span>/1000</div>
-    <div id="flameFuelWrap">🔥 FUEL <div id="flameFuelBg"><div id="flameFuelBar"></div></div></div>
   </div>
   <div id="streakLost">STREAK LOST</div>
   <div id="kongMsg">KING KONG SUMMONED</div>
@@ -1000,12 +992,6 @@ WEAPONS.saber = { name:"LIGHTSABER", baseModel:"saber", color:0x35a7ff, damage:9
   mag:1, reload:1.0, spreadBase:0, spreadGrow:0, spreadMax:0, recoil:0, pellets:1, range:2.5,
   headMult:1.0, auto:false, melee:true, saber:true, speed:1.05, sight:'none', noads:true };
 
-// FLAMETHROWER — the 4-kill scorestreak. A continuous flame-cone sprayer (no hitscan/projectile);
-// firing + cone damage + fuel are handled in updateFlamethrower(). Equipped with "V".
-WEAPONS.flame = { name:"FLAMETHROWER", baseModel:"flame", color:0x3a3a40, damage:12, fireRate:0.12,
-  mag:1, reload:0, spreadBase:0, spreadGrow:0, spreadMax:0, recoil:0, pellets:1, range:8,
-  headMult:1.0, auto:false, flame:true, speed:0.85, sight:'none', noads:true };
-
 /* --- Iron-sight ADS geometry + anchors (CoD-style raise-to-center) ---------
    Per weapon: sy = local height the rear/front sights sit at (their tops); the
    ADS anchor `ads` raises/centers the model so those sights land on screen center
@@ -1202,7 +1188,7 @@ const SND = {
   CATS: ['weapons', 'footsteps', 'ui', 'ambient', 'voice'],
   vol: { master: 0.5, weapons: 1.0, footsteps: 0.85, ui: 0.7, ambient: 0.45, voice: 1.0 },
   muted: false,
-  poly: {}, LIM: { footstep: 6, dog: 8, kong: 4, _def: 4 },
+  poly: {}, LIM: { footstep: 6, dog: 8, _def: 4 },
   lpos: new THREE.Vector3(), lright: new THREE.Vector3(1, 0, 0),
   _noise: null, _tmp: new THREE.Vector3(), CULL: 80,
 
@@ -1469,27 +1455,15 @@ function sfxKongSummon() { SND.play2d((ctx, out, t) => {
   aNoise(ctx, out, t + 0.3, { dur: 0.95, peak: 0.3, filter: 'lowpass', freq: 800, freq1: 300 });
 }, 'voice', 'kongsum', 1.0, 1.4); }
 function sfxKongRoar() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 230, f1: 52, dur: 1.5, peak: 0.45 }); aTone(ctx, out, t, { type: 'sine', f0: 72, f1: 42, dur: 1.5, peak: 0.32 }); aNoise(ctx, out, t, { dur: 1.5, peak: 0.3, filter: 'lowpass', freq: 700, freq1: 200 }); }, 'voice', 'kongroar', 1.0, 1.6); }
-// Continuous Kong vocalizations share the 'kong' audio type (capped at 4 simultaneous — see SND.LIM.kong).
-function sfxKongGrunt(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 145, f1: 88, dur: 0.22, peak: 0.3 }); aNoise(ctx, out, t, { dur: 0.18, peak: 0.12, filter: 'lowpass', freq: 500 }); }, pos, 'voice', 'kong', 0.7, 0.24); }
-function sfxKongThump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 120, f1: 68, dur: 0.12, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.1, peak: 0.16, filter: 'lowpass', freq: 300 }); aTone(ctx, out, t + 0.14, { type: 'sine', f0: 110, f1: 60, dur: 0.12, peak: 0.34 }); }, pos, 'voice', 'kong', 0.85, 0.28); }
-function sfxKongBreath(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.5, peak: 0.13, filter: 'lowpass', freq: 360, freq1: 540 }); aNoise(ctx, out, t + 0.6, { dur: 0.42, peak: 0.1, filter: 'lowpass', freq: 300 }); }, pos, 'voice', 'kong', 0.6, 1.0); }
-function sfxKongHuff(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.28, filter: 'bandpass', freq: 600, freq1: 300, q: 0.6 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 165, f1: 92, dur: 0.12, peak: 0.22 }); }, pos, 'voice', 'kong', 0.75, 0.14); }
-function sfxKongRoarNear(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 240, f1: 70, dur: 0.7, peak: 0.42 }); aTone(ctx, out, t, { type: 'sine', f0: 92, f1: 52, dur: 0.7, peak: 0.28 }); aNoise(ctx, out, t, { dur: 0.7, peak: 0.26, filter: 'lowpass', freq: 700, freq1: 250 }); }, pos, 'voice', 'kong', 0.95, 0.72); }
-function sfxKongBellow(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 205, f1: 110, dur: 0.3, peak: 0.34 }); aNoise(ctx, out, t, { dur: 0.24, peak: 0.2, filter: 'lowpass', freq: 600 }); }, pos, 'voice', 'kong', 0.8, 0.3); }
-function sfxKongPain(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 270, f1: 120, dur: 0.3, peak: 0.36 }); aNoise(ctx, out, t, { dur: 0.2, peak: 0.16, filter: 'lowpass', freq: 800 }); }, pos, 'voice', 'kong', 0.85, 0.3); }
+function sfxKongGrunt(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 145, f1: 88, dur: 0.22, peak: 0.3 }); aNoise(ctx, out, t, { dur: 0.18, peak: 0.12, filter: 'lowpass', freq: 500 }); }, pos, 'voice', 'konggr', 0.7, 0.24); }
+function sfxKongThump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 120, f1: 68, dur: 0.12, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.1, peak: 0.16, filter: 'lowpass', freq: 300 }); }, pos, 'voice', 'kongth', 0.8, 0.13); }
 function sfxKongStep(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 80, f1: 45, dur: 0.16, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.12, peak: 0.18, filter: 'lowpass', freq: 250 }); }, pos, 'footsteps', 'kongstep', 0.9, 0.17); }
 function sfxKongFire(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 130, f1: 50, dur: 0.28, peak: 0.55, atk: 0.004 }); aTone(ctx, out, t, { type: 'sine', f0: 70, f1: 40, dur: 0.35, peak: 0.4 }); aNoise(ctx, out, t, { dur: 0.18, peak: 0.3, filter: 'lowpass', freq: 900, freq1: 300 }); }, pos, 'weapons', 'kongfire', 1.0, 0.34); }
 function sfxBananaFly(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.14, peak: 0.12, filter: 'bandpass', freq: 500, freq1: 900, q: 0.6 }), pos, 'weapons', 'banfly', 0.5, 0.14); }
 function sfxBananaSplat(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.2, peak: 0.3, filter: 'lowpass', freq: 1200, freq1: 400 }); aTone(ctx, out, t, { type: 'sine', f0: 200, f1: 90, dur: 0.12, peak: 0.2 }); }, pos, 'weapons', 'bansplat', 0.7, 0.2); }
 function sfxBananaHit(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.16, peak: 0.34, filter: 'lowpass', freq: 800 }); aTone(ctx, out, t, { type: 'sawtooth', f0: 160, f1: 68, dur: 0.18, peak: 0.3 }); aTone(ctx, out, t + 0.05, { type: 'sawtooth', f0: 150, f1: 100, dur: 0.14, peak: 0.16 }); }, pos, 'weapons', 'banhit', 0.85, 0.2); }
 function sfxKongMelee(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.22, peak: 0.32, filter: 'bandpass', freq: 300, freq1: 1200, q: 0.5 }); aTone(ctx, out, t + 0.12, { type: 'sine', f0: 110, f1: 55, dur: 0.16, peak: 0.35 }); }, pos, 'weapons', 'kongmel', 0.85, 0.3); }
-function sfxKongHurt(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 185, f1: 110, dur: 0.16, peak: 0.26 }), pos, 'voice', 'kong', 0.6, 0.17); }
-
-/* --- FLAMETHROWER (4-kill scorestreak) --- */
-function sfxFlameLoop(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.3, peak: 0.3, filter: 'lowpass', freq: 1200, freq1: 700 }); aNoise(ctx, out, t, { dur: 0.3, peak: 0.16, filter: 'bandpass', freq: 420, freq1: 900, q: 0.4 }); }, pos, 'weapons', 'flame', 0.7, 0.3); }
-function sfxFlamePilot(pos) { SND.play3d((ctx, out, t) => aNoise(ctx, out, t, { dur: 0.2, peak: 0.07, filter: 'highpass', freq: 3000 }), pos, 'weapons', 'flamepilot', 0.4, 0.2); }
-function sfxFlameEquip(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.35, peak: 0.2, filter: 'lowpass', freq: 600, freq1: 1400 }); aTone(ctx, out, t + 0.3, { type: 'square', f0: 900, dur: 0.03, peak: 0.18 }); aTone(ctx, out, t + 0.34, { type: 'square', f0: 1200, dur: 0.03, peak: 0.16 }); }, pos || playerEarPos(), 'weapons', 'flameeq', 0.7, 0.4); }
-function sfxBurnCrackle(pos) { SND.play3d((ctx, out, t) => { for (let i = 0; i < 3; i++) aNoise(ctx, out, t + Math.random() * 0.2, { dur: 0.04, peak: 0.12, filter: 'highpass', freq: 3500 }); aNoise(ctx, out, t, { dur: 0.25, peak: 0.1, filter: 'bandpass', freq: 600, q: 0.5 }); }, pos, 'weapons', 'burn', 0.5, 0.26); }
+function sfxKongHurt(pos) { SND.play3d((ctx, out, t) => aTone(ctx, out, t, { type: 'sawtooth', f0: 185, f1: 110, dur: 0.16, peak: 0.26 }), pos, 'voice', 'konghurt', 0.6, 0.17); }
 // Force jump "whoom": a low rising swoosh on a saber leap.
 function sfxForceJump(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sine', f0: 170, f1: 440, dur: 0.32, peak: 0.3, atk: 0.02 }); aNoise(ctx, out, t, { dur: 0.32, peak: 0.18, filter: 'lowpass', freq: 600, freq1: 1700 }); }, pos, 'weapons', 'forcejmp', 0.85, 0.34); }
 // Sharp electric ricochet "zing" when the saber blade deflects a bullet.
@@ -2274,7 +2248,6 @@ document.addEventListener('keydown', (e) => {
   if (player.diving) return;                                            // no reload / swap / grenade / jump mid-dive
   // SCORESTREAK rewards: B = saber + Jack Daniels (3 kills), N = RC rocket launcher (5 kills).
   if (e.code === 'KeyB' && !e.repeat) { streakActivate('saberjd'); return; }
-  if (e.code === 'KeyV' && !e.repeat) { streakActivate('flame'); return; }
   if (e.code === 'KeyN' && !e.repeat) { streakActivate('rcrl'); return; }
   if (e.code === 'KeyM' && !e.repeat) { streakActivate('dogs'); return; }
   // Q: drink from the Jack Daniels bottle while saber+JD is active; otherwise light a cigar.
@@ -2368,7 +2341,6 @@ const player = {
   impulseGrace: 0,                       // window where impulse-launch fall damage is suppressed
   cigar: 1,                              // self-heal cigars carried this life (1, refills on respawn)
   overheal: 0,                           // amber whiskey shield (Jack Daniels) — absorbs damage before HP
-  burnT: 0,                              // remaining flamethrower-burn time (3 HP/s)
   onLadder: false, ladder: null          // climbing a watchtower ladder (E to grab, W/S to climb, Space to drop)
 };
 const LADDER_SPEED = 4;                  // climb speed (units/sec) up or down
@@ -3007,7 +2979,6 @@ GUNGAME_LADDER.forEach(k => {
 });
 weaponState[KARAMBIT_KEY] = { ammo: 1, cooldown: 0, reloading: 0, reserve: Infinity };   // permanent gun-game melee
 weaponState.saber = { ammo: 1, cooldown: 0, reloading: 0, reserve: Infinity };           // 3-kill scorestreak melee
-weaponState.flame = { ammo: 1, cooldown: 0, reloading: 0, reserve: Infinity };           // 4-kill scorestreak (fuel tracked separately)
 weaponState.rcrl = { ammo: 0, cooldown: 0, reloading: 0, reserve: 0 };                    // RC launcher: granted (1) on the 5-kill scorestreak
 let currentSpread = 0;
 let playerFlashTimer = 0;   // hides the viewmodel muzzle flash shortly after firing
@@ -3306,18 +3277,6 @@ function buildWeaponMesh(key) {
     body(0,0.12,0.34,0.22,0.06,0.12,0x16181d);         // rear shoulder venturi
     body(0.11,0.0,-0.04,0.035,0.035,0.5,0x2f343c);     // side data rail
     muzzleZ = -0.66;
-  } else if (model === 'flame') {
-    // FLAMETHROWER — dark metal body + nozzle barrel, red warning accents, a fuel tank + an
-    // always-on blue pilot light at the nozzle tip. (The big back tank is added per-avatar separately.)
-    body(0,0,-0.06,0.15,0.17,0.56,0x35353c);            // metal body
-    body(0,0.02,-0.5,0.075,0.075,0.5,0x222228);         // nozzle barrel
-    body(0,0.05,-0.74,0.11,0.11,0.1,0x2a2a30);          // nozzle ring
-    body(0,0.12,0.06,0.16,0.05,0.22,0xcc3322);          // red warning stripe / fuel line
-    body(0,-0.13,0.1,0.085,0.16,0.14,0x18181c);         // grip
-    body(0,0.0,0.28,0.18,0.2,0.16,0x44444c);            // rear pump housing
-    const pilot = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 7), new THREE.MeshBasicMaterial({ color: 0x6ab0ff, transparent: true, opacity: 0.9 }));
-    pilot.rotation.x = -Math.PI / 2; pilot.position.set(0.06, 0.04, -0.82); g.add(pilot); g.userData.pilot = pilot;
-    muzzleZ = -0.82;
   }
   // Iron-sight weapons get a visible rear notch + front post so the ADS picture reads.
   if (GG_IRON[key]) addIronSights(g, GG_IRON[key]);
@@ -3555,7 +3514,6 @@ function tryShoot(akSide) {
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
   if (w.rc) { rcTryLaunch(); return; }                 // SECRET RC launcher: fire = launch a guided missile
-  if (w.flame) return;                                 // flamethrower sprays continuously in updateFlamethrower (uses the `firing` hold)
   if (w.melee) { meleeAttack(); return; }
 
   // Akimbo: each pistol has its own ammo + cooldown. LMB fires right ('R'), RMB fires left ('L').
@@ -4627,7 +4585,7 @@ function applyBlast(center, radius, maxDmg, weaponTag, opts) {
     }
     for (const k of kongs) {
       if (!k.alive || k.dying) continue;
-      const kd = new THREE.Vector3(k.pos.x, k.pos.y + 4.5, k.pos.z).distanceTo(center);
+      const kd = new THREE.Vector3(k.pos.x, k.pos.y + 3, k.pos.z).distanceTo(center);
       if (kd < radius) damageKong(k, maxDmg * (1 - kd / radius), null);
     }
   }
@@ -5031,7 +4989,7 @@ function rcApplyDamage(center, directBot, directRemote) {
   });
   if (!NET.active || NET.isHost) for (const k of kongs) {   // RC rockets can hurt King Kong too
     if (!k.alive || k.dying) continue;
-    const d = Math.hypot(k.pos.x - center.x, k.pos.y + 4.5 - center.y, k.pos.z - center.z);
+    const d = Math.hypot(k.pos.x - center.x, k.pos.y + 3 - center.y, k.pos.z - center.z);
     if (d < RC.blastR) damageKong(k, Math.max(RC.blastDmg * (1 - d / RC.blastR), d < RC.killR ? 120 : 0), (NET.active ? NET.selfId : 'solo'));
   }
   const pd = Math.hypot(player.pos.x - center.x, player.pos.y + 1 - center.y, player.pos.z - center.z);
@@ -5485,7 +5443,6 @@ const STREAK = {
   count: 0,
   tiers: [
     { id: 'saberjd', need: 3, key: 'KeyB', label: '3 · SABER + JACK',    hint: 'PRESS B', unlocked: false, consumed: false },
-    { id: 'flame',   need: 4, key: 'KeyV', label: '4 · FLAMETHROWER',    hint: 'PRESS V', unlocked: false, consumed: false },
     { id: 'rcrl',    need: 5, key: 'KeyN', label: '5 · RC ROCKET',       hint: 'PRESS N', unlocked: false, consumed: false },
     { id: 'dogs',    need: 10, key: 'KeyM', label: '10 · 20 KIRKS AVENGERS', hint: 'PRESS M', unlocked: false, consumed: false }
   ]
@@ -5518,10 +5475,9 @@ function streakCredit(killerId, victimId) {
 function streakReset(announce) {
   const had = STREAK.count > 0 || STREAK.tiers.some(t => t.unlocked || t.consumed);
   STREAK.count = 0;
-  STREAK.tiers.forEach(t => { t.unlocked = false; t.consumed = false; t.armed = false; });
+  STREAK.tiers.forEach(t => { t.unlocked = false; t.consumed = false; });
   saberEnd();
-  player.overheal = 0; player.burnT = 0;
-  flameFuel = 0; flameEquipped = false;   // flamethrower fuel is per-life
+  player.overheal = 0;
   despawnOwnedDogs(NET.active ? NET.selfId : 'solo');   // loyalty: my dogs leave when I fall
   if (announce && had) { showStreakLost(); sfxStreakLost(); }
   updateStreakHUD();
@@ -5532,7 +5488,6 @@ function streakActivate(tierId) {
   if (!t || !gameState.running || !player.alive) return;
   if (!t.unlocked || t.consumed) { sfxStreakDenied(); return; }
   if (tierId === 'saberjd') { t.consumed = true; equipSaberJD(); updateStreakHUD(); }
-  else if (tierId === 'flame') { equipFlamethrower(); }   // consumed when the fuel tank runs dry (see flameEmpty)
   else if (tierId === 'rcrl') { streakDeployRC(); }   // consumed when the rocket is actually fired (see rcTryLaunch)
   else if (tierId === 'dogs') { t.consumed = true; requestSummonDogs(); updateStreakHUD(); }
 }
@@ -5755,106 +5710,6 @@ function showStreakLost() {
 // Quick screen flashes: golden when drinking, blue-white on saber ignition.
 function flashJD() { const f = el('jdFlash'); if (!f) return; f.style.transition = 'none'; f.style.opacity = '0.8'; requestAnimationFrame(() => { f.style.transition = 'opacity 0.7s'; f.style.opacity = '0'; }); }
 function flashSaber() { const f = el('saberFlash'); if (!f) return; f.style.transition = 'none'; f.style.opacity = '0.7'; requestAnimationFrame(() => { f.style.transition = 'opacity 0.45s'; f.style.opacity = '0'; }); }
-
-/* ============================================================================
-   7h2. FLAMETHROWER — the 4-kill scorestreak (press V). A continuous flame-cone sprayer with a
-   fuel tank. Cone damage (12/tick × 8/s) + a 3s burn afterward, blocked by world geometry, hits
-   players + NPCs (bots, enemy Kongs/dogs). Gun-game kills count as the current ladder weapon.
-   ============================================================================ */
-const FLAME = { fuelMax: 100, burnRate: 8, range: 8, coneCos: Math.cos(22.5 * Math.PI / 180), tickRate: 8, tickDmg: 12, burnDur: 3, burnDps: 3 };
-let flameFuel = 0, flameEquipped = false, flameTickT = 0, flameAudioT = 0, flameHissT = 0;
-function flameCreditWeapon() { return gameMode === 'gungame' ? ggLadderKey() : 'flame'; }
-
-// V: equip the flamethrower (first press issues the full tank). Re-equips while fuel remains.
-function equipFlamethrower() {
-  if (!player.alive || !gameState.running) return;
-  const t = STREAK.tiers.find(x => x.id === 'flame'); if (!t || !t.armed && flameFuel <= 0) { flameFuel = FLAME.fuelMax; if (t) t.armed = true; }
-  if (flameFuel <= 0) { sfxStreakDenied(); return; }
-  if (cigSmoking) cigFinish();
-  ggKarambit = false; aiming = false;
-  ggEquip('flame');           // sets currentWeaponKey='flame', flameEquipped=true, builds the model
-  sfxFlameEquip(playerEarPos());
-}
-// Tank ran dry — the reward is fully consumed: gray out the V tier + swap back to the main weapon.
-function flameEmpty() {
-  flameFuel = 0;
-  const t = STREAK.tiers.find(x => x.id === 'flame'); if (t) { t.consumed = true; updateStreakHUD(); }
-  if (currentWeaponKey === 'flame') ggEquipCurrent();   // back to the gun (or saber)
-  sfxEmpty();
-}
-// Pooled flame particles (spray cone + burn flames). Reused — no per-frame allocation.
-const flameParts = [];
-(function initFlameParts() {
-  const geo = new THREE.SphereGeometry(0.5, 6, 5);
-  for (let i = 0; i < 110; i++) { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xff8a1a, transparent: true, opacity: 0 })); m.visible = false; scene.add(m); flameParts.push({ mesh: m, vel: new THREE.Vector3(), life: 0, maxLife: 0, active: false }); }
-})();
-function flameSprayFX(origin, aim) {
-  for (let n = 0; n < 4; n++) {
-    const p = flameParts.find(x => !x.active); if (!p) break;
-    p.active = true; p.mesh.visible = true; p.mesh.position.copy(origin);
-    const sp = 0.35, dir = aim.clone().add(new THREE.Vector3((Math.random() - 0.5) * sp, (Math.random() - 0.5) * sp, (Math.random() - 0.5) * sp)).normalize();
-    p.vel.copy(dir).multiplyScalar(14 + Math.random() * 7);
-    p.life = p.maxLife = 0.32 + Math.random() * 0.22;
-    p.mesh.scale.setScalar(0.28 + Math.random() * 0.3);
-    p.mesh.material.color.setHex([0xffe23a, 0xff8a1a, 0xff4a1a][Math.floor(Math.random() * 3)]); p.mesh.material.opacity = 0.9;
-  }
-}
-function burnFX(pos, h) {
-  if (Math.random() < 0.55) return;
-  const p = flameParts.find(x => !x.active); if (!p) return;
-  p.active = true; p.mesh.visible = true; p.mesh.position.set(pos.x + (Math.random() - 0.5) * 0.8, pos.y + Math.random() * h, pos.z + (Math.random() - 0.5) * 0.8);
-  p.vel.set((Math.random() - 0.5), 2 + Math.random(), (Math.random() - 0.5));
-  p.life = p.maxLife = 0.4; p.mesh.scale.setScalar(0.22); p.mesh.material.color.setHex(0xff8a1a); p.mesh.material.opacity = 0.9;
-}
-function updateFlameParts(dt) {
-  for (const p of flameParts) { if (!p.active) continue; p.life -= dt; if (p.life <= 0) { p.active = false; p.mesh.visible = false; continue; } p.mesh.position.addScaledVector(p.vel, dt); p.vel.multiplyScalar(0.9); p.mesh.scale.addScalar(2.4 * dt); p.mesh.material.opacity = 0.9 * (p.life / p.maxLife); }
-}
-// Apply one damage tick to everything in the local player's flame cone (blocked by world geometry).
-function flameConeDamage() {
-  const origin = camera.getWorldPosition(new THREE.Vector3());
-  const aim = camera.getWorldDirection(new THREE.Vector3()).normalize();
-  const myId = dogSelfId(), creditW = flameCreditWeapon();
-  const inCone = (px, py, pz) => {
-    const to = new THREE.Vector3(px, py, pz).sub(origin); const dist = to.length();
-    if (dist < 0.4 || dist > FLAME.range) return false;
-    to.multiplyScalar(1 / dist); if (to.dot(aim) < FLAME.coneCos) return false;
-    return new THREE.Raycaster(origin, to, 0, dist - 0.4).intersectObjects(colliders, false).length === 0;   // walls block flames
-  };
-  for (const bot of bots) { if (bot.alive && inCone(bot.pos.x, bot.pos.y + 1.1, bot.pos.z)) flameHitBot(bot, creditW); }
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive && inCone(rp.pos.x, rp.pos.y + 1.0 - 0.5 * (rp.cr || 0), rp.pos.z)) { NET.damageRemote(rp, FLAME.tickDmg, false, creditW, false); NET.route(rp.id, { t: 'burn' }); } });
-  for (const k of kongs) { if (!k.alive || k.dying || k.ownerId === myId) continue; if (inCone(k.pos.x, k.pos.y + 4.5, k.pos.z)) { if (NET.isClient) NET.route(NET.hostId, { t: 'konghit', kongId: k.id, dmg: FLAME.tickDmg, fromId: myId, burn: 1 }); else { damageKong(k, FLAME.tickDmg, myId); k.burnT = FLAME.burnDur; } } }
-  for (const d of dogs) { if (!d.alive || d.dying || d.ownerId === myId) continue; if (inCone(d.pos.x, d.pos.y + 0.6, d.pos.z)) { if (NET.isClient) NET.route(NET.hostId, { t: 'doghit', dogId: d.id, dmg: FLAME.tickDmg, burn: 1 }); else { damageDog(d, FLAME.tickDmg); d.burnT = FLAME.burnDur; } } }
-}
-function flameHitBot(bot, creditW) {
-  if (NET.isClient) NET.route(NET.hostId, { t: 'dmgbot', botId: bot.id, dmg: FLAME.tickDmg, head: false, weapon: creditW, fromId: NET.selfId, burn: 1 });
-  else { if (NET.isHost) NET.botCredit = NET.selfId; damageBot(bot, FLAME.tickDmg, camera.getWorldDirection(new THREE.Vector3()), null, { weapon: creditW, dist: 4 }); if (NET.isHost) NET.botCredit = null; bot.burnT = FLAME.burnDur; bot.burnBy = NET.active ? NET.selfId : 'solo'; }
-}
-// Per-frame flamethrower driver: spray + cone damage + fuel drain + loop/pilot audio.
-function updateFlamethrower(dt) {
-  if (flameEquipped && gunMesh && gunMesh.userData.pilot) { gunMesh.userData.pilot.scale.setScalar(0.8 + Math.random() * 0.4); gunMesh.userData.pilot.material.opacity = 0.7 + Math.random() * 0.3; }   // pilot light flicker
-  const spraying = flameEquipped && firing && flameFuel > 0 && player.alive && gameState.running && !player.onLadder && !cigSmoking;
-  if (spraying) {
-    flameFuel = Math.max(0, flameFuel - FLAME.burnRate * dt);
-    flameSprayFX(gunMuzzleWorld(), camera.getWorldDirection(new THREE.Vector3()).normalize());
-    flameTickT -= dt; if (flameTickT <= 0) { flameTickT = 1 / FLAME.tickRate; flameConeDamage(); }
-    flameAudioT -= dt; if (flameAudioT <= 0) { flameAudioT = 0.22; sfxFlameLoop(playerEarPos()); }
-    updateHUD();
-    if (flameFuel <= 0) flameEmpty();
-  } else if (flameEquipped) {
-    flameHissT -= dt; if (flameHissT <= 0) { flameHissT = 0.7; sfxFlamePilot(playerEarPos()); }
-  }
-  updateFlameParts(dt);
-  updateBurns(dt);
-}
-// Burning status: 3s, 3 HP/s, on bots/Kong/dogs (host/solo) + the local player; orange flame FX.
-function updateBurns(dt) {
-  if (!NET.active || NET.isHost) {
-    for (const bot of bots) if (bot.alive && bot.burnT > 0) { bot.burnT -= dt; burnFX(new THREE.Vector3(bot.pos.x, bot.pos.y + 0.8, bot.pos.z), 1.4); bot._bt = (bot._bt || 0) - dt; if (bot._bt <= 0) { bot._bt = 0.5; if (NET.isHost) NET.botCredit = bot.burnBy || null; damageBot(bot, FLAME.burnDps * 0.5, new THREE.Vector3(0, 1, 0), null, { weapon: 'flame' }); if (NET.isHost) NET.botCredit = null; } }
-    for (const k of kongs) if (k.alive && !k.dying && k.burnT > 0) { k.burnT -= dt; burnFX(new THREE.Vector3(k.pos.x, k.pos.y + 4, k.pos.z), 3.5); k._bt = (k._bt || 0) - dt; if (k._bt <= 0) { k._bt = 0.5; damageKong(k, FLAME.burnDps * 0.5, k.lastAttacker); } }
-    for (const d of dogs) if (d.alive && !d.dying && d.burnT > 0) { d.burnT -= dt; burnFX(new THREE.Vector3(d.pos.x, d.pos.y + 0.6, d.pos.z), 1.0); d._bt = (d._bt || 0) - dt; if (d._bt <= 0) { d._bt = 0.5; damageDog(d, FLAME.burnDps * 0.5); } }
-  }
-  if (player.alive && player.burnT > 0) { player.burnT -= dt; burnFX(new THREE.Vector3(player.pos.x, player.pos.y + 0.9, player.pos.z), 1.3); player._bt = (player._bt || 0) - dt; if (player._bt <= 0) { player._bt = 0.5; sfxBurnCrackle(player.pos); hurtPlayer(FLAME.burnDps * 0.5); } }
-}
 
 /* ============================================================================
    7i. KIRKS AVENGERS — the 10-kill scorestreak: 10 loyal attack dogs (press M).
@@ -6108,7 +5963,7 @@ function clearDogs() { for (const d of dogs) removeDog(d); dogs.length = 0; dogS
    death / match end. Friendly to the summoner + their Kirks Avengers dogs.
    ============================================================================ */
 const KONG = { hp: 1000, speed: 11 * 1.4, accel: 24, fireRange: 40, fireCd: 2.0, bananaSpeed: 35, bananaDmg: 75,
-               meleeRange: 4.2, meleeDmg: 60, meleeCd: 1.5, deathHold: 3.0, riseTime: 1.2, footShakeR: 20, scale: 1.6 };
+               meleeRange: 3.2, meleeDmg: 60, meleeCd: 1.5, deathHold: 3.0, riseTime: 1.2, footShakeR: 15 };
 const kongs = [];          // active King Kongs (one per owner) — host/solo simulate, clients render
 let kongIdSeq = 1, kongNetAcc = 0;
 const bananas = [];        // giant banana projectiles (host-owned do damage; client copies render only)
@@ -6220,13 +6075,13 @@ function summonKong(ownerId) {   // host/solo authoritative spawn
   const kong = { id: kongIdSeq++, ownerId, pos: new THREE.Vector3(fx, groundHeightAt(fx, fz, 2), fz), vel: new THREE.Vector3(),
                  yaw: Math.atan2(fdx, fdz), health: KONG.hp, alive: true, dying: false, deathT: 0, riseT: KONG.riseTime,
                  target: null, fireCd: 1.2, meleeCd: 0, state: 'idle', bipedal: 1, animPhase: Math.random() * 6,
-                 stepT: 0, gruntT: 2 + Math.random() * 3, breathT: Math.random() * 2, huffT: 3 + Math.random() * 4, thumpT: 4 + Math.random() * 6, roarT: 2 + Math.random() * 2, flashT: 0, flinchT: 0, meleeSwingT: 0, burnT: 0, lastAttacker: null };
+                 stepT: 0, gruntT: 2 + Math.random() * 3, flashT: 0, flinchT: 0, meleeSwingT: 0, lastAttacker: null };
   attachKongMesh(kong); kongs.push(kong);
 }
 
 // ---- AI (host/solo) ----
 function kongHasLOS(kong, tgt) {
-  const from = new THREE.Vector3(kong.pos.x, kong.pos.y + 6, kong.pos.z);
+  const from = new THREE.Vector3(kong.pos.x, kong.pos.y + 4, kong.pos.z);
   const to = new THREE.Vector3(tgt.pos.x, tgt.pos.y + 1, tgt.pos.z);
   const dir = to.clone().sub(from); const dist = dir.length(); dir.normalize();
   const ray = new THREE.Raycaster(from, dir, 0, dist - 1.0);
@@ -6253,9 +6108,8 @@ function kongAI(kong, dt) {
       kong.state = 'walk'; desired.subVectors(tgt.pos, kong.pos).setY(0).normalize(); speed = KONG.speed;
     }
   } else {
-    // No enemies anywhere: Kong NEVER returns to the summoner — he just roams the map centre hunting.
-    const dc = Math.hypot(kong.pos.x, kong.pos.z);
-    if (dc > 18) { kong.state = 'walk'; desired.set(-kong.pos.x, 0, -kong.pos.z).normalize(); speed = KONG.speed * 0.45; }
+    const op = dogOwnerPos(kong.ownerId), d = kong.pos.distanceTo(op);
+    if (d > 8) { kong.state = 'walk'; desired.subVectors(op, kong.pos).setY(0).normalize(); speed = KONG.speed * 0.8; faceP = op; }
     else kong.state = 'idle';
   }
   const wantBiped = kong.state === 'walk' ? 0 : 1;   // upright to attack/idle, leaned to knuckle-walk
@@ -6283,7 +6137,7 @@ function kongFireBanana(kong, tgt) {
   const dir = aim.sub(muzzle).normalize(); dir.y += 0.06;   // counter the gravity arc a touch
   const vel = dir.normalize().multiplyScalar(KONG.bananaSpeed);
   spawnBanana(muzzle, vel, kong.ownerId, true);
-  sfxKongFire(muzzle); sfxKongBellow(muzzle);   // bassy BWAMM + Kong's battle bellow on each shot
+  sfxKongFire(muzzle);
   if (NET.active) NET.broadcast({ t: 'banana', x: muzzle.x, y: muzzle.y, z: muzzle.z, vx: vel.x, vy: vel.y, vz: vel.z, o: kong.ownerId });
 }
 function kongMelee(kong, tgt) {
@@ -6296,9 +6150,7 @@ function kongMelee(kong, tgt) {
 function damageKong(kong, dmg, attackerId) {
   if (!kong || !kong.alive || kong.dying) return;
   kong.health -= dmg; kong.flinchT = 0.18; if (attackerId) kong.lastAttacker = attackerId;
-  // Vocal reaction scales with the hit: low growl < 50, pain grunt 50-99, full roar of anger 100+.
-  if (dmg >= 100) sfxKongRoarNear(kong.pos); else if (dmg >= 50) sfxKongPain(kong.pos); else sfxKongHurt(kong.pos);
-  kongDrawHp(kong); kongUpdateHUD();
+  sfxKongHurt(kong.pos); kongDrawHp(kong); kongUpdateHUD();
   if (kong.health <= 0) {
     kong.health = 0; kong.alive = false; kong.dying = true; kong.deathT = KONG.deathHold;
     sfxKongRoar(); addShake(0.5, 0.8);
@@ -6329,8 +6181,8 @@ function kongClientLerp(kong, dt) {
 function kongAnimate(kong, dt) {
   if (!kong.group) return;
   const ud = kong.group.userData;
-  let yOff = 0, sc = KONG.scale;
-  if (kong.riseT > 0) { const p = 1 - kong.riseT / KONG.riseTime; yOff = -(1 - smoothstep(p)) * 5 * KONG.scale; sc = KONG.scale * (0.5 + 0.5 * smoothstep(p)); }
+  let yOff = 0, sc = 1;
+  if (kong.riseT > 0) { const p = 1 - kong.riseT / KONG.riseTime; yOff = -(1 - smoothstep(p)) * 5; sc = 0.5 + 0.5 * smoothstep(p); }
   kong.group.scale.setScalar(sc);
   const lean = (1 - (kong.bipedal || 0)) * 0.6;
   const moving = kong.state === 'walk';
@@ -6342,26 +6194,15 @@ function kongAnimate(kong, dt) {
   if (kong.meleeSwingT > 0) { kong.meleeSwingT -= dt; const s = Math.sin(Math.max(0, 1 - kong.meleeSwingT / 0.3) * Math.PI); if (ud.armL) ud.armL.rotation.x = -0.3 - s * 1.9; }
   if (kong.flinchT > 0) kong.flinchT -= dt;
   if (ud.gunFlash) { if (kong.flashT > 0) { kong.flashT -= dt; ud.gunFlash.visible = true; ud.gunFlash.scale.setScalar(0.8 + Math.random() * 0.5); } else ud.gunFlash.visible = false; }
-  if (moving) yOff += Math.abs(Math.sin(kong.animPhase)) * 0.12 * KONG.scale;   // heavy step bob
-  if (kong.dying) { kong.group.rotation.x += (1.45 - kong.group.rotation.x) * Math.min(1, dt * 5); yOff -= 0.3 * KONG.scale * (1 - Math.max(0, kong.deathT) / KONG.deathHold); }
+  if (moving) yOff += Math.abs(Math.sin(kong.animPhase)) * 0.12;   // heavy step bob
+  if (kong.dying) { kong.group.rotation.x += (1.45 - kong.group.rotation.x) * Math.min(1, dt * 5); yOff -= 0.3 * (1 - Math.max(0, kong.deathT) / KONG.deathHold); }
   kong.group.position.y = kong.pos.y + yOff;
   // Per-machine positional ambience + footstep screen shake for nearby players.
   if (SND.lpos) {
     const dist = Math.hypot(kong.pos.x - SND.lpos.x, kong.pos.z - SND.lpos.z);
-    if (moving) { kong.stepT -= dt; if (kong.stepT <= 0) { kong.stepT = 0.42; sfxKongStep(kong.pos); if (dist < KONG.footShakeR) addShake(0.13 * (1 - dist / KONG.footShakeR), 0.18); } }
-    if (!kong.dying) kongVoice(kong, dt);   // continuous breathing/grunting/huffing/thumping (escalates while chasing)
+    if (!kong.dying && (kong.state === 'idle' || kong.state === 'attack')) { kong.gruntT -= dt; if (kong.gruntT <= 0) { kong.gruntT = 3 + Math.random() * 4; (Math.random() < 0.5 ? sfxKongGrunt : sfxKongThump)(kong.pos); } }
+    if (moving) { kong.stepT -= dt; if (kong.stepT <= 0) { kong.stepT = 0.42; sfxKongStep(kong.pos); if (dist < KONG.footShakeR) addShake(0.12 * (1 - dist / KONG.footShakeR), 0.18); } }
   }
-}
-// Continuous Kong vocal presence: cycles breaths / grunts / huffs / chest-thumps, with heavier
-// breathing + more grunts while chasing and close-range roars near a target. (Audio is capped at 4.)
-function kongVoice(kong, dt) {
-  const chasing = !!kong.target && (kong.state === 'walk' || kong.state === 'attack' || kong.state === 'melee');
-  const closeTgt = kong.target && kong.pos.distanceTo(kong.target.pos) < 10;
-  kong.breathT -= dt; if (kong.breathT <= 0) { kong.breathT = (chasing ? 1.4 : 2.4) + Math.random(); sfxKongBreath(kong.pos); }       // deep breaths
-  kong.gruntT -= dt;  if (kong.gruntT <= 0)  { kong.gruntT = (chasing ? 2.5 : 4.3) + Math.random() * 1.4; sfxKongGrunt(kong.pos); }   // grunts / snorts
-  kong.huffT -= dt;   if (kong.huffT <= 0)   { kong.huffT = 6 + Math.random() * 2.5; sfxKongHuff(kong.pos); }                          // aggressive huffs
-  kong.thumpT -= dt;  if (kong.thumpT <= 0)  { kong.thumpT = 8 + Math.random() * 4; sfxKongThump(kong.pos); }                          // proud chest thumps
-  if (chasing && closeTgt) { kong.roarT -= dt; if (kong.roarT <= 0) { kong.roarT = 4 + Math.random() * 3; sfxKongRoarNear(kong.pos); } }   // intimidating close-range roars
 }
 function updateKongs(dt) {
   const sim = !NET.active || NET.isHost;
@@ -6384,7 +6225,7 @@ function applyKongsSnapshot(list) {
   for (const e of list) {
     seen[e.id] = true;
     let k = kongs.find(x => x.id === e.id);
-    if (!k) { k = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, bipedal: e.bp || 0, riseT: e.rise || 0, animPhase: Math.random() * 6, stepT: 0, gruntT: 2, breathT: Math.random() * 2, huffT: 3 + Math.random() * 4, thumpT: 4 + Math.random() * 6, roarT: 2 + Math.random() * 2, flashT: 0, flinchT: 0, meleeSwingT: 0, burnT: 0 }; attachKongMesh(k); kongs.push(k); }
+    if (!k) { k = { id: e.id, ownerId: e.o, pos: new THREE.Vector3(e.x, e.y, e.z), tpos: new THREE.Vector3(e.x, e.y, e.z), vel: new THREE.Vector3(), yaw: e.yaw, tyaw: e.yaw, health: e.hp, alive: true, dying: e.dy, state: e.st, bipedal: e.bp || 0, riseT: e.rise || 0, animPhase: Math.random() * 6, stepT: 0, gruntT: 2, flashT: 0, flinchT: 0, meleeSwingT: 0 }; attachKongMesh(k); kongs.push(k); }
     k.tpos.set(e.x, e.y, e.z); k.tyaw = e.yaw; k.state = e.st; k.dying = e.dy; k.bipedal = e.bp || 0; if (e.rise != null) k.riseT = e.rise;
     if (e.fl) k.flashT = 0.1;
     if (k.health !== e.hp) { k.health = e.hp; kongDrawHp(k); }
@@ -6609,9 +6450,6 @@ function updateHUD() {
   const oh = Math.max(0, Math.min(OVERHEAL_MAX, player.overheal || 0));
   const ohWrap = el('overhealBarBg');
   if (ohWrap) { ohWrap.style.display = oh > 0 ? 'block' : 'none'; const ob = el('overhealBar'); if (ob) ob.style.width = (oh / OVERHEAL_MAX * 100) + '%'; }
-  // Flamethrower fuel bar (shown only while it's the equipped weapon).
-  const ffw = el('flameFuelWrap');
-  if (ffw) { if (flameEquipped) { ffw.style.display = 'block'; const fb = el('flameFuelBar'); if (fb) fb.style.width = Math.max(0, Math.min(100, flameFuel)) + '%'; } else ffw.style.display = 'none'; }
   updateStreakHUD();
 }
 
@@ -6651,7 +6489,6 @@ el('scoreTarget').textContent = SCORE_TARGET;
 function ggEquip(key) {
   if (!WEAPONS[key]) return;
   rcEquipped = (key === 'rcrl');
-  flameEquipped = (key === 'flame');   // flamethrower in hand? (the V scorestreak weapon)
   currentWeaponKey = key; weaponState[key].reloading = 0; currentSpread = 0;
   buildGunModel(key); syncSaberHum(); updateHUD();
 }
@@ -7385,7 +7222,6 @@ const NET = {
              cr: player.crouchBlend, dv: player.diving,                      // crouch amount + dive (shorter hitbox)
              cig: cigSmoking && !cigCanceling,                               // smoking a cigar (third-person tell)
              sb: saberBlocking,                                              // saber block stance (third-person pose)
-             flm: (flameEquipped && firing && flameFuel > 0), brn: (player.burnT > 0),   // flamethrower spray + on-fire tells
              clm: player.onLadder };                                         // climbing a ladder (third-person)
   },
   // host -> all: positions of every human (host builds from its own state + clients' last pmove)
@@ -7393,7 +7229,7 @@ const NET = {
     const list = [this.selfSnapshot()];
     this.players.forEach((rp) => list.push({ id: rp.id, name: rp.name, x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
       yaw: rp.yaw, pitch: rp.pitch || 0, weapon: rp.weapon, health: rp.health, alive: rp.alive, ads: !!rp.ads, rl: rp.rl || 0,
-      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, sb: !!rp.sb, flm: !!rp.flm, brn: !!rp.brn, clm: !!rp.clm }));
+      cr: rp.cr || 0, dv: !!rp.dv, cig: !!rp.cig, sb: !!rp.sb, clm: !!rp.clm }));
     this.broadcast({ t: 'players', list });
   },
   broadcastBots() {
@@ -7431,7 +7267,6 @@ const NET = {
           const dir = new THREE.Vector3(0, 0, 0);
           damageBot(bot, msg.dmg, dir, msg.head ? 'head' : 'torso', { weapon: msg.weapon, headshot: !!msg.head, dist: 10 });
           this.botCredit = null;
-          if (msg.burn) { bot.burnT = FLAME.burnDur; bot.burnBy = msg.fromId; }   // flamethrower burn
         }
         break;
       }
@@ -7443,9 +7278,9 @@ const NET = {
         break;
       }
       case 'dogsummon': { if (this.isHost) summonDogs(msg.ownerId); break; }   // a client deployed their 10-kill dogs
-      case 'doghit': { if (this.isHost) { const d = dogs.find(x => x.id === msg.dogId); if (d) { damageDog(d, msg.dmg); if (msg.burn) d.burnT = FLAME.burnDur; } } break; }   // a client shot/burned an enemy dog
+      case 'doghit': { if (this.isHost) { const d = dogs.find(x => x.id === msg.dogId); if (d) damageDog(d, msg.dmg); } break; }   // a client shot an enemy dog
       case 'kongsummon': { if (this.isHost) summonKong(msg.ownerId); break; }   // a client summoned King Kong
-      case 'konghit': { if (this.isHost) { const k = kongs.find(x => x.id === msg.kongId); if (k) { damageKong(k, msg.dmg, msg.fromId); if (msg.burn) k.burnT = FLAME.burnDur; } } break; }   // a client shot/burned an enemy Kong
+      case 'konghit': { if (this.isHost) { const k = kongs.find(x => x.id === msg.kongId); if (k) damageKong(k, msg.dmg, msg.fromId); } break; }   // a client shot an enemy Kong
       case 'route': { this.route(msg.to, msg.msg); break; }   // forward client->client
 
       /* ---- CLIENT handlers ---- */
@@ -7537,7 +7372,6 @@ const NET = {
 
       case 'ggset': { ggSetLevel(msg.level); break; }    // host told me my new gun-game level
       case 'kc': { streakOnKill(); break; }              // host credited me a kill -> bump my (local) scorestreak
-      case 'burn': { if (player.alive) player.burnT = FLAME.burnDur; break; }   // an enemy flamethrower set me alight
 
       /* ---- both: I got shot ---- */
       case 'youhit': {
@@ -7670,8 +7504,6 @@ function makeRemotePlayer(id, name, color) {
       if (d.clm != null) this.clm = d.clm;
       if (d.pitch != null) this.pitch = d.pitch;
       if (d.sb != null) this.sb = d.sb;
-      if (d.flm != null) this.flm = d.flm;
-      if (d.brn != null) this.brn = d.brn;
     }
   };
 }
@@ -7750,14 +7582,6 @@ function updateRemoteWeapon(rp) {
   const wantBottle = (rp.weapon === 'saber');
   if (wantBottle && !rp.jdMesh) { rp.jdMesh = buildTpBottle(); rp.jdMesh.position.set(-0.42, 1.18, 0.30); rp.avatar.add(rp.jdMesh); }
   else if (!wantBottle && rp.jdMesh) { rp.avatar.remove(rp.jdMesh); disposeGroup(rp.jdMesh); rp.jdMesh = null; }
-  // Flamethrower: a fuel tank strapped to the character's back (visible to others).
-  const wantTank = (rp.weapon === 'flame');
-  if (wantTank && !rp.tankMesh) {
-    const tk = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.7, 10), new THREE.MeshLambertMaterial({ color: 0x44444c, flatShading: true })); tk.add(body);
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.12, 0.05), new THREE.MeshLambertMaterial({ color: 0xcc3322, flatShading: true })); stripe.position.set(0, 0.1, 0.22); tk.add(stripe);
-    tk.position.set(0, 1.3, -0.42); rp.avatar.add(tk); rp.tankMesh = tk;
-  } else if (!wantTank && rp.tankMesh) { rp.avatar.remove(rp.tankMesh); disposeGroup(rp.tankMesh); rp.tankMesh = null; }
 }
 // Smoothly move all remote players toward their last network position.
 function lerpRemotePlayers(dt) {
@@ -7810,9 +7634,6 @@ function lerpRemotePlayers(dt) {
       rp.cigMesh.visible = on; rp.cigEmber.visible = on;
       if (on) { rp._cigPuffT -= dt; if (rp._cigPuffT <= 0) { spawnSmokePuff(rp.cigEmber.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.14, 0.8); rp._cigPuffT = 0.5; } }
     }
-    // Flamethrower spray (visible from all angles) + on-fire flame tell for remote players.
-    if (rp.flm && rp.weaponMesh) { const o = rp.weaponMesh.getWorldPosition(new THREE.Vector3()); const aim = new THREE.Vector3(-Math.sin(rp.renderYaw), 0, -Math.cos(rp.renderYaw)); flameSprayFX(o, aim); }
-    if (rp.brn) burnFX(new THREE.Vector3(rp.pos.x, rp.pos.y + 1.0, rp.pos.z), 1.4);
     if (Math.round(rp.health) !== rp._lastNameHp) drawNameSprite(rp);
   });
 }
@@ -8204,7 +8025,6 @@ function animate() {
     updateDeflectedBullets(dt);   // saber-reflected bullets in flight
     updateDogs(dt);       // Kirks Avengers attack dogs (host AI / client render)
     updateKongs(dt);      // King Kong boss-ally (host AI / client render) + banana projectiles
-    updateFlamethrower(dt);   // flamethrower spray/fuel + burn status ticks
     if (impulseThrowT > 0) impulseThrowT -= dt;
     updatePickups(dt);    // ammo boxes (refill)
     // No loot crates in either mode now — both use the shared gun-game arsenal (FFA picks via inventory).

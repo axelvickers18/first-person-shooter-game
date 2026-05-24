@@ -157,6 +157,11 @@
     font: 800 18px 'Segoe UI', sans-serif; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 6px #000; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 8px 14px; pointer-events: none; }
   #axePrompt { bottom: 32%; }
   #noodlePrompt b, #axePrompt b { color: #ffd34a; }
+  #invTip { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); z-index: 14; display: none; align-items: center; gap: 8px;
+    font: 700 13px 'Segoe UI', sans-serif; color: #fff; letter-spacing: 1px; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.18); border-radius: 7px; padding: 6px 10px; pointer-events: auto; }
+  #invTipX, #invTipNever { background: none; border: none; color: #9aa6b2; cursor: pointer; font: inherit; font-size: 12px; padding: 0 2px; }
+  #invTipX:hover, #invTipNever:hover { color: #fff; }
+  #invTipNever { display: none; text-decoration: underline; font-size: 11px; }
   #lobbyStage { width: min(880px, 92vw); height: 290px; margin: 2px auto; border-radius: 12px; overflow: hidden; position: relative;
     background: linear-gradient(180deg, #10141c, #080a10); border: 2px solid rgba(120,150,220,0.28); box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
   #lobbyStage canvas { width: 100%; height: 100%; display: block; cursor: pointer; }
@@ -580,6 +585,7 @@
   <div id="kongMsg">KING KONG SUMMONED</div>
   <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
   <div id="axePrompt">Press <b>E</b> to pick up axe</div>
+  <div id="invTip"><span id="invTipText">PRESS [I] TO OPEN INVENTORY</span><button id="invTipNever">don't show again</button><button id="invTipX" title="Dismiss">✕</button></div>
 
   <div id="ammoWrap">
     <div id="ggLevel"></div>
@@ -6365,10 +6371,10 @@ function updateCigar(dt) {
 const STREAK = {
   count: 0,
   tiers: [
-    { id: 'saberjd', need: 3, key: 'KeyB', label: '3 · SABER + JACK',    hint: 'PRESS B', unlocked: false, consumed: false },
-    { id: 'flame',   need: 4, key: 'KeyV', label: '4 · FLAMETHROWER',    hint: 'PRESS V', unlocked: false, consumed: false },
-    { id: 'rcrl',    need: 5, key: 'KeyN', label: '5 · RC ROCKET',       hint: 'PRESS N', unlocked: false, consumed: false },
-    { id: 'dogs',    need: 10, key: 'KeyM', label: '10 · 20 KIRKS AVENGERS', hint: 'PRESS M', unlocked: false, consumed: false }
+    { id: 'saberjd', need: 3, key: 'KeyB', action: 'saber',       name: 'SABER + JACK',     unlocked: false, consumed: false },
+    { id: 'flame',   need: 4, key: 'KeyV', action: 'flamethrower', name: 'FLAMETHROWER',    unlocked: false, consumed: false },
+    { id: 'rcrl',    need: 5, key: 'KeyN', action: 'rcStreak',     name: 'RC ROCKET',        unlocked: false, consumed: false },
+    { id: 'dogs',    need: 10, key: 'KeyM', action: 'dogs',        name: '20 KIRKS AVENGERS', unlocked: false, consumed: false }
   ]
 };
 // Saber + Jack Daniels combo state.
@@ -6607,6 +6613,39 @@ function streakRcReturnWeapon() {
 }
 
 /* ---- SCORESTREAK HUD (left side) ---- */
+// --- Dynamic keybind hints: every UI key label reads live from the binding system (IM). ---
+function getKeyForAction(action) { return IM.keyLabel(IM.bind[action]); }   // 'flamethrower' -> 'V' (or 'F' if rebound), '(Not Bound)' if unbound
+function refreshKeyHints() {       // re-stamp static prompts from the current bindings (load / rebind / settings-close / match-start)
+  const ik = getKeyForAction('interact'), set = (id, html) => { const e = el(id); if (e) e.innerHTML = html; };
+  set('ladderPrompt', 'Press <b>' + ik + '</b> to climb');
+  set('noodlePrompt', 'Press <b>' + ik + '</b> to summon Mckayla');
+  set('axePrompt', 'Press <b>' + ik + '</b> to pick up axe');
+  const it = el('invTipText'); if (it) it.textContent = 'PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY';
+}
+// --- "PRESS [I] TO OPEN INVENTORY" discoverability hint (FFA only): 30s at match start, ~4s on respawn. ---
+let invTipT = 0, invTipSession = false;
+function _invTipNever() { try { return localStorage.getItem('invTipNever') === '1'; } catch (e) { return false; } }
+function _invTipSeen() { try { return parseInt(localStorage.getItem('invTipSeen') || '0', 10) || 0; } catch (e) { return 0; } }
+function maybeShowInvTip(secs, isMatchStart) {
+  if (gameMode !== 'ffa' || invTipSession || _invTipNever()) return;
+  if (isMatchStart) { const n = _invTipSeen() + 1; try { localStorage.setItem('invTipSeen', n); } catch (e) {} }
+  const nv = el('invTipNever'); if (nv) nv.style.display = (_invTipSeen() >= 5) ? 'inline' : 'none';   // permanent-dismiss option after 5 views
+  const it = el('invTipText'); if (it) it.textContent = 'PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY';
+  const box = el('invTip'); if (box) { box.style.display = 'flex'; box.style.opacity = '1'; }
+  invTipT = secs;
+}
+function dismissInvTip(permanent) {
+  invTipSession = true; invTipT = 0;
+  const box = el('invTip'); if (box) box.style.display = 'none';
+  if (permanent) { try { localStorage.setItem('invTipNever', '1'); } catch (e) {} }
+}
+function updateInvTip(dt) {
+  const box = el('invTip'); if (!box) return;
+  if (invTipT <= 0) { if (box.style.display !== 'none') box.style.display = 'none'; return; }
+  invTipT -= dt;
+  if (invTipT <= 0) { box.style.display = 'none'; box.style.opacity = '1'; return; }
+  box.style.opacity = invTipT < 1 ? invTipT.toFixed(2) : '1';   // fade out over the final second
+}
 function updateStreakHUD() {
   const sbar = el('streakBar');
   if (!sbar) return;
@@ -6618,8 +6657,10 @@ function updateStreakHUD() {
     row.classList.toggle('locked', !t.unlocked && !t.consumed);
     row.classList.toggle('ready', t.unlocked && !t.consumed);
     row.classList.toggle('consumed', t.consumed);
+    const k = getKeyForAction(t.action);   // live key (updates instantly when rebound in settings)
+    const lab = row.querySelector('.stLabel'); if (lab) lab.textContent = 'PRESS [' + k + '] · ' + t.name;
     const prog = row.querySelector('.stProg'); if (prog) prog.style.width = Math.max(0, Math.min(100, (STREAK.count / t.need) * 100)) + '%';
-    const ready = row.querySelector('.stReady'); if (ready) ready.textContent = t.consumed ? 'USED' : (t.unlocked ? '✓ ' + t.hint : STREAK.count + ' / ' + t.need);
+    const ready = row.querySelector('.stReady'); if (ready) ready.textContent = t.consumed ? 'USED' : (t.unlocked ? '✓ PRESS ' + k : STREAK.count + ' / ' + t.need);
   });
 }
 function streakFlashUnlock(t) {
@@ -7974,6 +8015,7 @@ function playerDie() {
     if (gameMode !== 'gungame' && !WEAPONS[ffaMain]) ffaMain = 'gg2';
     ggEquip(mainGunKey());
     updateHUD();
+    maybeShowInvTip(4, false);   // brief inventory reminder on FFA respawn
   }, 1400);
 }
 
@@ -8009,6 +8051,8 @@ function startMatch() {
   // Clear any leftover thrown grenades / tomahawks / explosion FX from a previous match
   liveGrenades.forEach(g => scene.remove(g.mesh)); liveGrenades.length = 0;
   liveTomahawks.forEach(t => { scene.remove(t.mesh); disposeGroup(t.mesh); }); liveTomahawks.length = 0;
+  liveSmokeNades.forEach(s => { scene.remove(s.mesh); disposeGroup(s.mesh); }); liveSmokeNades.length = 0;
+  smokeClouds.forEach(c => c.parts.forEach(p => { scene.remove(p.spr); p.spr.material.dispose(); })); smokeClouds.length = 0;
   explosions.forEach(e => scene.remove(e.mesh)); explosions.length = 0;
   bloodDecals.forEach(d => scene.remove(d.mesh)); bloodDecals.length = 0;
   debris.forEach(d => { scene.remove(d.obj); disposeGroup(d.obj); }); debris.length = 0;
@@ -8024,6 +8068,7 @@ function startMatch() {
   SPECIAL_ORDER.forEach(k => { weaponState[k].ammo = 0; weaponState[k].reserve = 0; weaponState[k].reloading = 0; weaponState[k].cooldown = 0; });
   currentWeaponKey = 'pistol';
   lootActive = false; lootGroup.visible = false; el('pickupBanner').style.opacity = 0;
+  maybeShowInvTip(30, true);   // FFA-only "PRESS I" inventory discoverability hint (first 30s of the match)
 
   // --- Bots: host (or solo) simulates them; clients render host snapshots ---
   if (!NET.active || NET.isHost) {
@@ -8117,6 +8162,7 @@ function toggleInventory() {
   if (invOpen) {
     cigCancel();
     setInvTab('paneMain'); refreshInvPanes();
+    dismissInvTip(false);   // opening the inventory = discovered it; stop nagging this session
     el('invMenu').classList.remove('hidden');
     sfxInvOpen();                                            // tactical tab-open
     document.exitPointerLock && document.exitPointerLock();   // free the cursor (game keeps running)
@@ -8233,6 +8279,7 @@ function openSettings(from) { settingsReturn = from; refreshSettingsUI(); if (wi
 el('menuSettings').onclick = () => openSettings('mainMenu');
 el('lobbySettings').onclick = () => openSettings('lobbyScreen');
 el('settingsBack').onclick = () => {
+  refreshKeyHints();   // re-stamp all in-game keybind hints with any rebinds the player just made
   if (settingsReturn === 'pause') { el('settingsScreen').classList.add('hidden'); el('pauseMenu').style.display = 'flex'; }   // back to the in-match pause menu
   else showScreen(settingsReturn);
 };
@@ -8267,7 +8314,7 @@ el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display
       row.appendChild(kb); list.appendChild(row);
     });
   }
-  function applyBind(action, code) { IM.bind[action] = code; IM.save(); rebindAction = null; hideConflict(); renderControls(); sfxClick(); }
+  function applyBind(action, code) { IM.bind[action] = code; IM.save(); rebindAction = null; hideConflict(); renderControls(); refreshKeyHints(); sfxClick(); }
   function tryBind(action, code) {
     const owner = IM.codeAction(code);
     if (owner === action) { applyBind(action, code); return; }
@@ -8372,11 +8419,14 @@ function refreshInvPanes() {
 function setInvTab(pane) {
   document.querySelectorAll('#invMenu .invTab').forEach(t => t.classList.toggle('active', t.dataset.pane === pane));
   document.querySelectorAll('#invMenu .invPane').forEach(p => p.classList.toggle('active', p.id === pane));
-  const hints = { paneMain: 'Click a weapon to equip it as your main • full ammo on swap • I/ESC to close', paneMelee: 'Pick your melee (key 3) — identical stats, different style & animations', paneLethal: 'Pick your lethal (key H) — 2 per life' };
+  const ik = getKeyForAction('inventory'), kk = getKeyForAction('karambit'), lk = getKeyForAction('lethal');
+  const hints = { paneMain: 'Click a weapon to equip it as your main • full ammo on swap • ' + ik + '/ESC to close', paneMelee: 'Pick your melee (key ' + kk + ') — identical stats, different style & animations', paneLethal: 'Pick your lethal (key ' + lk + ') — 2 per life' };
   const h = el('invHint'); if (h) h.textContent = hints[pane] || '';
 }
 document.querySelectorAll('#invMenu .invTab').forEach(t => t.onclick = () => { setInvTab(t.dataset.pane); sfxMenu(true); });
-buildInvMelee(); buildInvLethal();
+buildInvMelee(); buildInvLethal(); refreshKeyHints();   // stamp keybind hints from saved bindings on load
+el('invTipX').onclick = () => dismissInvTip(false);                     // session dismiss
+el('invTipNever').onclick = () => dismissInvTip(true);                  // permanent dismiss (localStorage)
 function setBotCount(n) {
   botCount = Math.max(0, Math.min(BOT_MAX, n));
   localStorage.setItem('blockoutBots', botCount);
@@ -9614,6 +9664,7 @@ function animate() {
     updateGrenades(dt);   // frag grenade physics + fuse
     updateTomahawks(dt);  // thrown tomahawks / lethal throwing axes (flight + stick + pickup)
     updateSmokes(dt);     // lethal smoke grenades: canister settle + view-blocking smoke cloud
+    updateInvTip(dt);     // fade the "PRESS I" inventory hint
     updateRockets(dt);    // rocket projectiles (special weapon)
     updateGGProjectiles(dt); updateSmoke(dt);   // gun-game projectiles (bolt/grenade/rocket/knife) + trails
     rcUpdate(dt); updateRcRemote(dt);   // SECRET RC missile flight + camera handoff + others' missiles

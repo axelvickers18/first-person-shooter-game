@@ -274,24 +274,6 @@
   #killcamRecording .kcrDots::after { content: ''; display: inline-block; width: 1.4em; text-align: left; animation: kcrDots 1.2s steps(1,end) infinite; }
   @keyframes kcrDots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} 100%{content:''} }
   #killcamRecording .kcrSkip { margin-top: 28px; font-size: 13px; opacity: .6; }
-  /* GAMEPAD: connection toast + first-time tutorial overlay + Controller settings tab */
-  #gpToast { position: fixed; top: 84px; left: 50%; transform: translateX(-50%) translateY(-12px); z-index: 30; pointer-events: none;
-    background: rgba(12,18,26,0.92); border: 1px solid #2c6e8f; border-radius: 8px; padding: 10px 18px; color: #dbeaf5;
-    font: 700 15px 'Segoe UI', sans-serif; letter-spacing: 1px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); opacity: 0; transition: opacity .35s, transform .35s; }
-  #gpToast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-  #gpTutorial { position: fixed; inset: 0; z-index: 31; display: none; align-items: center; justify-content: center; background: rgba(4,8,12,0.82); color: #e6eef6; font-family: 'Segoe UI', sans-serif; }
-  #gpTutorial.on { display: flex; }
-  #gpTutorial .gpCard { background: #10161e; border: 1px solid #2c6e8f; border-radius: 14px; padding: 26px 30px; max-width: 620px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.6); pointer-events: auto; }
-  #gpTutorial h2 { margin: 0 0 4px; font-size: 22px; color: #7fd0ff; letter-spacing: 1px; }
-  #gpTutorial .gpSub { font-size: 13px; opacity: .7; margin-bottom: 16px; }
-  #gpTutorial .gpGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; text-align: left; font-size: 14px; }
-  #gpTutorial .gpGrid div { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 4px 0; }
-  #gpTutorial .gpGrid b { color: #ffd98a; margin-left: 14px; white-space: nowrap; }
-  #gpTutorial .gpFoot { margin-top: 18px; font-size: 12.5px; opacity: .65; }
-  #gpTutorial .gpFoot b { color: #7fd0ff; }
-  #paneController .gpStatus { background: #0e1620; border: 1px solid #28435c; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 14px; }
-  #paneController .gpStatus .gpOn { color: #6fe08f; } #paneController .gpStatus .gpOff { color: #d98a8a; }
-  #paneController .ctrlScroll { max-height: 220px; }
   /* Mobility scooter (Part 7) */
   #scooterPrompt { position: absolute; left: 50%; bottom: 30%; transform: translateX(-50%); z-index: 15; display: none;
     background: rgba(0,0,0,0.55); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 17px; color: #fff; }
@@ -785,25 +767,6 @@
     <div class="kcrSub">RECORDING REPLAY<span class="kcrDots"></span></div>
     <div class="kcrSkip"></div>
   </div>
-  <div id="gpToast"></div>
-  <div id="gpTutorial">
-    <div class="gpCard">
-      <h2>🎮 Controller Detected</h2>
-      <div class="gpSub">Default Bindings</div>
-      <div class="gpGrid">
-        <div>Move <b>Left Stick</b></div><div>Aim / Look <b>Right Stick</b></div>
-        <div>Fire <b>RT (R2)</b></div><div>Aim Down Sights <b>LT (L2)</b></div>
-        <div>Jump <b>(A) / ✕</b></div><div>Crouch <b>(B) / ○</b></div>
-        <div>Reload <b>(X) / ▢</b></div><div>Melee <b>(Y) / △</b></div>
-        <div>Impulse <b>LB (L1)</b></div><div>Lethal <b>RB (R1)</b></div>
-        <div>Sprint <b>L3</b></div><div>Interact / Climb <b>DPad ↓</b></div>
-        <div>Cigar / JD <b>DPad ↑</b></div><div>Weapons <b>DPad ← / →</b></div>
-        <div>Scorestreaks <b>LT + DPad</b></div><div>King Kong <b>LB + RB</b></div>
-        <div>Inventory <b>Hold Back</b></div><div>Pause <b>Start / Options</b></div>
-      </div>
-      <div class="gpFoot">Press any button to dismiss · <b>View full controls in Settings → Controller</b></div>
-    </div>
-  </div>
   <div id="noodlePrompt">Press <b>E</b> to summon Mckayla</div>
   <div id="axePrompt">Press <b>E</b> to pick up axe</div>
   <div id="scooterPrompt">Press <b>E</b> to ride the scooter</div>
@@ -1076,7 +1039,6 @@
     <button class="setTab" data-pane="paneGameplay">GAMEPLAY</button>
     <button class="setTab" data-pane="paneMatch">MATCH</button>
     <button class="setTab" data-pane="paneWeaponCustom">WEAPONS</button>
-    <button class="setTab" data-pane="paneController">🎮 CONTROLLER</button>
   </div>
 
   <!-- CONTROLS tab: remappable keybindings + control options -->
@@ -1151,29 +1113,6 @@
   <div class="setPane" id="paneWeaponCustom">
     <div class="setHint" style="margin-bottom:8px">Pick a weapon to customize its sight, magazine, laser &amp; flashlight. Changes apply on your next spawn.</div>
     <div id="wcWeaponGrid"></div>
-  </div>
-
-  <!-- CONTROLLER tab: status + deadzones/sensitivity/aim-assist/curve/rumble + rebindable buttons -->
-  <div class="setPane" id="paneController">
-    <div class="gpStatus" id="gpStatusBox">No controller detected.</div>
-    <div class="ctrlOpts">
-      <div class="optRow"><span>Left Stick Deadzone</span><input type="range" id="gpDzL" min="0" max="50" step="1"><span class="optVal" id="gpDzLV">12%</span></div>
-      <div class="optRow"><span>Right Stick Deadzone</span><input type="range" id="gpDzR" min="0" max="50" step="1"><span class="optVal" id="gpDzRV">8%</span></div>
-      <div class="optRow"><span>Horizontal Look Sensitivity</span><input type="range" id="gpSensH" min="10" max="500" step="5"><span class="optVal" id="gpSensHV">2.0x</span></div>
-      <div class="optRow"><span>Vertical Look Sensitivity</span><input type="range" id="gpSensV" min="10" max="500" step="5"><span class="optVal" id="gpSensVV">1.5x</span></div>
-      <div class="optRow"><span>ADS Sensitivity Multiplier</span><input type="range" id="gpSensAds" min="10" max="200" step="5"><span class="optVal" id="gpSensAdsV">0.6x</span></div>
-      <label class="optRow"><span>Aim Assist (controllers only)</span><input type="checkbox" id="gpAimAssist"></label>
-      <div class="optRow"><span>Aim Assist Strength</span><input type="range" id="gpAimStr" min="0" max="100" step="5"><span class="optVal" id="gpAimStrV">30%</span></div>
-      <label class="optRow"><span>Response Curve — Exponential (vs Linear)</span><input type="checkbox" id="gpCurve"></label>
-      <label class="optRow"><span>Enable Rumble / Vibration</span><input type="checkbox" id="gpRumble"></label>
-      <div class="optRow"><span>Rumble Intensity</span><input type="range" id="gpRumbleInt" min="0" max="100" step="5"><span class="optVal" id="gpRumbleIntV">70%</span></div>
-      <label class="optRow"><span>Invert Look Y-Axis</span><input type="checkbox" id="gpInvertY"></label>
-    </div>
-    <div class="ctrlScroll" id="gpBindList"></div>
-    <div class="ctrlBtns">
-      <button class="smallbtn" id="gpReset">RESET BINDINGS</button>
-      <button class="smallbtn" id="gpViewTut">VIEW CONTROLS DIAGRAM</button>
-    </div>
   </div>
 
   <div class="menuRow">
@@ -3431,7 +3370,7 @@ const IM = {
     else this.bind = Object.assign({}, this.defaults, this.PRESETS[name] || {});
     this.save();
   },
-  down(action) { return !!keys[this.bind[action]] || !!(GP.held && GP.held[action]); },   // held: keyboard OR gamepad (ladder/scooter/jump/crouch/sprint)
+  down(action) { return !!keys[this.bind[action]]; },                 // held (keyboard)
   codeAction(code) { for (const a in this.bind) if (this.bind[a] === code) return a; return null; },   // reverse lookup
   keyLabel(code) {
     if (!code) return '(Not Bound)';
@@ -3456,178 +3395,6 @@ const OPT = {
 OPT.load();
 DEFAULT_FOV = OPT.fov;     // apply the saved field-of-view
 let sprintLatch = false;   // sprint toggle-mode latched state (held checks read sprint OR this)
-function kbDown(action) { return !!keys[IM.bind[action]]; }   // keyboard-only held (gamepad analog movement is added separately)
-
-/* ============================================================================
-   GAMEPAD / CONTROLLER SUPPORT — W3C Gamepad API (navigator.getGamepads). Additive to the
-   keyboard: polled each frame in animate(), routed through the SAME action system (gameAction /
-   firePress / adsPress / IM.down via GP.held) so every gameplay feature works on a controller with
-   no per-feature changes. Standard mapping (Xbox button indices; PS = same indices, relabelled).
-   ============================================================================ */
-const GP = {
-  active: false,            // true => the controller is the CURRENT input mode (drives on-screen prompts)
-  index: -1,                // active gamepad slot in navigator.getGamepads()
-  type: 'xbox',             // 'xbox' | 'ps' (label set auto-detected from the gamepad id)
-  pads: {},                 // index -> { name } of every connected pad (up to 4)
-  held: {},                 // action -> bool, merged into IM.down() (movement 8-way + jump/sprint/crouch)
-  mvX: 0, mvY: 0,           // left-stick analog (deadzoned): +x right, +y down (updateMovement reads these)
-  prev: [],                 // previous frame's button.pressed[] (edge detection)
-  _rt: false, _lt: false, _kong: false, _back: false, _invByBack: false, backHoldT: 0,
-  rebindAction: null,       // when set, the next gamepad button press rebinds this action
-  // --- persisted settings (controller_v1) ---
-  dzL: 0.12, dzR: 0.08, sensH: 2.0, sensV: 1.5, sensAds: 0.6, aimAssist: true, aimStr: 0.30,
-  curve: 'exp', rumbleOn: true, rumbleInt: 0.7, invertY: false,
-  // default action -> standard button index
-  bind: { jump: 0, crouch: 1, reload: 2, karambit: 3, grenade: 4, lethal: 5, ads: 6, fire: 7,
-          scoreboard: 8, pause: 9, sprint: 10, quickMelee: 11, use: 12, interact: 13, weapon1: 14, weapon2: 15 },
-  defaults: {},
-  load() {
-    this.defaults = Object.assign({}, this.bind);
-    try { const o = JSON.parse(localStorage.getItem('controller_v1')); if (o && typeof o === 'object') {
-      ['dzL','dzR','sensH','sensV','sensAds','aimAssist','aimStr','curve','rumbleOn','rumbleInt','invertY'].forEach(k => { if (o[k] != null) this[k] = o[k]; });
-      if (o.bind && typeof o.bind === 'object') Object.assign(this.bind, o.bind);
-    } } catch (e) {}
-  },
-  save() { try { localStorage.setItem('controller_v1', JSON.stringify({ dzL: this.dzL, dzR: this.dzR, sensH: this.sensH, sensV: this.sensV, sensAds: this.sensAds, aimAssist: this.aimAssist, aimStr: this.aimStr, curve: this.curve, rumbleOn: this.rumbleOn, rumbleInt: this.rumbleInt, invertY: this.invertY, bind: this.bind })); } catch (e) {} },
-  resetBind() { this.bind = Object.assign({}, this.defaults); this.save(); },
-  dz(v, d) { const a = Math.abs(v); if (a <= d) return 0; return Math.sign(v) * (a - d) / (1 - d); },   // deadzone + rescale
-  detectType(id) { const s = (id || '').toLowerCase(); if (/xbox|xinput|045e/.test(s)) return 'xbox'; if (/dualshock|dualsense|playstation|sony|054c|0ce6/.test(s)) return 'ps'; return 'xbox'; },   // Xbox first ("Xbox Wireless Controller"), then PS, else standard=Xbox labels
-  setMode(on) { if (this.active === on) return; this.active = on; if (typeof refreshKeyHints === 'function') refreshKeyHints(); if (typeof updateStreakHUD === 'function') updateStreakHUD(); },
-  onConnect(g) {
-    if (Object.keys(this.pads).length >= 4 && this.pads[g.index] == null) return;   // support up to 4
-    this.pads[g.index] = { name: g.id }; if (this.index < 0) { this.index = g.index; this.type = this.detectType(g.id); }
-    const nm = (g.id || 'Controller').replace(/\s*\([^)]*\)\s*/g, '').trim().slice(0, 30) || 'Controller';
-    if (typeof gpToast === 'function') gpToast('🎮 ' + nm + ' CONNECTED');
-    if (typeof maybeShowGpTutorial === 'function') maybeShowGpTutorial();
-  },
-  onDisconnect(g) {
-    delete this.pads[g.index];
-    if (this.index === g.index) { this.index = -1; for (const k in this.pads) { this.index = +k; break; } }
-    if (this.index < 0) { this.held = {}; this.setMode(false); if (typeof gpToast === 'function') gpToast('🎮 Controller disconnected — switching to keyboard'); }
-  },
-  rumble(strong, weak, dur) {
-    if (!this.rumbleOn || this.index < 0) return;
-    const pads = navigator.getGamepads ? navigator.getGamepads() : []; const g = pads[this.index]; if (!g) return;
-    const act = g.vibrationActuator; if (!act || !act.playEffect) return;
-    try { act.playEffect('dual-rumble', { duration: dur, strongMagnitude: Math.min(1, strong * this.rumbleInt), weakMagnitude: Math.min(1, weak * this.rumbleInt) }); } catch (e) {}
-  },
-  // PS/Xbox label for a button index, plus combo labels — used by the dynamic on-screen prompts
-  gpIcon(action) {
-    const F = this.type === 'ps'
-      ? ['(✕)','(○)','(▢)','(△)','[L1]','[R1]','[L2]','[R2]','[Share]','[Options]','[L3]','[R3]','[D↑]','[D↓]','[D←]','[D→]']
-      : ['(A)','(B)','(X)','(Y)','[LB]','[RB]','[LT]','[RT]','[Back]','[Start]','[L3]','[R3]','[D↑]','[D↓]','[D←]','[D→]'];
-    const combos = { saber: F[6] + '+' + F[12], flamethrower: F[6] + '+' + F[13], rcStreak: F[6] + '+' + F[14], dogs: F[6] + '+' + F[15], kong: F[4] + '+' + F[5], inventory: 'hold ' + F[8] };
-    if (combos[action]) return combos[action];
-    const bi = this.bind[action]; return (bi != null && F[bi] != null) ? F[bi] : '?';
-  }
-};
-GP.load();
-window.addEventListener('gamepadconnected', e => GP.onConnect(e.gamepad));
-window.addEventListener('gamepaddisconnected', e => GP.onDisconnect(e.gamepad));
-
-// Poll the active controller once per frame (called early in animate). Reads sticks/buttons/triggers,
-// switches to gamepad mode on any input, then routes everything through the existing action system.
-GP.poll = function (dt) {
-  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-  if (this.index < 0 || !pads[this.index]) { this.index = -1; for (let i = 0; i < pads.length; i++) if (pads[i]) { this.index = i; this.type = this.detectType(pads[i].id); break; } }
-  const g = this.index >= 0 ? pads[this.index] : null;
-  if (!g) { this.held = {}; this.mvX = this.mvY = 0; return; }
-  const b = g.buttons, ax = g.axes, B = this.bind;
-  const pressed = i => i != null && b[i] && b[i].pressed;
-  const val = i => (i != null && b[i]) ? b[i].value : 0;
-  const just = i => pressed(i) && !this.prev[i];
-  const lx = this.dz(ax[0] || 0, this.dzL), ly = this.dz(ax[1] || 0, this.dzL);
-  const rx = this.dz(ax[2] || 0, this.dzR), ry = this.dz(ax[3] || 0, this.dzR);
-  // --- input-mode auto-switch: any button or a stick beyond deadzone => gamepad mode ---
-  let any = (Math.hypot(lx, ly) > 0.02 || Math.hypot(rx, ry) > 0.02);
-  for (let i = 0; i < b.length && !any; i++) if (b[i] && b[i].pressed) any = true;
-  if (any) this.setMode(true);
-  // --- first-time tutorial overlay: any button dismisses it (and is consumed) ---
-  if (typeof gpTutorialOpen === 'function' && gpTutorialOpen()) { for (let i = 0; i < b.length; i++) if (just(i)) { hideGpTutorial(); break; } this.snapshot(b); return; }
-  // --- rebinding capture (Controller settings): grab the next pressed button, don't act on it ---
-  if (this.rebindAction) { for (let i = 0; i < b.length; i++) if (just(i)) { if (typeof gpApplyBind === 'function') gpApplyBind(this.rebindAction, i); break; } this.snapshot(b); return; }
-
-  const playing = gameState.running && !paused;
-  const ltDown = val(B.ads) > 0.5 || pressed(B.ads);    // LT = ADS (also the scorestreak modifier with the DPad)
-  const rtDown = val(B.fire) > 0.5 || pressed(B.fire);  // RT = fire
-  // ---- LEFT STICK -> movement (analog for updateMovement + 8-way held flags for ladder/scooter via IM.down) ----
-  this.held = {};
-  if (playing && player.alive && !invOpen) {
-    this.mvX = lx; this.mvY = ly;
-    this.held.moveForward = ly < -0.35; this.held.moveBackward = ly > 0.35; this.held.moveLeft = lx < -0.35; this.held.moveRight = lx > 0.35;
-    if (pressed(B.jump)) this.held.jump = true;
-    if (pressed(B.crouch)) this.held.crouch = true;
-    if (pressed(B.sprint)) this.held.sprint = true;
-  } else { this.mvX = this.mvY = 0; }
-  // ---- RIGHT STICK -> look (response curve + per-axis sens + ADS multiplier + invert) ----
-  if (playing && player.alive && !invOpen && !rcActive && !killcam.active && (rx || ry)) {
-    const cv = v => this.curve === 'exp' ? Math.sign(v) * v * v : v;   // exponential = precise centre, fast edges
-    let sh = this.sensH, sv = this.sensV;
-    if (aiming || camera.fov < DEFAULT_FOV - 0.5) { sh *= this.sensAds; sv *= this.sensAds; }
-    const TURN = 3.0;
-    yaw   -= cv(rx) * sh * TURN * dt;
-    pitch -= cv(ry) * sv * TURN * dt * (this.invertY ? -1 : 1);
-    pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch));
-  }
-  if (playing && player.alive && !rcActive && !killcam.active && this.aimAssist) this.applyAimAssist(dt);
-  // ---- TRIGGERS -> fire / ADS (edge-detected; analog threshold 0.5) ----
-  if (playing && !invOpen) {
-    if (rtDown && !this._rt) firePress(); else if (!rtDown && this._rt) fireRelease(); this._rt = rtDown;
-    if (ltDown && !this._lt) adsPress(); else if (!ltDown && this._lt) adsRelease(); this._lt = ltDown;
-  } else { if (this._rt) { fireRelease(); this._rt = false; } if (this._lt) { adsRelease(); this._lt = false; } }
-  // ---- BUTTONS -> actions ----
-  if (just(B.pause)) { if (paused) resumeGame(); else if (invOpen) toggleInventory(); else openPauseMenu(); }
-  this.handleBack(dt, pressed(B.scoreboard));
-  if (playing && player.alive && !invOpen && !rcActive) {
-    const lb = pressed(B.grenade), rb = pressed(B.lethal);
-    const kong = lb && rb;                                   // LB+RB = summon King Kong
-    if (kong && !this._kong) { requestSummonKong(); this._kong = true; } if (!kong) this._kong = false;
-    if (!kong) { if (just(B.grenade)) gameAction('grenade', false); if (just(B.lethal)) gameAction('lethal', false); }
-    if (just(B.reload)) gameAction('reload', false);
-    if (just(B.karambit)) gameAction('karambit', false);
-    if (just(B.quickMelee)) gameAction('karambit', false);   // R3 quick melee
-    if (just(B.crouch)) gameAction('crouch', false);   // press = dive (when sprinting); hold = crouch via GP.held
-    if (just(B.sprint)) gameAction('sprint', false);   // press = slide + toggle-mode latch; hold = sprint via GP.held
-    // DPad: normal action, OR a scorestreak when LT (the modifier) is held
-    const dmap = [[B.use, 'use', 'saber'], [B.interact, 'interact', 'flamethrower'], [B.weapon1, 'weapon1', 'rcStreak'], [B.weapon2, 'weapon2', 'dogs']];
-    dmap.forEach(([btn, normal, streak]) => { if (just(btn)) gameAction(ltDown ? streak : normal, false); });
-  }
-  this.snapshot(b);
-};
-GP.snapshot = function (b) { for (let i = 0; i < b.length; i++) this.prev[i] = b[i] && b[i].pressed; };
-// Hold Back/Select = scoreboard; hold ≥1s = open inventory (a fresh press while open closes it).
-GP.handleBack = function (dt, down) {
-  const justDown = down && !this._back, justUp = !down && this._back;
-  if (justDown) {
-    this.backHoldT = 0; this._invByBack = false;
-    if (invOpen) { toggleInventory(); this._back = down; return; }
-    if (gameState.running && !paused && !rcActive) { refreshScoreboard(); el('scoreboard').style.display = 'flex'; }
-  }
-  if (down && !invOpen && gameState.running && !paused) {
-    this.backHoldT += dt;
-    if (this.backHoldT >= 1.0 && !this._invByBack && gameMode !== 'gungame') { el('scoreboard').style.display = 'none'; toggleInventory(); this._invByBack = true; }
-  }
-  if (justUp && el('scoreboard').style.display === 'flex' && !this._invByBack) el('scoreboard').style.display = 'none';
-  this._back = down;
-};
-// Aim assist: gently rotate the view toward the nearest enemy within a small cone of the crosshair.
-GP.applyAimAssist = function (dt) {
-  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion), origin = camera.position;
-  let bestDir = null, bestAng = 0.087;   // ~5° cone
-  const consider = (pos, h) => {
-    const to = new THREE.Vector3(pos.x, pos.y + h, pos.z).sub(origin); const d = to.length();
-    if (d < 2.5 || d > 90) return; to.multiplyScalar(1 / d);
-    const ang = fwd.angleTo(to); if (ang < bestAng) { bestAng = ang; bestDir = to; }
-  };
-  if (typeof bots !== 'undefined') for (const bt of bots) if (bt && bt.alive) consider(bt.pos, 1.5);
-  if (NET.active) NET.players.forEach(rp => { if (rp.alive) consider(rp.pos, 1.5); });
-  if (!bestDir) return;
-  const desiredYaw = Math.atan2(-bestDir.x, -bestDir.z), desiredPitch = Math.atan2(bestDir.y, Math.hypot(bestDir.x, bestDir.z));
-  let dy = desiredYaw - yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI;
-  const k = Math.min(1, this.aimStr * dt * 6);                                  // subtle magnetic pull, scaled by strength
-  yaw += dy * k; pitch += (desiredPitch - pitch) * k;
-  pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch));
-};
 
 const canvas = renderer.domElement;
 function lockPointer() { canvas.requestPointerLock(); }
@@ -3734,7 +3501,6 @@ function sprintDown() { return OPT.sprintToggle ? sprintLatch : IM.down('sprint'
 
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
-  if (GP.active && !GP.rebindAction) GP.setMode(false);   // a key press switches the prompt/aim mode back to keyboard
   if (!gameState.running || paused) return;
   const act = IM.codeAction(e.code);
   if (invOpen) { if (act === 'inventory' && !e.repeat) toggleInventory(); return; }   // inventory open: only the inventory key closes it
@@ -4248,11 +4014,10 @@ function updateMovement(dt) {
   const f = horizontalForward(), r = horizontalRight();
   let wx = 0, wz = 0;
   if (!invOpen) {
-    if (kbDown('moveForward'))  { wx += f.x; wz += f.z; }   // keyboard (digital)
-    if (kbDown('moveBackward')) { wx -= f.x; wz -= f.z; }
-    if (kbDown('moveRight'))    { wx += r.x; wz += r.z; }
-    if (kbDown('moveLeft'))     { wx -= r.x; wz -= r.z; }
-    if (GP.active && (GP.mvX || GP.mvY)) { wx += r.x * GP.mvX - f.x * GP.mvY; wz += r.z * GP.mvX - f.z * GP.mvY; }   // gamepad left stick (analog 360°)
+    if (IM.down('moveForward'))  { wx += f.x; wz += f.z; }
+    if (IM.down('moveBackward')) { wx -= f.x; wz -= f.z; }
+    if (IM.down('moveRight'))    { wx += r.x; wz += r.z; }
+    if (IM.down('moveLeft'))     { wx -= r.x; wz -= r.z; }
   }
   const wishDir = new THREE.Vector3(wx, 0, wz);
   const hasInput = wishDir.lengthSq() > 0;
@@ -5319,7 +5084,6 @@ function tryShoot(akSide, burstFollow) {
   // Recoil kick (camera) + grow spread with sustained fire
   recoilPitch += w.recoil;
   recoilYaw   += (Math.random() - 0.5) * w.recoil * 0.6;
-  GP.rumble(0.18 + w.recoil * 1.5, 0.4, 55);   // brief per-shot controller rumble (scaled by the weapon's kick)
   currentSpread = Math.min(w.spreadMax, Math.max(currentSpread, w.spreadBase) + w.spreadGrow);
 
   // Firing while scoped briefly un-scopes from recoil, then auto-returns (improvement #1)
@@ -6561,8 +6325,6 @@ function spawnExplosionFX(center, radius, color) {
   const fx = new THREE.Mesh(explGeo, new THREE.MeshBasicMaterial({ color: color || 0xffa520, transparent: true, opacity: 0.9 }));
   fx.position.copy(center); scene.add(fx);
   explosions.push({ mesh: fx, life: 0.38, maxLife: 0.38, radius });
-  const ed = camera.position.distanceTo(center);   // heavy rumble for a blast near the player
-  if (ed < 22) GP.rumble(Math.min(1, 1.0 - ed / 28), Math.min(1, 0.85 - ed / 32), 380);
 }
 
 // Blue "force jump" energy ring that expands + fades at the player's feet on a saber leap.
@@ -7403,7 +7165,7 @@ function updateCigar(dt) {
     _cigAudioPuffT -= dt;
     if (_cigAudioPuffT <= 0) { sfxCigarPuff(); _cigAudioPuffT = 1.0; }   // inhale/exhale ~1/s
   }
-  if (cigT >= CIGAR.dur) { sfxCigarDone(); GP.rumble(0.12, 0.22, 130); cigFinish(); }   // warm satisfaction tone + subtle rumble at full heal
+  if (cigT >= CIGAR.dur) { sfxCigarDone(); cigFinish(); }   // warm satisfaction tone at full heal
 }
 
 /* ============================================================================
@@ -7670,14 +7432,12 @@ function streakRcReturnWeapon() {
 /* ---- SCORESTREAK HUD (left side) ---- */
 // --- Dynamic keybind hints: every UI key label reads live from the binding system (IM). ---
 function getKeyForAction(action) { return IM.keyLabel(IM.bind[action]); }   // 'flamethrower' -> 'V' (or 'F' if rebound), '(Not Bound)' if unbound
-// Prompt label for the CURRENT input mode: a controller icon in gamepad mode, else the keyboard key.
-function getPromptForAction(action) { return GP.active ? GP.gpIcon(action) : getKeyForAction(action); }
 function refreshKeyHints() {       // re-stamp static prompts from the current bindings (load / rebind / settings-close / match-start)
-  const ik = getPromptForAction('interact'), set = (id, html) => { const e = el(id); if (e) e.innerHTML = html; };
+  const ik = getKeyForAction('interact'), set = (id, html) => { const e = el(id); if (e) e.innerHTML = html; };
   set('ladderPrompt', 'Press <b>' + ik + '</b> to climb');
   set('noodlePrompt', 'Press <b>' + ik + '</b> to summon Mckayla');
   set('axePrompt', 'Press <b>' + ik + '</b> to pick up axe');
-  const it = el('invTipText'); if (it) it.textContent = GP.active ? (GP.gpIcon('inventory').toUpperCase() + ' TO OPEN INVENTORY') : ('PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY');
+  const it = el('invTipText'); if (it) it.textContent = 'PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY';
 }
 // --- "PRESS [I] TO OPEN INVENTORY" discoverability hint (FFA only): 30s at match start, ~4s on respawn. ---
 let invTipT = 0, invTipSession = false;
@@ -7687,7 +7447,7 @@ function maybeShowInvTip(secs, isMatchStart) {
   if ((gameMode !== 'ffa' && gameMode !== 'tdm') || invTipSession || _invTipNever()) return;
   if (isMatchStart) { const n = _invTipSeen() + 1; try { localStorage.setItem('invTipSeen', n); } catch (e) {} }
   const nv = el('invTipNever'); if (nv) nv.style.display = (_invTipSeen() >= 5) ? 'inline' : 'none';   // permanent-dismiss option after 5 views
-  const it = el('invTipText'); if (it) it.textContent = GP.active ? (GP.gpIcon('inventory').toUpperCase() + ' TO OPEN INVENTORY') : ('PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY');
+  const it = el('invTipText'); if (it) it.textContent = 'PRESS [' + getKeyForAction('inventory') + '] TO OPEN INVENTORY';
   const box = el('invTip'); if (box) { box.style.display = 'flex'; box.style.opacity = '1'; }
   invTipT = secs;
 }
@@ -7714,8 +7474,8 @@ function updateStreakHUD() {
     row.classList.toggle('locked', !t.unlocked && !t.consumed);
     row.classList.toggle('ready', t.unlocked && !t.consumed);
     row.classList.toggle('consumed', t.consumed);
-    const k = getPromptForAction(t.action);   // live key / controller icon (updates instantly on rebind or input-mode switch)
-    const lab = row.querySelector('.stLabel'); if (lab) lab.textContent = 'PRESS ' + k + ' · ' + t.name;
+    const k = getKeyForAction(t.action);   // live key (updates instantly when rebound in settings)
+    const lab = row.querySelector('.stLabel'); if (lab) lab.textContent = 'PRESS [' + k + '] · ' + t.name;
     const prog = row.querySelector('.stProg'); if (prog) prog.style.width = Math.max(0, Math.min(100, (STREAK.count / t.need) * 100)) + '%';
     const ready = row.querySelector('.stReady'); if (ready) ready.textContent = t.consumed ? 'USED' : (t.unlocked ? '✓ PRESS ' + k : STREAK.count + ' / ' + t.need);
   });
@@ -9057,7 +8817,6 @@ function hurtPlayer(dmg, srcPos) {
     player.overheal -= soak; dmg -= soak;
   }
   player.health -= dmg;
-  if (dmg > 0) GP.rumble(Math.min(0.9, 0.35 + dmg * 0.02), 0.5, 200);   // damage pulse (scales with the hit)
   showHurtFlash();
   if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg);   // body-impact thud + pained grunt, scaled by damage
   if (dmg >= 1 && srcPos) showDamageArc(srcPos);          // red directional arc toward the source
@@ -9204,7 +8963,7 @@ function buildVictimAvatar() {
 function removeVictimAvatar() { if (killcam.victim) { scene.remove(killcam.victim); disposeGroup(killcam.victim); killcam.victim = null; } }
 // Show / hide the "KILLED — RECORDING REPLAY..." overlay (held while the killer captures the post-kill 2s).
 function _kcShowRecording(on) {
-  const r = el('killcamRecording'); if (r) { r.classList.toggle('on', !!on); if (on) { const sk = r.querySelector('.kcrSkip'); if (sk) sk.textContent = 'Press ' + getPromptForAction('jump') + ' to skip'; } }
+  const r = el('killcamRecording'); if (r) { r.classList.toggle('on', !!on); if (on) { const sk = r.querySelector('.kcrSkip'); if (sk) sk.textContent = 'Press ' + getKeyForAction('jump') + ' to skip'; } }
   const f = el('killcamFade'); if (f && on) f.style.opacity = '0.9';   // dark backdrop behind the recording text
 }
 // Populate + reveal the replay HUD and arm playback. killcam.span / killcam.killT must already be set.
@@ -9218,7 +8977,7 @@ function _kcStartPlayUI() {
   if (wob && ((wob.sight && /scope/.test(wob.sight)) || /sniper/.test(wk || '') || wk === 'gg23' || wk === 'gg8')) labs.push('<span class="kl snipe">SNIPER</span>');
   if (killcam.dist > 30) labs.push('<span class="kl long">LONG SHOT</span>');
   el('killcamLabels').innerHTML = labs.join('');
-  el('killcamSkip').textContent = 'Press ' + getPromptForAction('jump') + ' to skip';
+  el('killcamSkip').textContent = 'Press ' + getKeyForAction('jump') + ' to skip';
   el('killcamBarFill').style.width = '0%';
   const km = el('killcamKillMark'); if (km) km.style.left = (killcam.span > 0 ? (killcam.killT / killcam.span * 100) : 60).toFixed(1) + '%';   // kill marker at the 3s / 60% point
   const elim = el('killcamElim'); if (elim) elim.style.opacity = '0';
@@ -9276,7 +9035,6 @@ function _kcFrameAt(fr, p) {
 function onKillMoment() {
   if (killcam.killed) return; killcam.killed = true;
   showKillFlash(killcam.head);
-  GP.rumble(0.35, 0.3, 200);   // slight rumble at the killcam kill moment
   const vp = killcam.deathPos;
   spawnBlood(new THREE.Vector3(vp.x, vp.y + 1.1, vp.z), killcam.head ? 18 : 12);
   spawnExplosionFX(new THREE.Vector3(vp.x, vp.y + 1.0, vp.z), 1.1, killcam.head ? 0xff4d4d : 0xffd27a);
@@ -9947,7 +9705,6 @@ function setSettingsTab(paneId) {
   document.querySelectorAll('#settingsScreen .setPane').forEach(p => p.classList.toggle('active', p.id === paneId));
   if (paneId === 'paneMatch') renderMatchPane();   // refresh editability + selections each time it's opened
   if (paneId === 'paneWeaponCustom') renderWeaponGrid();
-  if (paneId === 'paneController') { refreshGpStatus(); if (window._renderGpBinds) window._renderGpBinds(); if (window._refreshGpOpts) window._refreshGpOpts(); }
 }
 document.querySelectorAll('#settingsScreen .setTab').forEach(tab => tab.onclick = () => { setSettingsTab(tab.dataset.pane); sfxClick(); });
 // Pause-menu buttons.
@@ -10041,85 +9798,6 @@ el('pauseTeamSwitch').onclick = () => {
 
   window._renderControls = renderControls; window._refreshControlOpts = refreshControlOpts;
   renderControls(); refreshControlOpts();
-})();
-
-/* --- GAMEPAD: connection toast, first-time tutorial overlay, and the Controller settings tab --- */
-let _gpToastT = null;
-function gpToast(msg) { const t = el('gpToast'); if (!t) return; t.textContent = msg; t.classList.add('on'); clearTimeout(_gpToastT); _gpToastT = setTimeout(() => t.classList.remove('on'), 3000); }
-let _gpTutT = null;
-function gpTutorialOpen() { const t = el('gpTutorial'); return !!(t && t.classList.contains('on')); }
-function showGpTutorial() { const t = el('gpTutorial'); if (!t) return; t.classList.add('on'); clearTimeout(_gpTutT); _gpTutT = setTimeout(hideGpTutorial, 8000); }
-function hideGpTutorial() { const t = el('gpTutorial'); if (t) t.classList.remove('on'); clearTimeout(_gpTutT); }
-function maybeShowGpTutorial() {   // first controller connection only (re-viewable from Controller settings)
-  let seen = false; try { seen = localStorage.getItem('gpTutorialSeen') === '1'; } catch (e) {}
-  if (seen) return; try { localStorage.setItem('gpTutorialSeen', '1'); } catch (e) {}
-  showGpTutorial();
-}
-window.addEventListener('mousedown', () => { if (gpTutorialOpen()) hideGpTutorial(); });
-window.addEventListener('keydown', () => { if (gpTutorialOpen()) hideGpTutorial(); });
-function gpApplyBind(action, btn) {   // bind + clear any other action holding that button (-1 = unbound)
-  for (const a in GP.bind) if (GP.bind[a] === btn && a !== action) GP.bind[a] = -1;
-  GP.bind[action] = btn; GP.rebindAction = null; GP.save();
-  if (window._renderGpBinds) window._renderGpBinds();
-  refreshKeyHints(); if (typeof updateStreakHUD === 'function') updateStreakHUD(); sfxClick();
-}
-function refreshGpStatus() {
-  const box = el('gpStatusBox'); if (!box) return;
-  const names = Object.keys(GP.pads).map(k => (GP.pads[k].name || 'Controller').replace(/\s*\([^)]*\)\s*/g, '').trim()).filter(Boolean);
-  if (!names.length) { box.innerHTML = '<span class="gpOff">●</span> No controller detected — connect an Xbox / PlayStation controller via USB or Bluetooth.'; return; }
-  box.innerHTML = '<span class="gpOn">●</span> ' + names.map(n => '<b>' + n + '</b>').join(', ')
-    + ' &nbsp;·&nbsp; type: ' + (GP.type === 'ps' ? 'PlayStation' : 'Xbox / Standard')
-    + ' &nbsp;·&nbsp; input mode: <b>' + (GP.active ? 'GAMEPAD' : 'keyboard') + '</b>';
-}
-(function setupControllerUI() {
-  const GP_ROWS = [
-    ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['jump', 'Jump'], ['crouch', 'Crouch / Dive'],
-    ['reload', 'Reload'], ['karambit', 'Swap to Melee'], ['quickMelee', 'Quick Melee'], ['sprint', 'Sprint'],
-    ['grenade', 'Throw Impulse'], ['lethal', 'Throw Lethal'], ['use', 'Cigar / Drink JD'], ['interact', 'Interact / Climb'],
-    ['weapon1', 'Weapon Slot 1'], ['weapon2', 'Weapon Slot 2'], ['scoreboard', 'Scoreboard / Inventory (hold)'], ['pause', 'Pause / Menu']
-  ];
-  function renderGpBinds() {
-    const list = el('gpBindList'); if (!list) return; list.innerHTML = '';
-    GP_ROWS.forEach(([a, label]) => {
-      const row = document.createElement('div'); row.className = 'ctrlRow';
-      row.innerHTML = `<span class="cName">${label}</span>`;
-      const kb = document.createElement('div'); kb.className = 'ctrlKey'; kb.dataset.action = a;
-      if (GP.rebindAction === a) { kb.textContent = 'Press any button…'; kb.classList.add('rebinding'); }
-      else { kb.textContent = GP.gpIcon(a); if (GP.bind[a] == null || GP.bind[a] < 0) kb.classList.add('unbound'); }
-      kb.onclick = () => { GP.rebindAction = (GP.rebindAction === a ? null : a); renderGpBinds(); };
-      row.appendChild(kb); list.appendChild(row);
-    });
-    // a fixed-combos hint (sticks / triggers / scorestreaks aren't remappable)
-    const note = document.createElement('div'); note.className = 'cNote'; note.style.cssText = 'opacity:.6;font-size:12px;margin-top:8px;line-height:1.5';
-    note.innerHTML = 'Sticks (move / look) &amp; triggers (LT/RT) are fixed. Scorestreaks = <b>LT + DPad</b>, King Kong = <b>LB + RB</b>.';
-    list.appendChild(note);
-  }
-  function refreshGpOpts() {
-    const setv = (id, v) => { const e = el(id); if (e) e.value = v; }, sett = (id, t) => { const e = el(id); if (e) e.textContent = t; };
-    setv('gpDzL', Math.round(GP.dzL * 100)); sett('gpDzLV', Math.round(GP.dzL * 100) + '%');
-    setv('gpDzR', Math.round(GP.dzR * 100)); sett('gpDzRV', Math.round(GP.dzR * 100) + '%');
-    setv('gpSensH', Math.round(GP.sensH * 100)); sett('gpSensHV', GP.sensH.toFixed(1) + 'x');
-    setv('gpSensV', Math.round(GP.sensV * 100)); sett('gpSensVV', GP.sensV.toFixed(1) + 'x');
-    setv('gpSensAds', Math.round(GP.sensAds * 100)); sett('gpSensAdsV', GP.sensAds.toFixed(1) + 'x');
-    setv('gpAimStr', Math.round(GP.aimStr * 100)); sett('gpAimStrV', Math.round(GP.aimStr * 100) + '%');
-    setv('gpRumbleInt', Math.round(GP.rumbleInt * 100)); sett('gpRumbleIntV', Math.round(GP.rumbleInt * 100) + '%');
-    const ck = (id, v) => { const e = el(id); if (e) e.checked = v; };
-    ck('gpAimAssist', GP.aimAssist); ck('gpCurve', GP.curve === 'exp'); ck('gpRumble', GP.rumbleOn); ck('gpInvertY', GP.invertY);
-  }
-  const rng = (id, vid, fn, fmt) => { const e = el(id); if (e) e.addEventListener('input', () => { fn(parseInt(e.value, 10)); el(vid).textContent = fmt(); GP.save(); }); };
-  rng('gpDzL', 'gpDzLV', v => GP.dzL = v / 100, () => Math.round(GP.dzL * 100) + '%');
-  rng('gpDzR', 'gpDzRV', v => GP.dzR = v / 100, () => Math.round(GP.dzR * 100) + '%');
-  rng('gpSensH', 'gpSensHV', v => GP.sensH = Math.max(0.1, Math.min(5, v / 100)), () => GP.sensH.toFixed(1) + 'x');
-  rng('gpSensV', 'gpSensVV', v => GP.sensV = Math.max(0.1, Math.min(5, v / 100)), () => GP.sensV.toFixed(1) + 'x');
-  rng('gpSensAds', 'gpSensAdsV', v => GP.sensAds = Math.max(0.1, Math.min(2, v / 100)), () => GP.sensAds.toFixed(1) + 'x');
-  rng('gpAimStr', 'gpAimStrV', v => GP.aimStr = Math.max(0, Math.min(1, v / 100)), () => Math.round(GP.aimStr * 100) + '%');
-  rng('gpRumbleInt', 'gpRumbleIntV', v => GP.rumbleInt = Math.max(0, Math.min(1, v / 100)), () => Math.round(GP.rumbleInt * 100) + '%');
-  const chk = (id, fn) => { const e = el(id); if (e) e.addEventListener('change', () => { fn(e.checked); GP.save(); sfxClick(); }); };
-  chk('gpAimAssist', v => GP.aimAssist = v); chk('gpCurve', v => GP.curve = v ? 'exp' : 'lin'); chk('gpRumble', v => { GP.rumbleOn = v; if (v) GP.rumble(0.4, 0.4, 150); }); chk('gpInvertY', v => GP.invertY = v);
-  if (el('gpReset')) el('gpReset').onclick = () => { GP.resetBind(); renderGpBinds(); refreshKeyHints(); sfxClick(); };
-  if (el('gpViewTut')) el('gpViewTut').onclick = () => { showGpTutorial(); sfxClick(); };
-  window._renderGpBinds = renderGpBinds; window._refreshGpOpts = refreshGpOpts;
-  renderGpBinds(); refreshGpOpts();
 })();
 // Skin creator access: main menu, and "Edit Skin" inside Settings (applies next respawn).
 el('menuSkin').onclick = () => SkinCreator.open('mainMenu');
@@ -11951,7 +11629,7 @@ function updateScooters(dt) {
   if (!riding) {
     let near = null, bd = SCOOTER.mountDist;
     for (const sc of scooters) { if (sc.alive && !sc.occupant && player.alive && gameState.running) { const d = player.pos.distanceTo(sc.pos); if (d < bd) { bd = d; near = sc; } } }
-    const p = el('scooterPrompt'); if (p) { p.style.display = near ? 'block' : 'none'; if (near) p.innerHTML = 'Press <b>' + getPromptForAction('interact') + '</b> to ride the scooter'; }
+    const p = el('scooterPrompt'); if (p) { p.style.display = near ? 'block' : 'none'; if (near) p.innerHTML = 'Press <b>' + getKeyForAction('interact') + '</b> to ride the scooter'; }
   } else { const p = el('scooterPrompt'); if (p) p.style.display = 'none'; }
 }
 const clock = new THREE.Clock();
@@ -11959,7 +11637,6 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);  // clamp for stability
 
-  GP.poll(dt);             // poll the controller (movement/look/fire/actions) — additive to keyboard+mouse
   updateAudioListener();   // keep the audio listener at the camera (pos + right vector)
   Ambient.update(dt);      // wind swell + occasional bird
   updateHeartbeat(dt);     // critical-health heartbeat loop

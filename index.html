@@ -808,8 +808,9 @@
       <div style="position:relative;">
         <canvas id="brMapCanvas" width="760" height="760" style="width:min(76vh,80vw); height:min(76vh,80vw); border:3px solid #5a4a2a; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.6); background:#26506b;"></canvas>
         <div style="position:absolute; left:8px; bottom:8px; background:rgba(8,14,20,0.7); border:1px solid #3a4a5a; border-radius:6px; padding:6px 9px; font:700 11px 'Segoe UI',sans-serif; color:#cfe0f0; line-height:1.55; pointer-events:none;">
-          <div><span style="color:#fff;">▲</span> You</div><div><span style="color:#3aa0ff;">◯</span> Safe zone</div><div><span style="color:#ff9a3a;">◯</span> Next zone</div><div><span style="color:#e05a4a;">▨</span> Danger</div><div><span style="color:#ff4040;">●</span> Gunshot</div><div><span style="color:#ffe600;">✚</span> Your ping</div>
+          <div><span style="color:#3aff7a;">▲</span> You</div><div><span style="color:#fff;">◯</span> Safe zone</div><div><span style="color:#4ad0ff;">◯</span> Next zone</div><div><span style="color:#e05a4a;">▨</span> Danger</div><div><span style="color:#ff4040;">●</span> Gunshot</div><div><span style="color:#ffe24a;">⊕</span> Your ping</div><div><span style="color:#4ad0ff;">⊕</span> Team ping</div>
         </div>
+        <div id="brMapCursor" style="position:absolute; right:8px; top:8px; background:rgba(8,14,20,0.7); border:1px solid #3a4a5a; border-radius:6px; padding:5px 9px; font:700 11px 'Segoe UI',sans-serif; color:#cfe0f0; pointer-events:none; min-width:120px; text-align:right;"></div>
       </div>
       <div style="font:700 13px 'Segoe UI',sans-serif; color:#cfe0f0; margin-top:8px; opacity:.9;">Press <b style="color:#ffe600">M</b> / <b style="color:#ffe600">ESC</b> to close • <b style="color:#ffe600">Click</b> to ping • <b style="color:#ffe600">Scroll</b> to zoom • walk slowly while open</div>
     </div>
@@ -10013,7 +10014,7 @@ function brStart() {
   brGunshots.length = 0; const mm = el('brMinimap'); if (mm) mm.style.display = brMinimapOn ? 'block' : 'none';   // minimap
   brHudShow(true); updateBRHud();
 }
-function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
+function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); }
 function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
 function brEliminate(name) {                              // record an elimination + crown the winner when one remains
   if (!BR.active) return;
@@ -10048,6 +10049,7 @@ function brUpdate(dt) {
   if (typeof brUpdateZone === 'function') brUpdateZone(dt);   // stage 3: shrink + OOB damage
   if (brSpectating && typeof brUpdateSpectator === 'function') brUpdateSpectator(dt);   // post-death camera (solo)
   if (island && island.fireflies) island.fireflies.material.opacity = dnStarF * (0.5 + 0.3 * Math.sin(BR.t * 2.2));   // glow + gently twinkle at night, hidden by day
+  if (typeof brUpdatePings === 'function') brUpdatePings(dt);   // map pings: expire after 8s + pulse the 3D beams
   if (brMapOpen) brDrawMap();
   if (brInvOpen && brInvDrag < 0) brRenderInv();   // (Part 3) refresh the pop-up inventory (skip mid-drag)
   if (brMinimapOn) brDrawMinimap();
@@ -10881,7 +10883,7 @@ let brMapOpen = false, brSpectating = false, brSpecIdx = 0, brSpecFree = false, 
 const brSpecFromCam = new THREE.Vector3(), brFreePos = new THREE.Vector3();
 function brSpecList() { const list = bots.filter(b => b.alive && !b.dying); if (NET.active) NET.players.forEach(rp => { if (rp.alive) list.push(rp); }); return list; }   // living players to spectate (bots + remotes)
 function brViewPos() { return (brSpectating && brSpecFree) ? brFreePos : ((brSpectating && brSpecCur) ? brSpecCur.pos : player.pos); }   // minimap/compass centre
-let brMapZoom = 1; const brPings = [];   // (Part 7) scroll-zoom level + personal ping markers
+let brMapZoom = 1;   // (Part 7) scroll-zoom level (brPings declared below with the networked ping system)
 function brToggleMap() { if (!BR.active) return; if (brMapOpen) brCloseMap(); else brOpenMap(); }
 function brOpenMap() {
   if (!BR.active || !gameState.running) return;
@@ -10890,14 +10892,43 @@ function brOpenMap() {
   brDrawMap(); if (player.alive && !brSpectating) document.exitPointerLock && document.exitPointerLock();   // free the cursor for ping/zoom (game keeps running)
 }
 function brCloseMap() { brMapOpen = false; const m = el('brMap'); if (m) m.style.display = 'none'; if (BR.active && gameState.running && player.alive && !brSpectating && !paused && !brInvOpen) lockPointer(); }
-function brMapPing(clientX, clientY) {   // (Part 7) click the map -> a personal-only marker at that world position
-  const cv = el('brMapCanvas'); if (!cv || !island || !brMapOpen) return;
-  const rect = cv.getBoundingClientRect(); if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
-  const m = brMapXf(); const px = (clientX - rect.left) / rect.width * cv.width, py = (clientY - rect.top) / rect.height * cv.height;
-  const wx = m.viewCx + (px - m.cm) / m.scale, wz = m.viewCz + (py - m.cm) / m.scale;
-  brPings.push({ x: wx, z: wz, t: performance.now() }); if (brPings.length > 6) brPings.shift();
-  if (typeof sfxClick === 'function') sfxClick();
+function brMapCursorWorld(clientX, clientY) {   // map a screen point on the canvas to world (wx,wz), or null if off-canvas
+  const cv = el('brMapCanvas'); if (!cv || !island) return null;
+  const rect = cv.getBoundingClientRect(); if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return null;
+  const m = brMapXf(), px = (clientX - rect.left) / rect.width * cv.width, py = (clientY - rect.top) / rect.height * cv.height;
+  return { x: m.viewCx + (px - m.cm) / m.scale, z: m.viewCz + (py - m.cm) / m.scale };
 }
+function brMapPing(clientX, clientY) {   // click the map -> drop a ping at that world position (networked; 1 per player, 8s)
+  if (!brMapOpen) return; const w = brMapCursorWorld(clientX, clientY); if (!w) return;
+  brPlacePingLocal(w.x, w.z);
+}
+// ----- BR PINGS: one per player, 8s, on the full map + minimap + a 3D world beam (always-on-top). Networked via 'mapPing'. -----
+const brPings = [];   // { id, x, z, t, beam }
+function brPingColor(id) { return (id === (NET.active ? NET.selfId : 'self')) ? 0xffe24a : 0x4ad0ff; }   // your ping = gold, others = cyan
+function brPingBeam(wx, wz, colHex) {
+  const g = new THREE.Group(), gy = groundHeightAt(wx, wz, 90);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 60, 8, 1, true), new THREE.MeshBasicMaterial({ color: colHex, transparent: true, opacity: 0.5, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+  beam.position.set(wx, gy + 30, wz); beam.renderOrder = 998; g.add(beam);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(1.3, 2.2, 8), new THREE.MeshBasicMaterial({ color: colHex, transparent: true, opacity: 0.85, depthTest: false, depthWrite: false })); cap.position.set(wx, gy + 4, wz); cap.renderOrder = 999; g.add(cap);   // downward marker near the ground
+  scene.add(g); return g;
+}
+function brSetPing(id, wx, wz, t) {   // place/replace this player's single ping
+  const ix = brPings.findIndex(p => p.id === id); if (ix >= 0) { const ex = brPings[ix]; if (ex.beam) { scene.remove(ex.beam); disposeGroup(ex.beam); } brPings.splice(ix, 1); }
+  brPings.push({ id, x: wx, z: wz, t: t || performance.now(), beam: brPingBeam(wx, wz, brPingColor(id)) });
+}
+function brPlacePingLocal(wx, wz) {
+  brSetPing(NET.active ? NET.selfId : 'self', wx, wz, performance.now());
+  if (typeof sfxClick === 'function') sfxClick();
+  if (NET.active) NET.broadcast({ t: 'mapPing', id: NET.selfId, x: wx, z: wz });   // networked: everyone sees it
+}
+function brUpdatePings(dt) {   // expire after 8s + pulse the beams
+  const now = performance.now();
+  for (let i = brPings.length - 1; i >= 0; i--) { const p = brPings[i];
+    if ((now - p.t) / 1000 > 8) { if (p.beam) { scene.remove(p.beam); disposeGroup(p.beam); } brPings.splice(i, 1); continue; }
+    if (p.beam) { const k = 1 + 0.12 * Math.sin(now * 0.009); p.beam.scale.set(k, 1, k); p.beam.children.forEach(c => { if (c.material) c.material.opacity = (c.geometry.type === 'ConeGeometry') ? (0.6 + 0.3 * Math.sin(now * 0.009)) : 0.5; }); }
+  }
+}
+function brClearPings() { brPings.forEach(p => { if (p.beam) { scene.remove(p.beam); disposeGroup(p.beam); } }); brPings.length = 0; }
 function brMapXf() {   // shared world<->map transform (so brDrawMap and brMapPing agree), honouring zoom
   const cv = el('brMapCanvas'), S = cv.width, pad = 46, inner = S - 2 * pad, R = island.R, cm = pad + inner / 2;
   const zoom = Math.max(1, brMapZoom), vp = brViewPos();
@@ -10929,6 +10960,7 @@ function brDrawMinimap() {
     else if (d < 30) { ctx.fillStyle = '#ffd34a'; ctx.beginPath(); ctx.arc(m[0], m[1], 2.5, 0, 7); ctx.fill(); } }
   const now = performance.now();
   for (let i = brGunshots.length - 1; i >= 0; i--) { const g = brGunshots[i], age = (now - g.t) / 1000; if (age > 3) { brGunshots.splice(i, 1); continue; } const m = w2m(g.x, g.z); ctx.fillStyle = 'rgba(255,60,60,' + (1 - age / 3).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(m[0], m[1], 3, 0, 7); ctx.fill(); }
+  if (typeof brPings !== 'undefined') brPings.forEach(pg => { if (Math.hypot(pg.x - vp.x, pg.z - vp.z) > zoom) return; const m = w2m(pg.x, pg.z); ctx.strokeStyle = '#' + brPingColor(pg.id).toString(16).padStart(6, '0'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(m[0], m[1], 4 + Math.sin(now * 0.008), 0, 7); ctx.stroke(); });   // map pings on the minimap too
   ctx.restore();
   ctx.textAlign = 'center'; ctx.font = "bold 9px 'Segoe UI',sans-serif";
   island.pois.forEach(p => { const wx = island.cx + p.lx, wz = island.cz + p.lz; if (Math.hypot(wx - vp.x, wz - vp.z) > 85) return; const m = w2m(wx, wz), mx = Math.max(10, Math.min(S - 10, m[0])), my = Math.max(12, Math.min(S - 4, m[1])); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(p.name, mx + 0.5, my + 0.5); ctx.fillStyle = '#e8eef5'; ctx.fillText(p.name, mx, my); });
@@ -10961,19 +10993,25 @@ function brDrawMap() {
   if (z) {
     const zm = w2m(z.cx, z.cz), zr = Math.max(2, z.r * X.scale);
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, S, S); ctx.arc(zm[0], zm[1], zr, 0, 7, true); ctx.fillStyle = 'rgba(210,40,40,0.26)'; ctx.fill('evenodd'); ctx.restore();   // DANGER (outside the blue)
-    ctx.beginPath(); ctx.arc(zm[0], zm[1], zr, 0, 7); ctx.strokeStyle = '#3aa0ff'; ctx.lineWidth = 3; ctx.stroke();
-    if ((z.state === 'warn' || z.state === 'shrink') && z.toR != null) { const nm = w2m(z.toCx, z.toCz), nr = Math.max(2, z.toR * X.scale); ctx.beginPath(); ctx.arc(nm[0], nm[1], nr, 0, 7); ctx.strokeStyle = '#ff9a3a'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.stroke(); ctx.setLineDash([]); }
+    ctx.beginPath(); ctx.arc(zm[0], zm[1], zr, 0, 7); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();   // CURRENT safe zone — solid white
+    if ((z.state === 'warn' || z.state === 'shrink') && z.toR != null) { const nm = w2m(z.toCx, z.toCz), nr = Math.max(2, z.toR * X.scale); ctx.beginPath(); ctx.arc(nm[0], nm[1], nr, 0, 7); ctx.strokeStyle = '#4ad0ff'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.stroke(); ctx.setLineDash([]); }   // NEXT zone — dashed cyan
   }
   ctx.textAlign = 'center'; ctx.font = "700 10px 'Segoe UI',sans-serif";                  // landmarks: caves + wrecks
   (island.caveSpots || []).forEach(c => { const m = w2m(island.cx + c[0], island.cz + c[1]); ctx.fillStyle = '#2a2a2a'; ctx.beginPath(); ctx.arc(m[0], m[1], 3, 0, 7); ctx.fill(); brMapLabel(ctx, '🕳 Cave', m[0], m[1] - 7, '#1a1a1a'); });
   brMapLandmarks().forEach(L => { const m = w2m(island.cx + L.lx, island.cz + L.lz); brMapLabel(ctx, L.icon + ' ' + L.name, m[0], m[1], '#241a10'); });
+  (island.peaks || []).forEach(pk => { const m = w2m(island.cx + pk.lx, island.cz + pk.lz); ctx.fillStyle = '#5a4a3a'; ctx.beginPath(); ctx.moveTo(m[0], m[1] - 5); ctx.lineTo(m[0] + 4, m[1] + 3); ctx.lineTo(m[0] - 4, m[1] + 3); ctx.closePath(); ctx.fill(); brMapLabel(ctx, pk.name, m[0], m[1] + 13, '#3a2a1a'); });   // mountain peaks
+  if (BR.phase === 'drop' && BR.drop && BR.drop.dir) {   // transport-plane flight path (dashed) + current plane position
+    const d = BR.drop.dir, pp = BR.drop.planePos, a0 = w2m(pp.x - d.x * R * 1.6, pp.z - d.z * R * 1.6), a1 = w2m(pp.x + d.x * R * 1.6, pp.z + d.z * R * 1.6);
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.stroke(); ctx.setLineDash([]);
+    const pm = w2m(pp.x, pp.z); ctx.font = "16px 'Segoe UI',sans-serif"; ctx.fillStyle = '#fff'; ctx.fillText('✈️', pm[0], pm[1] + 5);
+  }
   island.pois.forEach(p => { const m = w2m(island.cx + p.lx, island.cz + p.lz);          // POIs: type icon + name
     ctx.font = "16px 'Segoe UI',sans-serif"; ctx.fillStyle = '#15110a'; ctx.fillText(brPoiIcon(p.icon), m[0], m[1] + 5);
     ctx.font = "bold 12px 'Segoe UI',sans-serif"; brMapLabel(ctx, p.name, m[0], m[1] - 12, '#15110a'); });
   for (let i = brGunshots.length - 1; i >= 0; i--) { const g = brGunshots[i], age = (now - g.t) / 1000; if (age > 3) continue; const m = w2m(g.x, g.z); ctx.fillStyle = 'rgba(255,50,50,' + (1 - age / 3).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(m[0], m[1], 4.5, 0, 7); ctx.fill(); }   // gunshots heard
-  for (let i = brPings.length - 1; i >= 0; i--) { const pg = brPings[i], age = (now - pg.t) / 1000; if (age > 45) { brPings.splice(i, 1); continue; } const m = w2m(pg.x, pg.z), a = Math.max(0.25, 1 - age / 45); ctx.strokeStyle = 'rgba(255,214,0,' + a.toFixed(2) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(m[0] - 7, m[1]); ctx.lineTo(m[0] + 7, m[1]); ctx.moveTo(m[0], m[1] - 7); ctx.lineTo(m[0], m[1] + 7); ctx.stroke(); }   // your pings
+  brPings.forEach(pg => { const m = w2m(pg.x, pg.z), pr = 6 + 2.5 * Math.sin(now * 0.008), c = '#' + brPingColor(pg.id).toString(16).padStart(6, '0'); ctx.strokeStyle = c; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(m[0], m[1], pr, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(m[0] - 8, m[1]); ctx.lineTo(m[0] + 8, m[1]); ctx.moveTo(m[0], m[1] - 8); ctx.lineTo(m[0], m[1] + 8); ctx.stroke(); });   // pings (8s, pulsing; gold=you, cyan=others) — expiry handled by brUpdatePings
   const pm = w2m(player.pos.x, player.pos.z), fwd = horizontalForward(), ang = Math.atan2(fwd.x, -fwd.z);   // player triangle (rotates; N up)
-  ctx.save(); ctx.translate(pm[0], pm[1]); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, 9); ctx.lineTo(-8, 9); ctx.closePath(); ctx.fillStyle = brSpectating ? '#9fd0ff' : '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.translate(pm[0], pm[1]); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, 9); ctx.lineTo(-8, 9); ctx.closePath(); ctx.fillStyle = brSpectating ? '#9fd0ff' : '#3aff7a'; ctx.strokeStyle = '#0a3a18'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke(); ctx.restore();   // local player — bright green arrow
   ctx.restore();   // un-clip
   ctx.fillStyle = '#15110a'; ctx.font = "bold 16px 'Segoe UI',sans-serif"; ctx.textAlign = 'center';   // compass rose (north-up)
   ctx.fillText('N', X.cm, 22); ctx.fillText('S', X.cm, S - 8); ctx.textAlign = 'left'; ctx.fillText('W', 7, X.cm + 5); ctx.textAlign = 'right'; ctx.fillText('E', S - 7, X.cm + 5); ctx.textAlign = 'center';
@@ -12656,6 +12694,7 @@ canvas.addEventListener('click', () => { if (gameState.running && !pointerLocked
 (function () {
   const mp = el('brMap'), cv = el('brMapCanvas'); if (!mp || !cv) return;
   cv.addEventListener('mousedown', (e) => { if (!brMapOpen) return; e.stopPropagation(); e.preventDefault(); brMapPing(e.clientX, e.clientY); });
+  cv.addEventListener('mousemove', (e) => { if (!brMapOpen) return; const w = brMapCursorWorld(e.clientX, e.clientY), el2 = el('brMapCursor'); if (!el2) return; if (!w) { el2.textContent = ''; return; } const d = Math.round(Math.hypot(w.x - player.pos.x, w.z - player.pos.z)); el2.innerHTML = 'X ' + Math.round(w.x - island.cx) + ' &nbsp; Z ' + Math.round(w.z - island.cz) + '<br><span style="color:#ffe24a">' + d + 'm</span>'; });   // cursor world coords (island-relative) + distance to you
   mp.addEventListener('mousedown', (e) => { if (brMapOpen) e.stopPropagation(); });
   mp.addEventListener('contextmenu', (e) => e.preventDefault());
   mp.addEventListener('wheel', (e) => { if (!brMapOpen) return; e.stopPropagation(); e.preventDefault(); brMapZoom = Math.max(1, Math.min(4, brMapZoom + (e.deltaY < 0 ? 0.5 : -0.5))); brDrawMap(); }, { passive: false });
@@ -13116,6 +13155,11 @@ const NET = {
       }
       case 'brchest': {                                // (Part 3) a peer opened a BR chest — show its lid go up + mark looted (their items are theirs)
         if (typeof BR_LOOT !== 'undefined') { const L = BR_LOOT.find(x => x.chest && x.id === msg.id); if (L && L.state === 'closed' && typeof brOpenChest === 'function') brOpenChest(L, true); }
+        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
+        break;
+      }
+      case 'mapPing': {                                // a peer dropped a map ping — show it on our minimap + full map + 3D world beam
+        if (BR.active && typeof brSetPing === 'function') brSetPing(msg.id, msg.x, msg.z, performance.now());
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
         break;
       }

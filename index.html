@@ -2345,6 +2345,8 @@ function sfxADS(into, scope) {
 
 /* --- CIGAR --- */
 function sfxCigarLight() { SND.play2d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 700, dur: 0.03, peak: 0.14 }); aNoise(ctx, out, t + 0.05, { dur: 0.25, peak: 0.18, filter: 'highpass', freq: 4000 }); }, 'voice', 'cig', 0.6, 0.3); }
+function sfxGulp() { SND.play2d((ctx, out, t) => { for (let i = 0; i < 3; i++) aTone(ctx, out, t + i * 0.13, { type: 'sine', f0: 175 - i * 18, f1: 95, dur: 0.1, peak: 0.16 }); }, 'voice', 'gulp', 0.6, 0.4); }   // JD drinking "glug-glug"
+function sfxPinPull(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'square', f0: 2600, f1: 1800, dur: 0.04, peak: 0.12 }); aNoise(ctx, out, t + 0.02, { dur: 0.05, peak: 0.1, filter: 'highpass', freq: 5000 }); }, pos, 'weapons', 'pin', 0.5, 0.08); }   // grenade pin-pull click
 function sfxCigarPuff() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.2, peak: 0.12, filter: 'bandpass', freq: 600, freq1: 900, q: 0.6 }); aNoise(ctx, out, t + 0.22, { dur: 0.25, peak: 0.1, filter: 'bandpass', freq: 800, freq1: 400, q: 0.5 }); }, 'voice', 'cig', 0.55, 0.5); }
 function sfxCigarDone() { SND.play2d((ctx, out, t) => aTone(ctx, out, t, { type: 'sine', f0: 330, f1: 440, dur: 0.5, peak: 0.3, atk: 0.05 }), 'voice', 'cig', 0.6, 0.5); }
 function sfxCigarCancel() { SND.play2d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.12, peak: 0.2, filter: 'highpass', freq: 5000 }); }, 'voice', 'cig', 0.5, 0.12); }
@@ -8209,7 +8211,7 @@ function throwLethal() {
   const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
   const dir = camera.getWorldDirection(new THREE.Vector3());
   if (lethalChoice === 'axe') throwAxe(origin, dir.clone());
-  else throwSmoke(origin, dir.clone());
+  else { if (typeof sfxPinPull === 'function') sfxPinPull(origin); throwSmoke(origin, dir.clone()); }   // pin-pull click before the smoke-nade whoosh
   if (gunMesh) gunMesh.position.z = -0.35;                      // throw pop on the viewmodel
   updateHUD();
 }
@@ -10044,7 +10046,6 @@ function brUpdate(dt) {
   if (typeof brUpdateLoot === 'function') brUpdateLoot(dt);   // stage 2: loot bob + pickup
   if (typeof brUpdateZone === 'function') brUpdateZone(dt);   // stage 3: shrink + OOB damage
   if (brSpectating && typeof brUpdateSpectator === 'function') brUpdateSpectator(dt);   // post-death camera (solo)
-  if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);   // 5-slot: show held consumable / hide gun for empty hands
   if (island && island.fireflies) island.fireflies.material.opacity = dnStarF * (0.5 + 0.3 * Math.sin(BR.t * 2.2));   // glow + gently twinkle at night, hidden by day
   if (brMapOpen) brDrawMap();
   if (brInvOpen && brInvDrag < 0) brRenderInv();   // (Part 3) refresh the pop-up inventory (skip mid-drag)
@@ -10429,7 +10430,7 @@ function brRefillAmmo() {   // ammo box: +2 magazines of reserve to EVERY carrie
 }
 function brDrinkJD() {   // returns true if a bottle was consumed (caller decrements the slot)
   if (!BR.active || (player.jdBottles || 0) <= 0 || player.overheal >= OVERHEAL_MAX || !player.alive) return false;
-  player.jdBottles--; player.overheal = OVERHEAL_MAX; flashJD(); return true;   // restore shield (full animation = later polish)
+  player.jdBottles--; player.overheal = OVERHEAL_MAX; flashJD(); if (typeof sfxGulp === 'function') sfxGulp(); return true;   // restore shield + drinking gulp
 }
 function brUpdateLoot(dt) {
   brSwapTarget = null;
@@ -10618,33 +10619,77 @@ function brOpenInv() {
 function brCloseInv() { brInvOpen = false; brInvDrag = -1; const p = el('brInvPanel'); if (p) p.style.display = 'none'; if (gameState.running && player.alive && !paused) lockPointer(); }
 // ----- in-hand consumable viewmodel (BR-only; weapons/melee use the existing gun viewmodel) -----
 let brHeldVM = null, brHeldVMType = null, brHeldUseT = 0, brSwapT = 0;   // brSwapT = brief (~150ms) equip-in dip for consumables (Part 5)
-function brBuildHeldVM(t) {
+function brBuildHeldVM(t) {   // first-person held-item models (procedural, flat-shaded low-poly to match weapons)
   const g = new THREE.Group();
-  if (t === 'cigar') { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), flatMat(0xb5742a)); c.rotation.z = Math.PI / 2; g.add(c); const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.08, 8), flatMat(0xe8d8b0)); tip.rotation.z = Math.PI / 2; tip.position.x = -0.28; g.add(tip); }
-  else if (t === 'jd') { g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.5, 8), flatMat(0x3a2a1a))); const nk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.18, 6), flatMat(0x2a1c10)); nk.position.y = 0.33; g.add(nk); const lbl = new THREE.Mesh(new THREE.BoxGeometry(0.205, 0.2, 0.205), flatMat(0xe8e0c8)); g.add(lbl); }
-  else if (t === 'impulse') { g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.4, 10), flatMat(0x2a6a8a))); const r = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 10), new THREE.MeshLambertMaterial({ color: 0x7fe0ff, emissive: 0x7fe0ff, emissiveIntensity: 0.6, flatShading: true })); g.add(r); }
-  else if (t === 'lethal') { if (lethalChoice === 'axe') { g.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), flatMat(0x6f5333))); const bl = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.26), flatMat(0x9aa3ab)); bl.position.set(0, 0.22, 0.1); g.add(bl); } else g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.4, 8), flatMat(0x4a5a2a))); }
-  else if (t === 'second') { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), flatMat(0xe8e8f0)); s.rotation.z = 0.3; g.add(s); const nd = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.16, 4), flatMat(0xcfd6dd)); nd.position.set(0.17, -0.3, 0); nd.rotation.z = 0.3; g.add(nd); }
+  if (t === 'cigar') {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8), flatMat(0x8a5a2a)); c.rotation.z = Math.PI / 2; g.add(c);
+    const filt = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 0.1, 8), flatMat(0xe8d8b0)); filt.rotation.z = Math.PI / 2; filt.position.x = -0.2; g.add(filt);
+    const ember = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.034, 0.04, 8), new THREE.MeshBasicMaterial({ color: 0xff6a1a })); ember.rotation.z = Math.PI / 2; ember.position.x = 0.22; g.add(ember); g.userData.ember = ember;   // glowing lit tip
+    const smoke = []; for (let i = 0; i < 4; i++) { const p = new THREE.Mesh(new THREE.SphereGeometry(0.028 + i * 0.012, 5, 4), new THREE.MeshBasicMaterial({ color: 0x9aa0a8, transparent: true, opacity: 0, depthWrite: false })); p.position.set(0.22, 0.06 + i * 0.06, 0); g.add(p); smoke.push(p); } g.userData.smoke = smoke;   // rising smoke curl
+  }
+  else if (t === 'jd') {
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.46, 8), flatMat(0x14110c)));   // black-glass body
+    const nk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.16, 6), flatMat(0x0e0b08)); nk.position.y = 0.3; g.add(nk);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.05, 6), flatMat(0x33281a)); cap.position.y = 0.4; g.add(cap);
+    const lbl = new THREE.Mesh(new THREE.BoxGeometry(0.205, 0.18, 0.07), flatMat(0xf0ead8)); lbl.position.z = 0.1; g.add(lbl);   // white front label
+  }
+  else if (t === 'impulse') {   // electric-blue sphere + emissive bands + antenna (distinct from the olive smoke nade)
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 8), flatMat(0x123040)));
+    const bandMat = new THREE.MeshLambertMaterial({ color: 0x32e0ff, emissive: 0x32e0ff, emissiveIntensity: 0.65, flatShading: true });
+    [0.06, -0.06].forEach(y => { const b = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 6, 14), bandMat); b.rotation.x = Math.PI / 2; b.position.y = y; g.add(b); });
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.14, 4), flatMat(0xcfd6dd)); ant.position.y = 0.25; g.add(ant);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.024, 6, 5), bandMat); tip.position.y = 0.33; g.add(tip); g.userData.charge = bandMat;   // charge-up flash on throw
+  }
+  else if (t === 'lethal') {
+    if (lethalChoice === 'axe') {   // wooden handle + dark-gray single-bit head, blade forward
+      const h = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.6, 7), flatMat(0x6f5333)); g.add(h);
+      const eye = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.15, 0.05), flatMat(0x3a3e44)); eye.position.set(0, 0.28, 0.02); g.add(eye);
+      const bit = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.2, 0.15), flatMat(0x9aa3ab)); bit.position.set(0, 0.28, 0.13); g.add(bit);
+    } else {   // SMOKE grenade: olive cylinder + metal spoon/lever + pull-pin ring
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.42, 10), flatMat(0x525a2a)));
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.13, 0.08, 10), flatMat(0x3a4020)); top.position.y = 0.25; g.add(top);
+      const spoon = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.26, 0.05), flatMat(0xb8bcc2)); spoon.position.set(0.1, 0.18, 0); spoon.rotation.z = 0.2; g.add(spoon);
+      const pin = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.013, 6, 12), flatMat(0xcfa83a)); pin.position.set(-0.02, 0.31, 0.1); pin.rotation.x = Math.PI / 2; g.add(pin); g.userData.pin = pin;   // pull-pin (yanked on throw)
+    }
+  }
+  else if (t === 'second') {   // med syringe + red cross
+    const s = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), flatMat(0xe8e8f0)); s.rotation.z = 0.3; g.add(s);
+    const nd = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.16, 4), flatMat(0xcfd6dd)); nd.position.set(0.17, -0.3, 0); nd.rotation.z = 0.3; g.add(nd);
+    const xMat = new THREE.MeshBasicMaterial({ color: 0xff4a4a }); const ch = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.035, 0.035), xMat); const cv = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.1, 0.035), xMat); g.add(ch); g.add(cv);
+  }
   g.traverse(o => { if (o.isMesh) { o.renderOrder = 999; o.frustumCulled = false; } });
   return g;
 }
 function brShowHeldVM(t, dt) {
-  if (cigSmoking) { if (brHeldVM) brHeldVM.visible = false; return; }   // the cigar smoke animation has its own viewmodel
-  if (brHeldVMType !== t) { if (brHeldVM) { camera.remove(brHeldVM); disposeGroup(brHeldVM); } brHeldVM = brBuildHeldVM(t); brHeldVMType = t; camera.add(brHeldVM); brSwapT = 0.15; }   // (Part 5) ~150ms equip-in dip on swap
+  if (cigSmoking) { if (brHeldVM) brHeldVM.visible = false; return; }   // the cigar 3s-heal smoke animation has its own viewmodel
+  if (brHeldVMType !== t) { if (brHeldVM) { camera.remove(brHeldVM); disposeGroup(brHeldVM); } brHeldVM = brBuildHeldVM(t); brHeldVMType = t; camera.add(brHeldVM); brSwapT = 0.30; }   // 0.30s equip/draw-in
   brHeldVM.visible = !rcCamLive;
-  const leftHand = (t === 'cigar' || t === 'jd' || t === 'second');
-  let lift = 0; if (brHeldUseT > 0) { brHeldUseT = Math.max(0, brHeldUseT - dt); lift = Math.sin((1 - brHeldUseT / 0.45) * Math.PI) * 0.22; }
-  if (brSwapT > 0) { brSwapT = Math.max(0, brSwapT - dt); lift -= (brSwapT / 0.15) * 0.34; }   // (Part 5) dips down then rises into view
-  brHeldVM.position.set(leftHand ? -0.34 : 0.32, -0.52 + lift, -0.62);
-  brHeldVM.rotation.set(0.1, leftHand ? 0.3 : -0.3, 0);
+  const leftHand = (t === 'cigar' || t === 'jd' || t === 'second'), now = performance.now();
+  const baseX = leftHand ? -0.34 : 0.32, baseY = -0.52, baseZ = -0.62;
+  let dx = 0, dy = 0, dz = 0, rx = 0.1, ry = leftHand ? 0.3 : -0.3, rz = 0;
+  if (brSwapT > 0) { brSwapT = Math.max(0, brSwapT - dt); const k = brSwapT / 0.30; dy -= k * 0.42; rx += k * 0.6; }   // draw-in: swings up from below frame
+  const spd = Math.hypot(player.vel.x, player.vel.z), bob = Math.min(1, spd / 6);                                     // idle/walk bob (like guns)
+  dy += Math.sin(now * 0.008) * 0.012 * bob; dx += Math.cos(now * 0.004) * 0.010 * bob;
+  if (brHeldUseT > 0) {   // USE / THROW motion
+    brHeldUseT = Math.max(0, brHeldUseT - dt);
+    if (t === 'impulse' || t === 'lethal') { const p = 1 - brHeldUseT / 0.45, wind = Math.sin(Math.min(1, p * 1.35) * Math.PI); dz += wind * 0.26; dy += wind * 0.22; rx -= wind * 1.1; }   // overhand wind-up + throw
+    else { const p = Math.sin((1 - brHeldUseT / 0.45) * Math.PI); dy += p * 0.26; dz += p * 0.12; rz += p * (leftHand ? -0.5 : 0.5); }   // bring to mouth (drink / smoke)
+  }
+  brHeldVM.position.set(baseX + dx, baseY + dy, baseZ + dz);
+  brHeldVM.rotation.set(rx, ry, rz);
+  if (t === 'cigar' && brHeldVM.userData.smoke) {   // smoke curl + ember flicker
+    if (brHeldVM.userData.ember) brHeldVM.userData.ember.material.color.setHex(Math.sin(now * 0.012) > 0 ? 0xff6a1a : 0xff4a0a);
+    brHeldVM.userData.smoke.forEach((pp, i) => { pp.position.y += dt * (0.25 + i * 0.05); pp.material.opacity = Math.max(0, 0.34 - (pp.position.y - 0.06) * 0.6); if (pp.position.y > 0.66) pp.position.y = 0.06; });
+  }
+  if (t === 'impulse' && brHeldVM.userData.charge) brHeldVM.userData.charge.emissiveIntensity = 0.65 + (brHeldUseT > 0 ? (1 - brHeldUseT / 0.45) * 1.4 : 0);   // charge-up flash near release
 }
 function brHideHeldVM() { if (brHeldVM) brHeldVM.visible = false; }
-function brUpdateHeldVM(dt) {   // each frame: weapons/melee use the gun viewmodel; consumables/empty-hands hide it + show the held item
-  if (!BR.active || ggKarambit) { brHideHeldVM(); return; }
+function brUpdateHeldVM(dt) {   // (universal, all modes) weapons/melee use the gun viewmodel; a held consumable hides it + shows the item's first-person model
+  if (ggKarambit || saberMode || flameEquipped || rcActive || rcEquipped) { brHideHeldVM(); return; }   // melee or a scorestreak weapon is in hand
   const it = brHeldItem();
-  if (it && it.t === 'weapon') { brHideHeldVM(); return; }
-  if (gunMesh) gunMesh.visible = false;
-  if (it && it.t !== 'weapon') brShowHeldVM(it.t, dt); else brHideHeldVM();
+  if (!it || it.t === 'weapon') { brHideHeldVM(); return; }   // a gun (or empty) is in hand
+  if (gunMesh) gunMesh.visible = false;                        // holding a consumable: hide the parked-knife gun model, show the item
+  brShowHeldVM(it.t, dt);
 }
 
 /* ----------------- BATTLE ROYALE — SHRINKING SAFE ZONE -----------------
@@ -12577,11 +12622,12 @@ canvas.addEventListener('click', () => { if (gameState.running && !pointerLocked
   const p = el('brInvPanel'); if (!p) return;
   const idxOf = (t) => { if (t.closest('[data-invmelee]')) return 'm'; const s = t.closest('[data-invslot]'); return s ? +s.getAttribute('data-invslot') : null; };
   p.addEventListener('mouseover', (e) => { if (brInvDrag >= 0) return; const i = idxOf(e.target); if (i === null || brInvHover === i) return; brInvHover = i; brRenderInv(); });
+  // IMPORTANT: do NOT preventDefault() on a left mousedown — that cancels the native HTML5 drag (the old snap-back bug). Select happens on 'click' (which only fires when NO drag occurred).
   p.addEventListener('mousedown', (e) => {
-    e.stopPropagation(); const i = idxOf(e.target); if (i === null) return; e.preventDefault();
-    if (e.button === 2) { if (BR.active && i !== 'm') { brDropSlotAll(i); if (brSel === i) brSelectAfterEmpty(i); brInvHover = i; brRenderInv(); } return; }   // right-click: drop the whole slot (BR only — other modes can't drop loadout)
-    if (i === 'm') brEquipMelee(); else brSelect(i); brInvHover = i; brRenderInv();                                                                  // left-click: equip
+    e.stopPropagation();
+    if (e.button === 2) { e.preventDefault(); const i = idxOf(e.target); if (BR.active && i !== null && i !== 'm') { brDropSlotAll(i); if (brSel === i) brSelectAfterEmpty(i); brInvHover = i; brRenderInv(); } }   // right-click: drop the whole slot (BR only)
   });
+  p.addEventListener('click', (e) => { const i = idxOf(e.target); if (i === null) return; e.stopPropagation(); if (i === 'm') brEquipMelee(); else brSelect(i); brInvHover = i; brRenderInv(); });   // left-click select (suppressed automatically when a drag happened)
   p.addEventListener('contextmenu', (e) => e.preventDefault());
   p.addEventListener('dragstart', (e) => { const s = e.target.closest('[data-invslot]'); if (!s) { e.preventDefault(); return; } brInvDrag = +s.getAttribute('data-invslot'); if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(brInvDrag)); } catch (x) {} } });
   p.addEventListener('dragover', (e) => { if (brInvDrag >= 0 && e.target.closest('[data-invslot]')) e.preventDefault(); });
@@ -12836,7 +12882,7 @@ const NET = {
     const ws = weaponState[currentWeaponKey];
     const rl = (ws && ws.reloading > 0) ? Math.max(0, Math.min(1, 1 - ws.reloading / (ws.reloadTotal || 1))) : 0;
     return { id: this.selfId, name: this.selfName, x: player.pos.x, y: player.pos.y, z: player.pos.z,
-             yaw, pitch, weapon: currentWeaponKey, health: Math.max(0, player.health), alive: player.alive,
+             yaw, pitch, weapon: currentWeaponKey, held: (brHoldingConsumable() && brHeldItem()) ? brHeldItem().t : null, health: Math.max(0, player.health), alive: player.alive,
              ads: (adsBlend > 0.5), rl,            // aim + reload state for others to see
              cr: player.crouchBlend, dv: player.diving,                      // crouch amount + dive (shorter hitbox)
              cig: cigSmoking && !cigCanceling,                               // smoking a cigar (third-person tell)
@@ -13198,6 +13244,7 @@ function makeRemotePlayer(id, name, color) {
       if (d.x != null) this.pos.set(d.x, d.y, d.z);
       if (d.yaw != null) this.yaw = d.yaw;
       if (d.weapon) this.weapon = d.weapon;
+      if ('held' in d) this.held = d.held || null;   // third-person held consumable (cigar/jd/impulse/lethal/second), else null
       if (d.health != null) this.health = d.health;
       if (d.alive != null) this.alive = d.alive;
       if (d.ads != null) this.ads = d.ads;
@@ -13230,7 +13277,7 @@ function buildRemoteAvatar(rp) {
   });
   const head = parts.head;
   // Third-person held weapon — real geometry, (re)built when rp.weapon changes (see updateRemoteWeapon).
-  rp.weaponKey = null; rp.weaponMesh = null; rp.jdMesh = null;
+  rp.weaponKey = null; rp.weaponMesh = null; rp.jdMesh = null; rp.heldMesh = null; rp.held = null; rp.heldShown = null;
   // Third-person cigar held to the mouth (shown only while this player is smoking — a heal tell).
   const cigM = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.34, 8), new THREE.MeshLambertMaterial({ color: 0x6b4a2a, flatShading: true }));
   cigM.rotation.z = Math.PI / 2; cigM.position.set(0.20, 1.62, 0.22); cigM.visible = false; g.add(cigM);
@@ -13283,10 +13330,13 @@ function drawNameSprite(rp) {
 // left-hand Jack Daniels bottle that accompanies the saber scorestreak.
 function updateRemoteWeapon(rp) {
   const wcKey = rp.wc ? (rp.wc.sight + rp.wc.magazine + rp.wc.laser + rp.wc.flashlight) : '';   // (PART 2) rebuild on attachment changes too
-  if (rp.weaponKey === rp.weapon && rp.weaponMc === rp.mc && rp.weaponWc === wcKey) return;
-  rp.weaponKey = rp.weapon; rp.weaponMc = rp.mc; rp.weaponWc = wcKey;
+  if (rp.weaponKey === rp.weapon && rp.weaponMc === rp.mc && rp.weaponWc === wcKey && rp.heldShown === (rp.held || null)) return;
+  rp.weaponKey = rp.weapon; rp.weaponMc = rp.mc; rp.weaponWc = wcKey; rp.heldShown = (rp.held || null);
   if (rp.weaponMesh) { rp.avatar.remove(rp.weaponMesh); disposeGroup(rp.weaponMesh); rp.weaponMesh = null; }
-  if (WEAPONS[rp.weapon]) {
+  if (rp.heldMesh) { rp.avatar.remove(rp.heldMesh); disposeGroup(rp.heldMesh); rp.heldMesh = null; }
+  if (rp.heldShown) {   // (third-person) holding a consumable: show the item model in hand instead of the parked knife
+    rp.heldMesh = brBuildHeldVM(rp.heldShown); rp.heldMesh.position.set(0.42, 1.2, 0.36); rp.heldMesh.traverse(o => { if (o.isMesh) { o.renderOrder = 0; o.frustumCulled = true; } }); rp.avatar.add(rp.heldMesh);
+  } else if (WEAPONS[rp.weapon]) {
     rp.weaponMesh = buildThirdPersonWeapon(rp.weapon, rp.weapon === KARAMBIT_KEY ? (rp.mc || 'karambit') : undefined, rp.wc || null);   // chosen knife + attachment config
     rp.weaponMesh.position.set(0.42, 1.26, 0.34);
     rp.avatar.add(rp.weaponMesh);
@@ -13369,6 +13419,7 @@ function lerpRemotePlayers(dt) {
       rp.cigMesh.visible = on; rp.cigEmber.visible = on;
       if (on) { rp._cigPuffT -= dt; if (rp._cigPuffT <= 0) { spawnSmokePuff(rp.cigEmber.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.14, 0.8); rp._cigPuffT = 0.5; } }
     }
+    if (rp.heldMesh) rp.heldMesh.visible = !(rp.heldShown === 'cigar' && rp.cig);   // avoid a double cigar: hide the in-hand one while the mouth-cigar smoking tell is active
     // Flamethrower spray (visible from all angles) + on-fire flame tell for remote players.
     if (rp.flm && rp.weaponMesh) { const o = rp.weaponMesh.getWorldPosition(new THREE.Vector3()); const aim = new THREE.Vector3(-Math.sin(rp.renderYaw), 0, -Math.cos(rp.renderYaw)); flameSprayFX(o, aim); }
     if (rp.brn) burnFX(new THREE.Vector3(rp.pos.x, rp.pos.y + 1.0, rp.pos.z), 1.4);
@@ -14377,6 +14428,7 @@ function animate() {
     updateInvTip(dt);     // fade the "PRESS I" inventory hint
     updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
     if (BR.active) brUpdate(dt);   // BATTLE ROYALE: loot, shrinking zone, players-remaining HUD, win check
+    if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);   // (universal) first-person held-item model: shows the equipped consumable in EVERY mode (fixes knife-instead-of-item)
     updateDmgNums(dt);    // Part 3: expire floating damage numbers
     recordCamFrame(dt);   // Part 5: record my camera for others' killcams
     if (NET.active) processKcSends(dt);   // Part 5/2: flush queued killcam buffers (2s after a kill, or early if I die)

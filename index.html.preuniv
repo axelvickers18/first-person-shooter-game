@@ -797,7 +797,8 @@
       <div style="position:absolute; left:50%; top:0; width:2px; height:24px; background:#ffe600; transform:translateX(-50%); box-shadow:0 0 4px #000;"></div>
     </div>
     <div id="brItems" style="position:fixed; left:16px; bottom:150px; z-index:6; pointer-events:none; font:700 15px 'Segoe UI',sans-serif; color:#e8eef5; text-shadow:0 2px 5px #000;"></div>
-    <!-- #brWeapons + #brHotbar moved out of #brHud (universal across all modes) -->>
+    <div id="brWeapons" style="position:fixed; right:16px; bottom:96px; z-index:6; pointer-events:none; text-align:right; font:700 14px 'Segoe UI',sans-serif; text-shadow:0 2px 5px #000; line-height:1.5;"></div>
+    <div id="brHotbar" style="position:fixed; left:50%; bottom:30px; transform:translateX(-50%); z-index:7; display:none; align-items:flex-end; gap:8px; text-shadow:0 2px 5px #000;"></div>
     <div id="brDropHud" style="position:fixed; left:50%; top:90px; transform:translateX(-50%); z-index:7; pointer-events:none; display:none; text-align:center; text-shadow:0 2px 6px #000;"></div>
     <div id="brSwapPrompt" style="position:fixed; left:50%; bottom:118px; transform:translateX(-50%); z-index:7; pointer-events:none; font:700 16px 'Segoe UI',sans-serif; color:#fff; background:rgba(0,0,0,.5); padding:6px 14px; border-radius:8px; display:none;"></div>
     <div id="brPickup" style="position:fixed; left:50%; bottom:205px; transform:translateX(-50%); z-index:7; pointer-events:none; font:800 17px 'Segoe UI',sans-serif; text-shadow:0 2px 6px #000; opacity:0;"></div>
@@ -824,9 +825,6 @@
       </div>
     </div>
   </div>
-  <!-- UNIVERSAL 5-slot hotbar + held-item detail (all modes; outside #brHud so they show regardless of BR) -->
-  <div id="brHotbar" style="position:fixed; left:50%; bottom:30px; transform:translateX(-50%); z-index:7; display:none; align-items:flex-end; gap:8px; text-shadow:0 2px 5px #000;"></div>
-  <div id="brWeapons" style="position:fixed; right:16px; bottom:96px; z-index:6; pointer-events:none; text-align:right; font:700 14px 'Segoe UI',sans-serif; text-shadow:0 2px 5px #000; line-height:1.5;"></div>
   <div id="teamScoreHud"><span class="tA">0</span><span class="vs">RED · BLUE</span><span class="tB">0</span></div>
   <div id="lobbyTag"></div>
   <div id="killFeed"></div>
@@ -1314,7 +1312,6 @@
     <div class="pauseWarn">⚠️ Game continues for other players while paused</div>
     <button class="bigbtn" id="pauseResume">RESUME</button>
     <button class="smallbtn" id="pauseTeamSwitch" style="display:none">⇄ SWITCH TEAM</button>
-    <button class="smallbtn" id="pauseLoadout" style="display:none">🔫 CHANGE LOADOUT</button>
     <button class="smallbtn" id="pauseSettings">⚙ SETTINGS</button>
     <button class="smallbtn" id="pauseLeave">LEAVE MATCH</button>
   </div>
@@ -4532,7 +4529,6 @@ function openPauseMenu() {
   if (paused || !gameState.running || gameState.over) return;
   paused = true; firing = false; firingL = false; aiming = false; saberBlocking = false;
   const pts = el('pauseTeamSwitch'); if (pts) { pts.style.display = (gameMode === 'tdm' && NET.active) ? '' : 'none'; if (myTeam) pts.textContent = '⇄ SWITCH TO ' + (myTeam === 'red' ? 'BLUE' : 'RED'); }
-  const pl = el('pauseLoadout'); if (pl) pl.style.display = (gameMode === 'ffa' || gameMode === 'tdm') ? '' : 'none';   // FFA/TDM: change your main weapon (the I key now opens the universal pop-up inventory)
   el('pauseMenu').style.display = 'flex';
   document.exitPointerLock && document.exitPointerLock();
 }
@@ -4568,7 +4564,7 @@ function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[curre
 function firePress() {
   if (brSpectating) { brSpecCycle(-1); return; }   // BR spectator: L-click = previous player
   if (brMapOpen) return;   // BR: can't fire while the map is open
-  if (!ggKarambit && !brHeldWeapon()) { if (brHoldingConsumable()) brUseSelected(); return; }   // (universal) holding a consumable / empty hands: no shot; left-click uses the held consumable
+  if (BR.active && !ggKarambit && !brHeldWeapon()) { if (brHoldingConsumable()) brUseSelected(); return; }   // empty hands / consumable: no shot; left-click uses the held consumable
   if (rcActive) { if (rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: fire = manual detonate
   if (inspectT > 0) { inspectT = 0; return; }                                     // (Part 5) fire cancels an inspect
   if (cigSmoking) { cigCancel(); return; }                                        // smoking: fire cancels (weapon holstered)
@@ -4587,7 +4583,7 @@ function fireRelease() {
 function adsPress() {
   if (brSpectating) { brSpecCycle(1); return; }   // BR spectator: R-click = next player
   if (brMapOpen) return;   // BR: can't ADS while the map is open
-  if (!ggKarambit && !brHeldWeapon()) return;   // (universal) holding a consumable / empty hands: no ADS or melee
+  if (BR.active && !ggKarambit && !brHeldWeapon()) return;   // empty hands / consumable: no ADS or melee
   if (inspectT > 0) { inspectT = 0; return; }   // (Part 5) ADS cancels an inspect
   if (rcActive || cigSmoking || player.onLadder) return;
   if (akimboEquipped()) { firingL = true; tryShoot('L'); return; }
@@ -4612,22 +4608,28 @@ function gameAction(act, rep) {
   if (act === 'flamethrower' && !rep) { streakActivate('flame'); return; }
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { if (BR.active) { brToggleMap(); return; } streakActivate('dogs'); return; }   // BR: the (disabled) Kirks-Avengers key opens the paper map
-  // UNIVERSAL 5-slot inventory OWNS the slot / melee / pop-up / consumable keys in EVERY mode (FFA / GG / TDM / BR).
-  if (player.alive && !brSpectating && gameState.running && !rcActive) {   // saberMode (3-kill streak) locks the weapon: only Q-drink + I-popup pass through
-    if (!saberMode && (act === 'weapon1' || act === 'weapon2' || act === 'karambit' || act === 'brSlot4' || act === 'brSlot5' || act === 'prevWeapon' || act === 'nextWeapon')) { if (cigSmoking) cigCancel(); brWeaponAction(act); return; }   // 1-5 = inventory slots, wheel cycles
-    if (act === 'use' && !rep) { if (saberMode) { drinkJD(); return; } if (cigSmoking) cigCancel(); brWeaponAction('melee'); return; }   // Q -> equip melee (saber scorestreak: drink JD instead)
-    if (act === 'inventory' && !rep) { brToggleInv(); return; }                                              // I -> open/close the pop-up inventory (all modes)
-    if (!saberMode && act === 'lethal' && !rep) { brUseType('lethal'); return; }                            // H -> use the lethal from its slot
-    if (act === 'drinkJD' && !rep) { if (BR.active) brUseType('jd'); return; }                               // Z -> drink a JD from its slot (BR loot only)
-    if (!saberMode && (act === 'grenade' || act === 'dropWeapon') && !rep) { if (BR.active) brWeaponAction('dropItem'); else if (act === 'grenade') brUseType('impulse'); return; }   // BR: G/X drop held item • other modes: G throws an impulse from its slot
+  if (BR.active && player.alive && !brSpectating) {   // BR 5-slot inventory OWNS the slot / melee / drop / quick-use keys
+    if (act === 'weapon1' || act === 'weapon2' || act === 'karambit' || act === 'brSlot4' || act === 'brSlot5' || act === 'prevWeapon' || act === 'nextWeapon') { if (cigSmoking) cigCancel(); brWeaponAction(act); return; }   // 1-5 = inventory slots, wheel cycles
+    if (act === 'use' && !rep) { if (cigSmoking) cigCancel(); brWeaponAction('melee'); return; }            // Q -> equip melee (separate from the 5 slots)
+    if (act === 'inventory' && !rep) { brToggleInv(); return; }                                              // I -> open/close the pop-up inventory (Part 3)
+    if ((act === 'grenade' || act === 'dropWeapon') && !rep) { brWeaponAction('dropItem'); return; }         // G / X -> drop ONE of the held item
+    if (act === 'lethal' && !rep) { brUseType('lethal'); return; }                                           // H -> quick-throw a lethal from its slot
+    if (act === 'drinkJD' && !rep) { brUseType('jd'); return; }                                              // Z -> quick-drink a JD from its slot
   }
+  if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
   if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (brTrySwapLoot() || brTryZip() || tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: BR loot swap > zip line > dismount > mount scooter > pick up axe > Mckayla > ladder
   if (act === 'reload') { cigCancel(); reload(); }
+  if (act === 'inventory' && !rep && gameMode !== 'gungame' && !BR.active) { toggleInventory(); return; }   // BR has no loadout inventory — you loot what you find (5-slot hotbar instead)
+  if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
+  else if (act === 'karambit' || act === 'prevWeapon' || act === 'nextWeapon') { if (cigSmoking) cigCancel(); ggSetKarambit(!ggKarambit); }   // 2-slot: main <-> karambit
   if (act === 'sprint') { if (OPT.sprintToggle) sprintLatch = !sprintLatch; if (!ggHeavyScopedNow()) startSlide(); }
+  if (act === 'grenade') throwImpulse();
+  if (act === 'lethal') throwLethal();
   if (act === 'toggleLaser' && !rep) { laserOn = !laserOn; sfxADS(laserOn); }   // hide/show your laser tactically
   if (act === 'flashlight' && !rep) { toggleFlashlight(); return; }   // (PART 2) toggle weapon flashlight
   if (act === 'toggleHints' && !rep) { OPT.ctrlHints = !OPT.ctrlHints; OPT.save(); const cb = el('optCtrlHints'); if (cb) cb.checked = OPT.ctrlHints; if (typeof sfxClick === 'function') sfxClick(); return; }   // P: show/hide the control-hints panel (persisted)
   if (act === 'inspect' && !rep) { if (typeof startInspect === 'function') startInspect(); return; }   // V/T: inspect the equipped weapon (cosmetic, local-only)
+  if (act === 'drinkJD' && !rep) { if (BR.active) brDrinkJD(); return; }   // Z (BR): drink a Jack Daniels bottle -> restore shields
 }
 // Held sprint state for breath-hold / RC-boost (raw key in hold mode, latched in toggle mode).
 function sprintDown() { return OPT.sprintToggle ? sprintLatch : IM.down('sprint'); }
@@ -4677,7 +4679,7 @@ document.addEventListener('contextmenu', (e) => e.preventDefault());
 document.addEventListener('wheel', (e) => {
   if (!gameState.running || player.diving || paused) return;
   const act = IM.codeAction(e.deltaY < 0 ? 'WheelUp' : 'WheelDown'); if (!act) return;
-  if (act === 'prevWeapon' || act === 'nextWeapon' || act === 'karambit') { cigCancel(); brWeaponAction(act); }   // (universal) wheel/karambit cycle the 5-slot inventory in every mode
+  if (act === 'prevWeapon' || act === 'nextWeapon' || act === 'karambit') { cigCancel(); if (BR.active) brWeaponAction(act); else ggSetKarambit(!ggKarambit); }
   else if (!rcActive) gameAction(act, false);
 });
 
@@ -10113,7 +10115,9 @@ function updateBRHud() {
   const k = el('brKills'); if (k) k.textContent = gameState.kills || 0;                                                   // top-right: your kills this match
   const tm = el('brTime'); if (tm) { const sec = Math.max(0, Math.round(BR.t)); tm.textContent = Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2); }   // survival time MM:SS
   updateBRCompass();
-  const it = el('brItems'); if (it) it.style.display = 'none';   // old consumable counters retired — they live in the hotbar (rendered by updateHUD universally)
+  const it = el('brItems'); if (it) it.style.display = 'none';   // (Part 3) redundant consumable counters removed — they live in the hotbar now
+  const hb = el('brHotbar'); if (hb) { hb.style.display = 'flex'; hb.innerHTML = brHotbarHtml(); }
+  const wh = el('brWeapons'); if (wh) wh.innerHTML = brHeldDetailHtml();
   if (typeof brUpdateZoneHud === 'function') brUpdateZoneHud();   // stage 3
 }
 
@@ -10315,27 +10319,6 @@ function brSelect(i) {
   updateHUD();
 }
 function brSelectAfterEmpty(i) { if (brSel === i) { const n = brInv.findIndex(x => x); if (n >= 0) brSelect(n); else brEquipMelee(); } }
-// (UNIVERSAL inventory) build a hotbar weapon item for a PRE-EQUIPPED, non-loot weapon (FFA/TDM main, GG ladder rung) — keeps its normal (usually infinite) reserve, not BR's finite ammo.
-function brWeaponItemFor(key) {
-  const ws = weaponState[key] || {}, w = WEAPONS[key] || {};
-  return { t: 'weapon', key, cfg: (isCustomizable(key) ? Object.assign({}, getCfg(key)) : null), rar: (w.legendary ? 'legendary' : 'common'), ammo: (ws.ammo != null ? ws.ammo : w.mag), reserve: (ws.reserve != null ? ws.reserve : Infinity) };
-}
-// (UNIVERSAL inventory) fill the 5 slots from the mode's loadout at spawn/respawn. BR starts empty (brStart loots into them).
-function brFillLoadout() {
-  if (gameMode === 'br') return;
-  brInv = [null, null, null, null, null]; brSel = -1; ggKarambit = false;
-  const mainKey = (gameMode === 'gungame') ? ggLadderKey() : ffaMain;
-  brInv[0] = brWeaponItemFor(mainKey);                          // slot 1 = main weapon (GG ladder rung / FFA-TDM chosen main)
-  if (gameMode === 'gungame') {                                 // GG: slot2 cigars, slot3 impulse; 4-5 empty
-    if ((player.cigar || 0) > 0) brInv[1] = { t: 'cigar' };
-    if ((player.impulses || 0) > 0) brInv[2] = { t: 'impulse' };
-  } else {                                                      // FFA / TDM: slot2 cigars, slot3 impulse, slot4 lethal
-    if ((player.cigar || 0) > 0) brInv[2] = { t: 'cigar' };
-    if ((player.impulses || 0) > 0) brInv[3] = { t: 'impulse' };
-    if ((player.lethals || 0) > 0) brInv[4] = { t: 'lethal' };
-  }
-  brSel = 0;   // hold the main weapon (the caller's ggEquip(mainGunKey()) does the actual equip)
-}
 function brGiveWeapon(key, cfg, rar, stored) {   // pick up a weapon: fill an empty slot, else swap the held item
   brSetupWeaponAmmo(key, cfg, rar, stored); const ws = weaponState[key];
   const item = { t: 'weapon', key, cfg: cfg ? Object.assign({}, cfg) : null, rar: rar || 'common', ammo: ws ? ws.ammo : WEAPONS[key].mag, reserve: ws ? ws.reserve : 0 };
@@ -10609,7 +10592,7 @@ function brInvSwap(a, b) {   // drag-reorder: swap two slots (consumable counts 
 }
 function brToggleInv() { if (brInvOpen) brCloseInv(); else brOpenInv(); }
 function brOpenInv() {
-  if (!gameState.running || !player.alive || brSpectating) return;   // (universal) pop-up inventory works in every mode
+  if (!BR.active || !gameState.running || !player.alive || brSpectating) return;
   if (brMapOpen) brCloseMap();
   brInvOpen = true; brInvHover = (!ggKarambit && brSel >= 0 && brInv[brSel]) ? brSel : 'm';
   const p = el('brInvPanel'); if (p) p.style.display = 'flex';
@@ -10973,11 +10956,6 @@ function updateHUD() {
   // Flamethrower fuel bar (shown only while it's the equipped weapon).
   const ffw = el('flameFuelWrap');
   if (ffw) { if (flameEquipped) { ffw.style.display = 'block'; const fb = el('flameFuelBar'); if (fb) fb.style.width = Math.max(0, Math.min(100, flameFuel)) + '%'; } else ffw.style.display = 'none'; }
-  // (UNIVERSAL inventory) the 5-slot hotbar + held-item detail REPLACE the old weapon-name/ammo + cigar/impulse/lethal HUD in every mode.
-  ['weaponName', 'ammo', 'grenades', 'impulseCount', 'lethalCount', 'cigarCount'].forEach(id => { const e = el(id); if (e) e.style.display = 'none'; });
-  const _hbOn = gameState.running && player.alive && !brSpectating;
-  const _hb = el('brHotbar'); if (_hb) { _hb.style.display = _hbOn ? 'flex' : 'none'; if (_hbOn) _hb.innerHTML = brHotbarHtml(); }
-  const _wh = el('brWeapons'); if (_wh) { _wh.style.display = _hbOn ? 'block' : 'none'; if (_hbOn) _wh.innerHTML = brHeldDetailHtml(); }
   updateStreakHUD();
 }
 
@@ -11062,8 +11040,7 @@ function ggSetLevel(level) {
   ws.ammo = WEAPONS[key].mag; ws.reloading = 0; ws.cooldown = 0;
   // While the saber scorestreak is active, the level still advances (and the underlying gun is
   // refilled for when the saber ends) but we KEEP the saber equipped instead of swapping to the gun.
-  if (brInv) brInv[0] = brWeaponItemFor(key);   // (UNIVERSAL inventory) the new level's weapon occupies hotbar slot 1
-  if (!saberMode) { ggKarambit = false; brSel = 0; ggEquip(key); }
+  if (!saberMode) { ggKarambit = false; ggEquip(key); }
   else updateHUD();
   // Progression SFX for the LOCAL player: ascending chime up (fanfare at the final level), sad chime on demote.
   if (gameState.running) { if (ggLevel > prev) (ggLevel >= GUNGAME_MAX ? sfxFinalLevel() : sfxLevelUp()); else if (ggLevel < prev) sfxDemote(); }
@@ -11273,7 +11250,6 @@ function doRespawn() {
   });
   weaponState.gg17.ammoL = weaponState.gg17.ammoR = null;   // re-split akimbo on respawn refill
   if (gameMode !== 'gungame' && !WEAPONS[ffaMain]) ffaMain = 'gg2';
-  brFillLoadout();             // (UNIVERSAL inventory) refill the 5 hotbar slots on respawn
   ggEquip(mainGunKey());
   updateHUD();
   maybeShowInvTip(4, false);   // brief inventory reminder on FFA respawn
@@ -11640,7 +11616,6 @@ function startMatch() {
     if (!WEAPONS[ffaMain]) ffaMain = 'gg2';
     ggEquip(ffaMain);                                // FFA: start on the chosen main weapon (default Assault Rifle)
   }
-  brFillLoadout();                                   // (UNIVERSAL inventory) fill the 5 hotbar slots from this mode's loadout (BR no-ops here; brStart loots)
   if (NET.active && NET.isHost) NET.broadcastScores();
   if (NET.active) NET.applyScoresLocal();
   updateHUD();
@@ -11699,7 +11674,6 @@ function selectInvWeapon(key) {
   ws.ammo = WEAPONS[key].mag; ws.reloading = 0; ws.cooldown = 0;
   if (key === 'gg17') { ws.ammoL = ws.ammoR = null; }
   ggKarambit = false;
-  if (brInv) { brInv[0] = brWeaponItemFor(key); brSel = 0; }   // (UNIVERSAL inventory) new main weapon -> hotbar slot 1
   ggEquip(key);                                      // draws the new weapon immediately
   sfxInvSelect();                                    // confirmation + gun-load
   closeInventory();
@@ -12193,7 +12167,6 @@ function setSettingsTab(paneId) {
 document.querySelectorAll('#settingsScreen .setTab').forEach(tab => tab.onclick = () => { setSettingsTab(tab.dataset.pane); sfxClick(); });
 // Pause-menu buttons.
 el('pauseResume').onclick = () => resumeGame();
-{ const pl = el('pauseLoadout'); if (pl) pl.onclick = () => { paused = false; el('pauseMenu').style.display = 'none'; if (typeof toggleInventory === 'function') toggleInventory(); }; }   // FFA/TDM: open the weapon picker (universal pop-up is on I now)
 el('pauseSettings').onclick = () => { el('pauseMenu').style.display = 'none'; openSettings('pause'); };
 el('pauseLeave').onclick = () => { paused = false; el('pauseMenu').style.display = 'none'; leaveToMenu(); };
 el('pauseTeamSwitch').onclick = () => {
@@ -12579,7 +12552,7 @@ canvas.addEventListener('click', () => { if (gameState.running && !pointerLocked
   p.addEventListener('mouseover', (e) => { if (brInvDrag >= 0) return; const i = idxOf(e.target); if (i === null || brInvHover === i) return; brInvHover = i; brRenderInv(); });
   p.addEventListener('mousedown', (e) => {
     e.stopPropagation(); const i = idxOf(e.target); if (i === null) return; e.preventDefault();
-    if (e.button === 2) { if (BR.active && i !== 'm') { brDropSlotAll(i); if (brSel === i) brSelectAfterEmpty(i); brInvHover = i; brRenderInv(); } return; }   // right-click: drop the whole slot (BR only — other modes can't drop loadout)
+    if (e.button === 2) { if (i !== 'm') { brDropSlotAll(i); if (brSel === i) brSelectAfterEmpty(i); brInvHover = i; brRenderInv(); } return; }   // right-click: drop the whole slot
     if (i === 'm') brEquipMelee(); else brSelect(i); brInvHover = i; brRenderInv();                                                                  // left-click: equip
   });
   p.addEventListener('contextmenu', (e) => e.preventDefault());

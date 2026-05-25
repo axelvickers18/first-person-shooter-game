@@ -4575,7 +4575,7 @@ function firePress() {
   if (!ggKarambit && !brHeldWeapon()) { if (brHoldingConsumable()) brUseSelected(); return; }   // (universal) holding a consumable / empty hands: no shot; left-click uses the held consumable
   if (rcActive) { if (rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: fire = manual detonate
   if (inspectT > 0) { inspectT = 0; return; }                                     // (Part 5) fire cancels an inspect
-  if (cigSmoking) { cigCancel(); return; }                                        // smoking: fire cancels (weapon holstered)
+  if (cigSmoking || brJdDrinking) return;                                         // (FIX 3) using a consumable: left-click is a no-op (no cancel, no double-use); the use runs to completion or cancels on slot-switch
   if (player.onLadder) return;
   firing = true;
   if (WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun) {   // minigun spins up first (no instant shot)
@@ -8393,10 +8393,11 @@ function impulseDetonate(center, doLaunches) {
    move speed, and CANCELS (and is consumed) on fire / weapon-switch / reload /
    grenade / dive. Other players see the smoking tell on the third-person avatar.
    ============================================================================ */
-const CIGAR = { maxCarry: 3, dur: 3.0, raise: 0.4, lowerFast: 0.25 };
+const CIGAR = { maxCarry: 3, dur: 1.5, raise: 0.3, lowerFast: 0.25 };   // (FIX 3) 1.5s heal-to-full (reload-paced), smooth HP lerp
 let cigSmoking = false;        // a cigar use is in progress (raise→light→hold→lower)
 let cigCanceling = false;      // an interrupt triggered: quick-lower then finish
 let cigT = 0, cigLowerT = 0, cigPuffT = 0, _cigAudioPuffT = 0;
+let brJdDrinking = false, brJdT = 0, brJdHealStart = 0; const JD_DUR = 1.5;   // (FIX 3) BR Jack Daniels: 1.5s timed drink, smooth shield refill (distinct from the saber-streak jdDrinking)
 let _cigVM = null;
 
 // Build the first-person left-hand + cigar viewmodel (lower-left), attached to the camera.
@@ -8427,8 +8428,8 @@ function buildCigarVM() {
 }
 // Q: light up the cigar (one per life; consumed the instant you start — no cancel-and-reuse).
 function useCigar() {
-  if (!gameState.running || !player.alive || cigSmoking || player.cigar <= 0) return;
-  player.cigar--;
+  if (!gameState.running || !player.alive || cigSmoking || brJdDrinking || player.cigar <= 0) return;
+  // (FIX 3) NOT consumed here — the stack decrements only on COMPLETION (cigComplete), so an interrupt (slot switch etc.) refunds it
   sfxCigarLight();                             // lighter click + flame hiss
   cigSmoking = true; cigCanceling = false; cigT = 0; cigLowerT = 0; cigPuffT = 0; _cigAudioPuffT = 1.0;
   aiming = false;                              // drop ADS — the main weapon holsters
@@ -8439,7 +8440,13 @@ function useCigar() {
 }
 // Interrupt: quick-lower and stop healing (the cigar is already consumed for this life).
 function cigCancel() { if (cigSmoking && !cigCanceling) { cigCanceling = true; cigLowerT = 0; sfxCigarCancel(); } }
-function cigFinish() { cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false; updateHUD(); }
+function cigFinish() { cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false; updateHUD(); }   // stop WITHOUT consuming (interrupt/death/switch → refund)
+function brConsumeOne(t) {   // (FIX 3) on a completed timed use: decrement the stack + empty/auto-switch the slot if it hit 0 (universal inventory)
+  brSetCount(t, Math.max(0, brCount(t) - 1));
+  if (brCount(t) <= 0) { const i = brSlotOfType(t); if (i >= 0) { brInv[i] = null; brSelectAfterEmpty(i); } }
+  updateHUD();
+}
+function cigComplete() { if (!cigSmoking) return; brConsumeOne('cigar'); cigFinish(); sfxCigarDone(); GP.rumble(0.12, 0.22, 130); }   // full heal reached → consume one cigar
 // Per-frame: heal, animate the viewmodel (raise → light → hold+puff → lower), keep the gun holstered.
 function updateCigar(dt) {
   if (!cigSmoking) return;
@@ -8457,22 +8464,20 @@ function updateCigar(dt) {
   player.health = Math.min(100, player.health + (100 / CIGAR.dur) * dt);
   updateHUD();
   cigT += dt;
-  const lowerStart = CIGAR.dur - 0.4;
+  const lowerStart = CIGAR.dur - 0.3;
   if (cigT < CIGAR.raise) vm.position.y = downY + (restY - downY) * smoothstep(cigT / CIGAR.raise);
   else if (cigT < lowerStart) vm.position.y = restY + Math.sin(cigT * 2.0) * 0.012;     // subtle idle bob at the mouth
-  else vm.position.y = restY + (downY - restY) * smoothstep((cigT - lowerStart) / 0.4);
-  if (cigT >= 0.5) {                           // light the ember after the raise + flicker it
+  else vm.position.y = restY + (downY - restY) * smoothstep((cigT - lowerStart) / 0.3);
+  if (cigT >= 0.25) {                          // light the ember once it reaches the mouth + flicker it
     ember.visible = true;
     const f = 0.85 + Math.random() * 0.15;
     ember.scale.setScalar(f); vm.userData.emberMat.color.setRGB(1, 0.35 * f, 0.08);
   }
-  if (cigT >= 0.6 && cigT < lowerStart) {      // periodic smoke wisps from the lit tip
+  if (cigT >= 0.3 && cigT < lowerStart) {      // 3 inhale puffs (~0.3s / 0.75s / 1.2s)
     cigPuffT -= dt;
-    if (cigPuffT <= 0) { spawnSmokePuff(vm.userData.tip.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.12, 0.7); cigPuffT = 0.35; }
-    _cigAudioPuffT -= dt;
-    if (_cigAudioPuffT <= 0) { sfxCigarPuff(); _cigAudioPuffT = 1.0; }   // inhale/exhale ~1/s
+    if (cigPuffT <= 0) { spawnSmokePuff(vm.userData.tip.getWorldPosition(new THREE.Vector3()), 0xcfcfcf, 0.12, 0.7); sfxCigarPuff(); cigPuffT = 0.45; }
   }
-  if (cigT >= CIGAR.dur) { sfxCigarDone(); GP.rumble(0.12, 0.22, 130); cigFinish(); }   // warm satisfaction tone + subtle rumble at full heal
+  if (cigT >= CIGAR.dur) cigComplete();         // full heal reached → consume one cigar (warm tone + rumble inside)
 }
 
 /* ============================================================================
@@ -10017,7 +10022,7 @@ function brStart() {
   brGunshots.length = 0; const mm = el('brMinimap'); if (mm) mm.style.display = brMinimapOn ? 'block' : 'none';   // minimap
   brHudShow(true); updateBRHud();
 }
-function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); if (typeof brClearArc === 'function') brClearArc(); }
+function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); if (typeof brClearArc === 'function') brClearArc(); brJdDrinking = false; }
 function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
 function brEliminate(name) {                              // record an elimination + crown the winner when one remains
   if (!BR.active) return;
@@ -10415,10 +10420,10 @@ function brWeaponAction(act) {   // BR slot select / wheel / melee / drop
 function brUseType(t) { const s = brSlotOfType(t); if (s < 0 || brCount(t) <= 0) return; brSyncHeldAmmo(); brSel = s; ggKarambit = false; brUseSelected(); }
 function brUseSelected() {   // use the held consumable (cigar smoke / JD drink / grenade throw); decrements the stack
   const it = brHeldItem(); if (!it || it.t === 'weapon' || it.t === 'second') return;
-  const before = brCount(it.t); let ok = false;
-  if (it.t === 'cigar') { useCigar(); ok = brCount('cigar') < before; }
-  else if (it.t === 'jd') { ok = brDrinkJD(); }
-  else if (it.t === 'impulse') { throwImpulse(); ok = brCount('impulse') < before; }
+  if (it.t === 'cigar') { useCigar(); return; }        // (FIX 3) 1.5s timed smoke — consumed on completion (cigComplete)
+  if (it.t === 'jd') { brDrinkJD(); return; }           // (FIX 3) 1.5s timed drink — consumed on completion (brJdComplete)
+  const before = brCount(it.t); let ok = false;         // throwables: throw + consume immediately
+  if (it.t === 'impulse') { throwImpulse(); ok = brCount('impulse') < before; }
   else if (it.t === 'lethal') { throwLethal(); ok = brCount('lethal') < before; }
   if (ok) { brHeldUseT = 0.45; if (brCount(it.t) <= 0) { const i = brSel; brInv[i] = null; brSelectAfterEmpty(i); } updateHUD(); }
 }
@@ -10451,9 +10456,22 @@ function brRefillAmmo() {   // ammo box: +2 magazines of reserve to EVERY carrie
   });
   brSyncHeldAmmo(); updateHUD();
 }
-function brDrinkJD() {   // returns true if a bottle was consumed (caller decrements the slot)
-  if (!BR.active || (player.jdBottles || 0) <= 0 || player.overheal >= OVERHEAL_MAX || !player.alive) return false;
-  player.jdBottles--; player.overheal = OVERHEAL_MAX; flashJD(); if (typeof sfxGulp === 'function') sfxGulp(); return true;   // restore shield + drinking gulp
+function brDrinkJD() {   // (FIX 3) START a 1.5s timed drink — shield refills smoothly; the bottle is consumed only on COMPLETION (so an interrupt refunds)
+  if (!BR.active || brJdDrinking || cigSmoking || (player.jdBottles || 0) <= 0 || player.overheal >= OVERHEAL_MAX || !player.alive) return false;
+  brJdDrinking = true; brJdT = 0; brJdHealStart = player.overheal || 0; aiming = false;
+  if (typeof sfxGulp === 'function') sfxGulp(); flashJD(); if (gunMesh) gunMesh.visible = false;
+  return true;
+}
+function brJdFinish() { brJdDrinking = false; updateHUD(); }   // stop WITHOUT consuming (switch/death/match-end → refund)
+function brJdComplete() { if (!brJdDrinking) return; player.overheal = OVERHEAL_MAX; brConsumeOne('jd'); brJdFinish(); }   // shield full → consume one JD
+function updateBrJdDrink(dt) {
+  if (!brJdDrinking) return;
+  if (!player.alive || !BR.active || !(brHeldItem() && brHeldItem().t === 'jd')) { brJdFinish(); return; }   // switched slots / died → cancel + refund
+  if (gunMesh) gunMesh.visible = false;                                                                       // keep the gun holstered while drinking
+  brJdT += dt;
+  player.overheal = Math.min(OVERHEAL_MAX, brJdHealStart + (OVERHEAL_MAX - brJdHealStart) * Math.min(1, brJdT / JD_DUR));   // smooth shield lerp across 1.5s
+  updateHUD();
+  if (brJdT >= JD_DUR) brJdComplete();
 }
 function brUpdateLoot(dt) {
   brSwapTarget = null;
@@ -10698,6 +10716,7 @@ function brShowHeldVM(t, dt) {
     if (t === 'impulse' || t === 'lethal') { const p = 1 - brHeldUseT / 0.45, wind = Math.sin(Math.min(1, p * 1.35) * Math.PI); dz += wind * 0.26; dy += wind * 0.22; rx -= wind * 1.1; }   // overhand wind-up + throw
     else { const p = Math.sin((1 - brHeldUseT / 0.45) * Math.PI); dy += p * 0.26; dz += p * 0.12; rz += p * (leftHand ? -0.5 : 0.5); }   // bring to mouth (drink / smoke)
   }
+  if (t === 'jd' && brJdDrinking) { const ramp = Math.min(1, brJdT / 0.3) * (brJdT < JD_DUR - 0.3 ? 1 : Math.max(0, (JD_DUR - brJdT) / 0.3)); dy += ramp * 0.30; rz += ramp * 0.7; }   // (FIX 3) tilt the bottle to the mouth during the 1.5s drink
   brHeldVM.position.set(baseX + dx, baseY + dy, baseZ + dz);
   brHeldVM.rotation.set(rx, ry, rz);
   if (t === 'cigar' && brHeldVM.userData.smoke) {   // smoke curl + ember flicker
@@ -14512,8 +14531,6 @@ function animate() {
     updateInvTip(dt);     // fade the "PRESS I" inventory hint
     updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
     if (BR.active) brUpdate(dt);   // BATTLE ROYALE: loot, shrinking zone, players-remaining HUD, win check
-    if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);   // (universal) first-person held-item model: shows the equipped consumable in EVERY mode (fixes knife-instead-of-item)
-    if (typeof brUpdateArc === 'function') brUpdateArc();   // throw trajectory preview while right-click-aiming a throwable
     updateDmgNums(dt);    // Part 3: expire floating damage numbers
     recordCamFrame(dt);   // Part 5: record my camera for others' killcams
     if (NET.active) processKcSends(dt);   // Part 5/2: flush queued killcam buffers (2s after a kill, or early if I die)
@@ -14684,7 +14701,11 @@ function animate() {
   if (gunMesh) gunMesh.visible = scopeBlend < 0.5;
   updateSights();   // GUN GAME per-weapon sights + reload bar (overrides the above in gun game)
   updateCigar(dt);  // cigar heal: animate the left-hand viewmodel + keep the weapon holstered while smoking
+  if (typeof updateBrJdDrink === 'function') updateBrJdDrink(dt);   // (FIX 3) BR Jack Daniels 1.5s timed drink (smooth shield refill)
   updateJD(dt);     // Jack Daniels bottle: keep it in the left hand + animate a swig while saber+JD is active
+  // (FIX 1) run the held-item viewmodel LAST — after updateSights/updateCigar/updateJD set gunMesh.visible — so holding a consumable definitively HIDES the parked knife (no persistent off-hand knife)
+  if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);
+  if (typeof brUpdateArc === 'function') brUpdateArc();   // throw trajectory preview while right-click-aiming a throwable
   updateLadderPrompt();   // "Press E to climb" when standing in a watchtower-ladder zone
   updateCtrlHints(dt);    // live control-hints panel (after the interaction prompts so its context rows are current)
   updateObjHint(dt);      // brief objective reminder at match start

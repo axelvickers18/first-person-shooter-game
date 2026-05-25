@@ -787,14 +787,6 @@
     <div id="killLine">KILLS <span id="killCount">0</span> <span class="dim">/ <span id="killTarget">25</span></span></div>
   </div>
   <div id="matchTimer"></div>
-  <!-- BATTLE ROYALE HUD: players remaining (top-right) + zone countdown (top-centre) -->
-  <div id="brHud" style="display:none;">
-    <div id="brAliveWrap" style="position:fixed; top:12px; right:16px; z-index:6; pointer-events:none; font:800 20px 'Segoe UI',sans-serif; color:#aef0c0; text-shadow:0 2px 6px #000; letter-spacing:1px;">🟢 PLAYERS <span id="brAlive">10</span><span style="opacity:.6"> / <span id="brStart">10</span></span></div>
-    <div id="brZoneWrap" style="position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:6; pointer-events:none; font:700 17px 'Segoe UI',sans-serif; text-shadow:0 2px 6px #000; display:none;"><span id="brZoneTimer"></span></div>
-    <div id="brItems" style="position:fixed; left:16px; bottom:150px; z-index:6; pointer-events:none; font:700 15px 'Segoe UI',sans-serif; color:#e8eef5; text-shadow:0 2px 5px #000;"></div>
-    <div id="brSwapPrompt" style="position:fixed; left:50%; bottom:118px; transform:translateX(-50%); z-index:7; pointer-events:none; font:700 16px 'Segoe UI',sans-serif; color:#fff; background:rgba(0,0,0,.5); padding:6px 14px; border-radius:8px; display:none;"></div>
-    <div id="brPickup" style="position:fixed; left:50%; bottom:205px; transform:translateX(-50%); z-index:7; pointer-events:none; font:800 17px 'Segoe UI',sans-serif; text-shadow:0 2px 6px #000; opacity:0;"></div>
-  </div>
   <div id="teamScoreHud"><span class="tA">0</span><span class="vs">RED · BLUE</span><span class="tB">0</span></div>
   <div id="lobbyTag"></div>
   <div id="killFeed"></div>
@@ -1316,7 +1308,6 @@
     <button data-mode="ffa">FREE-FOR-ALL<small>kills to win</small></button>
     <button data-mode="gungame">GUN GAME<small>20-weapon ladder</small></button>
     <button data-mode="tdm">TEAM DEATHMATCH<small>red vs. blue</small></button>
-    <button data-mode="br">BATTLE ROYALE<small>10 players · last alive</small></button>
   </div>
   <div id="lobbySettingsSummary"></div>
   <div class="menuRow">
@@ -1337,7 +1328,6 @@
     <button data-mode="ffa">FREE-FOR-ALL<small>kills to win</small></button>
     <button data-mode="gungame">GUN GAME<small>20-weapon ladder</small></button>
     <button data-mode="tdm">TEAM DEATHMATCH<small>red vs. blue</small></button>
-    <button data-mode="br">BATTLE ROYALE<small>10 players · last alive</small></button>
   </div>
   <div class="menuRow">
     <button class="bigbtn" id="startButton">CLICK TO PLAY</button>
@@ -1457,7 +1447,6 @@ MATCH.load();
 // Resolve the active kill target + time limit (seconds) for the current mode.
 function modeKillLimit() { return gameMode === 'tdm' ? MATCH.tdmKills : MATCH.ffaKills; }
 function modeTimeLimitSec() {
-  if (gameMode === 'br') return 0;   // BR has no clock — the shrinking zone ends the match
   const m = gameMode === 'gungame' ? MATCH.ggTime : gameMode === 'tdm' ? MATCH.tdmTime : MATCH.ffaTime;
   return (m && m > 0) ? m * 60 : 0;
 }
@@ -1613,32 +1602,8 @@ function setMeleeChoice(t) {
   if (typeof LobbyStage !== 'undefined') LobbyStage.refresh();
   if (typeof updateHUD === 'function') updateHUD();
 }
-let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame' | 'tdm' | 'br'
-if (!['ffa', 'gungame', 'tdm', 'br'].includes(gameMode)) gameMode = 'ffa';
-
-// --- MAP LIFECYCLE -----------------------------------------------------------------------------
-// The original Nuketown map is built at load around the world origin. The Battle-Royale island
-// "Paradise Island" is ~5× bigger, so instead of tearing down the working map (risky) it is built
-// LAZILY in its own far-away world region (centred near x=1200) the first time BR is started, and
-// the game switches between maps by toggling `activeMap`. The two never share floor/collision space,
-// so groundHeightAt()/resolveHorizontal() stay correct for both. activeMap also drives the player
-// boundary, spawns, scooter spawns and the out-of-bounds water below.
-let activeMap = 'nuketown';     // 'nuketown' (FFA/GunGame/TDM) | 'paradise' (Battle Royale)
-let island = null;              // set by buildParadiseIsland(): { cx, cz, R, spawns, scooterSpawns, patrol, water, glows }
-function ensureParadiseIsland() { if (!island && typeof buildParadiseIsland === 'function') island = buildParadiseIsland(1200, 0); return island; }
-// Map-aware horizontal boundary (replaces the old fixed ARENA clamp so the bigger island fits).
-function clampToMap(pos, margin) {
-  margin = (margin == null) ? 1.2 : margin;
-  if (activeMap === 'paradise' && island) {
-    const lim = island.R + 55;   // hard wall well out in the ocean; OOB water damage is the real soft edge
-    pos.x = Math.max(island.cx - lim, Math.min(island.cx + lim, pos.x));
-    pos.z = Math.max(island.cz - lim, Math.min(island.cz + lim, pos.z));
-  } else {
-    const lim = ARENA - margin;
-    pos.x = Math.max(-lim, Math.min(lim, pos.x));
-    pos.z = Math.max(-lim, Math.min(lim, pos.z));
-  }
-}
+let gameMode = localStorage.getItem('blockoutMode') || 'ffa';   // 'ffa' | 'gungame' | 'tdm'
+if (gameMode !== 'ffa' && gameMode !== 'gungame' && gameMode !== 'tdm') gameMode = 'ffa';
 let myTeam = null;      // TEAM DEATHMATCH: 'red' | 'blue' for the LOCAL player (null in FFA/GG)
 const TEAMS = { red: { name: 'TEAM RED', color: 0xe23b3b, css: '#ff5a5a', spawnSide: 'yellow' },
                 blue: { name: 'TEAM BLUE', color: 0x3b7fe2, css: '#5aa6ff', spawnSide: 'green' } };
@@ -3484,333 +3449,6 @@ function addAmmoBox(x, z) {
 [[68, 0], [85, 0], [72, 15], [72, -15], [90, 12], [90, -12]].forEach(([px, pz]) => patrolPoints.push(new THREE.Vector3(px, groundHeightAt(px, pz, 0.5), pz)));
 
 /* ============================================================================
-   PARADISE ISLAND — Battle-Royale map. Built LAZILY (first BR start) in a far
-   world region around (cx,cz)≈(1200,0) so its geometry/solids never overlap
-   Nuketown's. ~5× the Nuketown footprint: one tropical landmass ringed by an
-   out-of-bounds ocean, with beaches, jungle, mountains, clearings, dirt roads
-   and 9 named POIs. Flat-shaded low-poly; reuses addBox/panelWall/cyl/addRamp/
-   groundHeightAt + the global solids/colliders/ramps arrays. Returns an `island`
-   descriptor (centre, radius, spawns, scooter spawns, patrol points, glows).
-   ============================================================================ */
-function buildParadiseIsland(cx, cz) {
-  const R = 250;                         // dry-land radius; beyond this is ocean (out of bounds)
-  // palette
-  const sand = 0xe3d4a6, sandDk = 0xcab787, grass = 0x55934a, jungle = 0x2f5d2c, dirt = 0xb09766;
-  const rockC = 0x8a8378, rockDk = 0x6d675d, wood = 0x6f5333, woodDk = 0x49371f, woodLt = 0x8c6a3c, thatch = 0xc2a35a;
-  const water = 0x2f7fb0, waterLt = 0x5fb0d8, stone = 0xb8b09a, stoneLt = 0xcdc6b2, stoneDk = 0x7c7666;
-  const concrete = 0x9a9a92, metal = 0x79828c, rust = 0x9c5a3c, gold = 0xc9a24a, glassC = 0xacc4d2;
-  const pastel = [0xa9d3e0, 0xe9b7c6, 0xeede9e, 0xb8ddb0, 0xd9c2e6];   // beach-town house colours
-  const spawns = [], scooterSpawns = [], patrol = [], pois = [], glows = [];
-
-  // --- local→world helpers (mirror the mansion builder) ---
-  const iB   = (lx, y, lz, w, h, d, c, o) => addBox(cx + lx, y, cz + lz, w, h, d, c, o);                  // solid box
-  const iD   = (lx, y, lz, w, h, d, c) => addBox(cx + lx, y, cz + lz, w, h, d, c, { noCollide: true });   // decorative box
-  const iCyl = (lx, y, lz, r, h, c, rot) => cyl(cx + lx, y, cz + lz, r, h, c, rot);
-  const iRamp = (lx, y, lz, w, d, lo, hi, axis, c) => addRamp(cx + lx, y, cz + lz, w, d, lo, hi, axis, c);
-  const iGlow = (lx, y, lz, w, h, d, c, m) => glows.push([cx + lx, y, cz + lz, w, h, d, c, m == null ? 0.7 : m]);
-  const iWallX = (lzf, lx0, lx1, y0, y1, t, c, holes) => panelWall('x', cz + lzf, cx + lx0, cx + lx1, y0, y1, t, c, (holes || []).map(h => ({ a0: cx + h.a0, a1: cx + h.a1, y0: h.y0, y1: h.y1 })));
-  const iWallZ = (lxf, lz0, lz1, y0, y1, t, c, holes) => panelWall('z', cx + lxf, cz + lz0, cz + lz1, y0, y1, t, c, (holes || []).map(h => ({ a0: cz + h.a0, a1: cz + h.a1, y0: h.y0, y1: h.y1 })));
-  function disc(lx, lz, r, y, c, seg) { const m = new THREE.Mesh(new THREE.CircleGeometry(r, seg || 44), flatMat(c)); m.rotation.x = -Math.PI / 2; m.position.set(cx + lx, y, cz + lz); m.receiveShadow = true; scene.add(m); return m; }
-  // solid floor slab (walk-on top = `top`) with a rectangular stairwell hole cut out, so internal stairs
-  // can climb up through it without the slab clipping/ejecting the player (matches how multi-floor works elsewhere)
-  function floorHole(sx, sz, w, d, top, c, hx0, hx1, hz0, hz1) {
-    const x0 = sx - w / 2, x1 = sx + w / 2, z0 = sz - d / 2, z1 = sz + d / 2, y = top - 0.4;
-    if (hz0 > z0) iB(sx, y, (z0 + hz0) / 2, w, 0.4, hz0 - z0, c);
-    if (z1 > hz1) iB(sx, y, (hz1 + z1) / 2, w, 0.4, z1 - hz1, c);
-    if (hx0 > x0) iB((x0 + hx0) / 2, y, (hz0 + hz1) / 2, hx0 - x0, 0.4, hz1 - hz0, c);
-    if (x1 > hx1) iB((hx1 + x1) / 2, y, (hz0 + hz1) / 2, x1 - hx1, 0.4, hz1 - hz0, c);
-  }
-  function iSpawn(lx, lz) { spawns.push(new THREE.Vector3(cx + lx, groundHeightAt(cx + lx, cz + lz, 0.5), cz + lz)); }
-  function iPatrol(lx, lz) { patrol.push(new THREE.Vector3(cx + lx, groundHeightAt(cx + lx, cz + lz, 0.5), cz + lz)); }
-  function dist2(lx, lz) { return Math.hypot(lx, lz); }
-
-  // --- OCEAN (out-of-bounds) + tiered island ground ---
-  const oc = new THREE.Mesh(new THREE.CircleGeometry(R + 260, 60), flatMat(water));
-  oc.rotation.x = -Math.PI / 2; oc.position.set(cx, -0.4, cz); scene.add(oc);
-  const surf = new THREE.Mesh(new THREE.RingGeometry(R - 10, R + 70, 60), new THREE.MeshLambertMaterial({ color: waterLt, flatShading: true, transparent: true, opacity: 0.45, depthWrite: false }));
-  surf.rotation.x = -Math.PI / 2; surf.position.set(cx, -0.18, cz); scene.add(surf);
-  disc(0, 0, R + 10, -0.03, sand, 60);          // sandy coastline (whole landmass base)
-  disc(0, 0, R - 34, 0.0, grass, 56);           // grassy ring
-  disc(0, 0, R - 110, 0.02, jungle, 50);        // dense jungle core (darker green)
-
-  // --- scatter helpers ---
-  function palm(lx, lz, h) {
-    h = h || (7 + Math.random() * 4); const tilt = (Math.random() - 0.5) * 0.22;
-    const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.4, h, 6), flatMat(0x7a5a36));
-    tr.position.set(cx + lx, h / 2, cz + lz); tr.rotation.z = tilt; tr.castShadow = true; scene.add(tr);
-    const topX = cx + lx + tilt * h * 0.5;
-    for (let a = 0; a < 6; a++) { const fr = new THREE.Mesh(new THREE.ConeGeometry(0.55, 3.6, 4), flatMat(a % 2 ? 0x3f8a3a : 0x327530)); fr.position.set(topX + Math.cos(a) * 1.4, h - 0.2, cz + lz + Math.sin(a) * 1.4); fr.rotation.z = Math.PI / 2 - 0.55; fr.rotation.y = a; scene.add(fr); }
-    const co = new THREE.Mesh(new THREE.SphereGeometry(0.5, 5, 4), flatMat(0x6a4a2a)); co.position.set(topX, h - 0.7, cz + lz); scene.add(co);
-  }
-  function fern(lx, lz) { for (let a = 0; a < 5; a++) { const f = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.5, 4), flatMat(a % 2 ? 0x3c7a36 : 0x2f6a2c)); f.position.set(cx + lx + Math.cos(a) * 0.45, 0.72, cz + lz + Math.sin(a) * 0.45); f.rotation.z = (Math.random() - 0.5) * 0.9; scene.add(f); } }
-  function bush(lx, lz, r) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r || 1.1, 0), flatMat(0x3a7a36)); m.position.set(cx + lx, (r || 1.1) * 0.7, cz + lz); scene.add(m); }
-  function rockDeco(lx, lz, r) { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r), flatMat(Math.random() > 0.5 ? rockC : rockDk)); m.position.set(cx + lx, r * 0.5, cz + lz); m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); m.castShadow = true; scene.add(m); }
-  function rockSolid(lx, lz, w, h, d) { iB(lx, 0, lz, w, h, d, Math.random() > 0.5 ? rockC : rockDk); }   // boxy rock = cover
-  function driftwood(lx, lz) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 3.5, 6), flatMat(0x8a7a5a)); m.position.set(cx + lx, 0.3, cz + lz); m.rotation.set(Math.PI / 2, 0, Math.random() * 3); scene.add(m); }
-  function road(lx0, lz0, lx1, lz1, w) {                              // dirt path strip (decorative)
-    const dx = lx1 - lx0, dz = lz1 - lz0, len = Math.hypot(dx, dz);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w || 7, len), flatMat(dirt));
-    m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(dz, dx) + Math.PI / 2;
-    m.position.set(cx + (lx0 + lx1) / 2, 0.04, cz + (lz0 + lz1) / 2); m.receiveShadow = true; scene.add(m);
-  }
-  // simple thatched hut (used for villages + minor structures); returns nothing, registers walls solid
-  function hut(lx, lz, w, d, col, doorDir) {
-    const h = 3.4, t = 0.3; iD(lx, 0.01, lz, w - 0.4, 0.06, d - 0.4, 0x6b5333);   // floor
-    // 4 walls with a doorway on doorDir ('n'|'s'|'e'|'w')
-    iWallX(lz + d / 2, lx - w / 2, lx + w / 2, 0, h, t, col, doorDir === 'n' ? [{ a0: lx - 0.9, a1: lx + 0.9, y0: 0, y1: 2.4 }] : []);
-    iWallX(lz - d / 2, lx - w / 2, lx + w / 2, 0, h, t, col, doorDir === 's' ? [{ a0: lx - 0.9, a1: lx + 0.9, y0: 0, y1: 2.4 }] : []);
-    iWallZ(lx + w / 2, lz - d / 2, lz + d / 2, 0, h, t, col, doorDir === 'e' ? [{ a0: lz - 0.9, a1: lz + 0.9, y0: 0, y1: 2.4 }] : []);
-    iWallZ(lx - w / 2, lz - d / 2, lz + d / 2, 0, h, t, col, doorDir === 'w' ? [{ a0: lz - 0.9, a1: lz + 0.9, y0: 0, y1: 2.4 }] : []);
-    // thatched pyramid roof (decorative) + solid flat ceiling cap so you can stand on it
-    iB(lx, h, lz, w + 0.4, 0.3, d + 0.4, thatch);
-    for (let i = 0; i < 3; i++) { const f = i / 3; iD(lx, h + 0.3 + f * 1.8, lz, (w + 0.4) * (1 - f * 0.7), 0.5, (d + 0.4) * (1 - f * 0.7), i % 2 ? thatch : 0xae9148); }
-  }
-
-  // --- MOUNTAINS (scenic rocky massifs; the west one hosts the Cliff Settlement) ---
-  // A massif = a few stacked solid rock terraces; a switchback ramp climbs one face.
-  function massif(lx, lz, baseR, tiers, tierH) {
-    for (let i = 0; i < tiers; i++) { const r = baseR * (1 - i / (tiers + 0.6)); iB(lx, i * tierH, lz, r * 2, tierH + 0.2, r * 2, i % 2 ? rockC : rockDk); }
-    return tiers * tierH;   // summit height
-  }
-  massif(-150, 70, 34, 4, 5);                      // west mountain (Cliff Settlement builds its own terraced climb on the south flank)
-  massif(120, -150, 30, 3, 5);                     // south-east peak (scenic)
-  massif(40, 120, 26, 3, 4.5);                     // north-central peak (scenic)
-
-  // --- ROADS connecting the POIs (dirt; scooters travel them) ---
-  road(0, -210, -150, -120, 8); road(-150, -120, 0, 0, 8); road(0, 0, 150, 40, 8);
-  road(150, 40, 210, -20, 8); road(0, 0, 40, 200, 8); road(40, 200, -80, 165, 8); road(0, 0, 160, 160, 8);
-
-  // --- DECORATIVE SCATTER: palms ring the beaches, ferns/bushes/rocks fill the jungle ---
-  for (let a = 0; a < 64; a++) { const ang = a / 64 * Math.PI * 2, rr = R - 12 - Math.random() * 16; palm(Math.cos(ang) * rr, Math.sin(ang) * rr); if (a % 3 === 0) driftwood(Math.cos(ang) * (R - 4) + (Math.random() - 0.5) * 6, Math.sin(ang) * (R - 4) + (Math.random() - 0.5) * 6); }
-  for (let i = 0; i < 90; i++) { const ang = Math.random() * Math.PI * 2, rr = Math.random() * (R - 70); const lx = Math.cos(ang) * rr, lz = Math.sin(ang) * rr; const r = Math.random(); if (r < 0.5) palm(lx, lz, 6 + Math.random() * 5); else if (r < 0.75) fern(lx, lz); else if (r < 0.9) bush(lx, lz, 0.9 + Math.random()); else rockDeco(lx, lz, 1 + Math.random() * 1.5); }
-
-  // ============ POIs (named locations; high-density loot in the mechanics pass) ============
-  // 1) BEACH TOWN "Paradise Cove" — pastel thatched village around a fountain square, store + chapel, beached boats
-  function poiBeachTown(lx, lz) {
-    pois.push({ name: 'PARADISE COVE', lx, lz, icon: 'town' });
-    disc(lx, lz, 34, 0.03, sandDk, 26);                                       // packed-sand plaza
-    [[-22, -6, 'e'], [-22, 10, 'e'], [22, -6, 'w'], [22, 10, 'w'], [-9, -22, 'n'], [11, -22, 'n'], [-9, 22, 's'], [11, 22, 's']]
-      .forEach((h, i) => hut(lx + h[0], lz + h[1], 8, 7, pastel[i % pastel.length], h[2]));   // ring of pastel huts facing the square
-    iCyl(lx, 0.4, lz, 2.4, 0.8, stoneLt); iCyl(lx, 0.95, lz, 1.6, 0.4, stoneDk); iB(lx, 0, lz, 0.8, 1.9, 0.8, stoneLt);   // fountain
-    const plume = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.25, 1.3, 8), new THREE.MeshBasicMaterial({ color: 0xbfe0ee, transparent: true, opacity: 0.4 })); plume.position.set(cx + lx, 2.3, cz + lz); scene.add(plume);
-    [[-5, 0], [5, 0], [0, -5], [0, 5]].forEach(b => iD(lx + b[0], 0, lz + b[1], 2.2, 0.5, 0.7, woodLt));   // benches
-    (function (sx, sz) {   // general store (stone)
-      const w = 12, d = 9, h = 4.6;
-      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, 0, h, 0.4, stone, [{ a0: sx - 1.3, a1: sx + 1.3, y0: 0, y1: 3 }]);
-      iWallX(sz - d / 2, sx - w / 2, sx + w / 2, 0, h, 0.4, stone, []);
-      iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, 0, h, 0.4, stone, [{ a0: sz - 1.6, a1: sz + 1.6, y0: 1.2, y1: 3 }]);
-      iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, 0, h, 0.4, stone, []);
-      iB(sx, h, sz, w + 0.5, 0.4, d + 0.5, stoneDk); iD(sx, 0.02, sz, w - 0.6, 0.05, d - 0.6, 0x8a7a5a);
-      iD(sx, h + 0.5, sz - d / 2 - 0.1, 7, 0.7, 0.2, 0xb03a3a);
-    })(lx + 26, lz - 17);
-    (function (sx, sz) {   // chapel + bell tower
-      iWallX(sz + 5, sx - 4, sx + 4, 0, 5, 0.4, stoneLt, [{ a0: sx - 1, a1: sx + 1, y0: 0, y1: 3 }]); iWallX(sz - 5, sx - 4, sx + 4, 0, 5, 0.4, stoneLt, []);
-      iWallZ(sx - 4, sz - 5, sz + 5, 0, 5, 0.4, stoneLt, []); iWallZ(sx + 4, sz - 5, sz + 5, 0, 5, 0.4, stoneLt, []);
-      iB(sx, 5, sz, 8.6, 0.4, 10.6, stoneDk); iD(sx, 0.02, sz, 7.4, 0.05, 9.4, wood);
-      iWallX(sz + 2.2, sx - 2.2, sx + 2.2, 5, 14, 0.4, stoneLt, []); iWallX(sz - 2.2, sx - 2.2, sx + 2.2, 5, 14, 0.4, stoneLt, []);
-      iWallZ(sx - 2.2, sz - 2.2, sz + 2.2, 5, 14, 0.4, stoneLt, []); iWallZ(sx + 2.2, sz - 2.2, sz + 2.2, 5, 14, 0.4, stoneLt, []);
-      iB(sx, 14, sz, 5, 0.4, 5, stoneDk); const sp = new THREE.Mesh(new THREE.ConeGeometry(3, 4, 4), flatMat(0x8a3a3a)); sp.position.set(cx + sx, 16.2, cz + sz); scene.add(sp);
-      iD(sx, 11, sz, 0.4, 1.3, 0.4, gold);
-    })(lx - 24, lz - 15);
-    [[-30, 19], [31, 21], [9, 31]].forEach(b => { const hull = new THREE.Mesh(new THREE.BoxGeometry(5, 1.4, 2), flatMat([0xcf6b3a, 0x3a8acf, 0x6ab03a][(Math.random() * 3) | 0])); hull.position.set(cx + lx + b[0], 0.6, cz + lz + b[1]); hull.rotation.y = Math.random() * 3; scene.add(hull); });
-    iSpawn(lx - 11, lz); iSpawn(lx + 11, lz + 8); iSpawn(lx, lz - 12); iSpawn(lx + 26, lz - 17); iPatrol(lx, lz); iPatrol(lx + 20, lz - 14); iPatrol(lx - 18, lz + 12);
-  }
-  // 2) LAGOON RESORT — collapsing 3-storey hotel, cracked pool, palm grove + loungers, open spa, vine bar
-  function poiResort(lx, lz) {
-    pois.push({ name: 'LAGOON RESORT', lx, lz, icon: 'resort' });
-    disc(lx, lz, 42, 0.03, 0xa9a06f, 30);
-    const w = 28, d = 15, t = 0.5, hcol = 0xd8cdae;
-    [0, 4, 8].forEach((fy, fi) => {
-      if (fi > 0) floorHole(lx, lz, w, d, fy, 0xb9af90, lx - 13, lx - 7, lz - 5, lz + 5);   // upper floor slab with a stairwell hole over the stairs
-      const winF = []; for (let k = -w / 2 + 5; k < w / 2 - 4; k += 6) winF.push({ a0: lx + k, a1: lx + k + 3, y0: fy + 1.2, y1: fy + 3 });
-      iWallX(lz + d / 2, lx - w / 2, lx + w / 2, fy, fy + 4, t, hcol, fi === 0 ? winF.concat([{ a0: lx - 2, a1: lx + 2, y0: 0, y1: 3 }]) : winF);
-      iWallX(lz - d / 2, lx - w / 2, lx + w / 2, fy, fy + 4, t, hcol, winF);
-      iWallZ(lx - w / 2, lz - d / 2, lz + d / 2, fy, fy + 4, t, hcol, [{ a0: lz - 2, a1: lz + 2, y0: fy + 1.2, y1: fy + 3 }]);
-      if (fi !== 2) iWallZ(lx + w / 2, lz - d / 2, lz + d / 2, fy, fy + 4, t, hcol, [{ a0: lz - 2, a1: lz + 2, y0: fy + 1.2, y1: fy + 3 }]);   // top-floor +x corner "collapsed" (open)
-    });
-    iB(lx, 12, lz, w + 0.6, 0.5, d + 0.6, 0x9a9080); iD(lx, 0.02, lz, w - 1, 0.05, d - 1, 0x7a6f55);   // flat roof + lobby floor
-    for (let i = 0; i < 5; i++) iB(lx + w / 2 - 2 - i * 1.4, 0, lz + d / 2 - 2 - i * 0.6, 2.2, 1 + Math.random() * 1.4, 2.2, 0xb0a690);   // collapsed-corner rubble
-    iRamp(lx - 10, 0, lz, 5, 8, 0, 4, 'z', 0xb9af90); iRamp(lx - 10, 0, lz, 5, 8, 8, 4, 'z', 0xb9af90);   // switchback interior stairs G→F2→F3 (inside the stairwell hole)
-    (function (px, pz) {   // cracked pool (walk-in) + dried leaves
-      disc(px, pz, 8, 0.05, 0x6f8f7a, 20); [[-8, 0, 16, 0.6], [8, 0, 16, 0.6], [0, -8, 0.6, 16], [0, 8, 0.6, 16]].forEach(s => iB(px + s[0], 0, pz + s[1], s[2], 0.7, s[3], stoneLt));
-    })(lx, lz + 28);
-    [[-14, 22], [14, 22], [-20, 14], [20, 14]].forEach(o => { palm(lx + o[0], lz + o[1], 8); iD(lx + o[0] + 2, 0, lz + o[1], 2.2, 0.4, 1, 0xe0d6b0); });   // palm grove + loungers
-    (function (sx, sz) { for (let a = 0; a < 6; a++) { const ang = a / 6 * Math.PI * 2; iCyl(sx + Math.cos(ang) * 5, 1.6, sz + Math.sin(ang) * 5, 0.4, 3.2, stoneLt); } iB(sx, 3.2, sz, 12, 0.4, 12, stoneLt); })(lx - 26, lz + 6);   // open spa pavilion
-    iSpawn(lx, lz + 2); iSpawn(lx - 8, lz); iSpawn(lx + 8, lz); iSpawn(lx - 26, lz + 6); iPatrol(lx, lz); iPatrol(lx, lz + 26); iPatrol(lx - 24, lz + 6);
-  }
-  // 3) ANCIENT RUINS — overgrown stepped pyramid (stair to a solid top), base chamber, idols, broken columns
-  function poiRuins(lx, lz) {
-    pois.push({ name: 'ANCIENT RUINS', lx, lz, icon: 'temple' });
-    disc(lx, lz, 44, 0.03, 0x46583a, 30);                                     // mossy clearing
-    const tiers = 5, tH = 2.4, base = 20;
-    for (let i = 0; i < tiers; i++) { const s = base * (1 - i / (tiers + 1)); iB(lx, i * tH, lz, s * 2, tH + 0.1, s * 2, i % 2 ? 0x9a9384 : 0x837c6e); }
-    const topY = tiers * tH, topS = base * (1 - tiers / (tiers + 1));
-    iB(lx, topY, lz, topS * 2 + 1, 0.5, topS * 2 + 1, 0x8f8878);              // solid temple-top platform
-    iRamp(lx, 0, lz + base + 4, 7, base + 8, 0, topY + 0.5, 'z', 0x6d675d);   // grand stair up the south face
-    [[-topS, -topS], [topS, -topS], [-topS, topS], [topS, topS]].forEach(o => { iB(lx + o[0] * 0.7, topY + 0.5, lz + o[1] * 0.7, 1.2, 2.4, 1.2, 0x6d675d); iGlow(lx + o[0] * 0.7, topY + 2, lz + o[1] * 0.7, 0.6, 0.6, 0.6, 0x66ffcc, 0.5); });   // idols + glowing eyes
-    (function (rx, rz) {   // base chamber (hollow stone room; doorway faces away from the stair)
-      const w = 11, d = 8, h = 3.6;
-      iWallX(rz + d / 2, rx - w / 2, rx + w / 2, 0, h, 0.5, stoneDk, []); iWallX(rz - d / 2, rx - w / 2, rx + w / 2, 0, h, 0.5, stoneDk, [{ a0: rx - 1.3, a1: rx + 1.3, y0: 0, y1: 2.6 }]);
-      iWallZ(rx - w / 2, rz - d / 2, rz + d / 2, 0, h, 0.5, stoneDk, []); iWallZ(rx + w / 2, rz - d / 2, rz + d / 2, 0, h, 0.5, stoneDk, []);
-      iB(rx, h, rz, w + 0.4, 0.5, d + 0.4, stoneDk); iD(rx, 0.03, rz, w - 0.6, 0.05, d - 0.6, 0x3a352c);
-      iGlow(rx, 1.7, rz, 1.2, 1, 1.2, 0x66ffcc, 0.4);
-    })(lx, lz - base - 7);
-    for (let a = 0; a < 8; a++) { const ang = a / 8 * Math.PI * 2, rr = base + 16; iB(lx + Math.cos(ang) * rr, 0, lz + Math.sin(ang) * rr, 1.6, 2 + Math.random() * 3.5, 1.6, 0x9a9384); }   // broken columns
-    [[-32, 10], [32, -10], [0, 38]].forEach(o => { iB(lx + o[0], 0, lz + o[1], 2.6, 3, 1.6, 0x837c6e); iD(lx + o[0], 3, lz + o[1], 2.2, 1.4, 1.3, 0x6d675d); });   // stone heads
-    iSpawn(lx, lz + base + 10); iSpawn(lx - 22, lz - 18); iSpawn(lx + 22, lz + 18); iSpawn(lx, lz - base - 7); iPatrol(lx, lz + base + 6); iPatrol(lx - 20, lz + 10);
-  }
-  // 4) CAMP DELTA — concrete command building, bunkers, watchtowers (ladders), sandbags, helipad, wire fence
-  function poiCamp(lx, lz) {
-    pois.push({ name: 'CAMP DELTA', lx, lz, icon: 'military' });
-    disc(lx, lz, 38, 0.03, 0x6f6f5a, 26);
-    (function (sx, sz) {   // command building
-      const w = 16, d = 12, h = 4.6, t = 0.4;
-      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, 0, h, t, concrete, [{ a0: sx - 1.6, a1: sx + 1.6, y0: 0, y1: 3 }, { a0: sx - 6, a1: sx - 3.5, y0: 1.4, y1: 3 }, { a0: sx + 3.5, a1: sx + 6, y0: 1.4, y1: 3 }]);
-      iWallX(sz - d / 2, sx - w / 2, sx + w / 2, 0, h, t, concrete, []); iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, 0, h, t, concrete, [{ a0: sz - 2, a1: sz + 2, y0: 1.4, y1: 3 }]); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, 0, h, t, concrete, []);
-      iB(sx, h, sz, w + 0.5, 0.4, d + 0.5, 0x7a7a6e); iD(sx, 0.02, sz, w - 0.6, 0.05, d - 0.6, 0x55554a);
-      iD(sx - 5, h + 0.4, sz, 0.2, 3.2, 0.2, metal); iD(sx + 5, h + 0.4, sz, 0.2, 2.4, 0.2, metal);
-    })(lx, lz);
-    [[-24, -10], [22, 12]].forEach(b => { const sx = lx + b[0], sz = lz + b[1], w = 9, d = 7, h = 3;   // bunkers
-      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, 0, h, 0.5, 0x6a6a5e, [{ a0: sx - 1.2, a1: sx + 1.2, y0: 0, y1: 2.4 }]); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, 0, h, 0.5, 0x6a6a5e, []);
-      iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, 0, h, 0.5, 0x6a6a5e, []); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, 0, h, 0.5, 0x6a6a5e, []); iB(sx, h, sz, w + 0.6, 0.5, d + 0.6, 0x5a5a50);
-    });
-    [[-26, 18, 1, 0], [26, -14, -1, 0]].forEach(b => { const sx = lx + b[0], sz = lz + b[1], ph = 7;   // watchtowers + ladders
-      [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(l => iB(sx + l[0], 0, sz + l[1], 0.5, ph, 0.5, metal));
-      iB(sx, ph, sz, 5.6, 0.4, 5.6, 0x6a6a5e); iWallX(sz + 2.7, sx - 2.7, sx + 2.7, ph + 0.4, ph + 1.4, 0.2, metal, []); iWallX(sz - 2.7, sx - 2.7, sx + 2.7, ph + 0.4, ph + 1.4, 0.2, metal, []);
-      for (let y = 0.5; y < ph; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 0.1), flatMat(0x888888)); m.position.set(cx + sx + b[2] * 2.8, y, cz + sz); scene.add(m); }
-      ladders.push({ x: cx + sx + b[2] * 2.8, z: cz + sz, bottom: 0, top: ph, cx: cx + sx, cz: cz + sz, outX: b[2], outZ: 0 });
-    });
-    [[-12, 20, 10, 'x'], [14, 18, 8, 'x'], [-30, 4, 9, 'z'], [30, 2, 9, 'z']].forEach(s => { if (s[3] === 'x') iB(lx + s[0], 0, lz + s[1], s[2], 1.1, 1.2, 0x8a7a4a); else iB(lx + s[0], 0, lz + s[1], 1.2, 1.1, s[2], 0x8a7a4a); });   // sandbags
-    disc(lx - 2, lz - 26, 7, 0.06, 0x3a3a34, 20); iD(lx - 2, 0.08, lz - 26, 1.2, 0.04, 5, 0xddc94a); iD(lx - 2, 0.08, lz - 26, 5, 0.04, 1.2, 0xddc94a);   // helipad
-    [[8, -22, 0], [10, -22, 0], [9, -20.2, 2]].forEach(b => iB(lx + b[0], b[2], lz + b[1], 2, 2, 2, 0x4a5a3a));   // decorative supply crates (NOT lootable)
-    for (let a = 0; a < 16; a++) { if (a % 4 === 0) continue; const ang = a / 16 * Math.PI * 2; iB(lx + Math.cos(ang) * 34, 0, lz + Math.sin(ang) * 34, 1.6, 2.4, 0.2, metal); }   // wire fence (gaps)
-    iSpawn(lx, lz + 2); iSpawn(lx - 24, lz - 10); iSpawn(lx + 22, lz + 12); iSpawn(lx, lz); iPatrol(lx, lz); iPatrol(lx - 20, lz + 14); iPatrol(lx + 22, lz - 12);
-  }
-  // 5) HARBOR'S EDGE — fishing village on stilts: plank decks over the water, huts, pier, metal warehouse
-  function poiHarbor(lx, lz) {
-    pois.push({ name: "HARBOR'S EDGE", lx, lz, icon: 'harbor' });
-    function plat(sx, sz, w, d) { for (let px = -w / 2 + 1; px <= w / 2 - 1; px += 3) for (let pz = -d / 2 + 1; pz <= d / 2 - 1; pz += 3) iCyl(sx + px, 1, sz + pz, 0.25, 2, wood); iB(sx, 1.7, sz, w, 0.4, d, woodLt); }   // posts + deck (top ~2.1)
-    plat(lx, lz, 18, 14); plat(lx + 16, lz, 10, 10); plat(lx, lz + 14, 10, 10); plat(lx + 12, lz - 12, 9, 9);
-    iB(lx + 12, 1.7, lz, 12, 0.4, 3, woodLt); iB(lx, 1.7, lz + 9, 3, 0.4, 8, woodLt);   // connecting walkways
-    iRamp(lx - 11, 0, lz, 5, 8, 0, 2.1, 'x', woodLt);   // shore ramp up onto the deck (climbs +x)
-    [[0, 0, 's'], [16, 0, 'w'], [0, 14, 's']].forEach(h => { const sx = lx + h[0], sz = lz + h[1];   // huts on the decks
-      iWallX(sz + 3, sx - 3.5, sx + 3.5, 2.1, 5.6, 0.3, thatch, h[2] === 'n' ? [{ a0: sx - 1, a1: sx + 1, y0: 2.1, y1: 4.4 }] : []); iWallX(sz - 3, sx - 3.5, sx + 3.5, 2.1, 5.6, 0.3, thatch, h[2] === 's' ? [{ a0: sx - 1, a1: sx + 1, y0: 2.1, y1: 4.4 }] : []);
-      iWallZ(sx + 3.5, sz - 3, sz + 3, 2.1, 5.6, 0.3, thatch, h[2] === 'e' ? [{ a0: sz - 1, a1: sz + 1, y0: 2.1, y1: 4.4 }] : []); iWallZ(sx - 3.5, sz - 3, sz + 3, 2.1, 5.6, 0.3, thatch, h[2] === 'w' ? [{ a0: sz - 1, a1: sz + 1, y0: 2.1, y1: 4.4 }] : []);
-      iB(sx, 5.6, sz, 7.4, 0.3, 6.4, 0xae9148);
-    });
-    iB(lx - 12, 1.7, lz, 8, 0.4, 4, woodLt); for (let i = 0; i < 3; i++) iD(lx - 14 + i * 2, 2.1, lz, 1.2, 1, 1.2, 0x8a6a3a);   // pier + crab traps
-    (function (sx, sz) {   // metal warehouse (sliding door)
-      const w = 14, d = 10, h = 5, t = 0.4;
-      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, 0, h, t, metal, [{ a0: sx - 2.5, a1: sx + 2.5, y0: 0, y1: 3.5 }]); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, 0, h, t, metal, []);
-      iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, 0, h, t, metal, []); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, 0, h, t, metal, []); iB(sx, h, sz, w + 0.5, 0.4, d + 0.5, 0x5a6068); iD(sx, 0.02, sz, w - 0.6, 0.05, d - 0.6, 0x4a4a44);
-    })(lx - 16, lz + 13);
-    iSpawn(lx - 16, lz + 13); iSpawn(lx - 18, lz); iSpawn(lx + 16, lz + 4); iPatrol(lx - 12, lz); iPatrol(lx - 16, lz + 12);
-  }
-  // 6) CLIFF SETTLEMENT — terraced platforms up the west mountain, stair ramps + rope bridge, huts + longhouse
-  function poiCliff(lx, lz) {
-    pois.push({ name: 'CLIFF SETTLEMENT', lx, lz, icon: 'cliff' });
-    function shelter(sx, sz, by, w, d, col, dd) { const h = 3, t = 0.3;
-      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, by, by + h, t, col, dd === 'n' ? [{ a0: sx - 0.9, a1: sx + 0.9, y0: by, y1: by + 2.2 }] : []); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, by, by + h, t, col, dd === 's' ? [{ a0: sx - 0.9, a1: sx + 0.9, y0: by, y1: by + 2.2 }] : []);
-      iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, by, by + h, t, col, dd === 'e' ? [{ a0: sz - 0.9, a1: sz + 0.9, y0: by, y1: by + 2.2 }] : []); iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, by, by + h, t, col, dd === 'w' ? [{ a0: sz - 0.9, a1: sz + 0.9, y0: by, y1: by + 2.2 }] : []);
-      iB(sx, by + h, sz, w + 0.3, 0.3, d + 0.3, thatch);
-    }
-    const T = [1, 6, 11, 16];     // terrace walk-on heights, marching up toward -z
-    T.forEach((top, i) => {
-      iB(lx, 0, lz - i * 13, 24 - i * 3, top, 11, i % 2 ? rockC : rockDk);                                  // solid terrace block (top = `top`)
-      if (i > 0) iRamp(lx, 0, lz - (i - 0.5) * 13, 6, 11, top, T[i - 1], 'z', wood);                          // stair ramp from terrace i-1 up to i
-      shelter(lx + (i % 2 ? 6 : -6), lz - i * 13, top, 7, 6, thatch, 's');                                    // a hut on each terrace
-    });
-    iB(lx, 16, lz - 3 * 13, 14, 0.4, 9, woodDk); shelter(lx, lz - 3 * 13, 16, 13, 8, woodLt, 's');            // summit longhouse
-    iB(lx + 11, 6, lz - 13, 8, 0.5, 3, woodLt); [-1.4, 1.4].forEach(o => iD(lx + 11, 7.3, lz - 13 + o, 8, 1.4, 0.1, 0x6a4a2a));   // rope bridge (plank + rope rails) off terrace 1
-    iSpawn(lx, lz + 2); iSpawn(lx + 6, lz - 12); iSpawn(lx, lz - 36); iPatrol(lx, lz); iPatrol(lx, lz - 26);
-  }
-  // 7) RUSTED HULL — beached cargo ship: hull + main deck, internal stair + boarding gangway, containers, bridge
-  function poiCargo(lx, lz) {
-    pois.push({ name: 'RUSTED HULL', lx, lz, icon: 'ship' });
-    const L = 44, W = 16, dY = 6;
-    iWallZ(lx - W / 2, lz - L / 2, lz + L / 2, 0, dY, 0.6, rust, []); iWallZ(lx + W / 2, lz - L / 2, lz + L / 2, 0, dY, 0.6, rust, []);   // hull sides
-    iWallX(lz - L / 2, lx - W / 2, lx + W / 2, 0, dY, 0.6, 0x7a4632, [{ a0: lx - 1.6, a1: lx + 1.6, y0: 0, y1: 3 }]);                    // bow (door into below-deck)
-    iWallX(lz + L / 2, lx - W / 2, lx + W / 2, 0, dY, 0.6, 0x7a4632, []);                                                               // stern
-    iB(lx, dY - 0.4, lz + 6, W - 0.4, 0.4, 32, metal);                                                                                 // main deck (bow end stays open as a hatch)
-    iRamp(lx, 0, lz - 14, 6, 8, 0, dY, 'z', 0x6a4632);                                                                                 // internal stair: below-deck → deck
-    iB(lx - W / 2 - 3, 0, lz, 0.4, 1, 13, rust); iRamp(lx - W / 2 - 3.5, 0, lz, 5, 11, 0, dY, 'x', metal);                              // boarding gangway from the beach
-    function container(sx, sz, by, col) { const w = 6, d = 3, h = 2.6; iB(sx, by, sz - d / 2, w, h, 0.3, col); iB(sx, by, sz + d / 2, w, h, 0.3, col); iB(sx, by, sz, w, 0.25, d, col); iB(sx, by + h, sz, w, 0.25, d, col); }
-    [[-3, 2, 0xc06030], [3, 10, 0x3070a0], [-3, 16, 0x60a040]].forEach(c => container(lx + c[0], lz + c[1], dY, c[2]));                  // open containers on deck (cover/rooms)
-    [[-W / 2 - 10, -6], [-W / 2 - 10, 0]].forEach(c => container(lx + c[0], lz + c[1], 0, 0xc06030));                                    // beached containers
-    (function (sx, sz) { const w = 12, d = 7;   // bridge / control room atop the stern deck
-      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, dY, dY + 4, 0.4, 0x8a9098, [{ a0: sx - 4, a1: sx + 4, y0: dY + 1.2, y1: dY + 3 }]); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, dY, dY + 4, 0.4, 0x8a9098, [{ a0: sx - 1.2, a1: sx + 1.2, y0: dY, y1: dY + 2.6 }]);
-      iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, dY, dY + 4, 0.4, 0x8a9098, []); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, dY, dY + 4, 0.4, 0x8a9098, []); iB(sx, dY + 4, sz, w + 0.5, 0.4, d + 0.5, 0x6a7078);
-    })(lx, lz + L / 2 - 5);
-    iSpawn(lx, lz - 4); iSpawn(lx, lz + 12); iSpawn(lx - W / 2 - 10, lz - 6); iPatrol(lx, lz); iPatrol(lx, lz + 12);
-  }
-  // 8) AIRSTRIP — runway, two open hangars, 3-storey control tower, parked planes, exploding fuel barrels
-  function poiAirstrip(lx, lz) {
-    pois.push({ name: 'AIRSTRIP', lx, lz, icon: 'air' });
-    iD(lx, 0.04, lz, 16, 0.05, 92, 0x40403c); for (let z = -40; z <= 40; z += 8) iD(lx, 0.06, lz + z, 1.4, 0.04, 4, 0xd8d49a);            // runway + centre line
-    function hangar(sx, sz) { const w = 22, d = 18, h = 9, t = 0.5;
-      iWallX(sz - d / 2, sx - w / 2, sx + w / 2, 0, h, t, 0xb0b0a4, []); iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, 0, h, t, 0xb0b0a4, []); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, 0, h, t, 0xb0b0a4, []);
-      iB(sx, h - 1, sz + d / 2, w, 1, t, 0xa0a094); iB(sx, h, sz, w + 0.6, 0.5, d + 0.6, 0x8a8a7e); iD(sx, 0.02, sz, w - 0.8, 0.05, d - 0.8, 0x55554a);   // open front (lintel only) + roof
-    }
-    hangar(lx - 22, lz - 20); hangar(lx - 22, lz + 18);
-    (function (sx, sz) { const w = 8, d = 8;   // control tower: 3-storey shell, ground + top observation deck reached by a ladder
-      [0, 4, 8].forEach(fy => {
-        iWallX(sz + d / 2, sx - w / 2, sx + w / 2, fy, fy + 4, 0.4, concrete, fy === 0 ? [{ a0: sx - 1.2, a1: sx + 1.2, y0: 0, y1: 2.6 }] : [{ a0: sx - 3, a1: sx + 3, y0: fy + 1.2, y1: fy + 3 }]);
-        iWallX(sz - d / 2, sx - w / 2, sx + w / 2, fy, fy + 4, 0.4, concrete, [{ a0: sx - 3, a1: sx + 3, y0: fy + 1.2, y1: fy + 3 }]); iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, fy, fy + 4, 0.4, concrete, []); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, fy, fy + 4, 0.4, concrete, []);
-      });
-      iB(sx, 8 - 0.4, sz, w, 0.4, d, 0x9a9a8e); iB(sx, 12, sz, w + 1, 0.5, d + 1, 0x6a7078);   // observation deck floor (y8) + roof
-      for (let y = 0.5; y < 8; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 0.1), flatMat(0x888888)); m.position.set(cx + sx, y, cz + sz + d / 2 - 0.7); scene.add(m); }   // ladder rungs (inner wall)
-      ladders.push({ x: cx + sx, z: cz + sz + d / 2 - 0.7, bottom: 0, top: 8, cx: cx + sx, cz: cz + sz, outX: 0, outZ: -1 });
-    })(lx + 9, lz);
-    function plane(sx, sz) { iB(sx, 0.8, sz, 3, 2.2, 10, 0xc8c8c0); iB(sx, 1.4, sz - 1, 11, 0.5, 2.5, 0xb0b0a8); const tail = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3, 2), flatMat(0xb0b0a8)); tail.position.set(cx + sx, 3, cz + sz + 4.5); scene.add(tail); }
-    plane(lx + 2, lz - 28); plane(lx - 4, lz + 30);
-    iB(lx + 20, 0, lz + 8, 4, 4, 8, 0xd0d0c0); for (let i = 0; i < 6; i++) { const m = iB(lx + 16 + (i % 3) * 1.6, 0, lz + 14 + ((i / 3) | 0) * 1.6, 1.2, 1.6, 1.2, 0xc0392b); if (m) m.userData.explosive = true; }   // fuel tanks + EXPLODING barrels (hazard)
-    iSpawn(lx + 9, lz); iSpawn(lx - 22, lz - 20); iSpawn(lx - 22, lz + 18); iSpawn(lx, lz + 30); iPatrol(lx, lz); iPatrol(lx - 22, lz); iPatrol(lx + 9, lz);
-  }
-  // 9) MILLIONAIRE'S RETREAT — hilltop mansion (2 storeys via external grand stair), garden, fountain, tennis court, outbuildings
-  function poiMansion(lx, lz) {
-    pois.push({ name: "MILLIONAIRE'S RETREAT", lx, lz, icon: 'mansion' });
-    iB(lx, 0, lz, 72, 2, 66, 0x5f7a48);                                                       // grassy hilltop pad (top y2)
-    iRamp(lx, 0, lz - 42, 12, 20, 0, 2, 'z', dirt); road(lx, lz - 62, lx, lz - 44, 10);        // winding driveway up the hill
-    const base = 2, w = 30, d = 20, t = 0.5, F2 = base + 5, RF = base + 10, mc = 0xd9d2c0;
-    [base, F2].forEach((fy, fi) => {
-      if (fi > 0) iB(lx, fy - 0.4, lz, w, 0.4, d, 0xc9c0aa);                                   // solid F2 floor
-      const wn = []; for (let k = -w / 2 + 5; k < w / 2 - 3; k += 6) wn.push({ a0: lx + k, a1: lx + k + 3, y0: fy + 1.4, y1: fy + 3.4 });
-      iWallX(lz - d / 2, lx - w / 2, lx + w / 2, fy, fy + 5, t, mc, fi === 0 ? [{ a0: lx - 2.5, a1: lx + 2.5, y0: base, y1: base + 4 }].concat(wn) : [{ a0: lx - 2, a1: lx + 2, y0: fy, y1: fy + 3.5 }].concat(wn));
-      iWallX(lz + d / 2, lx - w / 2, lx + w / 2, fy, fy + 5, t, mc, wn);
-      iWallZ(lx - w / 2, lz - d / 2, lz + d / 2, fy, fy + 5, t, mc, [{ a0: lz - 3, a1: lz + 3, y0: fy + 1.4, y1: fy + 3.4 }]); iWallZ(lx + w / 2, lz - d / 2, lz + d / 2, fy, fy + 5, t, mc, [{ a0: lz - 3, a1: lz + 3, y0: fy + 1.4, y1: fy + 3.4 }]);
-    });
-    iB(lx, RF, lz, w + 1, 0.5, d + 1, 0x8a8276); for (let i = 0; i < 3; i++) iD(lx, RF + 0.5 + i * 1.4, lz, (w + 1) * (1 - i * 0.25), 0.5, (d + 1) * (1 - i * 0.25), 0x7a4a30); iD(lx, base + 0.02, lz, w - 1, 0.05, d - 1, 0x6b5333);   // roof + ground floor
-    iRamp(lx, 0, lz - d / 2 - 7, 8, 12, base, F2, 'z', stoneLt); iB(lx, F2 - 0.4, lz - d / 2 - 1, 9, 0.4, 4, stoneLt);   // external grand stair → F2 balcony landing
-    iCyl(lx, base + 0.4, lz - 31, 2.2, 0.8, stoneLt); iB(lx, base, lz - 31, 0.7, 1.8, 0.7, stoneLt);                       // garden fountain (clear of the grand stair)
-    [[-12, -25], [12, -25]].forEach(g => iB(lx + g[0], base, lz + g[1], 4, 1, 0.6, 0x3f6e3a)); [[-16, -27], [16, -27]].forEach(s => iB(lx + s[0], base, lz + s[1], 1, 3, 1, stoneLt));   // hedges flank the path; statues off to the sides
-    iD(lx + 27, base + 0.05, lz + 8, 14, 0.05, 24, 0x2f6e4a); iD(lx + 27, base + 0.6, lz + 8, 14, 1.0, 0.2, 0xffffff);     // tennis court + net
-    hut(lx - 46, lz + 10, 9, 8, 0xd9d2c0, 'e'); hut(lx + 46, lz - 6, 8, 8, 0xc9d9e0, 'w'); disc(lx + 46, lz + 8, 6, 0.06, 0x3a8acf, 18);   // guest house, pool house + pool (at hill base)
-    iSpawn(lx, lz); iSpawn(lx + 8, lz + 4); iSpawn(lx - 8, lz - 4); iSpawn(lx - 46, lz + 10); iPatrol(lx, lz); iPatrol(lx, lz - 22); iPatrol(lx + 27, lz + 8);
-  }
-  // __POI_DEFS__
-  poiBeachTown(0, -205);     // south beach
-  poiResort(-165, -135);     // south-west coast
-  poiRuins(0, 0);            // central jungle
-  poiCamp(150, 35);          // east-central
-  poiHarbor(212, -25);       // east coast (stilts over the water)
-  poiCliff(-150, 116);       // south flank of the west mountain
-  poiCargo(35, 212);         // north shore (beached)
-  poiAirstrip(-95, 165);     // north clearing
-  poiMansion(155, 150);      // north-east hilltop
-  // __POI_CALLS__
-
-  // --- generic loot/exploration spawns: a ring of beach drop-in points (more added per-POI) ---
-  for (let a = 0; a < 10; a++) { const ang = a / 10 * Math.PI * 2; iSpawn(Math.cos(ang) * (R - 40), Math.sin(ang) * (R - 40)); iPatrol(Math.cos(ang) * (R - 60), Math.sin(ang) * (R - 60)); }
-  iPatrol(0, 0); iPatrol(60, 60); iPatrol(-60, -60); iPatrol(150, 40); iPatrol(0, -210);
-
-  // --- scooters along the roads (traversal) + boost pads at select POIs (Section 1 "kept in BR") ---
-  [[-90, -70], [80, 5], [10, 150], [-60, 35], [120, -70], [180, 100]].forEach(s => scooterSpawns.push(new THREE.Vector3(cx + s[0], groundHeightAt(cx + s[0], cz + s[1], 0.4), cz + s[1])));
-  [[35, 196], [-150, 134], [-150, -128], [150, 70]].forEach(p => addLaunchPad(cx + p[0], cz + p[1], 0x12d0f0));   // cargo beach, cliff foot, resort, camp
-
-  return { cx, cz, R, spawns, scooterSpawns, patrol, pois, glows };
-}
-
-/* ============================================================================
    COLLISION HELPERS — ground height lookup + horizontal wall push-out
    (STEP is declared up in the MAP section so the map can use groundHeightAt.)
    ============================================================================ */
@@ -3889,7 +3527,7 @@ const IM = {
     weapon1: 'Digit1', weapon2: 'Digit2', karambit: 'Digit3', equipRC: 'Digit0', fire: 'Mouse0', ads: 'Mouse2', reload: 'KeyR', prevWeapon: 'WheelUp', nextWeapon: 'WheelDown', toggleLaser: 'KeyL',
     use: 'KeyQ', grenade: 'KeyG', lethal: 'KeyH', interact: 'KeyE', flashlight: 'KeyF',
     saber: 'KeyB', flamethrower: 'KeyV', rcStreak: 'KeyN', dogs: 'KeyM', kong: 'Equal',
-    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter', toggleHints: 'KeyP', inspect: 'KeyT', drinkJD: 'KeyZ'
+    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter', toggleHints: 'KeyP', inspect: 'KeyT'
   },
   // Movement keys can't be left unbound (the player must be able to move). ESC always reaches the menu.
   CRITICAL: ['moveForward', 'moveBackward', 'moveLeft', 'moveRight'],
@@ -4225,7 +3863,7 @@ function gameAction(act, rep) {
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { streakActivate('dogs'); return; }
   if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (brTrySwapLoot() || tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: BR loot swap > dismount > mount scooter > pick up axe > Mckayla > ladder
+  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: dismount > mount scooter > pick up axe > Mckayla > ladder
   if (act === 'reload') { cigCancel(); reload(); }
   if (act === 'inventory' && !rep && gameMode !== 'gungame') { toggleInventory(); return; }
   if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
@@ -4237,7 +3875,6 @@ function gameAction(act, rep) {
   if (act === 'flashlight' && !rep) { toggleFlashlight(); return; }   // (PART 2) toggle weapon flashlight
   if (act === 'toggleHints' && !rep) { OPT.ctrlHints = !OPT.ctrlHints; OPT.save(); const cb = el('optCtrlHints'); if (cb) cb.checked = OPT.ctrlHints; if (typeof sfxClick === 'function') sfxClick(); return; }   // P: show/hide the control-hints panel (persisted)
   if (act === 'inspect' && !rep) { if (typeof startInspect === 'function') startInspect(); return; }   // V/T: inspect the equipped weapon (cosmetic, local-only)
-  if (act === 'drinkJD' && !rep) { if (BR.active) brDrinkJD(); return; }   // Z (BR): drink a Jack Daniels bottle -> restore shields
 }
 // Held sprint state for breath-hold / RC-boost (raw key in hold mode, latched in toggle mode).
 function sprintDown() { return OPT.sprintToggle ? sprintLatch : IM.down('sprint'); }
@@ -4676,7 +4313,6 @@ function ggSpeedMult() {
 
 function updateMovement(dt) {
   if (!player.alive) return;
-  if (BR.active && BR.phase === 'drop') { brUpdateDrop(dt); return; }   // BATTLE ROYALE: plane ride + freefall + parachute drives the player itself
   if (paused) { player.vel.x = 0; player.vel.z = 0; return; }   // pause/settings menu open: stand still (game keeps running for others)
 
   // Piloting an RC missile: the body stands still (fully shootable). Keep its camera pinned
@@ -4821,15 +4457,10 @@ function updateMovement(dt) {
   player.pos.z += player.vel.z * dt;
   player.pos.y += player.vel.y * dt;
 
-  // Keep inside the active map's boundary (Nuketown arena, or the Paradise Island region in BR)
-  clampToMap(player.pos, 1.2);
-  // BR out-of-bounds: stepping into the ocean (off the island) drains HP until you head back inland.
-  if (activeMap === 'paradise' && island && gameMode === 'br' && gameState.running && player.alive) {
-    if (Math.hypot(player.pos.x - island.cx, player.pos.z - island.cz) > island.R) {
-      player._waterT = (player._waterT || 0) + dt;
-      if (player._waterT >= 1) { player._waterT -= 1; hurtPlayer(5, null); }   // ~5 HP/sec (Section 2)
-    } else player._waterT = 0;
-  }
+  // Keep inside arena
+  const lim = ARENA - 1.2;
+  player.pos.x = Math.max(-lim, Math.min(lim, player.pos.x));
+  player.pos.z = Math.max(-lim, Math.min(lim, player.pos.z));
 
   // --- SWEPT (continuous) horizontal collision for FAST movement (sprint / dive / impulse-launch).
   // A big per-frame step can skip past a thin wall before resolveHorizontal sees an overlap, so we
@@ -6300,17 +5931,15 @@ function spawnBlocked(p) {
   return false;
 }
 function randomSpawn() {
-  const pts = (activeMap === 'paradise' && island && island.spawns.length) ? island.spawns : spawnPoints;   // BR: spawn on the island
-  if (!pts.length) return new THREE.Vector3(activeMap === 'paradise' && island ? island.cx : 0, 0, activeMap === 'paradise' && island ? island.cz : 0);
+  if (!spawnPoints.length) return new THREE.Vector3(0, 0, 0);
   let best = null;
   for (let i = 0; i < 14; i++) {
-    const c = pts[(Math.random() * pts.length) | 0];
+    const c = spawnPoints[(Math.random() * spawnPoints.length) | 0];
     if (!best) best = c;
     if (!spawnBlocked(c)) return c.clone();
   }
   return best.clone();
 }
-function botPatrolPoint() { const pts = (activeMap === 'paradise' && island && island.patrol.length) ? island.patrol : patrolPoints; return pts[(Math.random() * pts.length) | 0]; }
 
 // --- Bot AI tuning (improvement #4): tweak personality/difficulty here ---
 const BOT_AI = {
@@ -6397,7 +6026,7 @@ function spawnBot(bot) {
   bot.health = 100;
   bot.alive = true;
   bot.state = 'PATROL';
-  bot.patrolTarget = botPatrolPoint();
+  bot.patrolTarget = patrolPoints[(Math.random() * patrolPoints.length) | 0];
   bot.pauseTimer = 0;
   bot.lookYaw = Math.random() * Math.PI * 2;
   bot.yawFacing = bot.lookYaw;
@@ -6654,7 +6283,7 @@ function updateBots(dt) {
         if (f < 0.55 && bot.materials) {                  // fade during the last ~0.6s
           for (const m of bot.materials) { m.transparent = true; m.opacity = Math.max(0, f / 0.55); }
         }
-        if (bot.deathTimer <= 0) { bot.dying = false; bot.group.visible = false; if (gameMode === 'br' && BR.active) { bot.respawnTimer = Infinity; brEliminate(bot.name); } else bot.respawnTimer = BOT_RESPAWN; }   // BR: bots get a single life
+        if (bot.deathTimer <= 0) { bot.dying = false; bot.group.visible = false; bot.respawnTimer = BOT_RESPAWN; }
       } else {
         bot.respawnTimer -= dt;
         if (bot.respawnTimer <= 0) spawnBot(bot);
@@ -6686,14 +6315,14 @@ function updateBots(dt) {
     let faceTarget = null;   // a world point to look at (else face movement)
 
     if (bot.state === 'PATROL') {
-      if (!bot.patrolTarget) bot.patrolTarget = botPatrolPoint();
+      if (!bot.patrolTarget) bot.patrolTarget = patrolPoints[(Math.random() * patrolPoints.length) | 0];
       const flat = bot.patrolTarget.clone(); flat.y = bot.pos.y;
       if (bot.pos.distanceTo(flat) < 2.5) {
         // Arrived: pause and "look around" by slowly rotating, then pick a new point
         bot.pauseTimer -= dt;
         if (bot.pauseTimer <= 0) {
           if (Math.random() < 0.5) { bot.lookYaw = Math.random() * Math.PI * 2; bot.pauseTimer = BOT_AI.lookAroundTime; }
-          else { bot.patrolTarget = botPatrolPoint(); bot.pauseTimer = 0; }
+          else { bot.patrolTarget = patrolPoints[(Math.random() * patrolPoints.length) | 0]; bot.pauseTimer = 0; }
         }
       } else {
         desiredDir.subVectors(bot.patrolTarget, bot.pos); desiredDir.y = 0; desiredDir.normalize();
@@ -6751,7 +6380,8 @@ function updateBots(dt) {
     const maxDelta = BOT_AI.accel * dt;
     bot.vel.x = approach(bot.vel.x, desiredDir.x * speed, maxDelta);
     bot.vel.z = approach(bot.vel.z, desiredDir.z * speed, maxDelta);
-    bot.pos.x += bot.vel.x * dt; bot.pos.z += bot.vel.z * dt; clampToMap(bot.pos, 2);   // map-aware (Nuketown arena or Paradise Island region)
+    bot.pos.x = Math.max(-lim, Math.min(lim, bot.pos.x + bot.vel.x * dt));
+    bot.pos.z = Math.max(-lim, Math.min(lim, bot.pos.z + bot.vel.z * dt));
     resolveHorizontal(bot.pos, 1.8);
     bot.pos.y = groundHeightAt(bot.pos.x, bot.pos.z, bot.pos.y + 0.4);
 
@@ -6893,7 +6523,7 @@ function floatText(worldPos, text, color) {
 // --- Floating damage numbers (stack rapid hits on the same target) ---
 const _dmgNums = [];
 function showDamageNumber(worldPos, dmg, headshot) {
-  if (BR.active || !OPT.dmgNumbers || dmg <= 0) return;   // BR: no damage numbers
+  if (!OPT.dmgNumbers || dmg <= 0) return;
   _proj.copy(worldPos).project(camera); if (_proj.z > 1) return;
   const sx = (_proj.x * 0.5 + 0.5) * window.innerWidth, sy = (-_proj.y * 0.5 + 0.5) * window.innerHeight, now = performance.now();
   for (const d of _dmgNums) {   // merge into a recent nearby number (same target within 320ms)
@@ -8462,7 +8092,7 @@ function updateInvTip(dt) {
 function updateStreakHUD() {
   const sbar = el('streakBar');
   if (!sbar) return;
-  if (!gameState.running || BR.active) { sbar.style.display = 'none'; return; }   // BR: no scorestreaks
+  if (!gameState.running) { sbar.style.display = 'none'; return; }
   sbar.style.display = 'block';
   el('streakCount').textContent = 'STREAK ' + STREAK.count;
   STREAK.tiers.forEach((t, i) => {
@@ -9546,311 +9176,6 @@ function showPickupBanner(text, gold, subtitle) {
    8. HUD — counters, ammo, health, hit marker, kill feed, flashes
    ============================================================================ */
 const el = (id) => document.getElementById(id);
-/* ============================================================================
-   BATTLE ROYALE — core match (single life, last alive wins). Loot, shrinking
-   zones and the parachute drop build on this. Solo plays vs bots: each living
-   bot is one of the (up to 10) participants. Host-authoritative networking is a
-   later increment — for now BR is validated solo / vs bots.
-   ============================================================================ */
-const BR = { active: false, phase: 'none', t: 0, startCount: 10, placement: 0, zone: null,
-  reset() { this.active = false; this.phase = 'none'; this.t = 0; this.placement = 0; this.zone = null; } };
-let brGun = null;            // BR: the looted primary weapon key (null = knife only)
-let brEliminated = [];       // participant names in elimination order
-
-function ordinal(n) { const v = n % 100; if (v >= 11 && v <= 13) return n + 'TH'; const d = n % 10; return n + (d === 1 ? 'ST' : d === 2 ? 'ND' : d === 3 ? 'RD' : 'TH'); }
-function brAliveCount() {
-  let n = player.alive ? 1 : 0;
-  for (const b of bots) if (b.alive && !b.dying) n++;
-  if (NET.active) NET.players.forEach(p => { if (p.alive) n++; });
-  return n;
-}
-function brStart() {
-  BR.reset(); BR.active = true; BR.phase = 'play'; BR.t = 0; brGun = null; brEliminated = [];
-  // melee-only loadout — no primary / ammo / cigars / JD shield / grenades until you loot them
-  player.overheal = 0; player.cigar = 0; player.grenades = 0; player.impulses = 0; player.lethals = 0;
-  player.jdBottles = 0; player.secondChance = false; brCurRarity = null;
-  saberMode = false; saberBlocking = false;
-  ggSetKarambit(true);                                    // start holding the knife (mainGunKey() returns the knife while brGun is null)
-  BR.startCount = Math.max(brAliveCount(), 1);
-  if (el('streakBar')) el('streakBar').style.display = 'none';
-  if (typeof brSpawnLoot === 'function') brSpawnLoot();   // stage 2: scatter loot across the island
-  if (typeof brInitZone === 'function') brInitZone();      // stage 3: arm the shrinking zone (full island first)
-  if (typeof brBeginDrop === 'function') brBeginDrop();    // stage 4: open on the transport plane
-  brHudShow(true); updateBRHud();
-}
-function brEnd() { BR.active = false; brHudShow(false); if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
-function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
-function brEliminate(name) {                              // record an elimination + crown the winner when one remains
-  if (!BR.active) return;
-  brEliminated.push(name || '?');
-  updateBRHud();
-  if (brAliveCount() <= 1 && (!NET.active || NET.isHost)) {
-    let winner = null;
-    if (player.alive) winner = NET.active ? NET.selfName : 'YOU';
-    else { const b = bots.find(x => x.alive && !x.dying); winner = b ? b.name : null; if (NET.active) NET.players.forEach(p => { if (p.alive) winner = p.name; }); }
-    finishMatch({ winner: winner, br: true });
-  }
-}
-function brOnPlayerDeath() {                              // BR: no respawn — record placement, then end (solo) or spectate (MP, later)
-  BR.placement = brAliveCount() + 1;                      // player.alive is already false here, so aliveCount excludes you
-  showCenterBanner('ELIMINATED — ' + ordinal(BR.placement) + ' PLACE', '#ff6a6a', 3000);
-  brEliminate(NET.active ? NET.selfName : 'YOU');
-  if (!gameState.over && !NET.active) finishMatch({ winner: null, br: true, placement: BR.placement });   // solo: you can't win once dead -> results
-}
-function brUpdate(dt) {
-  if (!BR.active) return;
-  BR.t += dt;
-  if (typeof brUpdateLoot === 'function') brUpdateLoot(dt);   // stage 2: loot bob + pickup
-  if (typeof brUpdateZone === 'function') brUpdateZone(dt);   // stage 3: shrink + OOB damage
-  updateBRHud();
-}
-function updateBRHud() {
-  const a = el('brAlive'); if (a) a.textContent = brAliveCount();
-  const s = el('brStart'); if (s) s.textContent = BR.startCount;
-  const it = el('brItems'); if (it) it.innerHTML = '🚬 ' + (player.cigar || 0) + '/3&nbsp;&nbsp;🥃 ' + (player.jdBottles || 0) + '/3&nbsp;&nbsp;🛡 ' + Math.round(player.overheal || 0) + (player.secondChance ? '&nbsp;&nbsp;<span style="color:#ffc83a">💉 2ND CHANCE</span>' : '');
-  if (typeof brUpdateZoneHud === 'function') brUpdateZoneHud();   // stage 3
-}
-
-/* ----------------- BATTLE ROYALE — LOOT ECONOMY (3-tier rarity) -----------------
-   Ground loot glows in its rarity colour. Weapons carry attachment configs (common
-   = iron + std mag; rare = an optic + extended mag + laser; legendary = best optic +
-   drum + laser + flashlight). Picking up a weapon with empty hands auto-equips it;
-   carrying one shows an E-to-swap prompt (the old gun drops as loot). Reuses the
-   existing weapon customization (liveCfg / buildGunModel / ADS) so attachments just work.
-   (Small legendary stat-bonus + the full downed/F self-revive are later refinements.) */
-const BR_LOOT = [];
-const BR_RAR = { common: { c: 0xd2d8de, name: 'COMMON' }, rare: { c: 0x3aa0ff, name: 'RARE' }, legendary: { c: 0xffc83a, name: 'LEGENDARY' } };
-const BR_WPN_POOL = Object.keys(WPN_CLASS);   // every customizable gun
-let brCurRarity = null, brSwapTarget = null;
-function brRollRarity() { const r = Math.random(); return r < 0.65 ? 'common' : (r < 0.93 ? 'rare' : 'legendary'); }
-function brWeaponCfg(key, rar) {
-  if (!isCustomizable(key)) return null;
-  const cls = WPN_CLASS[key], S = CLASS_SIGHTS[cls] || ['iron'], M = CLASS_MAGS[cls] || ['standard'], d = Object.assign({}, defaultCfg(key));
-  if (rar === 'common') { d.sight = S[0]; d.magazine = 'standard'; d.laser = 'off'; d.flashlight = 'off'; }
-  else if (rar === 'rare') { d.sight = S[Math.min(1, S.length - 1)]; d.magazine = M.indexOf('extended') >= 0 ? 'extended' : M[0]; d.laser = 'green'; d.flashlight = 'off'; }
-  else { d.sight = S[S.length - 1]; d.magazine = M.indexOf('drum') >= 0 ? 'drum' : M[M.length - 1]; d.laser = 'green'; d.flashlight = 'on'; }
-  return d;
-}
-function brLootMesh(kind, rar) {
-  const g = new THREE.Group(); let body, col = BR_RAR[rar] ? BR_RAR[rar].c : 0xd2d8de;
-  if (kind === 'weapon') { body = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.36, 0.46), flatMat(0x2a2e34)); body.rotation.z = 0.18; }
-  else if (kind === 'ammo') { col = 0x8aa0b0; body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), flatMat(0x5a6a3a)); }
-  else if (kind === 'cigar') { col = 0xd98a3a; body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.5), flatMat(0xb5742a)); }
-  else if (kind === 'jd') { col = 0xc9a24a; body = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.7, 6), flatMat(0x3a2a1a)); }
-  else if (kind === 'impulse') { col = 0x7fe0ff; body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6, 8), flatMat(0x2a6a8a)); }
-  else if (kind === 'lethal') { col = 0xff8a4a; body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), flatMat(0x4a5a2a)); }
-  else { col = 0xffc83a; body = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.7, 6), flatMat(0xe8e8f0)); }   // second chance (syringe)
-  g.add(body);
-  const halo = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 2.6, 10, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false })); halo.position.y = 1.0; g.add(halo);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 28, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.10, depthWrite: false })); beam.position.y = 13; g.add(beam);
-  return g;
-}
-function brAddLoot(wx, wz, kind) {
-  let rar = 'common', key = null, cfg = null;
-  if (kind === 'weapon') { rar = brRollRarity(); key = BR_WPN_POOL[(Math.random() * BR_WPN_POOL.length) | 0]; cfg = brWeaponCfg(key, rar); }
-  else if (kind === 'second') rar = 'legendary';
-  const y = groundHeightAt(wx, wz, 50) + 0.9, g = brLootMesh(kind, rar); g.position.set(wx, y, wz); scene.add(g);
-  BR_LOOT.push({ kind, rarity: rar, key, cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false });
-}
-function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; }
-function brSpawnLoot() {
-  brClearLoot(); if (!island) return;
-  const KINDS = ['weapon', 'weapon', 'ammo', 'ammo', 'ammo', 'cigar', 'jd', 'impulse', 'lethal'];
-  island.pois.forEach(poi => { const cxp = island.cx + poi.lx, czp = island.cz + poi.lz;
-    for (let i = 0; i < 9; i++) { const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 22; brAddLoot(cxp + Math.cos(a) * r, czp + Math.sin(a) * r, KINDS[(Math.random() * KINDS.length) | 0]); } });
-  for (let i = 0; i < 40; i++) { const a = Math.random() * Math.PI * 2, r = Math.random() * (island.R - 30); brAddLoot(island.cx + Math.cos(a) * r, island.cz + Math.sin(a) * r, Math.random() < 0.4 ? 'weapon' : 'ammo'); }
-  for (let i = 0; i < 2; i++) { const poi = island.pois[(Math.random() * island.pois.length) | 0]; brAddLoot(island.cx + poi.lx + (Math.random() - 0.5) * 18, island.cz + poi.lz + (Math.random() - 0.5) * 18, 'second'); }
-}
-function brEquipLoot(key, cfg) {
-  brGun = key; ggSetKarambit(false);                                   // mainGunKey()===brGun now, so this equips it
-  if (isCustomizable(key) && cfg) {
-    liveCfg[key] = Object.assign({}, cfg);                             // ADS + model read liveCfg (not the player's saved config)
-    if (_baseMag[key]) WEAPONS[key].mag = Math.round(_baseMag[key] * ((ATT_MAGS[cfg.magazine] || ATT_MAGS.standard).mult));
-    buildGunModel(key, cfg);
-  }
-  const ws = weaponState[key]; if (ws) { ws.ammo = WEAPONS[key].mag; ws.reloading = 0; if (ws.reserve !== Infinity && WEAPONS[key].reserveMax != null) ws.reserve = WEAPONS[key].reserveMax; }
-  updateHUD();
-}
-function brSpawnDroppedGun(wx, wz) {
-  if (!brGun) return; const rar = brCurRarity || 'common', key = brGun, cfg = liveCfg[key] || getCfg(key);
-  const y = groundHeightAt(wx, wz, 50) + 0.9, g = brLootMesh('weapon', rar); g.position.set(wx, y, wz); scene.add(g);
-  BR_LOOT.push({ kind: 'weapon', rarity: rar, key, cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false });
-}
-function brTakeLoot(L, label, col) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col); }
-function brPickupToast(label, col) { const p = el('brPickup'); if (!p) return; p.textContent = 'PICKED UP: ' + label; p.style.color = col || '#fff'; p.style.transition = 'none'; p.style.opacity = '1'; clearTimeout(p._t); requestAnimationFrame(() => { p.style.transition = 'opacity 1.4s'; }); p._t = setTimeout(() => { p.style.opacity = '0'; }, 900); }
-function brPickWeapon(L) {
-  if (brGun) brSpawnDroppedGun(player.pos.x + (Math.random() - 0.5) * 2, player.pos.z + (Math.random() - 0.5) * 2);
-  brEquipLoot(L.key, L.cfg); brCurRarity = L.rarity;
-  brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
-}
-function brTrySwapLoot() { if (!BR.active || !brSwapTarget || brSwapTarget.taken) return false; brPickWeapon(brSwapTarget); brSwapTarget = null; return true; }
-function brRefillAmmo() { if (brGun && weaponState[brGun]) { weaponState[brGun].ammo = WEAPONS[brGun].mag; if (weaponState[brGun].reserve !== Infinity && WEAPONS[brGun].reserveMax != null) weaponState[brGun].reserve = WEAPONS[brGun].reserveMax; } }
-function brDrinkJD() {
-  if (!BR.active || (player.jdBottles || 0) <= 0 || player.overheal >= OVERHEAL_MAX || !player.alive) return;
-  player.jdBottles--; player.overheal = OVERHEAL_MAX; flashJD(); updateHUD();   // restore shield (full animation = later polish)
-}
-function brUpdateLoot(dt) {
-  brSwapTarget = null;
-  const px = player.pos.x, pz = player.pos.z, py = player.pos.y; let nearestSwap = 1e9;
-  for (const L of BR_LOOT) {
-    if (L.taken) continue;
-    L.mesh.rotation.y += dt * 1.2; L.mesh.position.y = L.pos.y + Math.sin(performance.now() * 0.003 + L.pos.x) * 0.12;
-    if (!player.alive) continue;
-    const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
-    if (d > 2.6 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;
-    if (L.kind === 'weapon') { if (!brGun) brPickWeapon(L); else if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } }
-    else if (L.kind === 'ammo') { if (brGun) { brRefillAmmo(); brTakeLoot(L, 'AMMO', '#8aa0b0'); } }
-    else if (L.kind === 'cigar') { if ((player.cigar || 0) < CIGAR.maxCarry) { player.cigar = (player.cigar || 0) + 1; brTakeLoot(L, 'CIGAR (' + player.cigar + '/' + CIGAR.maxCarry + ')', '#d98a3a'); } }
-    else if (L.kind === 'jd') { if ((player.jdBottles || 0) < 3) { player.jdBottles = (player.jdBottles || 0) + 1; brTakeLoot(L, 'JACK DANIELS (' + player.jdBottles + '/3)', '#ffd98a'); } }
-    else if (L.kind === 'impulse') { if ((player.impulses || 0) < IMPULSE.maxCarry) { player.impulses++; brTakeLoot(L, 'IMPULSE GRENADE', '#7fe0ff'); } }
-    else if (L.kind === 'lethal') { if ((player.lethals || 0) < LETHAL_MAX) { player.lethals++; brTakeLoot(L, 'LETHAL', '#ff8a4a'); } }
-    else if (L.kind === 'second') { if (!player.secondChance) { player.secondChance = true; brTakeLoot(L, 'SECOND CHANCE!', '#ffc83a'); } }
-  }
-  const sp = el('brSwapPrompt');
-  if (sp) { if (brSwapTarget) { sp.style.display = 'block'; sp.innerHTML = 'Press <b style="color:#ffe600">' + IM.keyLabel(IM.bind.interact) + '</b> to swap for <b style="color:' + brRarHex(brSwapTarget.rarity) + '">' + BR_RAR[brSwapTarget.rarity].name + ' ' + (WEAPONS[brSwapTarget.key] ? WEAPONS[brSwapTarget.key].name : 'weapon') + '</b>'; } else sp.style.display = 'none'; }
-}
-function brRarHex(r) { return '#' + (BR_RAR[r] ? BR_RAR[r].c : 0xffffff).toString(16).padStart(6, '0'); }
-
-/* ----------------- BATTLE ROYALE — SHRINKING SAFE ZONE -----------------
-   Phases hold → warn → shrink, each closing to a smaller circle (random centre inside
-   the previous one) with rising out-of-zone damage. A translucent blue wall cylinder
-   marks the current circle; the HUD shows the countdown. The whole island is the first
-   safe zone; the final tiny circle forces the last fight. (Timers below are tuned for a
-   ~12-16 min match; bots taking zone damage is a later refinement.) */
-const BR_ZONES = [
-  { hold: 55, warn: 15, shrink: 45, rFrac: 0.72, dmg: 1 },
-  { hold: 30, warn: 15, shrink: 40, rFrac: 0.46, dmg: 3 },
-  { hold: 25, warn: 12, shrink: 35, rFrac: 0.26, dmg: 8 },
-  { hold: 20, warn: 10, shrink: 28, rFrac: 0.12, dmg: 12 },
-  { hold: 16, warn: 8,  shrink: 22, rFrac: 0.04, dmg: 15 }
-];
-function brInitZone() {
-  if (!island) return;
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 90, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0x40b0ff, transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthWrite: false }));
-  m.position.set(island.cx, 45, island.cz); scene.add(m);
-  BR.zone = { cx: island.cx, cz: island.cz, r: island.R, fromCx: island.cx, fromCz: island.cz, fromR: island.R, toCx: island.cx, toCz: island.cz, toR: island.R, phase: -1, state: 'hold', timer: BR_ZONES[0].hold, shrinkDur: 1, mesh: m, warnShown: false };
-  brSetWall();
-}
-function brSetWall() { const z = BR.zone; if (!z || !z.mesh) return; z.mesh.scale.set(Math.max(0.01, z.r), 1, Math.max(0.01, z.r)); z.mesh.position.set(z.cx, 45, z.cz); }
-function brAdvanceZone() {
-  const z = BR.zone, pi = z.phase + 1;
-  if (pi >= BR_ZONES.length) { z.state = 'final'; return; }
-  z.phase = pi; const ph = BR_ZONES[pi];
-  z.fromCx = z.cx; z.fromCz = z.cz; z.fromR = z.r; z.toR = island.R * ph.rFrac;
-  const maxOff = Math.max(0, z.r - z.toR), a = Math.random() * Math.PI * 2, off = Math.random() * maxOff * 0.85;   // new circle stays inside the old
-  z.toCx = z.cx + Math.cos(a) * off; z.toCz = z.cz + Math.sin(a) * off;
-  z.state = 'warn'; z.timer = ph.warn; z.warnShown = false;
-}
-function brUpdateZone(dt) {
-  const z = BR.zone; if (!z) return;
-  if (z.state === 'hold') { z.timer -= dt; if (z.timer <= 0) brAdvanceZone(); }
-  else if (z.state === 'warn') {
-    if (!z.warnShown) { z.warnShown = true; showCenterBanner('⚠ ZONE CLOSING SOON', '#ff7a5a', 1800); }
-    z.timer -= dt; if (z.timer <= 0) { z.state = 'shrink'; z.shrinkDur = BR_ZONES[z.phase].shrink; z.timer = z.shrinkDur; }
-  } else if (z.state === 'shrink') {
-    z.timer -= dt; const t = 1 - Math.max(0, z.timer) / (z.shrinkDur || 1);
-    z.r = z.fromR + (z.toR - z.fromR) * t; z.cx = z.fromCx + (z.toCx - z.fromCx) * t; z.cz = z.fromCz + (z.toCz - z.fromCz) * t;
-    if (z.timer <= 0) { z.r = z.toR; z.cx = z.toCx; z.cz = z.toCz; const last = z.phase + 1 >= BR_ZONES.length; z.state = last ? 'final' : 'hold'; if (!last) z.timer = BR_ZONES[z.phase + 1].hold; }
-  }
-  brSetWall();
-  if (player.alive && z.phase >= 0) {                       // out-of-zone damage (whole island is safe until phase 0 starts)
-    const d = Math.hypot(player.pos.x - z.cx, player.pos.z - z.cz);
-    if (d > z.r) { player._zoneT = (player._zoneT || 0) + dt; const dmg = BR_ZONES[z.phase].dmg; if (player._zoneT >= 1) { player._zoneT -= 1; hurtPlayer(dmg, null); } }
-    else player._zoneT = 0;
-  }
-  if (z.phase >= 0 && (!NET.active || NET.isHost)) {        // bots caught outside the zone die too, so the circle culls the field toward a finish
-    const dmg = BR_ZONES[z.phase].dmg * 1.6;
-    for (const b of bots) { if (!b.alive || b.dying) continue; if (Math.hypot(b.pos.x - z.cx, b.pos.z - z.cz) > z.r) { b.health -= dmg * dt; if (b.health <= 0) killBot(b, null, { zone: true }); } }
-  }
-}
-function brUpdateZoneHud() {
-  const z = BR.zone, wrap = el('brZoneWrap'), t = el('brZoneTimer'); if (!wrap || !t) return;
-  if (!z || !BR.active) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
-  if (z.state === 'hold') { t.textContent = '🔵 SAFE ZONE • SHRINKS IN ' + fmt(z.timer); t.style.color = '#7fd0ff'; }
-  else if (z.state === 'warn') { t.textContent = '⚠ ZONE CLOSING IN ' + Math.ceil(z.timer) + 's'; t.style.color = '#ff8a5a'; }
-  else if (z.state === 'shrink') { t.textContent = '🟠 ZONE IS CLOSING — GET INSIDE THE BLUE'; t.style.color = '#ffb05a'; }
-  else { t.textContent = '🔴 FINAL ZONE'; t.style.color = '#ff5a5a'; }
-}
-function brClearZone() { if (BR.zone && BR.zone.mesh) { scene.remove(BR.zone.mesh); if (BR.zone.mesh.geometry) BR.zone.mesh.geometry.dispose(); } BR.zone = null; }
-
-/* ----------------- BATTLE ROYALE — PARACHUTE DROP -----------------
-   The match opens on a transport plane crossing the island (random heading). Jump to
-   leave (or auto-drop at the end of the run): freefall (WASD steers, look down to dive
-   faster), then the parachute auto-deploys near the ground (slower, still steerable),
-   then you land with just your melee and scavenge. Drives the player/camera directly,
-   so updateMovement early-returns into brUpdateDrop while BR.phase === 'drop'. */
-function brBuildPlane() {
-  const g = new THREE.Group();
-  const fus = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.0, 18, 10), flatMat(0x8a9098)); fus.rotation.x = Math.PI / 2; g.add(fus);
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 4), flatMat(0x7a8088)); wing.position.y = 0.4; g.add(wing);
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(9, 0.5, 2.5), flatMat(0x7a8088)); tail.position.set(0, 1.4, -8); g.add(tail);
-  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3, 2.5), flatMat(0x7a8088)); fin.position.set(0, 2.4, -8); g.add(fin);
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(2.1, 4, 10), flatMat(0x9aa0a8)); nose.rotation.x = -Math.PI / 2; nose.position.z = 11; g.add(nose);
-  return g;
-}
-function brBuildChute() {
-  const g = new THREE.Group();
-  const canopy = new THREE.Mesh(new THREE.SphereGeometry(3, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x2a7fff, flatShading: true, side: THREE.DoubleSide }));
-  canopy.position.y = 5; g.add(canopy);
-  for (let a = 0; a < 4; a++) { const ln = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 5, 4), flatMat(0xddddee)); ln.position.set(Math.cos(a * 1.57) * 2, 2.5, Math.sin(a * 1.57) * 2); g.add(ln); }
-  return g;
-}
-function brBeginDrop() {
-  if (!island) { BR.phase = 'play'; return; }
-  BR.phase = 'drop';
-  const ang = Math.random() * Math.PI * 2, range = island.R + 160, dir = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang));
-  const start = new THREE.Vector3(island.cx - dir.x * range, 92, island.cz - dir.z * range);
-  const plane = brBuildPlane(); plane.position.copy(start); plane.rotation.y = Math.atan2(dir.x, dir.z); scene.add(plane);
-  BR.drop = { state: 'plane', t: 0, traverse: 12, dir, planePos: start.clone(), plane, chute: null, jumpHeld: true, range };
-  player.pos.copy(start); player.pos.y -= 3.5; player.vel.set(0, 0, 0); player.onGround = false; player.alive = true;
-  yaw = Math.atan2(dir.x, dir.z); pitch = -0.4;
-  showCenterBanner('PRESS JUMP TO DIVE', '#aef0c0', 2600);
-}
-function brUpdateDrop(dt) {
-  const D = BR.drop; if (!D) { BR.phase = 'play'; return; }
-  const speed = (D.range * 2) / D.traverse;
-  if (D.state === 'plane') {
-    D.t += dt; D.planePos.addScaledVector(D.dir, speed * dt); D.plane.position.copy(D.planePos);
-    player.pos.copy(D.planePos); player.pos.y -= 3.5;
-    const wantJump = IM.down('jump');
-    if ((wantJump && !D.jumpHeld) || D.t >= D.traverse) { D.state = 'freefall'; player.vel.set(D.dir.x * 6, -8, D.dir.z * 6); if (typeof sfxJump === 'function') sfxJump(player.pos); }
-    D.jumpHeld = wantJump;
-  } else {
-    D.planePos.addScaledVector(D.dir, speed * dt); if (D.plane) D.plane.position.copy(D.planePos);
-    const gh = groundHeightAt(player.pos.x, player.pos.z, 50);
-    if (D.state === 'freefall') {
-      const downness = Math.min(1, Math.max(0, -pitch / 1.2));
-      const targetVy = -(18 + downness * 16);
-      player.vel.y += (targetVy - player.vel.y) * Math.min(1, dt * 3);
-      if (player.pos.y - gh <= 16) { D.state = 'chute'; D.chute = brBuildChute(); scene.add(D.chute); showCenterBanner('PARACHUTE — STEER WITH WASD', '#aef0c0', 1800); }
-    } else {   // chute
-      player.vel.y += (-8 - player.vel.y) * Math.min(1, dt * 4);
-      if (D.chute) { D.chute.position.set(player.pos.x, player.pos.y + 0.5, player.pos.z); D.chute.rotation.y = yaw; }
-    }
-    const f = horizontalForward(), r = horizontalRight(); let wx = 0, wz = 0;
-    if (kbDown('moveForward')) { wx += f.x; wz += f.z; } if (kbDown('moveBackward')) { wx -= f.x; wz -= f.z; }
-    if (kbDown('moveRight')) { wx += r.x; wz += r.z; } if (kbDown('moveLeft')) { wx -= r.x; wz -= r.z; }
-    if (GP.active && (GP.mvX || GP.mvY)) { wx += r.x * GP.mvX - f.x * GP.mvY; wz += r.z * GP.mvX - f.z * GP.mvY; }
-    const wl = Math.hypot(wx, wz); if (wl > 0) { wx /= wl; wz /= wl; }
-    const steer = (D.state === 'chute') ? 11 : 14;
-    player.vel.x += (wx * steer - player.vel.x) * Math.min(1, dt * 2.5);
-    player.vel.z += (wz * steer - player.vel.z) * Math.min(1, dt * 2.5);
-    player.pos.x += player.vel.x * dt; player.pos.z += player.vel.z * dt; player.pos.y += player.vel.y * dt;
-    clampToMap(player.pos, 1.2);
-    if (player.pos.y <= gh + 0.1) {   // touchdown -> normal play
-      player.pos.y = gh; player.vel.set(0, 0, 0); player.onGround = true;
-      if (D.chute) { scene.remove(D.chute); disposeGroup(D.chute); } if (D.plane) { scene.remove(D.plane); disposeGroup(D.plane); }
-      BR.drop = null; BR.phase = 'play'; if (typeof sfxLand === 'function') sfxLand(player.pos, 1);
-    }
-  }
-  player.eye += (MOVE.eyeHeight - player.eye) * Math.min(1, dt * 10);
-  camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
-  camera.rotation.order = 'YXZ'; camera.rotation.y = yaw + recoilYaw; camera.rotation.x = pitch + recoilPitch;
-  if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
-}
-
 function updateHUD() {
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
@@ -9910,7 +9235,6 @@ function updateHUD() {
 
 let hitMarkerTimer = 0;
 function showHitMarker(headshot) {
-  if (BR.active) return;   // BR: no hit markers
   if (!OPT.hitMarkers) return;
   const hm = el('hitmarker'); hm.style.opacity = 1; hm.classList.toggle('hs', !!headshot); hitMarkerTimer = 0.15;
   sfxHitMarker(!!headshot);   // TINK (body) / DING (headshot)
@@ -9932,7 +9256,6 @@ function showHurtFlash() {
 }
 
 function addKillFeed(text) {
-  if (BR.active) return;   // BR: no kill feed
   const feed = el('killFeed');
   const div = document.createElement('div');
   div.className = 'entry';
@@ -9968,7 +9291,7 @@ function ggEquip(key) {
 function ggLadderKey() { return GUNGAME_LADDER[ggLevel - 1]; }
 // The LOCAL player's "main gun" slot: gun-game uses the current ladder rung; FFA uses the
 // player-chosen main weapon (set via the inventory menu, default Assault Rifle).
-function mainGunKey() { return saberMode ? 'saber' : (gameMode === 'gungame' ? ggLadderKey() : (gameMode === 'br' ? (brGun || KARAMBIT_KEY) : ffaMain)); }
+function mainGunKey() { return saberMode ? 'saber' : (gameMode === 'gungame' ? ggLadderKey() : ffaMain); }
 // Equip whichever of the two slots is active (the gun, or the karambit) — both modes.
 function ggEquipCurrent() { ggEquip(ggKarambit ? KARAMBIT_KEY : mainGunKey()); }
 // Toggle / set the karambit slot (both modes — FFA also carries a permanent karambit).
@@ -10126,11 +9449,7 @@ function hurtPlayer(dmg, srcPos) {
   if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg);   // body-impact thud + pained grunt, scaled by damage
   if (dmg >= 1 && srcPos) showDamageArc(srcPos);          // red directional arc toward the source
   updateHUD();
-  if (player.health <= 0) {
-    if (gameMode === 'br' && BR.active && player.secondChance && player.alive) {   // Second Chance: survive one fatal hit (simplified self-revive; full downed/F state is a later refinement)
-      player.secondChance = false; player.health = 50; player.overheal = 0; flashJD(); showCenterBanner('SECOND CHANCE!', '#ffc83a', 1600); updateHUD();
-    } else playerDie();
-  }
+  if (player.health <= 0) playerDie();
 }
 // Brief red arc at the screen edge pointing toward a damage source (Part 3, directional indicator).
 function showDamageArc(srcPos) {
@@ -10169,13 +9488,11 @@ function playerDie() {
   player.lastAttacker = null; player.lastAttackerHead = false; player.lastAttackerName = null;
   player.lastAttackerWeapon = null; player.lastAttackerMelee = false;
   updateHUD();
-  if (gameMode === 'br' && BR.active) { brOnPlayerDeath(); return; }   // BR: no killcam, no respawn — single life
   beginKillcam(killerInfo);   // Part 5: brief death replay, then doRespawn() (skippable with the jump key)
 }
 // Reset + spawn the player for a fresh life (FFA keeps going; only the kill target ends the match).
 function doRespawn() {
   if (gameState.over || player.alive) return;
-  if (gameMode === 'br' && BR.active) return;   // BR is single-life — no respawn
   const sp = spawnForPlayer();   // TDM: respawn on my team's side, away from the nearest enemy
   player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
@@ -10490,9 +9807,6 @@ function startMatch() {
   if (!NET.active || NET.isHost) { timeOfDay = Math.random(); dnFullCycle = 480 + Math.random() * 240; applyDayNightSetting(); }   // host/solo: randomize the day/night state each match (Part 6 can force it)
   mckaylaSummonedThisLife = false;   // fresh Mckayla summon available at match start
   rcResetMatch();   // RC launcher locks again each match (unlock is per-match, not permanent)
-  // --- MAP SELECTION: Battle Royale plays on Paradise Island (lazy-built in its own far world region);
-  // every other mode plays on Nuketown. activeMap drives the boundary clamp, spawns and OOB water. ---
-  if (gameMode === 'br') { ensureParadiseIsland(); activeMap = 'paradise'; } else { activeMap = 'nuketown'; }
   // Everyone spawns on a real spawn point (team side in TDM), facing the centre of the map.
   const sp = spawnForPlayer(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
@@ -10578,7 +9892,6 @@ function startMatch() {
   const introCol = gameMode === 'tdm' ? (myTeam ? TEAMS[myTeam].css : '#ffe600') : '#ffe600';
   showCenterBanner((gameMode === 'tdm' ? 'TEAM ' + (myTeam || 'red').toUpperCase() + '\n' : '') + matchSettingsSummary(), introCol, 3400);
   updateMatchTimerHUD();
-  if (gameMode === 'br') brStart(); else brEnd();   // BATTLE ROYALE: single-life elimination on Paradise Island (melee start, loot for guns)
   lockPointer();
 }
 
@@ -10690,7 +10003,7 @@ function finishMatch(result) {
   const awards = computeAwards();                    // MVP / highlight cards (Part 2)
   const rows = scoreboardRows();                     // final ranked table snapshot
   if (NET.active && NET.isHost) NET.broadcast({ t: 'matchover', winner: winnerName, team, byTime: !!result.byTime, awards, rows });
-  doMatchOver(winnerName, team, { byTime: !!result.byTime, awards, rows, br: !!result.br, placement: result.placement || BR.placement });
+  doMatchOver(winnerName, team, { byTime: !!result.byTime, awards, rows });
 }
 // Ranked row snapshot from the authoritative stat records — shared by the Tab scoreboard + results table.
 function scoreboardRows() {
@@ -10802,9 +10115,8 @@ function doMatchOver(winnerName, team, extra) {
   document.exitPointerLock();
   Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); clearMckaylas();
   // Did the local player win? (TDM: my team is the winning team.)
-  let won = team ? (myTeam === team) : ((winnerName && winnerName === NET.selfName) || (!NET.active && winnerName === 'YOU'));
-  if (extra.br) { won = player.alive; brEnd(); }   // BR: you win only as the last one standing
-  _matchResult = { winnerName, team, won, byTime: !!extra.byTime, br: !!extra.br, placement: won ? 1 : (extra.placement || BR.placement || 0),
+  const won = team ? (myTeam === team) : ((winnerName && winnerName === NET.selfName) || (!NET.active && winnerName === 'YOU'));
+  _matchResult = { winnerName, team, won, byTime: !!extra.byTime,
                    awards: extra.awards || computeAwards(), rows: extra.rows || scoreboardRows() };
   (won ? sfxWin() : sfxLose());           // victory / defeat fanfare
   showResultsScreen(_matchResult);        // Part 2 — full end-of-match results screen
@@ -10925,10 +10237,7 @@ function teamSpawnPoint(team) {
   return (best || pool[(Math.random() * pool.length) | 0]).clone();
 }
 // Where the local player should (re)spawn: team side in TDM, anywhere otherwise.
-function spawnForPlayer() {
-  if (activeMap === 'paradise' && island && island.spawns.length) return island.spawns[(Math.random() * island.spawns.length) | 0].clone();
-  return (gameMode === 'tdm' && myTeam) ? teamSpawnPoint(myTeam) : randomSpawn();
-}
+function spawnForPlayer() { return (gameMode === 'tdm' && myTeam) ? teamSpawnPoint(myTeam) : randomSpawn(); }
 // Build / update / remove a teammate's see-through team outline + overhead chevron.
 function updateTeamMarker(rp) {
   const wantTeam = (gameMode === 'tdm' && rp.team) ? rp.team : null;
@@ -10991,7 +10300,7 @@ function refreshModeUI() {
   if (el('lobbyModeHostNote')) el('lobbyModeHostNote').textContent = clientLocked ? '(set by host)' : '';
 }
 function setGameMode(mode) {
-  if (!['ffa', 'gungame', 'tdm', 'br'].includes(mode)) return;
+  if (mode !== 'ffa' && mode !== 'gungame' && mode !== 'tdm') return;
   if (NET.active && NET.isClient) return;
   gameMode = mode; localStorage.setItem('blockoutMode', mode);
   refreshModeUI(); renderMatchPane(); updateLobbySettingsSummary();
@@ -11017,7 +10326,6 @@ const MATCH_OPTS = {
         ['tdmKills', 'Team kill limit', [30, 50, 75, 100, 150]],
         ['tdmTime', 'Time limit (min)', [5, 10, 15, 20]],
         ['friendlyFire', 'Friendly fire', [false, true], v => v ? 'ON' : 'OFF']],
-  br: [['BATTLE ROYALE', null]],   // 10 players, last alive — full zone/loot settings land in the mechanics pass
   shared: [['SHARED', null],
         ['respawnDelay', 'Respawn delay (s)', [1, 2, 3, 5]],
         ['forceLoadout', 'Starting loadout', [false, true], v => v ? 'Preset' : 'Saved'],
@@ -11041,7 +10349,7 @@ function renderMatchPane() {
   const note = el('matchHostNote');
   if (note) note.innerHTML = (NET.active && NET.isClient) ? '🔒 Match settings are controlled by the <b>host</b>.'
     : (gameState.running ? '🔒 Settings are locked while a match is in progress.' : 'Adjust the rules for the next match.');
-  const mn = el('matchModeName'); if (mn) mn.textContent = ({ ffa: 'FREE-FOR-ALL', gungame: 'GUN GAME', tdm: 'TEAM DEATHMATCH', br: 'BATTLE ROYALE' }[gameMode] || gameMode);
+  const mn = el('matchModeName'); if (mn) mn.textContent = ({ ffa: 'FREE-FOR-ALL', gungame: 'GUN GAME', tdm: 'TEAM DEATHMATCH' }[gameMode] || gameMode);
   const groups = (MATCH_OPTS[gameMode] || MATCH_OPTS.ffa).concat(MATCH_OPTS.shared);
   let html = '';
   for (const row of groups) {
@@ -12504,12 +11812,9 @@ function resultsToLobby() {
 function showResultsScreen(result) {
   result = result || _matchResult || { rows: scoreboardRows() }; _matchResult = result;
   const wt = el('resWinner'), ws = el('resWinSub');
-  if (result.br) {
-    wt.textContent = result.won ? 'WINNER WINNER CHICKEN DINNER!' : ordinal(result.placement || 2) + ' PLACE';
-    wt.style.color = result.won ? '#ffd34a' : '#ff8a4a';
-    ws.textContent = (result.won ? 'Last one standing' : (result.winnerName ? result.winnerName.toUpperCase() + ' won' : 'Eliminated')) + ' • BATTLE ROYALE • ' + (BR.startCount || 10) + ' players';
-  } else if (result.team) { wt.textContent = TEAMS[result.team].name + ' WINS!'; wt.style.color = TEAMS[result.team].css; ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary(); }
-  else { const who = result.won ? 'YOU WIN!' : (result.winnerName ? result.winnerName.toUpperCase() + ' WINS!' : 'MATCH OVER'); wt.textContent = who; wt.style.color = '#ffd34a'; ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary(); }
+  if (result.team) { wt.textContent = TEAMS[result.team].name + ' WINS!'; wt.style.color = TEAMS[result.team].css; }
+  else { const who = result.won ? 'YOU WIN!' : (result.winnerName ? result.winnerName.toUpperCase() + ' WINS!' : 'MATCH OVER'); wt.textContent = who; wt.style.color = '#ffd34a'; }
+  ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary();
   try { ResultStage.show(resultsWinnerList(result)); } catch (e) {}
   buildResultCards(result.awards || computeAwards());
   el('resTable').innerHTML = resultsTableHTML();
@@ -13106,8 +12411,7 @@ function buildScooterModel() {
 function spawnScooters() {
   scooters.forEach(sc => { if (sc.group) { scene.remove(sc.group); disposeGroup(sc.group); } });
   scooters = []; riding = false; myScooter = null;
-  const _scSpawns = (activeMap === 'paradise' && island && island.scooterSpawns.length) ? island.scooterSpawns : SCOOTER_SPAWNS;   // BR rides the island; other modes use Nuketown
-  _scSpawns.forEach((sp, i) => {
+  SCOOTER_SPAWNS.forEach((sp, i) => {
     const grp = buildScooterModel(), y = groundHeightAt(sp.x, sp.z, 0.3);
     grp.traverse(o => { if (o.isMesh && o.userData && o.userData.scooter) o.userData.scIdx = i; });
     const sc = { i: i, group: grp, home: sp.clone(), pos: new THREE.Vector3(sp.x, y, sp.z), yaw: i * 1.3, speed: 0, nosOn: false, hp: SCOOTER.hp,
@@ -13247,7 +12551,6 @@ function animate() {
     updateSmokes(dt);     // lethal smoke grenades: canister settle + view-blocking smoke cloud
     updateInvTip(dt);     // fade the "PRESS I" inventory hint
     updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
-    if (BR.active) brUpdate(dt);   // BATTLE ROYALE: loot, shrinking zone, players-remaining HUD, win check
     updateDmgNums(dt);    // Part 3: expire floating damage numbers
     recordCamFrame(dt);   // Part 5: record my camera for others' killcams
     if (NET.active) processKcSends(dt);   // Part 5/2: flush queued killcam buffers (2s after a kill, or early if I die)

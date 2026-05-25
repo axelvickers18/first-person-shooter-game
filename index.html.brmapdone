@@ -787,14 +787,6 @@
     <div id="killLine">KILLS <span id="killCount">0</span> <span class="dim">/ <span id="killTarget">25</span></span></div>
   </div>
   <div id="matchTimer"></div>
-  <!-- BATTLE ROYALE HUD: players remaining (top-right) + zone countdown (top-centre) -->
-  <div id="brHud" style="display:none;">
-    <div id="brAliveWrap" style="position:fixed; top:12px; right:16px; z-index:6; pointer-events:none; font:800 20px 'Segoe UI',sans-serif; color:#aef0c0; text-shadow:0 2px 6px #000; letter-spacing:1px;">🟢 PLAYERS <span id="brAlive">10</span><span style="opacity:.6"> / <span id="brStart">10</span></span></div>
-    <div id="brZoneWrap" style="position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:6; pointer-events:none; font:700 17px 'Segoe UI',sans-serif; text-shadow:0 2px 6px #000; display:none;"><span id="brZoneTimer"></span></div>
-    <div id="brItems" style="position:fixed; left:16px; bottom:150px; z-index:6; pointer-events:none; font:700 15px 'Segoe UI',sans-serif; color:#e8eef5; text-shadow:0 2px 5px #000;"></div>
-    <div id="brSwapPrompt" style="position:fixed; left:50%; bottom:118px; transform:translateX(-50%); z-index:7; pointer-events:none; font:700 16px 'Segoe UI',sans-serif; color:#fff; background:rgba(0,0,0,.5); padding:6px 14px; border-radius:8px; display:none;"></div>
-    <div id="brPickup" style="position:fixed; left:50%; bottom:205px; transform:translateX(-50%); z-index:7; pointer-events:none; font:800 17px 'Segoe UI',sans-serif; text-shadow:0 2px 6px #000; opacity:0;"></div>
-  </div>
   <div id="teamScoreHud"><span class="tA">0</span><span class="vs">RED · BLUE</span><span class="tB">0</span></div>
   <div id="lobbyTag"></div>
   <div id="killFeed"></div>
@@ -1457,7 +1449,6 @@ MATCH.load();
 // Resolve the active kill target + time limit (seconds) for the current mode.
 function modeKillLimit() { return gameMode === 'tdm' ? MATCH.tdmKills : MATCH.ffaKills; }
 function modeTimeLimitSec() {
-  if (gameMode === 'br') return 0;   // BR has no clock — the shrinking zone ends the match
   const m = gameMode === 'gungame' ? MATCH.ggTime : gameMode === 'tdm' ? MATCH.tdmTime : MATCH.ffaTime;
   return (m && m > 0) ? m * 60 : 0;
 }
@@ -3889,7 +3880,7 @@ const IM = {
     weapon1: 'Digit1', weapon2: 'Digit2', karambit: 'Digit3', equipRC: 'Digit0', fire: 'Mouse0', ads: 'Mouse2', reload: 'KeyR', prevWeapon: 'WheelUp', nextWeapon: 'WheelDown', toggleLaser: 'KeyL',
     use: 'KeyQ', grenade: 'KeyG', lethal: 'KeyH', interact: 'KeyE', flashlight: 'KeyF',
     saber: 'KeyB', flamethrower: 'KeyV', rcStreak: 'KeyN', dogs: 'KeyM', kong: 'Equal',
-    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter', toggleHints: 'KeyP', inspect: 'KeyT', drinkJD: 'KeyZ'
+    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter', toggleHints: 'KeyP', inspect: 'KeyT'
   },
   // Movement keys can't be left unbound (the player must be able to move). ESC always reaches the menu.
   CRITICAL: ['moveForward', 'moveBackward', 'moveLeft', 'moveRight'],
@@ -4225,7 +4216,7 @@ function gameAction(act, rep) {
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { streakActivate('dogs'); return; }
   if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (brTrySwapLoot() || tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: BR loot swap > dismount > mount scooter > pick up axe > Mckayla > ladder
+  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: dismount > mount scooter > pick up axe > Mckayla > ladder
   if (act === 'reload') { cigCancel(); reload(); }
   if (act === 'inventory' && !rep && gameMode !== 'gungame') { toggleInventory(); return; }
   if (act === 'weapon1' || act === 'weapon2') { if (cigSmoking) cigCancel(); ggSetKarambit(false); }
@@ -4237,7 +4228,6 @@ function gameAction(act, rep) {
   if (act === 'flashlight' && !rep) { toggleFlashlight(); return; }   // (PART 2) toggle weapon flashlight
   if (act === 'toggleHints' && !rep) { OPT.ctrlHints = !OPT.ctrlHints; OPT.save(); const cb = el('optCtrlHints'); if (cb) cb.checked = OPT.ctrlHints; if (typeof sfxClick === 'function') sfxClick(); return; }   // P: show/hide the control-hints panel (persisted)
   if (act === 'inspect' && !rep) { if (typeof startInspect === 'function') startInspect(); return; }   // V/T: inspect the equipped weapon (cosmetic, local-only)
-  if (act === 'drinkJD' && !rep) { if (BR.active) brDrinkJD(); return; }   // Z (BR): drink a Jack Daniels bottle -> restore shields
 }
 // Held sprint state for breath-hold / RC-boost (raw key in hold mode, latched in toggle mode).
 function sprintDown() { return OPT.sprintToggle ? sprintLatch : IM.down('sprint'); }
@@ -4676,7 +4666,6 @@ function ggSpeedMult() {
 
 function updateMovement(dt) {
   if (!player.alive) return;
-  if (BR.active && BR.phase === 'drop') { brUpdateDrop(dt); return; }   // BATTLE ROYALE: plane ride + freefall + parachute drives the player itself
   if (paused) { player.vel.x = 0; player.vel.z = 0; return; }   // pause/settings menu open: stand still (game keeps running for others)
 
   // Piloting an RC missile: the body stands still (fully shootable). Keep its camera pinned
@@ -6300,17 +6289,15 @@ function spawnBlocked(p) {
   return false;
 }
 function randomSpawn() {
-  const pts = (activeMap === 'paradise' && island && island.spawns.length) ? island.spawns : spawnPoints;   // BR: spawn on the island
-  if (!pts.length) return new THREE.Vector3(activeMap === 'paradise' && island ? island.cx : 0, 0, activeMap === 'paradise' && island ? island.cz : 0);
+  if (!spawnPoints.length) return new THREE.Vector3(0, 0, 0);
   let best = null;
   for (let i = 0; i < 14; i++) {
-    const c = pts[(Math.random() * pts.length) | 0];
+    const c = spawnPoints[(Math.random() * spawnPoints.length) | 0];
     if (!best) best = c;
     if (!spawnBlocked(c)) return c.clone();
   }
   return best.clone();
 }
-function botPatrolPoint() { const pts = (activeMap === 'paradise' && island && island.patrol.length) ? island.patrol : patrolPoints; return pts[(Math.random() * pts.length) | 0]; }
 
 // --- Bot AI tuning (improvement #4): tweak personality/difficulty here ---
 const BOT_AI = {
@@ -6397,7 +6384,7 @@ function spawnBot(bot) {
   bot.health = 100;
   bot.alive = true;
   bot.state = 'PATROL';
-  bot.patrolTarget = botPatrolPoint();
+  bot.patrolTarget = patrolPoints[(Math.random() * patrolPoints.length) | 0];
   bot.pauseTimer = 0;
   bot.lookYaw = Math.random() * Math.PI * 2;
   bot.yawFacing = bot.lookYaw;
@@ -6654,7 +6641,7 @@ function updateBots(dt) {
         if (f < 0.55 && bot.materials) {                  // fade during the last ~0.6s
           for (const m of bot.materials) { m.transparent = true; m.opacity = Math.max(0, f / 0.55); }
         }
-        if (bot.deathTimer <= 0) { bot.dying = false; bot.group.visible = false; if (gameMode === 'br' && BR.active) { bot.respawnTimer = Infinity; brEliminate(bot.name); } else bot.respawnTimer = BOT_RESPAWN; }   // BR: bots get a single life
+        if (bot.deathTimer <= 0) { bot.dying = false; bot.group.visible = false; bot.respawnTimer = BOT_RESPAWN; }
       } else {
         bot.respawnTimer -= dt;
         if (bot.respawnTimer <= 0) spawnBot(bot);
@@ -6686,14 +6673,14 @@ function updateBots(dt) {
     let faceTarget = null;   // a world point to look at (else face movement)
 
     if (bot.state === 'PATROL') {
-      if (!bot.patrolTarget) bot.patrolTarget = botPatrolPoint();
+      if (!bot.patrolTarget) bot.patrolTarget = patrolPoints[(Math.random() * patrolPoints.length) | 0];
       const flat = bot.patrolTarget.clone(); flat.y = bot.pos.y;
       if (bot.pos.distanceTo(flat) < 2.5) {
         // Arrived: pause and "look around" by slowly rotating, then pick a new point
         bot.pauseTimer -= dt;
         if (bot.pauseTimer <= 0) {
           if (Math.random() < 0.5) { bot.lookYaw = Math.random() * Math.PI * 2; bot.pauseTimer = BOT_AI.lookAroundTime; }
-          else { bot.patrolTarget = botPatrolPoint(); bot.pauseTimer = 0; }
+          else { bot.patrolTarget = patrolPoints[(Math.random() * patrolPoints.length) | 0]; bot.pauseTimer = 0; }
         }
       } else {
         desiredDir.subVectors(bot.patrolTarget, bot.pos); desiredDir.y = 0; desiredDir.normalize();
@@ -6751,7 +6738,8 @@ function updateBots(dt) {
     const maxDelta = BOT_AI.accel * dt;
     bot.vel.x = approach(bot.vel.x, desiredDir.x * speed, maxDelta);
     bot.vel.z = approach(bot.vel.z, desiredDir.z * speed, maxDelta);
-    bot.pos.x += bot.vel.x * dt; bot.pos.z += bot.vel.z * dt; clampToMap(bot.pos, 2);   // map-aware (Nuketown arena or Paradise Island region)
+    bot.pos.x = Math.max(-lim, Math.min(lim, bot.pos.x + bot.vel.x * dt));
+    bot.pos.z = Math.max(-lim, Math.min(lim, bot.pos.z + bot.vel.z * dt));
     resolveHorizontal(bot.pos, 1.8);
     bot.pos.y = groundHeightAt(bot.pos.x, bot.pos.z, bot.pos.y + 0.4);
 
@@ -6893,7 +6881,7 @@ function floatText(worldPos, text, color) {
 // --- Floating damage numbers (stack rapid hits on the same target) ---
 const _dmgNums = [];
 function showDamageNumber(worldPos, dmg, headshot) {
-  if (BR.active || !OPT.dmgNumbers || dmg <= 0) return;   // BR: no damage numbers
+  if (!OPT.dmgNumbers || dmg <= 0) return;
   _proj.copy(worldPos).project(camera); if (_proj.z > 1) return;
   const sx = (_proj.x * 0.5 + 0.5) * window.innerWidth, sy = (-_proj.y * 0.5 + 0.5) * window.innerHeight, now = performance.now();
   for (const d of _dmgNums) {   // merge into a recent nearby number (same target within 320ms)
@@ -8462,7 +8450,7 @@ function updateInvTip(dt) {
 function updateStreakHUD() {
   const sbar = el('streakBar');
   if (!sbar) return;
-  if (!gameState.running || BR.active) { sbar.style.display = 'none'; return; }   // BR: no scorestreaks
+  if (!gameState.running) { sbar.style.display = 'none'; return; }
   sbar.style.display = 'block';
   el('streakCount').textContent = 'STREAK ' + STREAK.count;
   STREAK.tiers.forEach((t, i) => {
@@ -9546,311 +9534,6 @@ function showPickupBanner(text, gold, subtitle) {
    8. HUD — counters, ammo, health, hit marker, kill feed, flashes
    ============================================================================ */
 const el = (id) => document.getElementById(id);
-/* ============================================================================
-   BATTLE ROYALE — core match (single life, last alive wins). Loot, shrinking
-   zones and the parachute drop build on this. Solo plays vs bots: each living
-   bot is one of the (up to 10) participants. Host-authoritative networking is a
-   later increment — for now BR is validated solo / vs bots.
-   ============================================================================ */
-const BR = { active: false, phase: 'none', t: 0, startCount: 10, placement: 0, zone: null,
-  reset() { this.active = false; this.phase = 'none'; this.t = 0; this.placement = 0; this.zone = null; } };
-let brGun = null;            // BR: the looted primary weapon key (null = knife only)
-let brEliminated = [];       // participant names in elimination order
-
-function ordinal(n) { const v = n % 100; if (v >= 11 && v <= 13) return n + 'TH'; const d = n % 10; return n + (d === 1 ? 'ST' : d === 2 ? 'ND' : d === 3 ? 'RD' : 'TH'); }
-function brAliveCount() {
-  let n = player.alive ? 1 : 0;
-  for (const b of bots) if (b.alive && !b.dying) n++;
-  if (NET.active) NET.players.forEach(p => { if (p.alive) n++; });
-  return n;
-}
-function brStart() {
-  BR.reset(); BR.active = true; BR.phase = 'play'; BR.t = 0; brGun = null; brEliminated = [];
-  // melee-only loadout — no primary / ammo / cigars / JD shield / grenades until you loot them
-  player.overheal = 0; player.cigar = 0; player.grenades = 0; player.impulses = 0; player.lethals = 0;
-  player.jdBottles = 0; player.secondChance = false; brCurRarity = null;
-  saberMode = false; saberBlocking = false;
-  ggSetKarambit(true);                                    // start holding the knife (mainGunKey() returns the knife while brGun is null)
-  BR.startCount = Math.max(brAliveCount(), 1);
-  if (el('streakBar')) el('streakBar').style.display = 'none';
-  if (typeof brSpawnLoot === 'function') brSpawnLoot();   // stage 2: scatter loot across the island
-  if (typeof brInitZone === 'function') brInitZone();      // stage 3: arm the shrinking zone (full island first)
-  if (typeof brBeginDrop === 'function') brBeginDrop();    // stage 4: open on the transport plane
-  brHudShow(true); updateBRHud();
-}
-function brEnd() { BR.active = false; brHudShow(false); if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
-function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
-function brEliminate(name) {                              // record an elimination + crown the winner when one remains
-  if (!BR.active) return;
-  brEliminated.push(name || '?');
-  updateBRHud();
-  if (brAliveCount() <= 1 && (!NET.active || NET.isHost)) {
-    let winner = null;
-    if (player.alive) winner = NET.active ? NET.selfName : 'YOU';
-    else { const b = bots.find(x => x.alive && !x.dying); winner = b ? b.name : null; if (NET.active) NET.players.forEach(p => { if (p.alive) winner = p.name; }); }
-    finishMatch({ winner: winner, br: true });
-  }
-}
-function brOnPlayerDeath() {                              // BR: no respawn — record placement, then end (solo) or spectate (MP, later)
-  BR.placement = brAliveCount() + 1;                      // player.alive is already false here, so aliveCount excludes you
-  showCenterBanner('ELIMINATED — ' + ordinal(BR.placement) + ' PLACE', '#ff6a6a', 3000);
-  brEliminate(NET.active ? NET.selfName : 'YOU');
-  if (!gameState.over && !NET.active) finishMatch({ winner: null, br: true, placement: BR.placement });   // solo: you can't win once dead -> results
-}
-function brUpdate(dt) {
-  if (!BR.active) return;
-  BR.t += dt;
-  if (typeof brUpdateLoot === 'function') brUpdateLoot(dt);   // stage 2: loot bob + pickup
-  if (typeof brUpdateZone === 'function') brUpdateZone(dt);   // stage 3: shrink + OOB damage
-  updateBRHud();
-}
-function updateBRHud() {
-  const a = el('brAlive'); if (a) a.textContent = brAliveCount();
-  const s = el('brStart'); if (s) s.textContent = BR.startCount;
-  const it = el('brItems'); if (it) it.innerHTML = '🚬 ' + (player.cigar || 0) + '/3&nbsp;&nbsp;🥃 ' + (player.jdBottles || 0) + '/3&nbsp;&nbsp;🛡 ' + Math.round(player.overheal || 0) + (player.secondChance ? '&nbsp;&nbsp;<span style="color:#ffc83a">💉 2ND CHANCE</span>' : '');
-  if (typeof brUpdateZoneHud === 'function') brUpdateZoneHud();   // stage 3
-}
-
-/* ----------------- BATTLE ROYALE — LOOT ECONOMY (3-tier rarity) -----------------
-   Ground loot glows in its rarity colour. Weapons carry attachment configs (common
-   = iron + std mag; rare = an optic + extended mag + laser; legendary = best optic +
-   drum + laser + flashlight). Picking up a weapon with empty hands auto-equips it;
-   carrying one shows an E-to-swap prompt (the old gun drops as loot). Reuses the
-   existing weapon customization (liveCfg / buildGunModel / ADS) so attachments just work.
-   (Small legendary stat-bonus + the full downed/F self-revive are later refinements.) */
-const BR_LOOT = [];
-const BR_RAR = { common: { c: 0xd2d8de, name: 'COMMON' }, rare: { c: 0x3aa0ff, name: 'RARE' }, legendary: { c: 0xffc83a, name: 'LEGENDARY' } };
-const BR_WPN_POOL = Object.keys(WPN_CLASS);   // every customizable gun
-let brCurRarity = null, brSwapTarget = null;
-function brRollRarity() { const r = Math.random(); return r < 0.65 ? 'common' : (r < 0.93 ? 'rare' : 'legendary'); }
-function brWeaponCfg(key, rar) {
-  if (!isCustomizable(key)) return null;
-  const cls = WPN_CLASS[key], S = CLASS_SIGHTS[cls] || ['iron'], M = CLASS_MAGS[cls] || ['standard'], d = Object.assign({}, defaultCfg(key));
-  if (rar === 'common') { d.sight = S[0]; d.magazine = 'standard'; d.laser = 'off'; d.flashlight = 'off'; }
-  else if (rar === 'rare') { d.sight = S[Math.min(1, S.length - 1)]; d.magazine = M.indexOf('extended') >= 0 ? 'extended' : M[0]; d.laser = 'green'; d.flashlight = 'off'; }
-  else { d.sight = S[S.length - 1]; d.magazine = M.indexOf('drum') >= 0 ? 'drum' : M[M.length - 1]; d.laser = 'green'; d.flashlight = 'on'; }
-  return d;
-}
-function brLootMesh(kind, rar) {
-  const g = new THREE.Group(); let body, col = BR_RAR[rar] ? BR_RAR[rar].c : 0xd2d8de;
-  if (kind === 'weapon') { body = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.36, 0.46), flatMat(0x2a2e34)); body.rotation.z = 0.18; }
-  else if (kind === 'ammo') { col = 0x8aa0b0; body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), flatMat(0x5a6a3a)); }
-  else if (kind === 'cigar') { col = 0xd98a3a; body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.5), flatMat(0xb5742a)); }
-  else if (kind === 'jd') { col = 0xc9a24a; body = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.7, 6), flatMat(0x3a2a1a)); }
-  else if (kind === 'impulse') { col = 0x7fe0ff; body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6, 8), flatMat(0x2a6a8a)); }
-  else if (kind === 'lethal') { col = 0xff8a4a; body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), flatMat(0x4a5a2a)); }
-  else { col = 0xffc83a; body = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.7, 6), flatMat(0xe8e8f0)); }   // second chance (syringe)
-  g.add(body);
-  const halo = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 2.6, 10, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false })); halo.position.y = 1.0; g.add(halo);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 28, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.10, depthWrite: false })); beam.position.y = 13; g.add(beam);
-  return g;
-}
-function brAddLoot(wx, wz, kind) {
-  let rar = 'common', key = null, cfg = null;
-  if (kind === 'weapon') { rar = brRollRarity(); key = BR_WPN_POOL[(Math.random() * BR_WPN_POOL.length) | 0]; cfg = brWeaponCfg(key, rar); }
-  else if (kind === 'second') rar = 'legendary';
-  const y = groundHeightAt(wx, wz, 50) + 0.9, g = brLootMesh(kind, rar); g.position.set(wx, y, wz); scene.add(g);
-  BR_LOOT.push({ kind, rarity: rar, key, cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false });
-}
-function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; }
-function brSpawnLoot() {
-  brClearLoot(); if (!island) return;
-  const KINDS = ['weapon', 'weapon', 'ammo', 'ammo', 'ammo', 'cigar', 'jd', 'impulse', 'lethal'];
-  island.pois.forEach(poi => { const cxp = island.cx + poi.lx, czp = island.cz + poi.lz;
-    for (let i = 0; i < 9; i++) { const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 22; brAddLoot(cxp + Math.cos(a) * r, czp + Math.sin(a) * r, KINDS[(Math.random() * KINDS.length) | 0]); } });
-  for (let i = 0; i < 40; i++) { const a = Math.random() * Math.PI * 2, r = Math.random() * (island.R - 30); brAddLoot(island.cx + Math.cos(a) * r, island.cz + Math.sin(a) * r, Math.random() < 0.4 ? 'weapon' : 'ammo'); }
-  for (let i = 0; i < 2; i++) { const poi = island.pois[(Math.random() * island.pois.length) | 0]; brAddLoot(island.cx + poi.lx + (Math.random() - 0.5) * 18, island.cz + poi.lz + (Math.random() - 0.5) * 18, 'second'); }
-}
-function brEquipLoot(key, cfg) {
-  brGun = key; ggSetKarambit(false);                                   // mainGunKey()===brGun now, so this equips it
-  if (isCustomizable(key) && cfg) {
-    liveCfg[key] = Object.assign({}, cfg);                             // ADS + model read liveCfg (not the player's saved config)
-    if (_baseMag[key]) WEAPONS[key].mag = Math.round(_baseMag[key] * ((ATT_MAGS[cfg.magazine] || ATT_MAGS.standard).mult));
-    buildGunModel(key, cfg);
-  }
-  const ws = weaponState[key]; if (ws) { ws.ammo = WEAPONS[key].mag; ws.reloading = 0; if (ws.reserve !== Infinity && WEAPONS[key].reserveMax != null) ws.reserve = WEAPONS[key].reserveMax; }
-  updateHUD();
-}
-function brSpawnDroppedGun(wx, wz) {
-  if (!brGun) return; const rar = brCurRarity || 'common', key = brGun, cfg = liveCfg[key] || getCfg(key);
-  const y = groundHeightAt(wx, wz, 50) + 0.9, g = brLootMesh('weapon', rar); g.position.set(wx, y, wz); scene.add(g);
-  BR_LOOT.push({ kind: 'weapon', rarity: rar, key, cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false });
-}
-function brTakeLoot(L, label, col) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col); }
-function brPickupToast(label, col) { const p = el('brPickup'); if (!p) return; p.textContent = 'PICKED UP: ' + label; p.style.color = col || '#fff'; p.style.transition = 'none'; p.style.opacity = '1'; clearTimeout(p._t); requestAnimationFrame(() => { p.style.transition = 'opacity 1.4s'; }); p._t = setTimeout(() => { p.style.opacity = '0'; }, 900); }
-function brPickWeapon(L) {
-  if (brGun) brSpawnDroppedGun(player.pos.x + (Math.random() - 0.5) * 2, player.pos.z + (Math.random() - 0.5) * 2);
-  brEquipLoot(L.key, L.cfg); brCurRarity = L.rarity;
-  brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
-}
-function brTrySwapLoot() { if (!BR.active || !brSwapTarget || brSwapTarget.taken) return false; brPickWeapon(brSwapTarget); brSwapTarget = null; return true; }
-function brRefillAmmo() { if (brGun && weaponState[brGun]) { weaponState[brGun].ammo = WEAPONS[brGun].mag; if (weaponState[brGun].reserve !== Infinity && WEAPONS[brGun].reserveMax != null) weaponState[brGun].reserve = WEAPONS[brGun].reserveMax; } }
-function brDrinkJD() {
-  if (!BR.active || (player.jdBottles || 0) <= 0 || player.overheal >= OVERHEAL_MAX || !player.alive) return;
-  player.jdBottles--; player.overheal = OVERHEAL_MAX; flashJD(); updateHUD();   // restore shield (full animation = later polish)
-}
-function brUpdateLoot(dt) {
-  brSwapTarget = null;
-  const px = player.pos.x, pz = player.pos.z, py = player.pos.y; let nearestSwap = 1e9;
-  for (const L of BR_LOOT) {
-    if (L.taken) continue;
-    L.mesh.rotation.y += dt * 1.2; L.mesh.position.y = L.pos.y + Math.sin(performance.now() * 0.003 + L.pos.x) * 0.12;
-    if (!player.alive) continue;
-    const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
-    if (d > 2.6 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;
-    if (L.kind === 'weapon') { if (!brGun) brPickWeapon(L); else if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } }
-    else if (L.kind === 'ammo') { if (brGun) { brRefillAmmo(); brTakeLoot(L, 'AMMO', '#8aa0b0'); } }
-    else if (L.kind === 'cigar') { if ((player.cigar || 0) < CIGAR.maxCarry) { player.cigar = (player.cigar || 0) + 1; brTakeLoot(L, 'CIGAR (' + player.cigar + '/' + CIGAR.maxCarry + ')', '#d98a3a'); } }
-    else if (L.kind === 'jd') { if ((player.jdBottles || 0) < 3) { player.jdBottles = (player.jdBottles || 0) + 1; brTakeLoot(L, 'JACK DANIELS (' + player.jdBottles + '/3)', '#ffd98a'); } }
-    else if (L.kind === 'impulse') { if ((player.impulses || 0) < IMPULSE.maxCarry) { player.impulses++; brTakeLoot(L, 'IMPULSE GRENADE', '#7fe0ff'); } }
-    else if (L.kind === 'lethal') { if ((player.lethals || 0) < LETHAL_MAX) { player.lethals++; brTakeLoot(L, 'LETHAL', '#ff8a4a'); } }
-    else if (L.kind === 'second') { if (!player.secondChance) { player.secondChance = true; brTakeLoot(L, 'SECOND CHANCE!', '#ffc83a'); } }
-  }
-  const sp = el('brSwapPrompt');
-  if (sp) { if (brSwapTarget) { sp.style.display = 'block'; sp.innerHTML = 'Press <b style="color:#ffe600">' + IM.keyLabel(IM.bind.interact) + '</b> to swap for <b style="color:' + brRarHex(brSwapTarget.rarity) + '">' + BR_RAR[brSwapTarget.rarity].name + ' ' + (WEAPONS[brSwapTarget.key] ? WEAPONS[brSwapTarget.key].name : 'weapon') + '</b>'; } else sp.style.display = 'none'; }
-}
-function brRarHex(r) { return '#' + (BR_RAR[r] ? BR_RAR[r].c : 0xffffff).toString(16).padStart(6, '0'); }
-
-/* ----------------- BATTLE ROYALE — SHRINKING SAFE ZONE -----------------
-   Phases hold → warn → shrink, each closing to a smaller circle (random centre inside
-   the previous one) with rising out-of-zone damage. A translucent blue wall cylinder
-   marks the current circle; the HUD shows the countdown. The whole island is the first
-   safe zone; the final tiny circle forces the last fight. (Timers below are tuned for a
-   ~12-16 min match; bots taking zone damage is a later refinement.) */
-const BR_ZONES = [
-  { hold: 55, warn: 15, shrink: 45, rFrac: 0.72, dmg: 1 },
-  { hold: 30, warn: 15, shrink: 40, rFrac: 0.46, dmg: 3 },
-  { hold: 25, warn: 12, shrink: 35, rFrac: 0.26, dmg: 8 },
-  { hold: 20, warn: 10, shrink: 28, rFrac: 0.12, dmg: 12 },
-  { hold: 16, warn: 8,  shrink: 22, rFrac: 0.04, dmg: 15 }
-];
-function brInitZone() {
-  if (!island) return;
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 90, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0x40b0ff, transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthWrite: false }));
-  m.position.set(island.cx, 45, island.cz); scene.add(m);
-  BR.zone = { cx: island.cx, cz: island.cz, r: island.R, fromCx: island.cx, fromCz: island.cz, fromR: island.R, toCx: island.cx, toCz: island.cz, toR: island.R, phase: -1, state: 'hold', timer: BR_ZONES[0].hold, shrinkDur: 1, mesh: m, warnShown: false };
-  brSetWall();
-}
-function brSetWall() { const z = BR.zone; if (!z || !z.mesh) return; z.mesh.scale.set(Math.max(0.01, z.r), 1, Math.max(0.01, z.r)); z.mesh.position.set(z.cx, 45, z.cz); }
-function brAdvanceZone() {
-  const z = BR.zone, pi = z.phase + 1;
-  if (pi >= BR_ZONES.length) { z.state = 'final'; return; }
-  z.phase = pi; const ph = BR_ZONES[pi];
-  z.fromCx = z.cx; z.fromCz = z.cz; z.fromR = z.r; z.toR = island.R * ph.rFrac;
-  const maxOff = Math.max(0, z.r - z.toR), a = Math.random() * Math.PI * 2, off = Math.random() * maxOff * 0.85;   // new circle stays inside the old
-  z.toCx = z.cx + Math.cos(a) * off; z.toCz = z.cz + Math.sin(a) * off;
-  z.state = 'warn'; z.timer = ph.warn; z.warnShown = false;
-}
-function brUpdateZone(dt) {
-  const z = BR.zone; if (!z) return;
-  if (z.state === 'hold') { z.timer -= dt; if (z.timer <= 0) brAdvanceZone(); }
-  else if (z.state === 'warn') {
-    if (!z.warnShown) { z.warnShown = true; showCenterBanner('⚠ ZONE CLOSING SOON', '#ff7a5a', 1800); }
-    z.timer -= dt; if (z.timer <= 0) { z.state = 'shrink'; z.shrinkDur = BR_ZONES[z.phase].shrink; z.timer = z.shrinkDur; }
-  } else if (z.state === 'shrink') {
-    z.timer -= dt; const t = 1 - Math.max(0, z.timer) / (z.shrinkDur || 1);
-    z.r = z.fromR + (z.toR - z.fromR) * t; z.cx = z.fromCx + (z.toCx - z.fromCx) * t; z.cz = z.fromCz + (z.toCz - z.fromCz) * t;
-    if (z.timer <= 0) { z.r = z.toR; z.cx = z.toCx; z.cz = z.toCz; const last = z.phase + 1 >= BR_ZONES.length; z.state = last ? 'final' : 'hold'; if (!last) z.timer = BR_ZONES[z.phase + 1].hold; }
-  }
-  brSetWall();
-  if (player.alive && z.phase >= 0) {                       // out-of-zone damage (whole island is safe until phase 0 starts)
-    const d = Math.hypot(player.pos.x - z.cx, player.pos.z - z.cz);
-    if (d > z.r) { player._zoneT = (player._zoneT || 0) + dt; const dmg = BR_ZONES[z.phase].dmg; if (player._zoneT >= 1) { player._zoneT -= 1; hurtPlayer(dmg, null); } }
-    else player._zoneT = 0;
-  }
-  if (z.phase >= 0 && (!NET.active || NET.isHost)) {        // bots caught outside the zone die too, so the circle culls the field toward a finish
-    const dmg = BR_ZONES[z.phase].dmg * 1.6;
-    for (const b of bots) { if (!b.alive || b.dying) continue; if (Math.hypot(b.pos.x - z.cx, b.pos.z - z.cz) > z.r) { b.health -= dmg * dt; if (b.health <= 0) killBot(b, null, { zone: true }); } }
-  }
-}
-function brUpdateZoneHud() {
-  const z = BR.zone, wrap = el('brZoneWrap'), t = el('brZoneTimer'); if (!wrap || !t) return;
-  if (!z || !BR.active) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
-  if (z.state === 'hold') { t.textContent = '🔵 SAFE ZONE • SHRINKS IN ' + fmt(z.timer); t.style.color = '#7fd0ff'; }
-  else if (z.state === 'warn') { t.textContent = '⚠ ZONE CLOSING IN ' + Math.ceil(z.timer) + 's'; t.style.color = '#ff8a5a'; }
-  else if (z.state === 'shrink') { t.textContent = '🟠 ZONE IS CLOSING — GET INSIDE THE BLUE'; t.style.color = '#ffb05a'; }
-  else { t.textContent = '🔴 FINAL ZONE'; t.style.color = '#ff5a5a'; }
-}
-function brClearZone() { if (BR.zone && BR.zone.mesh) { scene.remove(BR.zone.mesh); if (BR.zone.mesh.geometry) BR.zone.mesh.geometry.dispose(); } BR.zone = null; }
-
-/* ----------------- BATTLE ROYALE — PARACHUTE DROP -----------------
-   The match opens on a transport plane crossing the island (random heading). Jump to
-   leave (or auto-drop at the end of the run): freefall (WASD steers, look down to dive
-   faster), then the parachute auto-deploys near the ground (slower, still steerable),
-   then you land with just your melee and scavenge. Drives the player/camera directly,
-   so updateMovement early-returns into brUpdateDrop while BR.phase === 'drop'. */
-function brBuildPlane() {
-  const g = new THREE.Group();
-  const fus = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.0, 18, 10), flatMat(0x8a9098)); fus.rotation.x = Math.PI / 2; g.add(fus);
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 4), flatMat(0x7a8088)); wing.position.y = 0.4; g.add(wing);
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(9, 0.5, 2.5), flatMat(0x7a8088)); tail.position.set(0, 1.4, -8); g.add(tail);
-  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3, 2.5), flatMat(0x7a8088)); fin.position.set(0, 2.4, -8); g.add(fin);
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(2.1, 4, 10), flatMat(0x9aa0a8)); nose.rotation.x = -Math.PI / 2; nose.position.z = 11; g.add(nose);
-  return g;
-}
-function brBuildChute() {
-  const g = new THREE.Group();
-  const canopy = new THREE.Mesh(new THREE.SphereGeometry(3, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x2a7fff, flatShading: true, side: THREE.DoubleSide }));
-  canopy.position.y = 5; g.add(canopy);
-  for (let a = 0; a < 4; a++) { const ln = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 5, 4), flatMat(0xddddee)); ln.position.set(Math.cos(a * 1.57) * 2, 2.5, Math.sin(a * 1.57) * 2); g.add(ln); }
-  return g;
-}
-function brBeginDrop() {
-  if (!island) { BR.phase = 'play'; return; }
-  BR.phase = 'drop';
-  const ang = Math.random() * Math.PI * 2, range = island.R + 160, dir = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang));
-  const start = new THREE.Vector3(island.cx - dir.x * range, 92, island.cz - dir.z * range);
-  const plane = brBuildPlane(); plane.position.copy(start); plane.rotation.y = Math.atan2(dir.x, dir.z); scene.add(plane);
-  BR.drop = { state: 'plane', t: 0, traverse: 12, dir, planePos: start.clone(), plane, chute: null, jumpHeld: true, range };
-  player.pos.copy(start); player.pos.y -= 3.5; player.vel.set(0, 0, 0); player.onGround = false; player.alive = true;
-  yaw = Math.atan2(dir.x, dir.z); pitch = -0.4;
-  showCenterBanner('PRESS JUMP TO DIVE', '#aef0c0', 2600);
-}
-function brUpdateDrop(dt) {
-  const D = BR.drop; if (!D) { BR.phase = 'play'; return; }
-  const speed = (D.range * 2) / D.traverse;
-  if (D.state === 'plane') {
-    D.t += dt; D.planePos.addScaledVector(D.dir, speed * dt); D.plane.position.copy(D.planePos);
-    player.pos.copy(D.planePos); player.pos.y -= 3.5;
-    const wantJump = IM.down('jump');
-    if ((wantJump && !D.jumpHeld) || D.t >= D.traverse) { D.state = 'freefall'; player.vel.set(D.dir.x * 6, -8, D.dir.z * 6); if (typeof sfxJump === 'function') sfxJump(player.pos); }
-    D.jumpHeld = wantJump;
-  } else {
-    D.planePos.addScaledVector(D.dir, speed * dt); if (D.plane) D.plane.position.copy(D.planePos);
-    const gh = groundHeightAt(player.pos.x, player.pos.z, 50);
-    if (D.state === 'freefall') {
-      const downness = Math.min(1, Math.max(0, -pitch / 1.2));
-      const targetVy = -(18 + downness * 16);
-      player.vel.y += (targetVy - player.vel.y) * Math.min(1, dt * 3);
-      if (player.pos.y - gh <= 16) { D.state = 'chute'; D.chute = brBuildChute(); scene.add(D.chute); showCenterBanner('PARACHUTE — STEER WITH WASD', '#aef0c0', 1800); }
-    } else {   // chute
-      player.vel.y += (-8 - player.vel.y) * Math.min(1, dt * 4);
-      if (D.chute) { D.chute.position.set(player.pos.x, player.pos.y + 0.5, player.pos.z); D.chute.rotation.y = yaw; }
-    }
-    const f = horizontalForward(), r = horizontalRight(); let wx = 0, wz = 0;
-    if (kbDown('moveForward')) { wx += f.x; wz += f.z; } if (kbDown('moveBackward')) { wx -= f.x; wz -= f.z; }
-    if (kbDown('moveRight')) { wx += r.x; wz += r.z; } if (kbDown('moveLeft')) { wx -= r.x; wz -= r.z; }
-    if (GP.active && (GP.mvX || GP.mvY)) { wx += r.x * GP.mvX - f.x * GP.mvY; wz += r.z * GP.mvX - f.z * GP.mvY; }
-    const wl = Math.hypot(wx, wz); if (wl > 0) { wx /= wl; wz /= wl; }
-    const steer = (D.state === 'chute') ? 11 : 14;
-    player.vel.x += (wx * steer - player.vel.x) * Math.min(1, dt * 2.5);
-    player.vel.z += (wz * steer - player.vel.z) * Math.min(1, dt * 2.5);
-    player.pos.x += player.vel.x * dt; player.pos.z += player.vel.z * dt; player.pos.y += player.vel.y * dt;
-    clampToMap(player.pos, 1.2);
-    if (player.pos.y <= gh + 0.1) {   // touchdown -> normal play
-      player.pos.y = gh; player.vel.set(0, 0, 0); player.onGround = true;
-      if (D.chute) { scene.remove(D.chute); disposeGroup(D.chute); } if (D.plane) { scene.remove(D.plane); disposeGroup(D.plane); }
-      BR.drop = null; BR.phase = 'play'; if (typeof sfxLand === 'function') sfxLand(player.pos, 1);
-    }
-  }
-  player.eye += (MOVE.eyeHeight - player.eye) * Math.min(1, dt * 10);
-  camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
-  camera.rotation.order = 'YXZ'; camera.rotation.y = yaw + recoilYaw; camera.rotation.x = pitch + recoilPitch;
-  if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
-}
-
 function updateHUD() {
   const ws = weaponState[currentWeaponKey];
   const w = WEAPONS[currentWeaponKey];
@@ -9910,7 +9593,6 @@ function updateHUD() {
 
 let hitMarkerTimer = 0;
 function showHitMarker(headshot) {
-  if (BR.active) return;   // BR: no hit markers
   if (!OPT.hitMarkers) return;
   const hm = el('hitmarker'); hm.style.opacity = 1; hm.classList.toggle('hs', !!headshot); hitMarkerTimer = 0.15;
   sfxHitMarker(!!headshot);   // TINK (body) / DING (headshot)
@@ -9932,7 +9614,6 @@ function showHurtFlash() {
 }
 
 function addKillFeed(text) {
-  if (BR.active) return;   // BR: no kill feed
   const feed = el('killFeed');
   const div = document.createElement('div');
   div.className = 'entry';
@@ -9968,7 +9649,7 @@ function ggEquip(key) {
 function ggLadderKey() { return GUNGAME_LADDER[ggLevel - 1]; }
 // The LOCAL player's "main gun" slot: gun-game uses the current ladder rung; FFA uses the
 // player-chosen main weapon (set via the inventory menu, default Assault Rifle).
-function mainGunKey() { return saberMode ? 'saber' : (gameMode === 'gungame' ? ggLadderKey() : (gameMode === 'br' ? (brGun || KARAMBIT_KEY) : ffaMain)); }
+function mainGunKey() { return saberMode ? 'saber' : (gameMode === 'gungame' ? ggLadderKey() : ffaMain); }
 // Equip whichever of the two slots is active (the gun, or the karambit) — both modes.
 function ggEquipCurrent() { ggEquip(ggKarambit ? KARAMBIT_KEY : mainGunKey()); }
 // Toggle / set the karambit slot (both modes — FFA also carries a permanent karambit).
@@ -10126,11 +9807,7 @@ function hurtPlayer(dmg, srcPos) {
   if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg);   // body-impact thud + pained grunt, scaled by damage
   if (dmg >= 1 && srcPos) showDamageArc(srcPos);          // red directional arc toward the source
   updateHUD();
-  if (player.health <= 0) {
-    if (gameMode === 'br' && BR.active && player.secondChance && player.alive) {   // Second Chance: survive one fatal hit (simplified self-revive; full downed/F state is a later refinement)
-      player.secondChance = false; player.health = 50; player.overheal = 0; flashJD(); showCenterBanner('SECOND CHANCE!', '#ffc83a', 1600); updateHUD();
-    } else playerDie();
-  }
+  if (player.health <= 0) playerDie();
 }
 // Brief red arc at the screen edge pointing toward a damage source (Part 3, directional indicator).
 function showDamageArc(srcPos) {
@@ -10169,13 +9846,11 @@ function playerDie() {
   player.lastAttacker = null; player.lastAttackerHead = false; player.lastAttackerName = null;
   player.lastAttackerWeapon = null; player.lastAttackerMelee = false;
   updateHUD();
-  if (gameMode === 'br' && BR.active) { brOnPlayerDeath(); return; }   // BR: no killcam, no respawn — single life
   beginKillcam(killerInfo);   // Part 5: brief death replay, then doRespawn() (skippable with the jump key)
 }
 // Reset + spawn the player for a fresh life (FFA keeps going; only the kill target ends the match).
 function doRespawn() {
   if (gameState.over || player.alive) return;
-  if (gameMode === 'br' && BR.active) return;   // BR is single-life — no respawn
   const sp = spawnForPlayer();   // TDM: respawn on my team's side, away from the nearest enemy
   player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
@@ -10578,7 +10253,6 @@ function startMatch() {
   const introCol = gameMode === 'tdm' ? (myTeam ? TEAMS[myTeam].css : '#ffe600') : '#ffe600';
   showCenterBanner((gameMode === 'tdm' ? 'TEAM ' + (myTeam || 'red').toUpperCase() + '\n' : '') + matchSettingsSummary(), introCol, 3400);
   updateMatchTimerHUD();
-  if (gameMode === 'br') brStart(); else brEnd();   // BATTLE ROYALE: single-life elimination on Paradise Island (melee start, loot for guns)
   lockPointer();
 }
 
@@ -10690,7 +10364,7 @@ function finishMatch(result) {
   const awards = computeAwards();                    // MVP / highlight cards (Part 2)
   const rows = scoreboardRows();                     // final ranked table snapshot
   if (NET.active && NET.isHost) NET.broadcast({ t: 'matchover', winner: winnerName, team, byTime: !!result.byTime, awards, rows });
-  doMatchOver(winnerName, team, { byTime: !!result.byTime, awards, rows, br: !!result.br, placement: result.placement || BR.placement });
+  doMatchOver(winnerName, team, { byTime: !!result.byTime, awards, rows });
 }
 // Ranked row snapshot from the authoritative stat records — shared by the Tab scoreboard + results table.
 function scoreboardRows() {
@@ -10802,9 +10476,8 @@ function doMatchOver(winnerName, team, extra) {
   document.exitPointerLock();
   Ambient.stop(); SaberHum.stop(); clearDogs(); clearKongs(); clearMckaylas();
   // Did the local player win? (TDM: my team is the winning team.)
-  let won = team ? (myTeam === team) : ((winnerName && winnerName === NET.selfName) || (!NET.active && winnerName === 'YOU'));
-  if (extra.br) { won = player.alive; brEnd(); }   // BR: you win only as the last one standing
-  _matchResult = { winnerName, team, won, byTime: !!extra.byTime, br: !!extra.br, placement: won ? 1 : (extra.placement || BR.placement || 0),
+  const won = team ? (myTeam === team) : ((winnerName && winnerName === NET.selfName) || (!NET.active && winnerName === 'YOU'));
+  _matchResult = { winnerName, team, won, byTime: !!extra.byTime,
                    awards: extra.awards || computeAwards(), rows: extra.rows || scoreboardRows() };
   (won ? sfxWin() : sfxLose());           // victory / defeat fanfare
   showResultsScreen(_matchResult);        // Part 2 — full end-of-match results screen
@@ -12504,12 +12177,9 @@ function resultsToLobby() {
 function showResultsScreen(result) {
   result = result || _matchResult || { rows: scoreboardRows() }; _matchResult = result;
   const wt = el('resWinner'), ws = el('resWinSub');
-  if (result.br) {
-    wt.textContent = result.won ? 'WINNER WINNER CHICKEN DINNER!' : ordinal(result.placement || 2) + ' PLACE';
-    wt.style.color = result.won ? '#ffd34a' : '#ff8a4a';
-    ws.textContent = (result.won ? 'Last one standing' : (result.winnerName ? result.winnerName.toUpperCase() + ' won' : 'Eliminated')) + ' • BATTLE ROYALE • ' + (BR.startCount || 10) + ' players';
-  } else if (result.team) { wt.textContent = TEAMS[result.team].name + ' WINS!'; wt.style.color = TEAMS[result.team].css; ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary(); }
-  else { const who = result.won ? 'YOU WIN!' : (result.winnerName ? result.winnerName.toUpperCase() + ' WINS!' : 'MATCH OVER'); wt.textContent = who; wt.style.color = '#ffd34a'; ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary(); }
+  if (result.team) { wt.textContent = TEAMS[result.team].name + ' WINS!'; wt.style.color = TEAMS[result.team].css; }
+  else { const who = result.won ? 'YOU WIN!' : (result.winnerName ? result.winnerName.toUpperCase() + ' WINS!' : 'MATCH OVER'); wt.textContent = who; wt.style.color = '#ffd34a'; }
+  ws.textContent = (result.byTime ? 'Time expired • ' : '') + matchSettingsSummary();
   try { ResultStage.show(resultsWinnerList(result)); } catch (e) {}
   buildResultCards(result.awards || computeAwards());
   el('resTable').innerHTML = resultsTableHTML();
@@ -13247,7 +12917,6 @@ function animate() {
     updateSmokes(dt);     // lethal smoke grenades: canister settle + view-blocking smoke cloud
     updateInvTip(dt);     // fade the "PRESS I" inventory hint
     updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
-    if (BR.active) brUpdate(dt);   // BATTLE ROYALE: loot, shrinking zone, players-remaining HUD, win check
     updateDmgNums(dt);    // Part 3: expire floating damage numbers
     recordCamFrame(dt);   // Part 5: record my camera for others' killcams
     if (NET.active) processKcSends(dt);   // Part 5/2: flush queued killcam buffers (2s after a kill, or early if I die)

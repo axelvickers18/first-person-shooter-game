@@ -1512,8 +1512,6 @@ const GUNGAME_WEAPONS = {
   gg24: { name:"BULLPUP RIFLE",    baseModel:"bullpup",     color:0x394032, damage:22, fireRate:0.0909, mag:25, reload:2.0, spreadBase:0.012,spreadGrow:0.009,spreadMax:0.075, recoil:0.012,pellets:1,range:280,headMult:1.8, auto:true },
   gg25: { name:"SUPPRESSED SMG",   baseModel:"suppressedsmg",color:0x1c1c20,damage:18, fireRate:0.0833, mag:30, reload:2.2, spreadBase:0.016,spreadGrow:0.010,spreadMax:0.110, recoil:0.008,pellets:1,range:150,headMult:1.6, auto:true, suppressed:true },
   gg26: { name:"MINIGUN",          baseModel:"minigun",     color:0x2a2a2e, damage:18, fireRate:0.04,   mag:200,reload:8.0, spreadBase:0.030,spreadGrow:0.006,spreadMax:0.120, recoil:0.010,pellets:1,range:200,headMult:1.4, auto:true, minigun:true, spinup:0.8, winddown:1.0 },
-  // DRAGUNOV (SVD) — FFA-only SEMI-AUTO sniper: 2-body-shots / 1-headshot kill, fast follow-ups, 25-round mag, magazine reload (NOT bolt-action). Customizable like the DMR.
-  gg27: { name:"DRAGUNOV",         baseModel:"dragunov",    color:0x8a6a3a, damage:80, fireRate:0.40,   mag:25, reload:3.0, spreadBase:0.003,spreadGrow:0.014,spreadMax:0.045, recoil:0.060,pellets:1,range:480,headMult:2.0, auto:false },
   // KARAMBIT — a permanent second slot in gun game (NOT on the ladder). A curved
   // reverse-grip hook blade: fast one-hit melee that DEMOTES the victim (the killer
   // never advances, and it can't win). See `karambit:true` checks below.
@@ -1525,7 +1523,7 @@ const GUNGAME_LADDER = ["gg1","gg2","gg3","gg4","gg5","gg6","gg7","gg8","gg9","g
                         "gg11","gg12","gg13","gg14","gg15","gg16","gg17","gg18","gg19","gg20"];
 const GUNGAME_MAX = GUNGAME_LADDER.length;   // 20
 // FFA-only extra weapons: selectable from the I-key inventory but NEVER on the gun-game ladder.
-const FFA_ONLY_WEAPONS = ["gg21", "gg22", "gg23", "gg24", "gg25", "gg26", "gg27"];
+const FFA_ONLY_WEAPONS = ["gg21", "gg22", "gg23", "gg24", "gg25", "gg26"];
 const KARAMBIT_KEY = "karambit";
 // --- MELEE SELECTION (CS:GO-inspired): the slot-3 melee is ALWAYS keyed 'karambit' internally
 // (identical stats / demotion / range / networking); only its model, animations + audio vary by
@@ -1585,8 +1583,7 @@ const GG_SPEC = {
   gg23: { speed:0.65, sight:'scope_heavy', zoom:10.0, reload:4.5, rstyle:'bolt', model:'heavysniper', boltShot:true },
   gg24: { speed:0.95, sight:'holo',        zoom:1.5,  reload:2.0, rstyle:'mag',  model:'bullpup' },
   gg25: { speed:1.00, sight:'minidot',     zoom:1.35, reload:2.2, rstyle:'mag',  model:'suppressedsmg' },
-  gg26: { speed:0.35, sight:'none',        zoom:1.0,  reload:8.0, rstyle:'belt', model:'minigun', noads:true },
-  gg27: { speed:0.80, sight:'scope_sniper', zoom:6.0, reload:3.0, rstyle:'mag', model:'dragunov' }   // semi-auto sniper — magazine reload (NOT bolt), so no boltShot
+  gg26: { speed:0.35, sight:'none',        zoom:1.0,  reload:8.0, rstyle:'belt', model:'minigun', noads:true }
 };
 for (const k in GG_SPEC) {
   const s = GG_SPEC[k], w = WEAPONS[k];
@@ -1663,8 +1660,7 @@ const GG_SCOPE = {
   gg8:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'thermal', fov:0.45, sway:0.5 },   // DMR (THERMAL scope)
   gg9:  { ads:{ x:0, y:-0.16, z:-0.40 }, style:'heavy',   fov:0.18, sway:1.0 },   // Bolt sniper (heavy scope)
   gg12: { ads:{ x:0, y:-0.16, z:-0.42 }, style:'javelin', fov:0.70, sway:0.0 },   // RPG (digital targeting)
-  gg23: { ads:{ x:0, y:-0.16, z:-0.40 }, style:'heavy',   fov:0.12, sway:1.2 },   // Heavy Sniper (~10x heavy scope)
-  gg27: { ads:{ x:0, y:-0.16, z:-0.40 }, style:'heavy',   fov:0.18, sway:1.0 }    // Dragunov (8x sniper scope — default sight; customization can swap it)
+  gg23: { ads:{ x:0, y:-0.16, z:-0.40 }, style:'heavy',   fov:0.12, sway:1.2 }    // Heavy Sniper (~10x heavy scope)
 };
 
 // --- LASER SIGHTS: hipfire-focused weapons project a bright red beam + a bright dot where it lands. ---
@@ -1694,7 +1690,7 @@ const ATT_FLASH = { off: 'Off', on: 'White' };
 // Per-weapon class (drives the allowed-attachment restrictions). Omitted weapons aren't customizable.
 const WPN_CLASS = { gg1:'lmg', gg2:'ar', gg3:'smg', gg4:'ar', gg5:'ar', gg6:'shotgun', gg7:'shotgun', gg8:'dmr',
   gg9:'sniper', gg10:'crossbow', gg13:'smg', gg14:'pistol', gg15:'revolver', gg16:'pistol', gg18:'pistol',
-  gg21:'shotgun', gg22:'smg', gg23:'sniper', gg24:'ar', gg25:'smg', gg26:'lmg', gg27:'dmr' };   // Dragunov: 'dmr' class = sniper/acog/holo/thermal sights + standard/extended mags (no iron/red_dot/drum)
+  gg21:'shotgun', gg22:'smg', gg23:'sniper', gg24:'ar', gg25:'smg', gg26:'lmg' };
 const CLASS_SIGHTS = {
   pistol:['iron','red_dot'], smg:['iron','red_dot','holo'], ar:['iron','red_dot','acog','holo','thermal'],
   shotgun:['iron','red_dot','holo'], lmg:['iron','red_dot','holo'], dmr:['acog','holo','sniper','thermal'],
@@ -1712,7 +1708,7 @@ function magAllowed(key) { const c = WPN_CLASS[key]; return (CLASS_MAGS[c] || ['
 function defaultCfg(key) {
   const SIGHT = { gg1:'iron', gg2:'red_dot', gg3:'red_dot', gg4:'red_dot', gg5:'red_dot', gg6:'iron', gg7:'red_dot',
     gg8:'sniper', gg9:'sniper', gg10:'iron', gg13:'iron', gg14:'iron', gg15:'iron', gg16:'iron', gg18:'iron',
-    gg21:'red_dot', gg22:'red_dot', gg23:'sniper', gg24:'red_dot', gg25:'red_dot', gg26:'iron', gg27:'sniper' };
+    gg21:'red_dot', gg22:'red_dot', gg23:'sniper', gg24:'red_dot', gg25:'red_dot', gg26:'iron' };
   return { sight: SIGHT[key] || 'iron', magazine: 'standard', laser: LASER_WEAPONS[key] != null ? 'red' : 'off', flashlight: 'off' };
 }
 let weaponCfgs = {};
@@ -1835,12 +1831,12 @@ const TRACER = {
            gg1:0xffb330, gg2:0xffb330, gg4:0xffb330, gg5:0xffb330, gg21:0xffb330, gg24:0xffb330,
            gg3:0xff8a1a, gg22:0xff8a1a, gg13:0xff8a1a,                                  // orange (SMG / micro SMG / machine pistol)
            gg6:0xff5418, gg7:0xff5418,                                                  // orange-red (shotguns)
-           gg8:0x35dd55, gg9:0x35dd55, gg23:0x35dd55, gg27:0x35dd55,                    // green (DMR / bolt + heavy sniper + Dragunov)
+           gg8:0x35dd55, gg9:0x35dd55, gg23:0x35dd55,                                   // green (DMR / bolt + heavy sniper)
            gg14:0xffe23a, gg15:0xffe23a, gg16:0xffe23a, gg17:0xffe23a, gg18:0xffe23a, gg25:0xffe23a, gg26:0xffb330 },  // yellow pistols/akimbo/suppressed; minigun yellow-orange
   life:  { pistol:0.10, smg:0.09, shotgun:0.08, sniper:0.16,
            laser:0.25, deagle:0.13, bot:0.10, def:0.10,
-           gg8:0.16, gg9:0.20, gg23:0.22, gg27:0.18 },          // sniper tracers linger (more visible at range)
-  thick: { sniper:true, laser:true, deagle:true, gg9:true, gg23:true, gg27:true },   // these render as thicker beams
+           gg8:0.16, gg9:0.20, gg23:0.22 },          // sniper tracers linger (more visible at range)
+  thick: { sniper:true, laser:true, deagle:true, gg9:true, gg23:true },   // these render as thicker beams
   dim:   { gg25:true }   // suppressed SMG: very dim tracer (matches its stealth profile)
 };
 
@@ -2018,7 +2014,6 @@ const GUN_SFX = {
   gg22: { f: 300, dur: 0.045,noise: 0.5, nf: 3600, peak: 0.40 },              // PDW / Micro SMG — tiny fast pop
   gg24: { f: 175, dur: 0.085,noise: 0.62,nf: 2600, peak: 0.56 },              // Bullpup Rifle — punchy mid
   gg26: { f: 58,  dur: 0.11, noise: 1.0, nf: 1000, peak: 0.72, verb: 0.5 },   // Minigun — deep menacing BRRRT
-  gg27: { f: 100, dur: 0.20, noise: 0.8, nf: 2100, peak: 0.74, verb: 0.5 },   // Dragunov — deep heavy bang + sharp crack, snappier (less tail) than the bolt sniper
 };
 // Build the fire SFX for a weapon (layered tone + sub + powder noise + optional tail/ring).
 function buildGunFire(key) {
@@ -4949,22 +4944,6 @@ function buildWeaponMesh(key, variant, cfg) {
     for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, r = 0.08; const bb = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), flatMat(0x3a3a40)); bb.rotation.x = Math.PI / 2; bb.position.set(Math.cos(a) * r, Math.sin(a) * r, -0.35); barrels.add(bb); }
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 12), flatMat(0x14141a)); hub.rotation.x = Math.PI / 2; hub.position.set(0, 0, -0.04); barrels.add(hub);
     g.add(barrels); g.userData.barrels = barrels;
-    muzzleZ = -0.92;
-  } else if (model === 'dragunov') {
-    // DRAGUNOV (SVD) — long semi-auto marksman rifle: warm wooden furniture, dark receiver/barrel, big box
-    // mag below, thumbhole stock, flash hider. The scope atop is added by addWeaponAttachments (sniper sight).
-    const wood = 0x8a5a2a, woodDk = 0x6f4520, metal = 0x26262a, metalDk = 0x16161a;
-    body(0,0,-0.06,0.085,0.12,0.66,metal);          // dark metal receiver
-    body(0,0.01,-0.56,0.04,0.04,0.55,metalDk);      // long barrel
-    body(0,0.01,-0.86,0.062,0.062,0.12,metalDk);    // flash hider / muzzle brake
-    body(0,-0.02,-0.26,0.088,0.10,0.34,wood);       // wooden handguard over the barrel
-    body(0,0.045,-0.26,0.090,0.02,0.34,woodDk);     // handguard grain accent
-    body(0,-0.17,0.05,0.075,0.26,0.15,0x2c2c24);    // large box magazine (25 rounds) below the receiver
-    body(0,-0.16,0.19,0.068,0.17,0.10,wood);        // wooden pistol grip
-    body(0,0.015,0.40,0.082,0.085,0.30,wood);       // thumbhole stock — comb (top)
-    body(0,0.055,0.40,0.084,0.02,0.30,woodDk);      // stock grain accent
-    body(0,-0.15,0.42,0.072,0.10,0.20,wood);        // thumbhole stock — toe (bottom); the gap to the grip reads as the thumbhole
-    body(0,-0.05,0.56,0.085,0.21,0.05,metalDk);     // rubber butt pad
     muzzleZ = -0.92;
   }
   // Iron-sight weapons get a visible rear notch + front post so the ADS picture reads.

@@ -4284,7 +4284,7 @@ const IM = {
     ['weapon1', 'Weapon Slot 1 / BR Inv Slot 1'], ['weapon2', 'Weapon Slot 2 / BR Inv Slot 2'], ['karambit', 'Equip Karambit / BR Inv Slot 3'], ['brSlot4', 'BR Inventory Slot 4'], ['brSlot5', 'BR Inventory Slot 5'], ['equipRC', 'Equip RC Launcher', 'when unlocked'],
     ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['reload', 'Reload'], ['prevWeapon', 'Previous Weapon'], ['nextWeapon', 'Next Weapon'], ['toggleLaser', 'Toggle Laser Sight', 'laser weapons'], ['flashlight', 'Toggle Flashlight', 'flashlight attachment'],
     ['CONSUMABLES / ABILITIES', null],
-    ['use', 'Use Cigar / Drink JD  •  BR: Equip Melee'], ['grenade', 'Throw Impulse  •  BR: Drop Held Item'], ['lethal', 'Throw Lethal (Smoke / Axe)'], ['interact', 'Interact / Climb Ladder  •  BR: Pick Up Loot'],
+    ['use', 'Use Cigar / Drink JD  •  BR: Equip Melee'], ['grenade', 'Throw Impulse Grenade'], ['lethal', 'Throw Lethal (Smoke / Axe)'], ['interact', 'Interact / Climb Ladder  •  BR: Pick Up Loot'], ['dropWeapon', 'BR: Drop Held Item'],
     ['SCORESTREAKS', null],
     ['saber', 'Saber + Jack Daniels  •  BR: Toggle Minimap', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers  •  BR: Open Full Map', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
     ['UI / MENUS', null],
@@ -4621,7 +4621,8 @@ function gameAction(act, rep) {
     if (act === 'inventory' && !rep) { brToggleInv(); return; }                                              // I -> open/close the pop-up inventory (all modes)
     if (!saberMode && act === 'lethal' && !rep) { brUseType('lethal'); return; }                            // H -> use the lethal from its slot
     if (act === 'drinkJD' && !rep) { if (BR.active) brUseType('jd'); return; }                               // Z -> drink a JD from its slot (BR loot only)
-    if (!saberMode && (act === 'grenade' || act === 'dropWeapon') && !rep) { if (BR.active) brWeaponAction('dropItem'); else if (act === 'grenade') brUseType('impulse'); return; }   // BR: G/X drop held item • other modes: G throws an impulse from its slot
+    if (!saberMode && act === 'grenade' && !rep) { brUseType('impulse'); return; }                              // (Bug 5) G -> throw an impulse from its slot in EVERY mode incl BR (same throwImpulse path as FFA/TDM)
+    if (!saberMode && act === 'dropWeapon' && !rep) { if (BR.active) brWeaponAction('dropItem'); return; }       // X -> drop the held item (BR only)
   }
   if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (brTrySwapLoot() || brTryZip() || tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: BR loot swap > zip line > dismount > mount scooter > pick up axe > Mckayla > ladder
   if (act === 'reload') { cigCancel(); reload(); }
@@ -10155,11 +10156,11 @@ function brLootMesh(kind, rar, key, cfg) {
   void col;
   return g;
 }
-function brAddLoot(wx, wz, kind, forceRar) {
+function brAddLoot(wx, wz, kind, forceRar, atY) {
   let rar = forceRar || 'common', key = null, cfg = null;
   if (kind === 'weapon') { rar = forceRar || brRollRarity(); key = BR_WPN_POOL[(Math.random() * BR_WPN_POOL.length) | 0]; cfg = brWeaponCfg(key, rar); }
   else if (kind === 'second') rar = 'legendary';
-  const y = brSafeY(wx, wz) + 0.35, g = brLootMesh(kind, rar, key, cfg); g.position.set(wx, y, wz); scene.add(g);   // sit just above the floor (player-walkable surface), never the roof
+  const y = (atY != null ? atY : brSafeY(wx, wz)) + 0.35, g = brLootMesh(kind, rar, key, cfg); g.position.set(wx, y, wz); scene.add(g);   // atY = the chest's own floor Y (Bug 3); else snap to the floor under (wx,wz)
   const item = { kind, rarity: rar, key, cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false };
   BR_LOOT.push(item);
   if (brLootDebug) console.log('[T][LOOT] ' + kind + ' ' + rar + ' @' + wx.toFixed(0) + ',' + y.toFixed(1) + ',' + wz.toFixed(0) + (brIsIndoors(wx, wz) ? ' INDOOR' : ' open'));
@@ -10179,10 +10180,23 @@ function brChestMesh(rar) {
 }
 function brSolidAtPt(x, y, z) { for (const s of solids) { if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && y > s.min.y && y < s.max.y) return s; } return null; }
 function brChestClips(x, y, z) { return brPointInSolid(x, y + 0.4, z) || brPointInSolid(x, y + 0.9, z); }   // chest occupies ~y..y+1; check base + body (walls have window gaps higher up)
+function brChestBlocked(x, y, z) {   // (Bug 4) ~0.6u footprint overlap: chest center + its four sides clear of walls/furniture
+  if (brChestClips(x, y, z)) return true;
+  for (const o of [[0.65, 0], [-0.65, 0], [0, 0.65], [0, -0.65]]) if (brChestClips(x + o[0], y, z + o[1])) return true;
+  return false;
+}
 function brAddChest(wx, wz, rar, atY) {
   const y = (atY != null) ? atY : brSafeY(wx, wz);
-  if (brChestClips(wx, y, wz)) {   // un-bury: nudge horizontally (same floor) to the nearest open spot — never lift onto a roof
-    outer: for (let r = 1.5; r <= 6; r += 1) for (let k = 0; k < 12; k++) { const a = k * 0.5236, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestClips(nx, y, nz)) { wx = nx; wz = nz; break outer; } }
+  if (brChestClips(wx, y, wz)) {   // (Bug 4) TRULY-buried chest (center inside geometry) — flush-against-a-wall is fine. Keep it on the SAME floor.
+    let ly = y, lifted = false;
+    for (let k = 0; k < 7; k++) { ly += 0.2; if (!brChestClips(wx, ly, wz)) { lifted = true; break; } }   // (a) un-embed vertically: lift onto the surface it's stuck in (≤1.4u, stays on this floor)
+    if (lifted) { y = ly; }
+    else {                                                                                                   // (b) embedded in a wall column: relocate horizontally on the same floor (concentric rings to 5u)
+      let found = false;
+      outer: for (let r = 1.0; r <= 5.0 && !found; r += 0.7) { const n = Math.max(8, Math.round(r * 6)); for (let k = 0; k < n; k++) { const a = k / n * 6.2832, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestBlocked(nx, y, nz)) { wx = nx; wz = nz; found = true; break outer; } } }   // prefer a fully footprint-clear spot
+      if (!found) { outer2: for (let r = 1.0; r <= 5.0; r += 0.6) { const n = Math.max(8, Math.round(r * 6)); for (let k = 0; k < n; k++) { const a = k / n * 6.2832, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestClips(nx, y, nz)) { wx = nx; wz = nz; found = true; break outer2; } } } }   // else any center-clear spot
+      if (!found) console.warn('[BR] chest could not be placed clear of geometry near ' + wx.toFixed(0) + ',' + wz.toFixed(0) + ' (rarity ' + rar + ') — placing at original spot');
+    }
   }
   const g = brChestMesh(rar); g.position.set(wx, y, wz); g.rotation.y = Math.random() * 6; scene.add(g);   // chest base sits flush on the floor (or an explicit Y for upper floors)
   BR_LOOT.push({ chest: true, state: 'closed', id: brChestSeq++, openT: 0, spawned: false, rarity: rar, mesh: g, lid: g.userData.lid, pos: new THREE.Vector3(wx, y, wz), taken: false });   // state: closed -> opened -> looted (lid stays UP once opened)
@@ -10213,8 +10227,12 @@ function brSpawnChestContents(L) {
   if (rar === 'legendary') { items.push(['lethal'], ['jd']); if (Math.random() < 0.05) items.push(['second']); }   // legendary: a lethal + premium JD (+5% Second Chance bonus)
   else if (rar === 'rare') { items.push([Math.random() < 0.5 ? 'impulse' : 'lethal'], [Math.random() < 0.5 ? 'cigar' : 'jd']); }
   else { items.push(['impulse'], ['cigar']); }                                                                     // common: impulse grenade + cigar
-  const out = [], base = (L.mesh ? L.mesh.rotation.y : 0) - (items.length - 1) * 0.35;
-  items.forEach((it, i) => { const a = base + i * 0.7, r = 1.5; const o = brAddLoot(L.pos.x + Math.cos(a) * r, L.pos.z + Math.sin(a) * r, it[0], it[1]); if (o) { o.fromChest = true; out.push(o); } });   // fan the items out in front of the chest
+  // (Bug 3) spawn the items ON the chest's OWN floor (its Y), not a recomputed ground-floor Y; tight fan so they don't fall away / stack.
+  const out = [], cy = L.pos.y, base = (L.mesh ? L.mesh.rotation.y : 0) - (items.length - 1) * 0.4;
+  items.forEach((it, i) => { const a = base + i * 0.8, o = brAddLoot(L.pos.x + Math.cos(a) * 0.7, L.pos.z + Math.sin(a) * 0.7, it[0], it[1], cy); if (o) { o.fromChest = true; out.push(o); } });
+  // (Bug 1) hard guarantee EXACTLY 3 items — if any roll somehow produced nothing, fill a common fallback (weapon / smoke / cigar)
+  const fb = ['weapon', 'lethal', 'cigar'];
+  while (out.length < 3) { const k = fb[out.length] || 'cigar'; console.warn('[BR] chest contents came up short — filling fallback "' + k + '"'); const a = base + out.length * 0.8, o = brAddLoot(L.pos.x + Math.cos(a) * 0.7, L.pos.z + Math.sin(a) * 0.7, k, 'common', cy); if (!o) break; o.fromChest = true; out.push(o); }
   return out;
 }
 function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; brChestSeq = 0; }

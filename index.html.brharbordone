@@ -3681,56 +3681,35 @@ function buildParadiseIsland(cx, cz) {
   for (let i = 0; i < 90; i++) { const ang = Math.random() * Math.PI * 2, rr = Math.random() * (R - 70); const lx = Math.cos(ang) * rr, lz = Math.sin(ang) * rr; const r = Math.random(); if (r < 0.5) palm(lx, lz, 6 + Math.random() * 5); else if (r < 0.75) fern(lx, lz); else if (r < 0.9) bush(lx, lz, 0.9 + Math.random()); else rockDeco(lx, lz, 1 + Math.random() * 1.5); }
 
   // ============ POIs (named locations; high-density loot in the mechanics pass) ============
-  // 1) BEACH TOWN "Paradise Cove" — fountain plaza ringed by 2-storey coastal houses, 2-storey store, chapel + bell tower, 2-storey inn, fish market
+  // 1) BEACH TOWN "Paradise Cove" — pastel thatched village around a fountain square, store + chapel, beached boats
   function poiBeachTown(lx, lz) {
     pois.push({ name: 'PARADISE COVE', lx, lz, icon: 'town' });
-    disc(lx, lz, 36, 0.03, sandDk, 26);
+    disc(lx, lz, 34, 0.03, sandDk, 26);                                       // packed-sand plaza
+    [[-22, -6, 'e'], [-22, 10, 'e'], [22, -6, 'w'], [22, 10, 'w'], [-9, -22, 'n'], [11, -22, 'n'], [-9, 22, 's'], [11, 22, 's']]
+      .forEach((h, i) => hut(lx + h[0], lz + h[1], 8, 7, pastel[i % pastel.length], h[2]));   // ring of pastel huts facing the square
     iCyl(lx, 0.4, lz, 2.4, 0.8, stoneLt); iCyl(lx, 0.95, lz, 1.6, 0.4, stoneDk); iB(lx, 0, lz, 0.8, 1.9, 0.8, stoneLt);   // fountain
     const plume = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.25, 1.3, 8), new THREE.MeshBasicMaterial({ color: 0xbfe0ee, transparent: true, opacity: 0.4 })); plume.position.set(cx + lx, 2.3, cz + lz); scene.add(plume);
     [[-5, 0], [5, 0], [0, -5], [0, 5]].forEach(b => iD(lx + b[0], 0, lz + b[1], 2.2, 0.5, 0.7, woodLt));   // benches
-    function house2(hx, hz, col) { const w = 9, d = 8;   // 2-storey coastal house (internal stair to a bedroom upstairs)
-      [0, 4].forEach((fy, fi) => { if (fi > 0) floorHole(hx, hz, w, d, fy, 0x9a8a6a, hx + 1, hx + 4, hz - 2, hz + 2);
-        const dr = fi === 0 ? [{ a0: hx - 1.1, a1: hx + 1.1, y0: 0, y1: 2.6 }] : [];
-        iWallX(hz + d / 2, hx - w / 2, hx + w / 2, fy, fy + 4, 0.35, col, dr.concat([{ a0: hx + w / 2 - 3, a1: hx + w / 2 - 1.5, y0: fy + 1.4, y1: fy + 2.8 }])); iWallX(hz - d / 2, hx - w / 2, hx + w / 2, fy, fy + 4, 0.35, col, [{ a0: hx - w / 2 + 1.5, a1: hx - w / 2 + 3, y0: fy + 1.4, y1: fy + 2.8 }]);
-        iWallZ(hx - w / 2, hz - d / 2, hz + d / 2, fy, fy + 4, 0.35, col, []); iWallZ(hx + w / 2, hz - d / 2, hz + d / 2, fy, fy + 4, 0.35, col, []); });
-      iB(hx, 8, hz, w + 0.4, 0.4, d + 0.4, 0x8a6a4a); iB(hx, 0, hz, w - 0.5, 0.1, d - 0.5, 0x6f5a3a); iRamp(hx + 2.5, 0, hz, 3, 4, 0, 4, 'z', col);
-      iD(hx - 2, 0.4, hz, 1.6, 0.8, 1.2, 0x6f5333); iD(hx - 2, 4.4, hz - 2, 2, 0.5, 1.1, 0x5a4a6a); lightFix(hx, hz, 3.6); lightFix(hx, hz, 7.6);
-      fixedChests.push({ x: cx + hx, z: cz + hz - 2, y: 4.1, rar: Math.random() < 0.25 ? 'rare' : 'common' });   // upstairs bedroom chest
-    }
-    [[-24, 4], [-24, 16], [24, -8], [26, 14], [12, -24], [-16, 24]].forEach((h, i) => house2(lx + h[0], lz + h[1], pastel[i % pastel.length]));   // 6 coastal houses round the plaza (footprints clear of the store / chapel / inn / fish market)
-    (function (sx, sz) { const w = 13, d = 10;   // GENERAL STORE (2-storey: shop + storage, office + balcony upstairs)
-      [0, 4].forEach((fy, fi) => { if (fi > 0) floorHole(sx, sz, w, d, fy, 0x8a7a5a, sx + 2, sx + 5, sz - 2, sz + 2);
-        iWallX(sz + d / 2, sx - w / 2, sx + w / 2, fy, fy + 4, 0.4, stone, fi === 0 ? [{ a0: sx - 1.6, a1: sx + 1.6, y0: 0, y1: 3 }] : [{ a0: sx - 3, a1: sx + 3, y0: fy + 0.5, y1: fy + 1.2 }]); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, fy, fy + 4, 0.4, stone, []);
-        iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, fy, fy + 4, 0.4, stone, [{ a0: sz - 1.6, a1: sz + 1.6, y0: fy + 1.2, y1: fy + 3 }]); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, fy, fy + 4, 0.4, stone, []); });
-      iB(sx, 8, sz, w + 0.5, 0.4, d + 0.5, stoneDk); iB(sx, 0, sz, w - 0.6, 0.1, d - 0.6, 0x8a7a5a); iRamp(sx + 3.5, 0, sz, 3, 6, 0, 4, 'z', stone); iB(sx, 4, sz + d / 2 + 1, w - 3, 0.3, 2, stoneLt);   // balcony
-      for (let i = 0; i < 3; i++) iD(sx - w / 2 + 1, 0.9, sz - 3 + i * 3, 0.5, 1.8, 2.2, 0x7a6f55); iD(sx + 3, 0.5, sz, 3, 1.0, 1.2, 0x6f5a3a); iD(sx, 4.4, sz, 1.6, 0.8, 1, 0x55504a); lightFix(sx, sz, 3.6); lightFix(sx, sz, 7.6);   // shelves + counter + office desk
-      fixedChests.push({ x: cx + sx, z: cz + sz, y: 4.1, rar: 'rare' });
-    })(lx + 28, lz - 18);
-    (function (sx, sz) {   // CHAPEL hall + BELL TOWER (internal switchback stairs to the belfry)
-      iWallX(sz + 6, sx - 5, sx + 5, 0, 5, 0.4, stoneLt, []); iWallX(sz - 6, sx - 5, sx + 5, 0, 5, 0.4, stoneLt, [{ a0: sx - 1.2, a1: sx + 1.2, y0: 0, y1: 3 }]);
-      iWallZ(sx - 5, sz - 6, sz + 6, 0, 5, 0.4, stoneLt, [{ a0: sz - 1.5, a1: sz + 1.5, y0: 1.4, y1: 3.2 }]); iWallZ(sx + 5, sz - 6, sz + 6, 0, 5, 0.4, stoneLt, []); iB(sx, 5, sz, 10.4, 0.4, 12.4, stoneDk); iB(sx, 0, sz, 9.4, 0.1, 11.4, wood);
-      for (let i = 0; i < 3; i++) { iD(sx - 2.5, 0.4, sz - 3 + i * 3, 4, 0.6, 0.8, 0x6f5a3a); iD(sx + 2.5, 0.4, sz - 3 + i * 3, 4, 0.6, 0.8, 0x6f5a3a); } iD(sx, 0.6, sz + 5, 3, 1.0, 1.2, stoneLt); lightFix(sx, sz, 4.6);   // pews + altar
-      const tx = sx, tz = sz - 9, T1 = 5, T2 = 10, TR = 15;   // bell tower (attached, north end)
-      [0, T1, T2].forEach((fy, fi) => { if (fi > 0) floorHole(tx, tz, 6, 6, fy, stoneLt, tx - 2.5, tx - 0.5, tz - 1.5, tz + 1.5);
-        iWallX(tz + 3, tx - 3, tx + 3, fy, fy + 5, 0.4, stoneLt, fi === 0 ? [{ a0: tx - 1.2, a1: tx + 1.2, y0: 0, y1: 3 }] : (fi === 2 ? [{ a0: tx - 2, a1: tx + 2, y0: fy + 1, y1: fy + 4 }] : [])); iWallX(tz - 3, tx - 3, tx + 3, fy, fy + 5, 0.4, stoneLt, fi === 2 ? [{ a0: tx - 2, a1: tx + 2, y0: fy + 1, y1: fy + 4 }] : []);
-        iWallZ(tx - 3, tz - 3, tz + 3, fy, fy + 5, 0.4, stoneLt, fi === 2 ? [{ a0: tz - 2, a1: tz + 2, y0: fy + 1, y1: fy + 4 }] : []); iWallZ(tx + 3, tz - 3, tz + 3, fy, fy + 5, 0.4, stoneLt, fi === 2 ? [{ a0: tz - 2, a1: tz + 2, y0: fy + 1, y1: fy + 4 }] : []); });
-      iRamp(tx - 1.5, 0, tz, 3, 6, 0, T1, 'z', stoneLt); iRamp(tx - 1.5, 0, tz, 3, 6, T2, T1, 'z', stoneLt);   // switchback to the belfry
-      const sp = new THREE.Mesh(new THREE.ConeGeometry(3.4, 4, 4), flatMat(0x8a3a3a)); sp.position.set(cx + tx, TR + 2, cz + tz); scene.add(sp); iB(tx, TR, tz, 6.4, 0.4, 6.4, stoneDk); iD(tx, T2 + 2, tz, 0.5, 1.6, 0.5, gold);   // spire + bell
-      fixedChests.push({ x: cx + tx, z: cz + tz, y: T2 + 0.1, rar: 'legendary' });   // belfry climb reward
-    })(lx - 26, lz - 14);
-    (function (sx, sz) { const w = 14, d = 10;   // INN / BAR (2-storey: bar + dining, 4 rooms upstairs)
-      [0, 4].forEach((fy, fi) => { if (fi > 0) floorHole(sx, sz, w, d, fy, 0x9a8a6a, sx - 5, sx - 2, sz - 2, sz + 2);
-        iWallX(sz + d / 2, sx - w / 2, sx + w / 2, fy, fy + 4, 0.4, pastel[1], fi === 0 ? [{ a0: sx - 1.6, a1: sx + 1.6, y0: 0, y1: 3 }] : [{ a0: sx + 1, a1: sx + 5, y0: fy + 1.2, y1: fy + 3 }]); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, fy, fy + 4, 0.4, pastel[1], []);
-        iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, fy, fy + 4, 0.4, pastel[1], []); iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, fy, fy + 4, 0.4, pastel[1], []); });
-      iB(sx, 8, sz, w + 0.5, 0.4, d + 0.5, 0x8a6a4a); iB(sx, 0, sz, w - 0.6, 0.1, d - 0.6, 0x6f5a3a); iRamp(sx - 3.5, 0, sz, 3, 6, 0, 4, 'z', pastel[1]);
-      iD(sx + 3, 0.5, sz - 3, 6, 1.0, 1.2, 0x6f5a3a); for (let i = 0; i < 3; i++) iD(sx + 1 + i * 2, 0.4, sz - 1.5, 0.7, 0.9, 0.7, 0x55504a); for (let i = 0; i < 4; i++) iD(sx - w / 2 + 3 + i * 3, 4.3, sz + 2, 1.8, 0.5, 1.0, 0x5a4a6a); lightFix(sx, sz, 3.6); lightFix(sx, sz, 7.6);   // bar + stools + 4 upstairs beds
-      fixedChests.push({ x: cx + sx - 3, z: cz + sz + 2, y: 4.1, rar: 'common' }, { x: cx + sx + 4, z: cz + sz + 2, y: 4.1, rar: 'rare' });
-    })(lx - 2, lz + 22);
-    (function (sx, sz) { for (let i = 0; i < 3; i++) { const ox = sx - 4 + i * 4; for (let p = 0; p < 4; p++) iCyl(ox + (p % 2 ? 1.5 : -1.5), 1.2, sz + (p < 2 ? -1.5 : 1.5), 0.2, 2.4, woodLt); iB(ox, 2.4, sz, 3.4, 0.3, 3.4, thatch); iD(ox, 1.1, sz, 2.6, 0.5, 2.2, 0x9aa0a8); }   // FISH MARKET open stalls
-      iB(sx + 9, 0, sz, 5, 3, 5, 0x8a7a5a); iWallX(sz + 2.5, sx + 6.5, sx + 11.5, 0, 3, 0.3, 0x8a7a5a, [{ a0: sx + 8, a1: sx + 10, y0: 0, y1: 2.4 }]);   // storage shed
-    })(lx + 16, lz + 16);
-    [[-32, 21], [33, 23], [9, 33]].forEach(b => { const hull = new THREE.Mesh(new THREE.BoxGeometry(5, 1.4, 2), flatMat([0xcf6b3a, 0x3a8acf, 0x6ab03a][(Math.random() * 3) | 0])); hull.position.set(cx + lx + b[0], 0.6, cz + lz + b[1]); hull.rotation.y = Math.random() * 3; scene.add(hull); });   // beached boats
-    iSpawn(lx - 11, lz); iSpawn(lx + 11, lz + 8); iSpawn(lx, lz - 12); iSpawn(lx + 28, lz - 18); iSpawn(lx - 2, lz + 22); iPatrol(lx, lz); iPatrol(lx + 20, lz - 14); iPatrol(lx - 18, lz + 12);
+    (function (sx, sz) {   // general store (stone)
+      const w = 12, d = 9, h = 4.6;
+      iWallX(sz + d / 2, sx - w / 2, sx + w / 2, 0, h, 0.4, stone, [{ a0: sx - 1.3, a1: sx + 1.3, y0: 0, y1: 3 }]);
+      iWallX(sz - d / 2, sx - w / 2, sx + w / 2, 0, h, 0.4, stone, []);
+      iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, 0, h, 0.4, stone, [{ a0: sz - 1.6, a1: sz + 1.6, y0: 1.2, y1: 3 }]);
+      iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, 0, h, 0.4, stone, []);
+      iB(sx, h, sz, w + 0.5, 0.4, d + 0.5, stoneDk); iD(sx, 0.02, sz, w - 0.6, 0.05, d - 0.6, 0x8a7a5a);
+      iD(sx, h + 0.5, sz - d / 2 - 0.1, 7, 0.7, 0.2, 0xb03a3a);
+    })(lx + 26, lz - 17);
+    (function (sx, sz) {   // chapel + bell tower
+      iWallX(sz + 5, sx - 4, sx + 4, 0, 5, 0.4, stoneLt, [{ a0: sx - 1, a1: sx + 1, y0: 0, y1: 3 }]); iWallX(sz - 5, sx - 4, sx + 4, 0, 5, 0.4, stoneLt, []);
+      iWallZ(sx - 4, sz - 5, sz + 5, 0, 5, 0.4, stoneLt, []); iWallZ(sx + 4, sz - 5, sz + 5, 0, 5, 0.4, stoneLt, []);
+      iB(sx, 5, sz, 8.6, 0.4, 10.6, stoneDk); iD(sx, 0.02, sz, 7.4, 0.05, 9.4, wood);
+      iWallX(sz + 2.2, sx - 2.2, sx + 2.2, 5, 14, 0.4, stoneLt, []); iWallX(sz - 2.2, sx - 2.2, sx + 2.2, 5, 14, 0.4, stoneLt, []);
+      iWallZ(sx - 2.2, sz - 2.2, sz + 2.2, 5, 14, 0.4, stoneLt, []); iWallZ(sx + 2.2, sz - 2.2, sz + 2.2, 5, 14, 0.4, stoneLt, []);
+      iB(sx, 14, sz, 5, 0.4, 5, stoneDk); const sp = new THREE.Mesh(new THREE.ConeGeometry(3, 4, 4), flatMat(0x8a3a3a)); sp.position.set(cx + sx, 16.2, cz + sz); scene.add(sp);
+      iD(sx, 11, sz, 0.4, 1.3, 0.4, gold);
+    })(lx - 24, lz - 15);
+    [[-30, 19], [31, 21], [9, 31]].forEach(b => { const hull = new THREE.Mesh(new THREE.BoxGeometry(5, 1.4, 2), flatMat([0xcf6b3a, 0x3a8acf, 0x6ab03a][(Math.random() * 3) | 0])); hull.position.set(cx + lx + b[0], 0.6, cz + lz + b[1]); hull.rotation.y = Math.random() * 3; scene.add(hull); });
+    iSpawn(lx - 11, lz); iSpawn(lx + 11, lz + 8); iSpawn(lx, lz - 12); iSpawn(lx + 26, lz - 17); iPatrol(lx, lz); iPatrol(lx + 20, lz - 14); iPatrol(lx - 18, lz + 12);
   }
   // 2) LAGOON RESORT — 4-storey collapsing hotel (lobby + room floors + presidential suite), 2-storey pool house, spa, open-air bar, cracked pool
   function poiResort(lx, lz) {
@@ -3911,37 +3890,17 @@ function buildParadiseIsland(cx, cz) {
     function shelter(sx, sz, by, w, d, col, dd) { const h = 3, t = 0.3;
       iWallX(sz + d / 2, sx - w / 2, sx + w / 2, by, by + h, t, col, dd === 'n' ? [{ a0: sx - 0.9, a1: sx + 0.9, y0: by, y1: by + 2.2 }] : []); iWallX(sz - d / 2, sx - w / 2, sx + w / 2, by, by + h, t, col, dd === 's' ? [{ a0: sx - 0.9, a1: sx + 0.9, y0: by, y1: by + 2.2 }] : []);
       iWallZ(sx + w / 2, sz - d / 2, sz + d / 2, by, by + h, t, col, dd === 'e' ? [{ a0: sz - 0.9, a1: sz + 0.9, y0: by, y1: by + 2.2 }] : []); iWallZ(sx - w / 2, sz - d / 2, sz + d / 2, by, by + h, t, col, dd === 'w' ? [{ a0: sz - 0.9, a1: sz + 0.9, y0: by, y1: by + 2.2 }] : []);
-      iB(sx, by + h, sz, w + 0.3, 0.3, d + 0.3, thatch); iD(sx, by + 0.4, sz, 1.8, 0.5, 0.9, 0x6a4a2a); lightFix(sx, sz, by + h - 0.3);   // roof + bunk + lamp
-    }
-    function bridge(ax, az, bx2, bz2, y) { const mx = (ax + bx2) / 2, mz = (az + bz2) / 2, dx = bx2 - ax, dz = bz2 - az, len = Math.hypot(dx, dz), along = Math.abs(dx) > Math.abs(dz) ? 'x' : 'z';   // rope bridge + rope rails
-      if (along === 'x') { iB(mx, y, mz, len, 0.3, 2.4, woodLt); for (let s = -len / 2; s <= len / 2; s += 2) { iD(mx + s, y + 0.9, mz - 1.1, 0.12, 1.0, 0.12, 0x6a4a2a); iD(mx + s, y + 0.9, mz + 1.1, 0.12, 1.0, 0.12, 0x6a4a2a); } iD(mx, y + 1.4, mz - 1.1, len, 0.1, 0.1, 0x8a6a3a); iD(mx, y + 1.4, mz + 1.1, len, 0.1, 0.1, 0x8a6a3a); }
-      else { iB(mx, y, mz, 2.4, 0.3, len, woodLt); for (let s = -len / 2; s <= len / 2; s += 2) { iD(mx - 1.1, y + 0.9, mz + s, 0.12, 1.0, 0.12, 0x6a4a2a); iD(mx + 1.1, y + 0.9, mz + s, 0.12, 1.0, 0.12, 0x6a4a2a); } iD(mx - 1.1, y + 1.4, mz, 0.1, 0.1, len, 0x8a6a3a); iD(mx + 1.1, y + 1.4, mz, 0.1, 0.1, len, 0x8a6a3a); }
+      iB(sx, by + h, sz, w + 0.3, 0.3, d + 0.3, thatch);
     }
     const T = [1, 6, 11, 16];     // terrace walk-on heights, marching up toward -z
     T.forEach((top, i) => {
-      iB(lx, 0, lz - i * 13, 26 - i * 3, top, 11, i % 2 ? rockC : rockDk);                                  // solid terrace block (top = `top`)
+      iB(lx, 0, lz - i * 13, 24 - i * 3, top, 11, i % 2 ? rockC : rockDk);                                  // solid terrace block (top = `top`)
       if (i > 0) iRamp(lx, 0, lz - (i - 0.5) * 13, 6, 11, top, T[i - 1], 'z', wood);                          // stair ramp from terrace i-1 up to i
-      shelter(lx + (i % 2 ? 7 : -7), lz - i * 13, top, 7, 6, thatch, 's');                                    // a hut on each terrace
-      if (i < 3) shelter(lx + (i % 2 ? -8 : 8), lz - i * 13 + 2, top, 6, 5, thatch, 'e');                     // a second hut on the lower terraces (≈7 huts total)
-      fixedChests.push({ x: cx + lx + (i % 2 ? 7 : -7), z: cz + lz - i * 13, y: top + 0.1, rar: i === 3 ? 'rare' : (Math.random() < 0.3 ? 'rare' : 'common') });
+      shelter(lx + (i % 2 ? 6 : -6), lz - i * 13, top, 7, 6, thatch, 's');                                    // a hut on each terrace
     });
-    // ---- summit LONGHOUSE (large meeting hall: central fire pit, long benches, woven banners) ----
-    (function (hx, hz, by) { const w = 17, d = 11, h = 4.5;
-      iWallX(hz + d / 2, hx - w / 2, hx + w / 2, by, by + h, 0.4, woodLt, [{ a0: hx - 1.6, a1: hx + 1.6, y0: by, y1: by + 2.6 }]); iWallX(hz - d / 2, hx - w / 2, hx + w / 2, by, by + h, 0.4, woodLt, []);
-      iWallZ(hx - w / 2, hz - d / 2, hz + d / 2, by, by + h, 0.4, woodLt, []); iWallZ(hx + w / 2, hz - d / 2, hz + d / 2, by, by + h, 0.4, woodLt, []); iB(hx, by + h, hz, w + 0.6, 0.5, d + 0.6, woodDk); iB(hx, by, hz, w - 0.6, 0.1, d - 0.6, 0x5a4632);
-      iCyl(hx, by + 0.3, hz, 1.2, 0.5, 0x3a3028); iGlow(hx, by + 0.7, hz, 1.8, 1.2, 1.8, 0xff8a3a, 0.5);   // central fire pit (glows at night)
-      for (let i = 0; i < 2; i++) { iD(hx - 5, by + 0.4, hz - 3 + i * 6, 9, 0.5, 0.8, 0x6f5a3a); iD(hx + 5, by + 0.4, hz - 3 + i * 6, 9, 0.5, 0.8, 0x6f5a3a); }   // long benches
-      [-w / 2 + 1, 0, w / 2 - 1].forEach(bx => iD(hx + bx, by + h - 1.6, hz - d / 2 + 0.4, 0.12, 2.2, 1.2, [0x8a3a3a, 0x3a6a8a, 0x6a8a3a][(bx + 9) % 3]));   // woven banners
-      lightFix(hx, hz, by + h - 0.4); fixedChests.push({ x: cx + hx - 4, z: cz + hz, y: by + 0.1, rar: 'legendary' }, { x: cx + hx + 4, z: cz + hz, y: by + 0.1, rar: 'rare' });
-    })(lx, lz - 3 * 13, 16);
-    // ---- rope bridges between terraces (with rope rails) ----
-    bridge(lx + 11, lz - 13, lx + 11, lz - 1, 6); bridge(lx - 10, lz - 26, lx - 10, lz - 14, 11);
-    // ---- 2-3 cave openings in the cliff face (enclosed chambers, mouth on +z) ----
-    [[-15, -2], [15, -6], [-13, -28]].forEach(c => { const ox = lx + c[0], oz = lz + c[1], w = 7, d = 6, h = 3;
-      iWallX(oz - d / 2, ox - w / 2, ox + w / 2, 0, h, 0.5, rockDk, []); iWallZ(ox - w / 2, oz - d / 2, oz + d / 2, 0, h, 0.5, rockDk, []); iWallZ(ox + w / 2, oz - d / 2, oz + d / 2, 0, h, 0.5, rockDk, []); iB(ox, h, oz, w + 0.4, 0.4, d + 0.4, rockDk);
-      iGlow(ox, 1.4, oz, 1, 0.8, 1, 0xffcf88, 0.25); fixedChests.push({ x: cx + ox, z: cz + oz, y: 0.1, rar: Math.random() < 0.3 ? 'rare' : 'common' });
-    });
-    iSpawn(lx, lz + 2); iSpawn(lx + 7, lz - 12); iSpawn(lx, lz - 36); iSpawn(lx - 15, lz - 2); iPatrol(lx, lz); iPatrol(lx, lz - 26);
+    iB(lx, 16, lz - 3 * 13, 14, 0.4, 9, woodDk); shelter(lx, lz - 3 * 13, 16, 13, 8, woodLt, 's');            // summit longhouse
+    iB(lx + 11, 6, lz - 13, 8, 0.5, 3, woodLt); [-1.4, 1.4].forEach(o => iD(lx + 11, 7.3, lz - 13 + o, 8, 1.4, 0.1, 0x6a4a2a));   // rope bridge (plank + rope rails) off terrace 1
+    iSpawn(lx, lz + 2); iSpawn(lx + 6, lz - 12); iSpawn(lx, lz - 36); iPatrol(lx, lz); iPatrol(lx, lz - 26);
   }
   // 7) RUSTED HULL — beached cargo ship, 4 levels: cargo hold → main deck → upper deck (crew) → bridge, metal stairs + boarding gangway, container maze, engine room
   function poiCargo(lx, lz) {
@@ -4137,7 +4096,12 @@ function buildParadiseIsland(cx, cz) {
   function ladderTo(lx, lz, top) { for (let y = 0.5; y < top; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.1), flatMat(0x6a6a6a)); m.position.set(cx + lx, y, cz + lz); scene.add(m); } ladders.push({ x: cx + lx, z: cz + lz, bottom: 0, top: top, cx: cx + lx, cz: cz + lz - 1.2, outX: 0, outZ: -1 }); }
   pois.forEach(p => {
     const lx = p.lx, lz = p.lz, n = p.name;
-    if (n === 'PARADISE COVE') { /* fully built (2-storey houses + store + chapel/bell tower + inn + fish market) in poiBeachTown */ }
+    if (n === 'PARADISE COVE') {
+      enterBox(lx + 31, lz + 4, 10, 8, 4.2, pastel[1], 'w', 0, ['bed', 'bed', 'table', 'chair', 'counter']); ladderTo(lx + 31, lz + 8.3, 4.6);   // inn: bar downstairs, beds up
+      enterBox(lx - 29, lz + 11, 9, 7, 3.6, pastel[2], 'e', 0, ['counter', 'crate', 'shelf', 'crate']);                                          // fish market
+      furnishRoom(lx - 24, lz - 15, 0, ['pew', 'pew', 'pew', 'altar'], 4.6);   // chapel pews + altar
+      furnishRoom(lx + 26, lz - 17, 0, ['shelf', 'shelf', 'counter', 'crate'], 4.4);   // general store
+    }
     // LAGOON RESORT is now fully built (4-storey hotel + pool house + spa + bar) in poiResort — no generic furnishing here
 
     // ANCIENT RUINS is now fully built (hollow pyramid + chambers + crypt + priest buildings) in poiRuins — no generic furnishing here
@@ -4146,8 +4110,11 @@ function buildParadiseIsland(cx, cz) {
 
     // HARBOR'S EDGE is now fully built (lighthouse + 2-storey warehouse + processing plant + stilt huts) in poiHarbor — no generic furnishing here
 
-    // CLIFF SETTLEMENT is now fully built (terraces + huts + longhouse + bridges + caves) in poiCliff — no generic furnishing here
-
+    else if (n === 'CLIFF SETTLEMENT') {
+      enterBox(lx + 16, lz + 6, 8, 7, 3.4, rockDk, 'w', 0, ['bed', 'table', 'crate']);              // hut
+      enterBox(lx - 15, lz + 4, 7, 6, 3.2, rockC, 'e', 0, ['cot', 'shelf', 'crate']);               // hut
+      furnishRoom(lx, lz, 0, ['table', 'pew', 'pew', 'crate'], 3.8);                                 // longhouse meeting hall
+    }
     // RUSTED HULL is now fully built (4 levels + stairs + crew/bridge) in poiCargo — no generic furnishing here
     // AIRSTRIP is now fully built (4-storey control tower + hangars + terminal + fuel depot) in poiAirstrip — no generic furnishing here
 
@@ -10162,14 +10129,8 @@ function brChestMesh(rar) {
   // (Refinement) NO rarity glow/halo/beam on chests — all chests look like plain wooden chests; rarity is revealed by the loot inside.
   return g;
 }
-function brSolidAtPt(x, y, z) { for (const s of solids) { if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && y > s.min.y && y < s.max.y) return s; } return null; }
-function brChestClips(x, y, z) { return brPointInSolid(x, y + 0.4, z) || brPointInSolid(x, y + 0.9, z); }   // chest occupies ~y..y+1; check base + body (walls have window gaps higher up)
 function brAddChest(wx, wz, rar, atY) {
-  const y = (atY != null) ? atY : brSafeY(wx, wz);
-  if (brChestClips(wx, y, wz)) {   // un-bury: nudge horizontally (same floor) to the nearest open spot — never lift onto a roof
-    outer: for (let r = 1.5; r <= 6; r += 1) for (let k = 0; k < 12; k++) { const a = k * 0.5236, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestClips(nx, y, nz)) { wx = nx; wz = nz; break outer; } }
-  }
-  const g = brChestMesh(rar); g.position.set(wx, y, wz); g.rotation.y = Math.random() * 6; scene.add(g);   // chest base sits flush on the floor (or an explicit Y for upper floors)
+  const y = (atY != null) ? atY : brSafeY(wx, wz), g = brChestMesh(rar); g.position.set(wx, y, wz); g.rotation.y = Math.random() * 6; scene.add(g);   // chest base sits flush on the floor (or an explicit Y for upper floors)
   BR_LOOT.push({ chest: true, open: false, openT: 0, spawned: false, rarity: rar, mesh: g, lid: g.userData.lid, pos: new THREE.Vector3(wx, y, wz), taken: false });
   if (brLootDebug) console.log('[T][LOOT] chest ' + rar + ' @' + wx.toFixed(0) + ',' + y.toFixed(1) + ',' + wz.toFixed(0) + (brIsIndoors(wx, wz) ? ' INDOOR' : ' open'));
 }
@@ -10220,13 +10181,13 @@ function brIndoorPoint(cxp, czp, maxR) {   // sample for a point in a real, walk
     const a = Math.random() * 6.28, r = 2 + Math.random() * maxR, x = cxp + Math.cos(a) * r, z = czp + Math.sin(a) * r;
     const roofY = brCeilingY(x, z); if (roofY === Infinity) continue;          // must be roofed (indoors)
     const fy = brPlaceY(x, z); if (roofY - fy < 1.8) continue;                 // need standing headroom (a room, not a crawlspace / squeezed slab gap)
-    if (brPointInSolid(x, fy + 0.4, z) || brPointInSolid(x, fy + 0.9, z)) continue;   // reject if the chest base OR body clips a wall (walls have window holes ~1.4+, so check low too)
+    if (brPointInSolid(x, fy + 0.9, z)) continue;                              // reject points buried inside walls / solid masses (e.g. the temple pyramid)
     return [x, z];
   }
   return null;
 }
 // (Part 1) ALL loot lives in CHESTS, placed inside roofed rooms — no naked ground weapons/consumables. Player drops/death loot are the only loose items.
-const POI_CHESTS = { 'PARADISE COVE': [10, 14], 'LAGOON RESORT': [12, 15], 'ANCIENT RUINS': [10, 14], 'CAMP DELTA': [18, 22], "HARBOR'S EDGE": [12, 16], 'CLIFF SETTLEMENT': [8, 12], 'RUSTED HULL': [9, 12], 'AIRSTRIP': [14, 18], "MILLIONAIRE'S RETREAT": [16, 20] };   // ship/mansion: fewer ground-floor random chests; fixed chests cover their upper levels   // mansion: ground-floor random chests; +8 fixed chests placed on its upper floors / special rooms
+const POI_CHESTS = { 'PARADISE COVE': [15, 20], 'LAGOON RESORT': [12, 15], 'ANCIENT RUINS': [10, 14], 'CAMP DELTA': [18, 22], "HARBOR'S EDGE": [12, 16], 'CLIFF SETTLEMENT': [15, 18], 'RUSTED HULL': [9, 12], 'AIRSTRIP': [14, 18], "MILLIONAIRE'S RETREAT": [16, 20] };   // ship/mansion: fewer ground-floor random chests; fixed chests cover their upper levels   // mansion: ground-floor random chests; +8 fixed chests placed on its upper floors / special rooms
 const POI_LEG = { 'ANCIENT RUINS': 1.8, 'CAMP DELTA': 1.6, 'RUSTED HULL': 1.6, "MILLIONAIRE'S RETREAT": 2.0, 'AIRSTRIP': 1.4 };   // higher-risk POIs roll more legendaries (strategic placement, approximated)
 function brSpawnLoot() {
   brClearLoot(); if (!island) return;

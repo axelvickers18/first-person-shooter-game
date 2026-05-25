@@ -4269,10 +4269,10 @@ const SENS = 0.0022;
 const IM = {
   defaults: {
     moveForward: 'KeyW', moveBackward: 'KeyS', moveLeft: 'KeyA', moveRight: 'KeyD', jump: 'Space', sprint: 'ShiftLeft', crouch: 'KeyC',
-    weapon1: 'Digit1', weapon2: 'Digit2', karambit: 'Digit3', brSlot4: 'Digit4', brSlot5: 'Digit5', equipRC: 'Digit0', fire: 'Mouse0', ads: 'Mouse2', reload: 'KeyR', prevWeapon: 'WheelUp', nextWeapon: 'WheelDown', toggleLaser: 'KeyL',
-    use: 'KeyQ', grenade: 'KeyG', lethal: 'KeyH', interact: 'KeyE', flashlight: 'KeyF',
-    saber: 'KeyB', flamethrower: 'KeyV', rcStreak: 'KeyN', dogs: 'KeyM', kong: 'Equal',
-    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter', toggleHints: 'KeyP', inspect: 'KeyT', drinkJD: 'KeyZ', dropWeapon: 'KeyX'
+    weapon1: 'Digit1', weapon2: 'Digit2', karambit: 'Digit3', brSlot4: 'Digit4', brSlot5: 'Digit5', equipRC: '', fire: 'Mouse0', ads: 'Mouse2', reload: 'KeyR', prevWeapon: 'WheelUp', nextWeapon: 'WheelDown', toggleLaser: 'KeyL',
+    use: 'KeyQ', grenade: '', lethal: '', interact: 'KeyE', flashlight: 'KeyF',
+    saber: 'KeyB', flamethrower: 'KeyV', rcStreak: 'KeyN', dogs: 'KeyH', brMap: 'KeyM', kong: 'Equal',
+    inventory: 'KeyI', pause: 'Escape', scoreboard: 'Tab', chat: 'Enter', toggleHints: 'KeyP', inspect: 'KeyT', drinkJD: '', dropWeapon: 'KeyX'
   },
   // Movement keys can't be left unbound (the player must be able to move). ESC always reaches the menu.
   CRITICAL: ['moveForward', 'moveBackward', 'moveLeft', 'moveRight'],
@@ -4281,15 +4281,16 @@ const IM = {
     ['MOVEMENT', null],
     ['moveForward', 'Move Forward'], ['moveBackward', 'Move Backward'], ['moveLeft', 'Move Left'], ['moveRight', 'Move Right'],
     ['jump', 'Jump'], ['sprint', 'Sprint'], ['crouch', 'Crouch / Dive (sprint + key)'],
-    ['WEAPONS / EQUIPMENT', null],
-    ['weapon1', 'Weapon Slot 1 / BR Inv Slot 1'], ['weapon2', 'Weapon Slot 2 / BR Inv Slot 2'], ['karambit', 'Equip Karambit / BR Inv Slot 3'], ['brSlot4', 'BR Inventory Slot 4'], ['brSlot5', 'BR Inventory Slot 5'], ['equipRC', 'Equip RC Launcher', 'when unlocked'],
-    ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['reload', 'Reload'], ['prevWeapon', 'Previous Weapon'], ['nextWeapon', 'Next Weapon'], ['toggleLaser', 'Toggle Laser Sight', 'laser weapons'], ['flashlight', 'Toggle Flashlight', 'flashlight attachment'],
-    ['CONSUMABLES / ABILITIES', null],
-    ['use', 'Use Cigar / Drink JD  •  BR: Equip Melee'], ['grenade', 'Throw Impulse Grenade'], ['lethal', 'Throw Lethal (Smoke / Axe)'], ['interact', 'Interact / Climb Ladder  •  BR: Pick Up Loot'], ['dropWeapon', 'BR: Drop Held Item'],
-    ['SCORESTREAKS', null],
-    ['saber', 'Saber + Jack Daniels  •  BR: Toggle Minimap', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers  •  BR: Open Full Map', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
+    ['COMBAT', null],
+    ['fire', 'Fire / Use Equipped Item'], ['ads', 'Aim Down Sights / Block'], ['reload', 'Reload'], ['interact', 'Interact / Pick Up / Open Chest / Ladder'],
+    ['INVENTORY', null],
+    ['weapon1', 'Inventory Slot 1'], ['weapon2', 'Inventory Slot 2'], ['karambit', 'Inventory Slot 3'], ['brSlot4', 'Inventory Slot 4'], ['brSlot5', 'Inventory Slot 5'], ['use', 'Melee Slot'], ['inventory', 'Open Inventory Pop-up'], ['dropWeapon', 'Drop Held Item', 'BR only'],
+    ['WEAPON ATTACHMENTS', null],
+    ['toggleLaser', 'Toggle Laser Sight', 'laser weapons'], ['flashlight', 'Toggle Flashlight', 'flashlight attachment'], ['prevWeapon', 'Previous Weapon'], ['nextWeapon', 'Next Weapon'], ['inspect', 'Inspect Weapon'],
+    ['SCORESTREAKS  (FFA / TDM only)', null],
+    ['saber', 'Saber + Jack Daniels', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
     ['UI / MENUS', null],
-    ['inventory', 'Inventory / FFA Loadout  •  BR: Inventory Pop-up'], ['pause', 'Pause / Settings'], ['scoreboard', 'Scoreboard'], ['chat', 'Chat'], ['toggleHints', 'Toggle Control Hints'], ['inspect', 'Inspect Weapon']
+    ['pause', 'Pause / Settings'], ['scoreboard', 'Scoreboard'], ['chat', 'Chat'], ['toggleHints', 'Toggle Control Hints'], ['brMap', 'Full-Screen Map', 'BR only']
   ],
   PRESETS: {
     default: {},   // = defaults (filled in load)
@@ -4299,13 +4300,13 @@ const IM = {
   load() {
     this.PRESETS.default = Object.assign({}, this.defaults);
     this.bind = Object.assign({}, this.defaults);
-    try { const b = JSON.parse(localStorage.getItem('controls_v1')); if (b && typeof b === 'object') Object.assign(this.bind, b); } catch (e) {}
+    try { const b = JSON.parse(localStorage.getItem('controls_v2')); if (b && typeof b === 'object') Object.assign(this.bind, b); } catch (e) {}
   },
-  save() { try { localStorage.setItem('controls_v1', JSON.stringify(this.bind)); } catch (e) {} },
-  saveCustom() { try { localStorage.setItem('controls_custom_v1', JSON.stringify(this.bind)); } catch (e) {} },
+  save() { try { localStorage.setItem('controls_v2', JSON.stringify(this.bind)); } catch (e) {} },
+  saveCustom() { try { localStorage.setItem('controls_custom_v2', JSON.stringify(this.bind)); } catch (e) {} },
   resetDefault() { this.bind = Object.assign({}, this.defaults); this.save(); },
   loadPreset(name) {
-    if (name === 'custom') { let c = null; try { c = JSON.parse(localStorage.getItem('controls_custom_v1')); } catch (e) {} this.bind = Object.assign({}, this.defaults, c || {}); }
+    if (name === 'custom') { let c = null; try { c = JSON.parse(localStorage.getItem('controls_custom_v2')); } catch (e) {} this.bind = Object.assign({}, this.defaults, c || {}); }
     else this.bind = Object.assign({}, this.defaults, this.PRESETS[name] || {});
     this.save();
   },
@@ -4590,7 +4591,7 @@ function fireRelease() {
 function adsPress() {
   if (brSpectating) { brSpecCycle(1); return; }   // BR spectator: R-click = next player
   if (brMapOpen) return;   // BR: can't ADS while the map is open
-  if (!ggKarambit && !brHeldWeapon()) return;   // (universal) holding a consumable / empty hands: no ADS or melee
+  if (!ggKarambit && !brHeldWeapon()) { if (brHoldingThrowable()) brArcShow(true); return; }   // (universal) holding a throwable: right-click previews the throw arc; other consumables: no ADS
   if (inspectT > 0) { inspectT = 0; return; }   // (Part 5) ADS cancels an inspect
   if (rcActive || cigSmoking || player.onLadder) return;
   if (akimboEquipped()) { firingL = true; tryShoot('L'); return; }
@@ -4602,6 +4603,7 @@ function adsPress() {
 }
 function adsRelease() {
   firingL = false; saberBlocking = false; minigunSteady = false;
+  if (typeof brArcShow === 'function') brArcShow(false);   // stop previewing the throw arc
   if (OPT.adsToggle) return;                            // toggle mode: keep `aiming` until tapped again
   if (aiming && ggAdsInfo()) sfxADS(false);
   aiming = false;
@@ -4614,7 +4616,8 @@ function gameAction(act, rep) {
   if (act === 'jump' && !rep && BR.active && brSpectating) { brSpecToggleFree(); return; }   // BR spectator: SPACE toggles third-person follow / free camera
   if (act === 'flamethrower' && !rep) { streakActivate('flame'); return; }
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
-  if (act === 'dogs' && !rep) { if (BR.active) { brToggleMap(); return; } streakActivate('dogs'); return; }   // BR: the (disabled) Kirks-Avengers key opens the paper map
+  if (act === 'brMap' && !rep) { if (BR.active) brToggleMap(); return; }                                   // M -> BR full-screen map (dedicated key; no scorestreak conflict)
+  if (act === 'dogs' && !rep) { if (!BR.active) streakActivate('dogs'); return; }                          // H -> Kirks Avengers scorestreak (FFA/TDM; disabled in BR)
   // UNIVERSAL 5-slot inventory OWNS the slot / melee / pop-up / consumable keys in EVERY mode (FFA / GG / TDM / BR).
   if (player.alive && !brSpectating && gameState.running && !rcActive) {   // saberMode (3-kill streak) locks the weapon: only Q-drink + I-popup pass through
     if (!saberMode && (act === 'weapon1' || act === 'weapon2' || act === 'karambit' || act === 'brSlot4' || act === 'brSlot5' || act === 'prevWeapon' || act === 'nextWeapon')) { if (cigSmoking) cigCancel(); brWeaponAction(act); return; }   // 1-5 = inventory slots, wheel cycles
@@ -8486,7 +8489,7 @@ const STREAK = {
     { id: 'saberjd', need: 3, key: 'KeyB', action: 'saber',       name: 'SABER + JACK',     unlocked: false, consumed: false },
     { id: 'flame',   need: 4, key: 'KeyV', action: 'flamethrower', name: 'FLAMETHROWER',    unlocked: false, consumed: false },
     { id: 'rcrl',    need: 5, key: 'KeyN', action: 'rcStreak',     name: 'RC ROCKET',        unlocked: false, consumed: false },
-    { id: 'dogs',    need: 10, key: 'KeyM', action: 'dogs',        name: '20 KIRKS AVENGERS', unlocked: false, consumed: false }
+    { id: 'dogs',    need: 10, key: 'KeyH', action: 'dogs',        name: '20 KIRKS AVENGERS', unlocked: false, consumed: false }
   ]
 };
 // Saber + Jack Daniels combo state.
@@ -10014,7 +10017,7 @@ function brStart() {
   brGunshots.length = 0; const mm = el('brMinimap'); if (mm) mm.style.display = brMinimapOn ? 'block' : 'none';   // minimap
   brHudShow(true); updateBRHud();
 }
-function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); }
+function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); if (typeof brClearArc === 'function') brClearArc(); }
 function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
 function brEliminate(name) {                              // record an elimination + crown the winner when one remains
   if (!BR.active) return;
@@ -10711,6 +10714,25 @@ function brUpdateHeldVM(dt) {   // (universal, all modes) weapons/melee use the 
   if (gunMesh) gunMesh.visible = false;                        // holding a consumable: hide the parked-knife gun model, show the item
   brShowHeldVM(it.t, dt);
 }
+// ----- THROW TRAJECTORY ARC: right-click (ADS) while holding a throwable previews where it will land (left-click still throws) -----
+let brArcOn = false, brArcGroup = null;
+function brHoldingThrowable() { const it = brHeldItem(); return !ggKarambit && it && (it.t === 'impulse' || it.t === 'lethal'); }
+function brArcShow(on) { brArcOn = on; if (!on && brArcGroup) brArcGroup.visible = false; }
+function brUpdateArc() {
+  if (!brArcOn || !brHoldingThrowable() || !player.alive || cigSmoking || rcActive || brMapOpen) { if (brArcGroup) brArcGroup.visible = false; return; }
+  if (!brArcGroup) { brArcGroup = new THREE.Group(); for (let i = 0; i < 26; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.13 - i * 0.0025, 6, 5), new THREE.MeshBasicMaterial({ color: 0xffe24a, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false })); d.renderOrder = 997; brArcGroup.add(d); } scene.add(brArcGroup); }
+  brArcGroup.visible = true;
+  const it = brHeldItem(), type = (it.t === 'impulse') ? 'imp' : (lethalChoice === 'axe' ? 'axe' : 'smk');
+  const P = type === 'imp' ? { s: 30, u: 6.5, g: 30 } : type === 'axe' ? { s: 42, u: 2, g: 22 } : { s: 24, u: 6, g: 30 };   // matches throwImpulse / throwAxe(TOMAHAWK) / throwSmoke(GRENADE)
+  const fwd = camera.getWorldDirection(new THREE.Vector3()), pos = camera.getWorldPosition(new THREE.Vector3()).add(fwd.clone().multiplyScalar(0.6)), vel = fwd.clone().multiplyScalar(P.s); vel.y += P.u;
+  const dt = 0.045, dots = brArcGroup.children; let landed = false;
+  for (let i = 0; i < dots.length; i++) {
+    if (!landed) { pos.addScaledVector(vel, dt); vel.y -= P.g * dt; const gh = groundHeightAt(pos.x, pos.z, pos.y + 2); if (pos.y <= gh) { pos.y = gh + 0.05; landed = true; } }
+    dots[i].position.copy(pos); dots[i].visible = true;
+    if (landed) { for (let j = i + 1; j < dots.length; j++) dots[j].visible = false; break; }
+  }
+}
+function brClearArc() { brArcOn = false; if (brArcGroup) { scene.remove(brArcGroup); disposeGroup(brArcGroup); brArcGroup = null; } }
 
 /* ----------------- BATTLE ROYALE — SHRINKING SAFE ZONE -----------------
    Phases hold → warn → shrink, each closing to a smaller circle (random centre inside
@@ -14491,6 +14513,7 @@ function animate() {
     updateMatchTimer(dt); // Part 6: match time limit countdown (host authoritative) + HUD clock
     if (BR.active) brUpdate(dt);   // BATTLE ROYALE: loot, shrinking zone, players-remaining HUD, win check
     if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);   // (universal) first-person held-item model: shows the equipped consumable in EVERY mode (fixes knife-instead-of-item)
+    if (typeof brUpdateArc === 'function') brUpdateArc();   // throw trajectory preview while right-click-aiming a throwable
     updateDmgNums(dt);    // Part 3: expire floating damage numbers
     recordCamFrame(dt);   // Part 5: record my camera for others' killcams
     if (NET.active) processKcSends(dt);   // Part 5/2: flush queued killcam buffers (2s after a kill, or early if I die)

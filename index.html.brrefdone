@@ -1637,27 +1637,7 @@ if (!['ffa', 'gungame', 'tdm', 'br'].includes(gameMode)) gameMode = 'ffa';
 // so groundHeightAt()/resolveHorizontal() stay correct for both. activeMap also drives the player
 // boundary, spawns, scooter spawns and the out-of-bounds water below.
 let activeMap = 'nuketown';     // 'nuketown' (FFA/GunGame/TDM) | 'paradise' (Battle Royale)
-let island = null;              // set by buildParadiseIsland(): { cx, cz, R, spawns, scooterSpawns, patrol, glows, peaks, caveSpots, lootSpots, secretSpots }
-const brZiplines = [];          // BR zip lines: { a:Vector3, b:Vector3 } — ride with E (Part 3)
-let brZip = null;               // active zip-line ride { from, to, t, dur }
-function brTryZip() {
-  if (!BR.active || !brZiplines.length || brZip) return false;
-  let best = null, far = null, bd = 3.4;
-  for (const z of brZiplines) { const da = player.pos.distanceTo(z.a), db = player.pos.distanceTo(z.b); if (da < bd) { bd = da; best = z.a; far = z.b; } if (db < bd) { bd = db; best = z.b; far = z.a; } }
-  if (!best) return false;
-  brZip = { from: best.clone(), to: far.clone(), t: 0, dur: Math.max(1.2, best.distanceTo(far) / 22) };
-  if (typeof sfxBoost === 'function') sfxBoost(player.pos); return true;
-}
-function brUpdateZip(dt) {
-  const Z = brZip; Z.t += dt; const f = Math.min(1, Z.t / Z.dur);
-  player.pos.lerpVectors(Z.from, Z.to, f); player.pos.y += Math.sin(f * Math.PI) * 1.3;   // gentle cable sag
-  player.vel.set(0, 0, 0); player.onGround = false;
-  player.eye += (MOVE.eyeHeight - player.eye) * Math.min(1, dt * 10);
-  camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
-  camera.rotation.order = 'YXZ'; camera.rotation.y = yaw + recoilYaw; camera.rotation.x = pitch + recoilPitch;
-  if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
-  if (f >= 1) brZip = null;   // released at the far end; normal physics resumes next frame
-}
+let island = null;              // set by buildParadiseIsland(): { cx, cz, R, spawns, scooterSpawns, patrol, water, glows }
 function ensureParadiseIsland() { if (!island && typeof buildParadiseIsland === 'function') island = buildParadiseIsland(1200, 0); return island; }
 // Map-aware horizontal boundary (replaces the old fixed ARENA clamp so the bigger island fits).
 function clampToMap(pos, margin) {
@@ -3533,8 +3513,7 @@ function buildParadiseIsland(cx, cz) {
   const water = 0x2f7fb0, waterLt = 0x5fb0d8, stone = 0xb8b09a, stoneLt = 0xcdc6b2, stoneDk = 0x7c7666;
   const concrete = 0x9a9a92, metal = 0x79828c, rust = 0x9c5a3c, gold = 0xc9a24a, glassC = 0xacc4d2;
   const pastel = [0xa9d3e0, 0xe9b7c6, 0xeede9e, 0xb8ddb0, 0xd9c2e6];   // beach-town house colours
-  const spawns = [], scooterSpawns = [], patrol = [], pois = [], glows = [], peaks = [], caveSpots = [], lootSpots = [], secretSpots = [];
-  brZiplines.length = 0;
+  const spawns = [], scooterSpawns = [], patrol = [], pois = [], glows = [];
 
   // --- local→world helpers (mirror the mansion builder) ---
   const iB   = (lx, y, lz, w, h, d, c, o) => addBox(cx + lx, y, cz + lz, w, h, d, c, o);                  // solid box
@@ -3607,62 +3586,8 @@ function buildParadiseIsland(cx, cz) {
     return tiers * tierH;   // summit height
   }
   massif(-150, 70, 34, 4, 5);                      // west mountain (Cliff Settlement builds its own terraced climb on the south flank)
-
-  // ============ PART 2 — VARIED TERRAIN around the POIs: 3 named peaks, ravines, cliffs, caves, hills ============
-  function tLadder(lx, lz, top, outZ) { outZ = outZ == null ? -1 : outZ; for (let y = 0.5; y < top; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.1), flatMat(0x6a6a6a)); m.position.set(cx + lx, y, cz + lz); scene.add(m); } ladders.push({ x: cx + lx, z: cz + lz, bottom: 0, top: top, cx: cx + lx, cz: cz + lz + outZ * 1.3, outX: 0, outZ: outZ }); }
-  function hill(lx, lz, r, h) { const steps = Math.max(2, Math.round(h / 0.65)); for (let i = 0; i < steps; i++) { const f = i / steps; iB(lx, i * (h / steps), lz, r * 2 * (1 - f * 0.8), (h / steps) + 0.12, r * 2 * (1 - f * 0.8), i % 2 ? 0x6f9d5a : 0x5f8d4e); } }   // climbable stepped mound (each step ≤ STEP)
-  function caveRoom(lx, lz, w, d, h, dirs) { dirs = dirs || ['s']; const hole = (dir, a) => dirs.indexOf(dir) >= 0 ? [{ a0: a - 1.5, a1: a + 1.5, y0: 0, y1: 2.8 }] : [];
-    iWallX(lz + d / 2, lx - w / 2, lx + w / 2, 0, h, 0.6, rockDk, hole('n', lx)); iWallX(lz - d / 2, lx - w / 2, lx + w / 2, 0, h, 0.6, rockDk, hole('s', lx));
-    iWallZ(lx + w / 2, lz - d / 2, lz + d / 2, 0, h, 0.6, rockDk, hole('e', lz)); iWallZ(lx - w / 2, lz - d / 2, lz + d / 2, 0, h, 0.6, rockDk, hole('w', lz));
-    iB(lx, h, lz, w + 0.4, 0.6, d + 0.4, rockDk);   // ceiling (dark enclosed cave)
-    for (let i = 0; i < 4; i++) { const sx = lx + (i - 1.5) * (w / 5), sz = lz + ((i % 2) - 0.5) * (d / 3); iB(sx, 0, sz, 0.7, 0.8 + (i % 2), 0.7, rockC); const st = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.8, 5), flatMat(rockC)); st.position.set(cx + sx, h - 0.9, cz + sz); st.rotation.x = Math.PI; scene.add(st); }   // stalagmites + stalactites
-    iGlow(lx, 1.4, lz, 1, 0.8, 1, 0xffcf88, 0.25); caveSpots.push([lx, lz]);
-  }
-  function ravine(lx, lz, len, axis) { const half = 7;   // two ridges + a walkable canyon between + bridges over the top
-    if (axis === 'z') { iB(lx - half, 0, lz, 3, 9, len, rockC); iB(lx + half, 0, lz, 3, 9, len, rockDk); iD(lx, 9.2, lz - len / 2 + 6, 17, 0.4, 4, woodLt); iD(lx, 9.2, lz + len / 2 - 6, 17, 0.4, 4, woodLt); }
-    else { iB(lx, 0, lz - half, len, 9, 3, rockC); iB(lx, 0, lz + half, len, 9, 3, rockDk); iD(lx - len / 2 + 6, 9.2, lz, 4, 0.4, 17, woodLt); iD(lx + len / 2 - 6, 9.2, lz, 4, 0.4, 17, woodLt); }
-  }
-  (function () { const lx = 55, lz = -120, topY = 30;   // SLEEPING VOLCANO (south-centre) — tiered cone, crater, lava-tube cave, ladder up
-    for (let i = 0; i < 6; i++) { const r = 38 * (1 - i / 7); iB(lx, i * 5, lz, r * 2, 5.2, r * 2, i % 2 ? rockC : rockDk); }
-    for (let a = 0; a < 10; a++) { const ang = a / 10 * Math.PI * 2; iB(lx + Math.cos(ang) * 10, topY, lz + Math.sin(ang) * 10, 3, 3, 3, 0x5a4a44); }   // crater rim
-    iD(lx, topY, lz, 18, 0.4, 18, 0x3a2a26); iGlow(lx, topY + 1.5, lz, 7, 2.5, 7, 0xff5a2a, 0.45);
-    tLadder(lx, lz + 11, topY + 0.2, 1); caveRoom(lx + 30, lz + 2, 11, 9, 4, ['w', 'e']);
-    peaks.push({ name: 'VOLCANO', lx, lz, top: topY }); for (let i = 0; i < 6; i++) { const a = i * 1.1; rockDeco(lx + Math.cos(a) * 30, lz + Math.sin(a) * 30, 2); }
-  })();
-  (function () { const lx = 70, lz = 125;   // TWIN HILLS (north) — two climbable rounded peaks + saddle + cave
-    hill(lx - 15, lz, 20, 14); hill(lx + 15, lz, 20, 13); hill(lx, lz - 2, 12, 7); caveRoom(lx, lz + 22, 10, 8, 4, ['s']);
-    peaks.push({ name: 'TWIN HILLS', lx, lz, top: 14 });
-  })();
-  (function () { const lx = -205, lz = -35, topY = 26;   // WEST SHEER CLIFFS — tall face, cliff-top perch, inland ladders, cave
-    iB(lx, 0, lz, 11, topY + 2, 52, rockDk); iB(lx + 2, topY + 2, lz, 9, 0.6, 34, rockC);
-    tLadder(lx + 6, lz + 12, topY + 2.2, 1); tLadder(lx + 6, lz - 12, topY + 2.2, 1); caveRoom(lx + 9, lz + 20, 9, 7, 4, ['e']);
-    peaks.push({ name: 'WEST CLIFFS', lx, lz, top: topY + 2 });
-  })();
-  ravine(-55, -85, 50, 'z'); ravine(100, 78, 46, 'x');
-  (function () { const lx = 30, lz = -55, steps = 20; for (let i = 0; i < steps; i++) { const f = i / steps; iB(lx, i * 0.65, lz, 16 * (1 - f * 0.55), 0.75, 16 * (1 - f * 0.55), i % 2 ? rockC : rockDk); } iB(lx, 13, lz, 11, 0.5, 11, rockC); peaks.push({ name: "DEAD MAN'S DROP", lx, lz, top: 13 }); })();   // overlook above Beach Town
-  for (let i = 0; i < 7; i++) { const ang = i / 7 * Math.PI * 2 + 0.6, rr = 70 + (i % 3) * 35, hx = Math.cos(ang) * rr, hz = Math.sin(ang) * rr; if (dist2(hx, hz) < R - 35) hill(hx, hz, 7 + (i % 3) * 3, 3 + (i % 3) * 1.5); }   // rolling climbable hills
-
   massif(120, -150, 30, 3, 5);                     // south-east peak (scenic)
-  massif(40, 200, 24, 3, 4.5);                     // far-north scenic peak
-
-  // ============ PART 3 — CONTENT: wrecks, camp, vine ruins, campfires, lighthouse, signposts, zip lines ============
-  function chestSpot(lx, lz, rar) { lootSpots.push({ lx: lx, lz: lz, rar: rar || 'common' }); }
-  function smokePlume(lx, lz, h) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 2.0, h, 7), new THREE.MeshBasicMaterial({ color: 0x6a6a6a, transparent: true, opacity: 0.16, depthWrite: false })); m.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 50) + h / 2 + 2, cz + lz); scene.add(m); }
-  function campfire(lx, lz) { for (let a = 0; a < 6; a++) iD(lx + Math.cos(a) * 0.8, 0, lz + Math.sin(a) * 0.8, 0.4, 0.3, 0.4, 0x6a6a6a); iD(lx, 0.1, lz, 0.7, 0.3, 0.7, 0x2a2018); const f = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.9, 6), new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0.5 })); f.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 5) + 0.5, cz + lz); scene.add(f); iGlow(lx, 0.6, lz, 1.4, 1, 1.4, 0xff8a3a, 0.4); }
-  function vineRuin(lx, lz) { iB(lx, 0, lz, 2.4, 2.6 + (lx % 2) * 1.5, 1.4, 0x837c6e); iB(lx + 3, 0, lz + 1, 1.4, 1.6, 2.4, 0x9a9384); iD(lx + 1.5, 0, lz - 2, 3, 0.4, 0.4, 0x6d675d); for (let i = 0; i < 4; i++) iD(lx + (i - 1.5), 2, lz, 0.1, 1.6, 0.1, 0x3a6a2a); chestSpot(lx + 1, lz, (lx % 4 === 0) ? 'rare' : 'common'); }
-  function tent(lx, lz, col) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 2, 3, 3), flatMat(col)); t.rotation.y = Math.PI / 4; t.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 5) + 1.5, cz + lz); scene.add(t); }
-  function signpost(lx, lz) { iD(lx, 0, lz, 0.3, 2.4, 0.3, 0x6f5333); [[-0.9, 1.8, -0.4], [0.9, 1.5, 0.5]].forEach(s => { const b = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.1), flatMat(0x8c6a3c)); b.position.set(cx + lx + s[0], groundHeightAt(cx + lx, cz + lz, 5) + s[1], cz + lz); b.rotation.y = s[2]; scene.add(b); }); }
-  function zipline(ax, az, ay, bx, bz, by) { const a = new THREE.Vector3(cx + ax, ay, cz + az), b = new THREE.Vector3(cx + bx, by, cz + bz), mid = a.clone().add(b).multiplyScalar(0.5), m = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, a.distanceTo(b), 5), flatMat(0x1a1a1a)); m.position.copy(mid); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); scene.add(m); brZiplines.push({ a, b }); }
-  smokePlume(-40, 160, 14); iB(-40, 0, 160, 6, 2.2, 3, 0x3a4a3a); iB(-38, 1.4, 162, 4, 1.5, 2, 0x2a3a2a); cyl(cx - 36, 4, cz + 160, 0.2, 9, 0x555555, 'z'); chestSpot(-40, 160, 'legendary'); chestSpot(-37, 162, 'rare');   // CRASHED HELICOPTER + smoke landmark
-  smokePlume(-90, -70, 10); iB(-90, 0, -70, 5, 1.8, 2.5, 0xc8c8c0); iB(-86, 0, -72, 3, 1.4, 5, 0xb0b0a8); chestSpot(-90, -70, 'rare');   // CRASHED CIVILIAN PLANE
-  (function (lx, lz) { iB(lx, 0.6, lz, 7, 4, 18, 0x7a6a4a); cyl(cx + lx, 8, cz + lz, 0.4, 13, 0x6a5a3a); iWallX(lz + 9, lx - 3.5, lx + 3.5, 0.6, 4.6, 0.5, 0x7a6a4a, [{ a0: lx - 1.5, a1: lx + 1.5, y0: 0.6, y1: 3.4 }]); chestSpot(lx, lz, 'rare'); chestSpot(lx + 1, lz + 5, 'common'); })(228, 95);   // SHIPWRECK on the east beach
-  (function (lx, lz) { tent(lx - 4, lz, 0x4a6a3a); tent(lx + 4, lz + 2, 0x6a5a3a); tent(lx, lz - 4, 0x4a5a6a); chestSpot(lx, lz, 'common'); chestSpot(lx + 4, lz + 2, 'rare'); })(-130, 30);   // ABANDONED TENT CAMP
-  for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.3, rr = 80 + (i % 3) * 30, vx = Math.cos(a) * rr, vz = Math.sin(a) * rr; if (dist2(vx, vz) < R - 30) vineRuin(vx, vz); }
-  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 1.1, rr = 45 + (i % 4) * 38; campfire(Math.cos(a) * rr, Math.sin(a) * rr); }
-  (function lighthouse(lx, lz) { iCyl(lx, 8, lz, 3, 16, 0xe8e8e8); iCyl(lx, 16.5, lz, 3.4, 1, 0xc0392b); const lamp = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0xfff0b0 })); lamp.position.set(cx + lx, 17.6, cz + lz); scene.add(lamp); iGlow(lx, 17.6, lz, 5, 3, 5, 0xfff0b0, 0.8); peaks.push({ name: 'LIGHTHOUSE', lx, lz, top: 16 }); })(-215, 60);
-  signpost(0, -90); signpost(-80, 40); signpost(120, 10); signpost(60, 170);
-  zipline(70, 125, 16, 35, 200, 9); zipline(-150, 116, 22, -100, 60, 6); zipline(155, 162, 14, 110, 90, 5); zipline(55, -110, 31, 0, -70, 7);
-  secretSpots.push({ lx: 155, lz: 150, rar: 'legendary' }, { lx: 1, lz: 8, rar: 'legendary' });   // secret-room loot (mansion, temple)
+  massif(40, 120, 26, 3, 4.5);                     // north-central peak (scenic)
 
   // --- ROADS connecting the POIs (dirt; scooters travel them) ---
   road(0, -210, -150, -120, 8); road(-150, -120, 0, 0, 8); road(0, 0, 150, 40, 8);
@@ -3920,13 +3845,7 @@ function buildParadiseIsland(cx, cz) {
   [[-90, -70], [80, 5], [10, 150], [-60, 35], [120, -70], [180, 100]].forEach(s => scooterSpawns.push(new THREE.Vector3(cx + s[0], groundHeightAt(cx + s[0], cz + s[1], 0.4), cz + s[1])));
   [[35, 196], [-150, 134], [-150, -128], [150, 70]].forEach(p => addLaunchPad(cx + p[0], cz + p[1], 0x12d0f0));   // cargo beach, cliff foot, resort, camp
 
-  // night fireflies over the jungle (opacity raised at night in brUpdate)
-  const ffGeo = new THREE.BufferGeometry(), ffN = 150, ffPos = new Float32Array(ffN * 3);
-  for (let i = 0; i < ffN; i++) { const a = Math.random() * 6.28, rr = Math.random() * (R - 70); ffPos[i * 3] = cx + Math.cos(a) * rr; ffPos[i * 3 + 1] = 1.5 + Math.random() * 5; ffPos[i * 3 + 2] = cz + Math.sin(a) * rr; }
-  ffGeo.setAttribute('position', new THREE.BufferAttribute(ffPos, 3));
-  const fireflies = new THREE.Points(ffGeo, new THREE.PointsMaterial({ color: 0xcaff70, size: 0.6, transparent: true, opacity: 0, depthWrite: false })); scene.add(fireflies);
-
-  return { cx, cz, R, spawns, scooterSpawns, patrol, pois, glows, peaks, caveSpots, lootSpots, secretSpots, fireflies };
+  return { cx, cz, R, spawns, scooterSpawns, patrol, pois, glows };
 }
 
 /* ============================================================================
@@ -4304,7 +4223,7 @@ function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[curre
 
 // --- Fire / ADS press+release (shared by mouse + key bindings, so Fire/ADS can be remapped) ---
 function firePress() {
-  if (brSpectating) { brSpecCycle(-1); return; }   // BR spectator: L-click = previous player
+  if (brSpectating) { brSpecTarget++; return; }   // BR spectator: click cycles the watched player
   if (brMapOpen) return;   // BR: can't fire while the map is open
   if (rcActive) { if (rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: fire = manual detonate
   if (inspectT > 0) { inspectT = 0; return; }                                     // (Part 5) fire cancels an inspect
@@ -4322,7 +4241,6 @@ function fireRelease() {
   firing = false;
 }
 function adsPress() {
-  if (brSpectating) { brSpecCycle(1); return; }   // BR spectator: R-click = next player
   if (brMapOpen) return;   // BR: can't ADS while the map is open
   if (inspectT > 0) { inspectT = 0; return; }   // (Part 5) ADS cancels an inspect
   if (rcActive || cigSmoking || player.onLadder) return;
@@ -4344,12 +4262,11 @@ function gameAction(act, rep) {
   if (act === 'crouch' && !rep) crouchKey();
   if (player.diving) return;                                            // no reload / swap / grenade mid-dive
   if (act === 'saber' && !rep) { if (BR.active) { brToggleMinimap(); return; } streakActivate('saberjd'); return; }   // BR: the (disabled) saber key toggles the minimap
-  if (act === 'jump' && !rep && BR.active && brSpectating) { brSpecToggleFree(); return; }   // BR spectator: SPACE toggles third-person follow / free camera
   if (act === 'flamethrower' && !rep) { streakActivate('flame'); return; }
   if (act === 'rcStreak' && !rep) { streakActivate('rcrl'); return; }
   if (act === 'dogs' && !rep) { if (BR.active) { brToggleMap(); return; } streakActivate('dogs'); return; }   // BR: the (disabled) Kirks-Avengers key opens the paper map
   if (act === 'use' && !rep) { if (saberMode) drinkJD(); else useCigar(); }
-  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (brTrySwapLoot() || brTryZip() || tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: BR loot swap > zip line > dismount > mount scooter > pick up axe > Mckayla > ladder
+  if (act === 'interact' && !rep) { if (riding) { scooterDismount(); return; } if (brTrySwapLoot() || tryMountScooter() || tryPickupAxe() || tryNoodleSummon()) return; tryGrabLadder(); }   // E: BR loot swap > dismount > mount scooter > pick up axe > Mckayla > ladder
   if (act === 'reload') { cigCancel(); reload(); }
   if (act === 'inventory' && !rep && gameMode !== 'gungame' && !BR.active) { toggleInventory(); return; }   // BR has no loadout inventory — you loot what you find
   if (BR.active && (act === 'weapon1' || act === 'weapon2' || act === 'karambit' || act === 'prevWeapon' || act === 'nextWeapon' || act === 'dropWeapon')) { if (cigSmoking) cigCancel(); brWeaponAction(act); return; }   // BR: two primaries (1/2) + melee (3)
@@ -4802,7 +4719,6 @@ function ggSpeedMult() {
 function updateMovement(dt) {
   if (!player.alive) return;
   if (BR.active && BR.phase === 'drop') { brUpdateDrop(dt); return; }   // BATTLE ROYALE: plane ride + freefall + parachute drives the player itself
-  if (brZip) { brUpdateZip(dt); return; }   // BATTLE ROYALE: riding a zip line
   if (paused) { player.vel.x = 0; player.vel.z = 0; return; }   // pause/settings menu open: stand still (game keeps running for others)
 
   // Piloting an RC missile: the body stands still (fully shootable). Keep its camera pinned
@@ -6551,12 +6467,10 @@ function spawnBot(bot) {
   bot.group.visible = true;
 }
 
-const BOT_NAMES = ['Viper', 'Maverick', 'Ghost', 'Reaper', 'Hawk', 'Bandit', 'Rogue', 'Echo', 'Frost', 'Talon', 'Cobra', 'Wraith'];
 function createBots() {
   for (let i = 0; i < botCount; i++) {
     const bot = {
       id: i + 1,
-      name: BOT_NAMES[i % BOT_NAMES.length],   // used by the BR spectator HUD + results placement table
       pos: new THREE.Vector3(), vel: new THREE.Vector3(),
       health: 100, alive: true, respawnTimer: 0, group: null
     };
@@ -9710,7 +9624,7 @@ function brAliveCount() {
 }
 function brStart() {
   BR.reset(); BR.active = true; BR.phase = 'play'; BR.t = 0; brSlots = [null, null]; brSlotCfg = [null, null]; brSlotRar = [null, null]; brActive = 0; brEliminated = []; brElimLog = [];
-  brSpectating = false; brSpecFree = false; brSpecBlend = 1; brSpecCur = null; brZip = null; if (typeof brCloseMap === 'function') brCloseMap();
+  brSpectating = false; if (typeof brCloseMap === 'function') brCloseMap();
   // melee-only loadout — no primary / ammo / cigars / JD shield / grenades until you loot them
   player.overheal = 0; player.cigar = 0; player.grenades = 0; player.impulses = 0; player.lethals = 0;
   player.jdBottles = 0; player.secondChance = false; brCurRarity = null;
@@ -9724,7 +9638,7 @@ function brStart() {
   brGunshots.length = 0; const mm = el('brMinimap'); if (mm) mm.style.display = brMinimapOn ? 'block' : 'none';   // minimap
   brHudShow(true); updateBRHud();
 }
-function brEnd() { BR.active = false; brHudShow(false); brSpectating = false; brZip = null; if (typeof brCloseMap === 'function') brCloseMap(); const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
+function brEnd() { BR.active = false; brHudShow(false); brSpectating = false; if (typeof brCloseMap === 'function') brCloseMap(); const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
 function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
 function brEliminate(name) {                              // record an elimination + crown the winner when one remains
   if (!BR.active) return;
@@ -9742,13 +9656,7 @@ function brOnPlayerDeath() {                              // BR: no respawn — 
   showCenterBanner('ELIMINATED — ' + ordinal(BR.placement) + ' PLACE', '#ff6a6a', 3000);
   brCloseMap();
   brEliminate(NET.active ? NET.selfName : 'YOU');         // may finish the match if you were the 2nd-last alive
-  if (!gameState.over) {                                  // watch the survivors until one remains -> results
-    brSpectating = true; brSpecFree = false; brSpecBlend = 0; brSpecFromCam.copy(camera.position);
-    // first target = the killer (nearest living bot to the death spot is a clean proxy in solo)
-    const list = brSpecList(); brSpecIdx = 0; let bd = Infinity;
-    list.forEach((t, i) => { const d = t.pos.distanceTo(player.pos); if (d < bd) { bd = d; brSpecIdx = i; } });
-    brSpecCur = list[brSpecIdx] || null;
-  }
+  if (!gameState.over) { brSpectating = true; brSpecTarget = 0; }   // watch the survivors until one remains -> results
 }
 function brUpdate(dt) {
   if (!BR.active) return;
@@ -9756,7 +9664,6 @@ function brUpdate(dt) {
   if (typeof brUpdateLoot === 'function') brUpdateLoot(dt);   // stage 2: loot bob + pickup
   if (typeof brUpdateZone === 'function') brUpdateZone(dt);   // stage 3: shrink + OOB damage
   if (brSpectating && typeof brUpdateSpectator === 'function') brUpdateSpectator(dt);   // post-death camera (solo)
-  if (island && island.fireflies) island.fireflies.material.opacity = dnStarF * (0.5 + 0.3 * Math.sin(BR.t * 2.2));   // glow + gently twinkle at night, hidden by day
   if (brMapOpen) brDrawMap();
   if (brMinimapOn) brDrawMinimap();
   updateBRHud();
@@ -9771,40 +9678,17 @@ function brResultsTableHTML() {    // placement table for the BR results screen 
   rows.forEach(r => { const me = (r.name === selfN || r.name === 'YOU'); h += '<tr style="' + (me ? 'background:rgba(255,211,74,0.16);' : (r.place === 1 ? 'background:rgba(58,160,255,0.12);' : '')) + '"><td style="padding:4px 8px; font-weight:800; color:' + (r.place === 1 ? '#ffd34a' : '#cfe0f0') + ';">' + ordinal(r.place) + '</td><td style="padding:4px 8px;' + (me ? 'color:#ffd34a; font-weight:800;' : '') + '">' + (r.name || '—') + (me ? ' (you)' : '') + (r.place === 1 ? ' 👑' : '') + '</td><td style="padding:4px 8px; text-align:right;">' + fmt(r.t) + '</td></tr>'; });
   return h + '</table>';
 }
-function brUpdateSpectator(dt) {   // polished spectator: TPS over-shoulder follow OR free-cam; L/R-click cycle; SPACE toggles
-  const list = brSpecList(), sp = el('brSpec');
-  if (!list.length) { if (sp) sp.style.display = 'none'; brSpecCur = null; return; }
-  brSpecIdx = ((brSpecIdx % list.length) + list.length) % list.length;
-  const t = list[brSpecIdx]; brSpecCur = t;
+function brUpdateSpectator(dt) {   // post-death camera: orbit a living opponent (mouse turns, click cycles)
+  const live = bots.filter(b => b.alive && !b.dying);
+  const sp = el('brSpec');
+  if (!live.length) { if (sp) sp.style.display = 'none'; return; }
+  if (brSpecTarget >= live.length) brSpecTarget = 0;
+  const t = live[brSpecTarget], dist = 8, h = 3.6;
+  camera.position.set(t.pos.x + Math.sin(yaw) * dist, t.pos.y + h, t.pos.z + Math.cos(yaw) * dist);
+  camera.lookAt(t.pos.x, t.pos.y + 1.4, t.pos.z);
   if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
-  camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
-  if (brSpecFree) {   // FREE CAMERA: fly with WASD (relative to look), SHIFT = faster, mouse look
-    const cd = new THREE.Vector3(); camera.getWorldDirection(cd); const r = horizontalRight();
-    const mv = new THREE.Vector3();
-    if (kbDown('moveForward')) mv.add(cd); if (kbDown('moveBackward')) mv.sub(cd);
-    if (kbDown('moveRight')) mv.add(new THREE.Vector3(r.x, 0, r.z)); if (kbDown('moveLeft')) mv.sub(new THREE.Vector3(r.x, 0, r.z));
-    if (mv.lengthSq() > 0) mv.normalize();
-    brFreePos.addScaledVector(mv, ((keys['ShiftLeft'] || keys['ShiftRight']) ? 65 : 28) * dt);
-    clampToMap(brFreePos, 1); brFreePos.y = Math.max(2, Math.min(110, brFreePos.y));
-    camera.position.copy(brFreePos);
-  } else {   // THIRD-PERSON over-the-shoulder follow (mouse orbits; smooth tracking)
-    const desired = new THREE.Vector3(t.pos.x + Math.sin(yaw) * 6, t.pos.y + 2.8, t.pos.z + Math.cos(yaw) * 6);
-    brSpecBlend = Math.min(1, brSpecBlend + dt);
-    if (brSpecBlend < 1) camera.position.lerpVectors(brSpecFromCam, desired, brSpecBlend < 0 ? 0 : brSpecBlend);   // 1s ease from the death position
-    else camera.position.lerp(desired, Math.min(1, dt * 6));
-    camera.lookAt(t.pos.x, t.pos.y + 1.5, t.pos.z);
-  }
-  if (sp) { sp.style.display = 'block'; sp.innerHTML = brSpecHudHtml(t); }
+  if (sp) { sp.style.display = 'block'; sp.innerHTML = '👁 SPECTATING: <b>' + (t.name || 'Player') + '</b> &nbsp;•&nbsp; click to cycle'; }
 }
-function brSpecHudHtml(t) {
-  const wk = t.weaponKey || t.weapon, wn = (wk && WEAPONS[wk]) ? WEAPONS[wk].name : '—', hp = Math.max(0, Math.round(t.health || 0));
-  const mode = brSpecFree ? '🎥 FREE CAMERA' : '👁 SPECTATING: <b>' + (t.name || 'Player') + '</b>';
-  return '<div style="font:800 18px \'Segoe UI\',sans-serif; color:#9fd0ff;">' + mode + '</div>' +
-    (brSpecFree ? '' : '<div style="font:700 13px \'Segoe UI\',sans-serif; color:#dfe7f0; margin-top:2px;">🔫 ' + wn + ' &nbsp; ❤ ' + hp + '</div>') +
-    '<div style="font:600 11px \'Segoe UI\',sans-serif; color:#aebdcc; margin-top:4px;">L-CLICK: prev &nbsp;•&nbsp; R-CLICK: next &nbsp;•&nbsp; SPACE: ' + (brSpecFree ? 'follow' : 'free cam') + '</div>';
-}
-function brSpecCycle(d) { if (!brSpectating) return; const n = brSpecList().length; if (!n) return; brSpecIdx = ((brSpecIdx + d) % n + n) % n; brSpecBlend = 1; brSpecFree = false; }
-function brSpecToggleFree() { if (!brSpectating) return; brSpecFree = !brSpecFree; if (brSpecFree) brFreePos.copy(camera.position); }
 let _brCompassBuilt = false;
 function updateBRCompass() {
   const strip = el('brCompassStrip'); if (!strip) return;
@@ -9918,17 +9802,7 @@ function brSpawnLoot() {
     const a = Math.random() * Math.PI * 2, r = Math.random() * (island.R - 30), x = island.cx + Math.cos(a) * r, z = island.cz + Math.sin(a) * r, t = Math.random();
     if (t < 0.3) brAddChest(x, z, Math.random() < 0.85 ? 'common' : 'rare'); else if (t < 0.62) brAddLoot(x, z, 'weapon'); else brAddLoot(x, z, 'ammo');
   }
-  // Part 3/4: content-feature chests (wrecks/camp/ruins/shipwreck), peak SUPPLY DROPS, cave chests, secret-room legendaries
-  (island.lootSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar); });
-  (island.peaks || []).forEach(pk => { brAddChest(island.cx + pk.lx, island.cz + pk.lz + 2, Math.random() < 0.5 ? 'legendary' : 'rare'); });   // supply drop on each peak top
-  (island.caveSpots || []).forEach(cv => { const n = 2 + (Math.random() * 2 | 0); for (let i = 0; i < n; i++) brAddChest(island.cx + cv[0] + (i - 1) * 2, island.cz + cv[1] + (i % 2) * 2, Math.random() < 0.4 ? 'rare' : 'common'); });
-  (island.secretSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar || 'legendary'); if (Math.random() < 0.6) brAddLoot(island.cx + s.lx + 2, island.cz + s.lz, 'second'); });
-  // more healing (longer travel times): extra cigars + JD around the POIs
-  island.pois.forEach(poi => { for (let i = 0; i < 2; i++) { const a = Math.random() * 6.28, r = 5 + Math.random() * 20; brAddLoot(island.cx + poi.lx + Math.cos(a) * r, island.cz + poi.lz + Math.sin(a) * r, Math.random() < 0.55 ? 'cigar' : 'jd'); } });
-  for (let i = 0; i < 3; i++) { const poi = island.pois[(Math.random() * island.pois.length) | 0]; brAddLoot(island.cx + poi.lx + (Math.random() - 0.5) * 18, island.cz + poi.lz + (Math.random() - 0.5) * 18, 'second'); }
-  // Part 4 balance: scatter extra healing island-wide so the bigger/hillier map keeps cigars ~35-40 & JD ~30-35
-  for (let i = 0; i < 21; i++) { const a = Math.random() * 6.28, r = 12 + Math.random() * (island.R - 34); brAddLoot(island.cx + Math.cos(a) * r, island.cz + Math.sin(a) * r, 'cigar'); }
-  for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28, r = 12 + Math.random() * (island.R - 34); brAddLoot(island.cx + Math.cos(a) * r, island.cz + Math.sin(a) * r, 'jd'); }
+  for (let i = 0; i < 2; i++) { const poi = island.pois[(Math.random() * island.pois.length) | 0]; brAddLoot(island.cx + poi.lx + (Math.random() - 0.5) * 18, island.cz + poi.lz + (Math.random() - 0.5) * 18, 'second'); }
 }
 // --- BR weapon slots: two primaries (1/2) + the melee (3). Each slot's ammo lives in weaponState[key]. ---
 function brWeaponMags(rar, key) {     // reserve magazines by rarity (snipers/DMRs/LMGs carry fewer)
@@ -10183,10 +10057,7 @@ function brUpdateDrop(dt) {
    zone (orange dashed), out-of-zone shaded red, your position as a white triangle, a
    compass rose. Open with M (the otherwise-disabled Kirks-Avengers key in BR); you
    walk slowly and can't fire while it's open. */
-let brMapOpen = false, brSpectating = false, brSpecIdx = 0, brSpecFree = false, brSpecBlend = 1, brSpecCur = null;
-const brSpecFromCam = new THREE.Vector3(), brFreePos = new THREE.Vector3();
-function brSpecList() { const list = bots.filter(b => b.alive && !b.dying); if (NET.active) NET.players.forEach(rp => { if (rp.alive) list.push(rp); }); return list; }   // living players to spectate (bots + remotes)
-function brViewPos() { return (brSpectating && brSpecFree) ? brFreePos : ((brSpectating && brSpecCur) ? brSpecCur.pos : player.pos); }   // minimap/compass centre
+let brMapOpen = false, brSpectating = false, brSpecTarget = 0;
 function brToggleMap() {
   if (!BR.active) return;
   brMapOpen = !brMapOpen;
@@ -10203,8 +10074,8 @@ function brToggleMinimap() { if (!BR.active) return; brMinimapOn = !brMinimapOn;
 function brNoteGunshot(x, z) { if (!BR.active || Math.hypot(x - player.pos.x, z - player.pos.z) > 85) return; brGunshots.push({ x, z, t: performance.now() }); if (brGunshots.length > 40) brGunshots.shift(); }
 function brDrawMinimap() {
   const c = el('brMinimap'); if (!c || !island || !brMinimapOn) return;
-  const ctx = c.getContext('2d'), S = c.width, half = S / 2, zoom = 80, ppu = S / zoom, vp = brViewPos();   // centre on the spectated player when spectating
-  const w2m = (wx, wz) => [half + (wx - vp.x) * ppu, half + (wz - vp.z) * ppu];
+  const ctx = c.getContext('2d'), S = c.width, half = S / 2, zoom = 80, ppu = S / zoom;
+  const w2m = (wx, wz) => [half + (wx - player.pos.x) * ppu, half + (wz - player.pos.z) * ppu];
   ctx.clearRect(0, 0, S, S); ctx.save(); ctx.beginPath(); ctx.rect(0, 0, S, S); ctx.clip();
   ctx.fillStyle = '#2a566f'; ctx.fillRect(0, 0, S, S);
   const im = w2m(island.cx, island.cz), ir = island.R * ppu;
@@ -10214,14 +10085,14 @@ function brDrawMinimap() {
   const z = BR.zone;
   if (z) { const zm = w2m(z.cx, z.cz); ctx.beginPath(); ctx.arc(zm[0], zm[1], z.r * ppu, 0, 7); ctx.strokeStyle = '#3aa0ff'; ctx.lineWidth = 2; ctx.stroke();
     if ((z.state === 'warn' || z.state === 'shrink') && z.toR != null) { const nm = w2m(z.toCx, z.toCz); ctx.beginPath(); ctx.arc(nm[0], nm[1], z.toR * ppu, 0, 7); ctx.strokeStyle = '#ff9a3a'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]); } }
-  for (const Lo of BR_LOOT) { if (!Lo.chest) continue; const d = Math.hypot(Lo.pos.x - vp.x, Lo.pos.z - vp.z); if (d > zoom * 0.7) continue; const m = w2m(Lo.pos.x, Lo.pos.z);
+  for (const Lo of BR_LOOT) { if (!Lo.chest) continue; const d = Math.hypot(Lo.pos.x - player.pos.x, Lo.pos.z - player.pos.z); if (d > zoom * 0.7) continue; const m = w2m(Lo.pos.x, Lo.pos.z);
     if (Lo.open) { ctx.strokeStyle = 'rgba(180,180,180,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1] - 3); ctx.lineTo(m[0] + 3, m[1] + 3); ctx.moveTo(m[0] + 3, m[1] - 3); ctx.lineTo(m[0] - 3, m[1] + 3); ctx.stroke(); }
     else if (d < 30) { ctx.fillStyle = '#ffd34a'; ctx.beginPath(); ctx.arc(m[0], m[1], 2.5, 0, 7); ctx.fill(); } }
   const now = performance.now();
   for (let i = brGunshots.length - 1; i >= 0; i--) { const g = brGunshots[i], age = (now - g.t) / 1000; if (age > 3) { brGunshots.splice(i, 1); continue; } const m = w2m(g.x, g.z); ctx.fillStyle = 'rgba(255,60,60,' + (1 - age / 3).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(m[0], m[1], 3, 0, 7); ctx.fill(); }
   ctx.restore();
   ctx.textAlign = 'center'; ctx.font = "bold 9px 'Segoe UI',sans-serif";
-  island.pois.forEach(p => { const wx = island.cx + p.lx, wz = island.cz + p.lz; if (Math.hypot(wx - vp.x, wz - vp.z) > 85) return; const m = w2m(wx, wz), mx = Math.max(10, Math.min(S - 10, m[0])), my = Math.max(12, Math.min(S - 4, m[1])); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(p.name, mx + 0.5, my + 0.5); ctx.fillStyle = '#e8eef5'; ctx.fillText(p.name, mx, my); });
+  island.pois.forEach(p => { const wx = island.cx + p.lx, wz = island.cz + p.lz; if (Math.hypot(wx - player.pos.x, wz - player.pos.z) > 85) return; const m = w2m(wx, wz), mx = Math.max(10, Math.min(S - 10, m[0])), my = Math.max(12, Math.min(S - 4, m[1])); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(p.name, mx + 0.5, my + 0.5); ctx.fillStyle = '#e8eef5'; ctx.fillText(p.name, mx, my); });
   const fwd = horizontalForward(), ang = Math.atan2(fwd.x, -fwd.z);
   ctx.save(); ctx.translate(half, half); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4, 5); ctx.lineTo(-4, 5); ctx.closePath(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.fill(); ctx.stroke(); ctx.restore();
   ctx.fillStyle = '#ff6a6a'; ctx.font = "bold 11px 'Segoe UI',sans-serif"; ctx.textAlign = 'center'; ctx.fillText('N', half, 11);

@@ -4570,9 +4570,10 @@ function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[curre
 
 // --- Fire / ADS press+release (shared by mouse + key bindings, so Fire/ADS can be remapped) ---
 function firePress() {
+  console.log('[BR-DEBUG] firePress entry ggKarambit=' + ggKarambit + ' heldWeapon=' + (!!brHeldWeapon()) + ' holdingConsumable=' + brHoldingConsumable() + ' heldItem=' + JSON.stringify(brHeldItem()) + ' rcActive=' + rcActive + ' cigSmoking=' + cigSmoking + ' brJdDrinking=' + brJdDrinking + ' onLadder=' + player.onLadder);
   if (brSpectating) { brSpecCycle(-1); return; }   // BR spectator: L-click = previous player
   if (brMapOpen) return;   // BR: can't fire while the map is open
-  if (!ggKarambit && !brHeldWeapon()) { if (brHoldingConsumable()) brUseSelected(); return; }   // (universal) holding a consumable / empty hands: no shot; left-click uses the held consumable
+  if (!ggKarambit && !brHeldWeapon()) { console.log('[BR-DEBUG] firePress -> consumable branch; holdingConsumable=' + brHoldingConsumable()); if (brHoldingConsumable()) brUseSelected(); return; }   // (universal) holding a consumable / empty hands: no shot; left-click uses the held consumable
   if (rcActive) { if (rcCamLive) rcDetonate(null, null, null, false); return; }   // piloting: fire = manual detonate
   if (inspectT > 0) { inspectT = 0; return; }                                     // (Part 5) fire cancels an inspect
   if (cigSmoking || brJdDrinking) return;                                         // (FIX 3) using a consumable: left-click is a no-op (no cancel, no double-use); the use runs to completion or cancels on slot-switch
@@ -4666,8 +4667,10 @@ window.addEventListener('blur', clearInput);
 
 const MOUSE_CODE = { 0: 'Mouse0', 1: 'Mouse1', 2: 'Mouse2' };
 document.addEventListener('mousedown', (e) => {
+  if (e.button === 0) console.log('[BR-DEBUG] mousedown btn0 running=' + gameState.running + ' pointerLocked=' + pointerLocked + ' paused=' + paused + ' BR.active=' + (typeof BR !== 'undefined' && BR.active) + ' phase=' + (typeof BR !== 'undefined' ? BR.phase : '?') + ' spectating=' + brSpectating + ' mapOpen=' + brMapOpen);
   if (!gameState.running || !pointerLocked || paused) return;
   const act = IM.codeAction(MOUSE_CODE[e.button]); if (!act) return;
+  if (e.button === 0) console.log('[BR-DEBUG] mousedown btn0 act=' + act + ' ggKarambit=' + ggKarambit + ' brSel=' + brSel + ' heldItem=' + JSON.stringify(brHeldItem && brHeldItem()));
   if (act === 'fire') firePress();
   else if (act === 'ads') adsPress();
   else if (act === 'kong') requestSummonKong();
@@ -7468,6 +7471,7 @@ function throwSmoke(pos, dir) {
   const mesh = buildSmokeCanister(); mesh.position.copy(pos); scene.add(mesh);
   const vel = dir.normalize().multiplyScalar(26); vel.y += 6;
   liveSmokeNades.push({ mesh, pos: pos.clone(), vel, life: 6, restT: 0 });
+  console.log('[BR-DEBUG] throwSmoke SPAWNED liveSmokeNades=' + liveSmokeNades.length);
   sfxSmokeThrow(pos);
 }
 function spawnSmokeCloud(center, networked) {
@@ -8197,13 +8201,15 @@ const liveImpulses = [];      // thrown canisters (owned = I simulate physics; e
 let impulseThrowT = 0;        // brief throw animation / re-throw guard
 const impulseRingGeo = new THREE.TorusGeometry(1, 0.12, 8, 24);   // expanding shockwave ring (scaled up)
 function throwImpulse() {
-  if (!gameState.running || !player.alive || player.impulses <= 0 || impulseThrowT > 0 || player.onLadder) return;
+  console.log('[BR-DEBUG] throwImpulse entry running=' + gameState.running + ' alive=' + player.alive + ' impulses=' + player.impulses + ' throwT=' + impulseThrowT.toFixed(2) + ' onLadder=' + player.onLadder);
+  if (!gameState.running || !player.alive || player.impulses <= 0 || impulseThrowT > 0 || player.onLadder) { console.log('[BR-DEBUG] throwImpulse GATED -> NO SPAWN'); return; }
   cigCancel();                                                  // throwing cancels (and consumes) a cigar in progress
   player.impulses--; impulseThrowT = 0.4;                       // quick throw, ~400ms anim/guard
   const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
   const dir = camera.getWorldDirection(new THREE.Vector3());
   const vel = dir.multiplyScalar(IMPULSE.throwVel); vel.y += IMPULSE.upArc;   // slight forward arc (easy throw-at-feet)
   spawnImpulse(origin, vel, true, NET.selfId);
+  console.log('[BR-DEBUG] throwImpulse SPAWNED at ' + origin.x.toFixed(1) + ',' + origin.y.toFixed(1) + ',' + origin.z.toFixed(1) + ' liveImpulses=' + liveImpulses.length);
   sfxImpulseThrow(origin);                                      // whoosh + cylinder rattle
   if (gunMesh) gunMesh.position.z = -0.35;                      // little throw pop on the viewmodel
   if (NET.active) NET.broadcast({ t: 'imp', s: 'spawn', id: NET.selfId, x: origin.x, y: origin.y, z: origin.z, vx: vel.x, vy: vel.y, vz: vel.z });
@@ -8211,7 +8217,8 @@ function throwImpulse() {
 }
 // H: throw the player's chosen LETHAL (smoke grenade or throwing axe). 2 per life.
 function throwLethal() {
-  if (!gameState.running || !player.alive || (player.lethals || 0) <= 0 || player.onLadder || cigSmoking) return;
+  console.log('[BR-DEBUG] throwLethal entry running=' + gameState.running + ' alive=' + player.alive + ' lethals=' + (player.lethals || 0) + ' onLadder=' + player.onLadder + ' cigSmoking=' + cigSmoking + ' lethalChoice=' + lethalChoice);
+  if (!gameState.running || !player.alive || (player.lethals || 0) <= 0 || player.onLadder || cigSmoking) { console.log('[BR-DEBUG] throwLethal GATED -> NO SPAWN'); return; }
   player.lethals--;
   const origin = camera.getWorldPosition(new THREE.Vector3()).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
   const dir = camera.getWorldDirection(new THREE.Vector3());
@@ -9981,6 +9988,7 @@ const BR = { active: false, phase: 'none', t: 0, startCount: 10, placement: 0, z
 // Melee is SEPARATE (not in a slot) — held via `ggKarambit`, equipped with the melee key (Q).
 let brInv = [null, null, null, null, null];   // the 5 universal slots
 let brSel = -1;                                // selected slot index 0..4 (-1 = none); melee overrides when ggKarambit
+let brLastSlot = 0;                            // last non-melee inventory slot held (Q toggles melee <-> this slot)
 const BR_STACK = { cigar: 5, jd: 5, impulse: 3, lethal: 3, second: 1 };   // per-type stack limits
 function brItemMeta(t) {   // icon + name + effect + verb per item type (lethal label depends on the chosen lethal)
   if (t === 'cigar') return { icon: '🚬', name: 'CIGAR', desc: 'Restores 100 HP', verb: 'SMOKE' };
@@ -10338,10 +10346,20 @@ function brEquipMelee() { brSyncHeldAmmo(); brSel = -1; ggSetKarambit(true); brH
 function brSelect(i) {
   if (i < 0 || i > 4) return;
   if (i === brSel && !ggKarambit && brInv[i] && brInv[i].t !== 'weapon') { brUseSelected(); return; }   // press the held slot's key again -> USE the consumable
-  brSyncHeldAmmo(); brSel = i; ggKarambit = false;
+  brSyncHeldAmmo(); brSel = i; ggKarambit = false; brLastSlot = i;   // (Q-TOGGLE) remember the slot we're on so Q can return to it
   const it = brInv[i];
   if (it && it.t === 'weapon') brEquipWeaponItem(it); else brEquipHands();
   updateHUD();
+}
+// Q melee TOGGLE (all modes): on a slot -> draw melee; on melee -> re-equip the last-held slot (fallback to lowest non-empty; stay on melee if all empty).
+function brToggleMelee() {
+  if (ggKarambit) {                                                   // currently on melee -> go back to a real slot
+    let i = brLastSlot;
+    if (!(i >= 0 && i < 5 && brInv[i])) i = brInv.findIndex(x => x);  // remembered slot empty/used-up -> lowest non-empty
+    if (i >= 0) brSelect(i);                                          // all slots empty -> stay on melee (no-op)
+  } else {
+    brEquipMelee();                                                   // on a slot -> draw melee (brLastSlot already holds this slot)
+  }
 }
 function brSelectAfterEmpty(i) { if (brSel === i) { const n = brInv.findIndex(x => x); if (n >= 0) brSelect(n); else brEquipMelee(); } }
 // (UNIVERSAL inventory) build a hotbar weapon item for a PRE-EQUIPPED, non-loot weapon (FFA/TDM main, GG ladder rung) — keeps its normal (usually infinite) reserve, not BR's finite ammo.
@@ -10363,7 +10381,7 @@ function brFillLoadout() {
     if ((player.impulses || 0) > 0) brInv[3] = { t: 'impulse' };
     if ((player.lethals || 0) > 0) brInv[4] = { t: 'lethal' };
   }
-  brSel = 0;   // hold the main weapon (the caller's ggEquip(mainGunKey()) does the actual equip)
+  brSel = 0; brLastSlot = 0;   // hold the main weapon (the caller's ggEquip(mainGunKey()) does the actual equip); Q returns here
 }
 function brGiveWeapon(key, cfg, rar, stored) {   // pick up a weapon: fill an empty slot, else swap the held item
   brSetupWeaponAmmo(key, cfg, rar, stored); const ws = weaponState[key];
@@ -10408,7 +10426,7 @@ function brWeaponAction(act) {   // BR slot select / wheel / melee / drop
   else if (act === 'karambit') brSelect(2);
   else if (act === 'brSlot4') brSelect(3);
   else if (act === 'brSlot5') brSelect(4);
-  else if (act === 'melee') brEquipMelee();
+  else if (act === 'melee') brToggleMelee();   // (Q-TOGGLE) melee <-> last-held slot
   else if (act === 'dropItem' || act === 'dropWeapon') brDropHeldItem();
   else {   // wheel: cycle non-empty slots + melee
     const order = []; for (let i = 0; i < 5; i++) if (brInv[i]) order.push(i); order.push('m');
@@ -10419,12 +10437,14 @@ function brWeaponAction(act) {   // BR slot select / wheel / melee / drop
 }
 function brUseType(t) { const s = brSlotOfType(t); if (s < 0 || brCount(t) <= 0) return; brSyncHeldAmmo(); brSel = s; ggKarambit = false; brUseSelected(); }
 function brUseSelected() {   // use the held consumable (cigar smoke / JD drink / grenade throw); decrements the stack
-  const it = brHeldItem(); if (!it || it.t === 'weapon' || it.t === 'second') return;
+  const it = brHeldItem(); if (!it || it.t === 'weapon' || it.t === 'second') { console.log('[BR-DEBUG] brUseSelected EARLY-RETURN it=' + JSON.stringify(it)); return; }
+  console.log('[BR-DEBUG] brUseSelected dispatch it.t=' + it.t + ' count=' + brCount(it.t) + ' brSel=' + brSel);
   if (it.t === 'cigar') { useCigar(); return; }        // (FIX 3) 1.5s timed smoke — consumed on completion (cigComplete)
   if (it.t === 'jd') { brDrinkJD(); return; }           // (FIX 3) 1.5s timed drink — consumed on completion (brJdComplete)
   const before = brCount(it.t); let ok = false;         // throwables: throw + consume immediately
   if (it.t === 'impulse') { throwImpulse(); ok = brCount('impulse') < before; }
   else if (it.t === 'lethal') { throwLethal(); ok = brCount('lethal') < before; }
+  console.log('[BR-DEBUG] brUseSelected after-throw type=' + it.t + ' before=' + before + ' after=' + brCount(it.t) + ' ok=' + ok);
   if (ok) { brHeldUseT = 0.45; if (brCount(it.t) <= 0) { const i = brSel; brInv[i] = null; brSelectAfterEmpty(i); } updateHUD(); }
 }
 function brTakeLoot(L, label, col, raw) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col, raw); }

@@ -3677,10 +3677,10 @@ function buildParadiseIsland(cx, cz) {
   function tent(lx, lz, col) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 2, 3, 3), flatMat(col)); t.rotation.y = Math.PI / 4; t.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 5) + 1.5, cz + lz); scene.add(t); }
   function signpost(lx, lz) { iD(lx, 0, lz, 0.3, 2.4, 0.3, 0x6f5333); [[-0.9, 1.8, -0.4], [0.9, 1.5, 0.5]].forEach(s => { const b = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.1), flatMat(0x8c6a3c)); b.position.set(cx + lx + s[0], groundHeightAt(cx + lx, cz + lz, 5) + s[1], cz + lz); b.rotation.y = s[2]; scene.add(b); }); }
   function zipline(ax, az, ay, bx, bz, by) { const a = new THREE.Vector3(cx + ax, ay, cz + az), b = new THREE.Vector3(cx + bx, by, cz + bz), mid = a.clone().add(b).multiplyScalar(0.5), m = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, a.distanceTo(b), 5), flatMat(0x1a1a1a)); m.position.copy(mid); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); scene.add(m); brZiplines.push({ a, b }); }
-  smokePlume(-40, 160, 14); iB(-40, 0, 160, 6, 2.2, 3, 0x3a4a3a); iB(-38, 1.4, 162, 4, 1.5, 2, 0x2a3a2a); cyl(cx - 36, 4, cz + 160, 0.2, 9, 0x555555, 'z'); chestSpot(-45, 161, 'rare');   // CRASHED HELICOPTER + smoke landmark (1 chest around the wreck)
-  smokePlume(-90, -70, 10); iB(-90, 0, -70, 5, 1.8, 2.5, 0xc8c8c0); iB(-86, 0, -72, 3, 1.4, 5, 0xb0b0a8); chestSpot(-94, -68, 'rare');   // CRASHED CIVILIAN PLANE (1 chest beside the fuselage)
-  (function (lx, lz) { iB(lx, 0.6, lz, 7, 4, 18, 0x7a6a4a); cyl(cx + lx, 8, cz + lz, 0.4, 13, 0x6a5a3a); iWallX(lz + 9, lx - 3.5, lx + 3.5, 0.6, 4.6, 0.5, 0x7a6a4a, [{ a0: lx - 1.5, a1: lx + 1.5, y0: 0.6, y1: 3.4 }]); chestSpot(lx, lz + 11, 'rare'); })(228, 95);   // SHIPWRECK on the east beach (1 chest on the sand at the hull door)
-  (function (lx, lz) { tent(lx - 4, lz, 0x4a6a3a); tent(lx + 4, lz + 2, 0x6a5a3a); tent(lx, lz - 4, 0x4a5a6a); chestSpot(lx + 4, lz + 2, 'common'); })(-130, 30);   // ABANDONED TENT CAMP (1 chest inside the tents)
+  smokePlume(-40, 160, 14); iB(-40, 0, 160, 6, 2.2, 3, 0x3a4a3a); iB(-38, 1.4, 162, 4, 1.5, 2, 0x2a3a2a); cyl(cx - 36, 4, cz + 160, 0.2, 9, 0x555555, 'z'); chestSpot(-45, 161, 'legendary'); chestSpot(-36, 166, 'rare');   // CRASHED HELICOPTER + smoke landmark (Part 1: 2 chests around the wreck)
+  smokePlume(-90, -70, 10); iB(-90, 0, -70, 5, 1.8, 2.5, 0xc8c8c0); iB(-86, 0, -72, 3, 1.4, 5, 0xb0b0a8); chestSpot(-94, -68, 'rare'); chestSpot(-95, -73, 'common');   // CRASHED CIVILIAN PLANE (Part 1: 2 chests beside the fuselage)
+  (function (lx, lz) { iB(lx, 0.6, lz, 7, 4, 18, 0x7a6a4a); cyl(cx + lx, 8, cz + lz, 0.4, 13, 0x6a5a3a); iWallX(lz + 9, lx - 3.5, lx + 3.5, 0.6, 4.6, 0.5, 0x7a6a4a, [{ a0: lx - 1.5, a1: lx + 1.5, y0: 0.6, y1: 3.4 }]); chestSpot(lx, lz + 11, 'rare'); chestSpot(lx + 3, lz + 11, 'common'); })(228, 95);   // SHIPWRECK on the east beach (Part 1: 2 chests on the sand at the hull door)
+  (function (lx, lz) { tent(lx - 4, lz, 0x4a6a3a); tent(lx + 4, lz + 2, 0x6a5a3a); tent(lx, lz - 4, 0x4a5a6a); chestSpot(lx + 4, lz + 2, 'rare'); chestSpot(lx, lz, 'common'); })(-130, 30);   // ABANDONED TENT CAMP (Part 1: 2 chests inside the tents)
   for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.3, rr = 80 + (i % 3) * 30, vx = Math.cos(a) * rr, vz = Math.sin(a) * rr; if (dist2(vx, vz) < R - 30) vineRuin(vx, vz); }
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 1.1, rr = 45 + (i % 4) * 38; campfire(Math.cos(a) * rr, Math.sin(a) * rr); }
   (function lighthouse(lx, lz) { iCyl(lx, 8, lz, 3, 16, 0xe8e8e8); iCyl(lx, 16.5, lz, 3.4, 1, 0xc0392b); const lamp = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0xfff0b0 })); lamp.position.set(cx + lx, 17.6, cz + lz); scene.add(lamp); iGlow(lx, 17.6, lz, 5, 3, 5, 0xfff0b0, 0.8); peaks.push({ name: 'LIGHTHOUSE', lx, lz, top: 16 }); })(-215, 60);
@@ -10188,41 +10188,35 @@ function brAddChest(wx, wz, rar, atY) {
     outer: for (let r = 1.5; r <= 6; r += 1) for (let k = 0; k < 12; k++) { const a = k * 0.5236, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestClips(nx, y, nz)) { wx = nx; wz = nz; break outer; } }
   }
   const g = brChestMesh(rar); g.position.set(wx, y, wz); g.rotation.y = Math.random() * 6; scene.add(g);   // chest base sits flush on the floor (or an explicit Y for upper floors)
-  BR_LOOT.push({ chest: true, state: 'closed', id: brChestSeq++, openT: 0, spawned: false, rarity: rar, mesh: g, lid: g.userData.lid, pos: new THREE.Vector3(wx, y, wz), taken: false });   // state: closed -> opened -> looted (lid stays UP once opened)
+  BR_LOOT.push({ chest: true, open: false, openT: 0, spawned: false, rarity: rar, mesh: g, lid: g.userData.lid, pos: new THREE.Vector3(wx, y, wz), taken: false });
   if (brLootDebug) console.log('[T][LOOT] chest ' + rar + ' @' + wx.toFixed(0) + ',' + y.toFixed(1) + ',' + wz.toFixed(0) + (brIsIndoors(wx, wz) ? ' INDOOR' : ' open'));
 }
-function brOpenChest(L, fromNet) {   // (Part 3) closed -> opened; the lid animates up and STAYS up (looted) for the rest of the match
-  if (!L.chest || L.state !== 'closed') return;
-  L.state = 'opened'; L.netRemote = !!fromNet;
-  if (typeof sfxAxePickup === 'function') sfxAxePickup(L.pos);
-  if (!fromNet) { brPickupToast('CHEST OPENED', L.rarity !== 'common' ? BR_RAR[L.rarity].c : '#cfe0f0'); if (NET.active) NET.broadcast({ t: 'brchest', id: L.id }); }   // (Part 3) broadcast the open so other clients see the lid go up
-}
+function brOpenChest(L) { if (L.open) return; L.open = true; if (typeof sfxAxePickup === 'function') sfxAxePickup(L.pos); brPickupToast('CHEST OPENED', L.rarity !== 'common' ? BR_RAR[L.rarity].c : '#cfe0f0'); }
 function brUpdateChestAnim(L, dt) {
-  if (!L.chest || L.state === 'closed') return;
-  if (L.openT < 1) { L.openT = Math.min(1, L.openT + dt * 1.5); if (L.lid) L.lid.rotation.x = -1.45 * L.openT; }   // lid swings open ONCE (~1s) and stays up — no close-back
-  if (L.netRemote) { if (L.openT >= 1) L.state = 'looted'; return; }                                              // remote-opened: only show it open/looted (its items belong to the opener)
-  if (L.openT >= 0.55 && !L.spawned) { L.spawned = true; L.contents = brSpawnChestContents(L); L.contentsT = 30; }  // fan the 3 items out
-  if (L.spawned && L.state === 'opened') {
+  if (!L.chest || !L.open) return;
+  if (!L.closing && L.openT < 1) { L.openT = Math.min(1, L.openT + dt * 1.5); if (L.lid) L.lid.rotation.x = -1.45 * L.openT; }   // lid swings open
+  if (L.openT >= 0.55 && !L.spawned) { L.spawned = true; L.contents = brSpawnChestContents(L); L.contentsT = 30; }               // fan the loot out
+  if (L.spawned && !L.closing) {
     L.contentsT -= dt;
-    if (!L.contents.some(c => !c.taken) || L.contentsT <= 0) {                                                     // all picked up OR 30s elapsed -> LOOTED (lid stays up, empty)
+    const anyLeft = L.contents.some(c => !c.taken);
+    if (!anyLeft || L.contentsT <= 0) {                                                                                          // all taken OR 30s elapsed -> despawn leftovers + close lid
       if (L.contentsT <= 0) L.contents.forEach(c => { if (!c.taken) { c.taken = true; if (c.mesh) { scene.remove(c.mesh); disposeGroup(c.mesh); } } });
-      L.state = 'looted';
+      L.closing = true;
     }
   }
+  if (L.closing && L.openT > 0) { L.openT = Math.max(0, L.openT - dt * 2); if (L.lid) L.lid.rotation.x = -1.45 * L.openT; }       // lid swings back shut (stays "open"=looted)
 }
-// (Part 2) every chest = EXACTLY 3 items: 1 weapon + 1 throwable + 1 healing (NO ammo boxes — each weapon carries its own rarity-tier ammo).
 function brSpawnChestContents(L) {
-  const rar = L.rarity, items = [['weapon', rar]];
-  if (rar === 'legendary') { items.push(['lethal'], ['jd']); if (Math.random() < 0.05) items.push(['second']); }   // legendary: a lethal + premium JD (+5% Second Chance bonus)
-  else if (rar === 'rare') { items.push([Math.random() < 0.5 ? 'impulse' : 'lethal'], [Math.random() < 0.5 ? 'cigar' : 'jd']); }
-  else { items.push(['impulse'], ['cigar']); }                                                                     // common: impulse grenade + cigar
-  const out = [], base = (L.mesh ? L.mesh.rotation.y : 0) - (items.length - 1) * 0.35;
-  items.forEach((it, i) => { const a = base + i * 0.7, r = 1.5; const o = brAddLoot(L.pos.x + Math.cos(a) * r, L.pos.z + Math.sin(a) * r, it[0], it[1]); if (o) { o.fromChest = true; out.push(o); } });   // fan the items out in front of the chest
+  const rar = L.rarity, items = [];
+  if (rar === 'legendary') { items.push(['weapon', 'legendary'], ['ammo'], ['ammo'], ['ammo'], ['cigar'], ['cigar'], ['jd'], ['jd'], [Math.random() < 0.5 ? 'impulse' : 'lethal']); if (Math.random() < 0.5) items.push([Math.random() < 0.5 ? 'impulse' : 'lethal']); if (Math.random() < 0.15) items.push(['second']); }
+  else if (rar === 'rare') { items.push(['weapon', 'rare'], ['ammo'], ['ammo'], ['cigar'], ['jd']); if (Math.random() < 0.5) items.push([Math.random() < 0.5 ? 'impulse' : 'lethal']); if (Math.random() < 0.2) items.push([Math.random() < 0.35 ? 'second' : (Math.random() < 0.5 ? 'cigar' : 'jd')]); }
+  else { items.push(['weapon', 'common'], ['ammo']); if (Math.random() < 0.6) items.push(['ammo']); if (Math.random() < 0.5) items.push([Math.random() < 0.5 ? 'cigar' : 'jd']); if (Math.random() < 0.3) items.push([Math.random() < 0.5 ? 'impulse' : 'lethal']); }
+  const out = [];
+  items.forEach((it, i) => { const a = i / items.length * Math.PI * 2, r = 1.6; const o = brAddLoot(L.pos.x + Math.cos(a) * r, L.pos.z + Math.sin(a) * r, it[0], it[1]); if (o) { o.fromChest = true; out.push(o); } });
   return out;
 }
-function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; brChestSeq = 0; }
+function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; }
 let brLootDebug = false;   // set true to log every loot spawn position (Part 1 diagnostics)
-let brChestSeq = 0;        // (Part 3) stable per-chest id for networked open/looted state sync
 function brCeilingY(x, z) {   // height of the lowest ceiling/roof slab overhead at (x,z), or Infinity if open sky
   let roofY = Infinity;
   for (const s of solids) { if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && s.min.y >= 2.4 && s.min.y < roofY) roofY = s.min.y; }
@@ -10254,35 +10248,35 @@ function brIndoorPoint(cxp, czp, maxR) {   // sample for a point in a real, walk
 // sparser now — fewer, more meaningful chests, encouraging exploration & competition. Strategic fixed
 // chests (esp. legendaries: mansion suite/panic room, temple crypt, cargo bridge, longhouse, armory,
 // control-tower top) are ALWAYS kept; the remaining commons are capped to the budget.
-// (Part 1) TRUE scarcity: ~55-75 chests map-wide, every one meaningful. Per-POI counts are low and
-// SPREAD across buildings (fixed chest spots are shuffled, not clustered by rarity). Critical buildings
-// keep a guaranteed legendary; everything else rolls mostly common — overall ≈75% common / 18% rare / 7% legendary.
-const POI_TARGET = { 'PARADISE COVE': [4, 5], 'LAGOON RESORT': [5, 7], 'ANCIENT RUINS': [4, 6], 'CAMP DELTA': [6, 8], "HARBOR'S EDGE": [4, 5], 'CLIFF SETTLEMENT': [4, 5], 'RUSTED HULL': [6, 8], 'AIRSTRIP': [5, 7], "MILLIONAIRE'S RETREAT": [6, 8] };
-const POI_LEG_GUARANTEE = { "MILLIONAIRE'S RETREAT": 1, 'RUSTED HULL': 1, 'CAMP DELTA': 1 };   // critical buildings keep a legendary at their key room (mansion master suite / cargo bridge / military armory); + the 2 secret rooms (mansion panic room, temple crypt) = ~5 legendaries total
-function brShuf(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0, t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+const POI_TARGET = { 'PARADISE COVE': [7, 10], 'LAGOON RESORT': [10, 12], 'ANCIENT RUINS': [9, 11], 'CAMP DELTA': [12, 14], "HARBOR'S EDGE": [7, 9], 'CLIFF SETTLEMENT': [7, 9], 'RUSTED HULL': [12, 14], 'AIRSTRIP': [10, 12], "MILLIONAIRE'S RETREAT": [12, 14] };
+const POI_LEG = { 'ANCIENT RUINS': 1.8, 'CAMP DELTA': 1.6, 'RUSTED HULL': 1.6, "MILLIONAIRE'S RETREAT": 2.0, 'AIRSTRIP': 1.4 };   // higher-risk POIs roll more legendaries (strategic placement, approximated)
 function brSpawnLoot() {
   brClearLoot(); if (!island) return;
   let indoorCount = 0, placedCount = 0, last = {};
+  // assign each FIXED chest to its nearest POI so it counts against that POI's budget (keeps legendaries)
   const poiFixed = {}; island.pois.forEach(p => poiFixed[p.name] = []);
-  (island.fixedChests || []).forEach(c => { let best = null, bd = Infinity; island.pois.forEach(p => { const d = Math.hypot(c.x - (island.cx + p.lx), c.z - (island.cz + p.lz)); if (d < bd) { bd = d; best = p; } }); if (best && bd < 70) poiFixed[best.name].push(c); });
+  (island.fixedChests || []).forEach(c => { let best = null, bd = Infinity; island.pois.forEach(p => { const d = Math.hypot(c.x - (island.cx + p.lx), c.z - (island.cz + p.lz)); if (d < bd) { bd = d; best = p; } }); if (best && bd < 70) poiFixed[best.name].push(c); else brAddChest(c.x, c.z, c.rar, c.y); });
+  const rank = c => c.rar === 'legendary' ? 0 : (c.rar === 'rare' ? 1 : 2);
   island.pois.forEach(poi => {
-    const cxp = island.cx + poi.lx, czp = island.cz + poi.lz, rng = POI_TARGET[poi.name] || [5, 7];
+    const cxp = island.cx + poi.lx, czp = island.cz + poi.lz, rng = POI_TARGET[poi.name] || [10, 12], legMul = POI_LEG[poi.name] || 1;
     const target = rng[0] + (Math.random() * (rng[1] - rng[0] + 1) | 0);
-    let n = 0, legNeed = POI_LEG_GUARANTEE[poi.name] || 0;
-    const fx = brShuf((poiFixed[poi.name] || []).slice());   // shuffle so chests spread across DIFFERENT buildings (not clustered)
-    if (legNeed > 0) { const li = fx.findIndex(c => c.rar === 'legendary'); const c = (li >= 0) ? fx.splice(li, 1)[0] : fx.shift(); if (c) { brAddChest(c.x, c.z, 'legendary', c.y); n++; legNeed--; } }   // 1 guaranteed legendary at the key building
-    while (n < target && fx.length) { const c = fx.shift(); brAddChest(c.x, c.z, (Math.random() < 0.82 ? 'common' : 'rare'), c.y); n++; }   // spread the rest across remaining buildings
-    while (n < target) {   // top up with random indoor chests if a POI ran out of fixed spots
-      let p = null; for (let tries = 0; tries < 4 && !p; tries++) { const c = brIndoorPoint(cxp, czp, 30); if (c && (!last[poi.name] || Math.hypot(c[0] - last[poi.name][0], c[1] - last[poi.name][1]) > 4)) p = c; else if (c && tries === 3) p = c; }
+    let n = 0;
+    const fx = (poiFixed[poi.name] || []).slice().sort((a, b) => rank(a) - rank(b));   // legendaries first, then rares, then commons
+    for (const c of fx) { if (n >= target && c.rar !== 'legendary') continue; brAddChest(c.x, c.z, c.rar, c.y); n++; }   // always keep legendaries; cap the rest at the budget
+    while (n < target) {   // fill the remaining budget with random indoor chests
+      let p = null; for (let tries = 0; tries < 4 && !p; tries++) { const c = brIndoorPoint(cxp, czp, 30); if (c && (!last[poi.name] || Math.hypot(c[0] - last[poi.name][0], c[1] - last[poi.name][1]) > 3)) p = c; else if (c && tries === 3) p = c; }
       if (!p) break; last[poi.name] = p; placedCount++; if (brIsIndoors(p[0], p[1])) indoorCount++;
-      brAddChest(p[0], p[1], (Math.random() < 0.82 ? 'common' : 'rare')); n++;
+      const rr = Math.random();   // 70% common / 23% rare / 7% legendary
+      let tier = rr < 0.70 ? 'common' : (rr < 0.93 ? 'rare' : 'legendary');
+      if (tier === 'rare' && Math.random() < (legMul - 1) * 0.15) tier = 'legendary';   // high-risk POIs upgrade some rares -> more legendaries
+      brAddChest(p[0], p[1], tier); n++;
     }
   });
   BR._lootIndoorRatio = placedCount ? indoorCount / placedCount : 1;   // verification hook
-  // Enclosed non-POI sources — 1 chest each (scarce); caves a single chest; secret rooms keep their legendary
+  // Enclosed non-POI sources (wrecks / shipwreck / plane / vine ruins / tent camps / caves / secret rooms) — all chests
   (island.lootSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar); });
-  (island.caveSpots || []).forEach(cv => { brAddChest(island.cx + cv[0], island.cz + cv[1], Math.random() < 0.30 ? 'rare' : 'common'); });   // (Part 1) 1 chest per cave (3 caves -> 3)
-  (island.secretSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar || 'legendary'); });   // mansion panic room + temple crypt: legendary
+  (island.caveSpots || []).forEach(cv => { for (let i = 0; i < 2; i++) brAddChest(island.cx + cv[0] + (i - 0.5) * 3, island.cz + cv[1] + (i % 2) * 2.4, (i === 0 && Math.random() < 0.4) ? 'rare' : (Math.random() < 0.12 ? 'legendary' : 'common')); });   // (Part 1) 2 chests per cave (3 caves -> ~6)
+  (island.secretSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar || 'legendary'); });   // secret rooms: a single legendary chest
 }
 // --- BR weapon slots: two primaries (1/2) + the melee (3). Each slot's ammo lives in weaponState[key]. ---
 function brWeaponMags(rar, key) {     // reserve magazines by rarity (snipers/DMRs/LMGs carry fewer)
@@ -10416,7 +10410,7 @@ function brDrinkJD() {   // returns true if a bottle was consumed (caller decrem
 }
 function brUpdateLoot(dt) {
   brSwapTarget = null;
-  const px = player.pos.x, pz = player.pos.z, py = player.pos.y; let nearestSwap = 1e9, nearestLooted = 1e9, lootedNear = null;
+  const px = player.pos.x, pz = player.pos.z, py = player.pos.y; let nearestSwap = 1e9;
   for (const L of BR_LOOT) {
     if (L.taken) continue;
     if (typeof brUpdateChestAnim === 'function') brUpdateChestAnim(L, dt);   // chests: lid-open animation (Part 5)
@@ -10424,7 +10418,7 @@ function brUpdateLoot(dt) {
     if (!player.alive) continue;
     const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
     if (d > 2.8 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;
-    if (L.chest) { if (L.state === 'closed') { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } } else if (L.state === 'looted' && d < nearestLooted) { nearestLooted = d; lootedNear = L; } continue; }   // closed: E to open; looted: show [LOOTED]
+    if (L.chest) { if (!L.open && d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }   // chest: E to open
     if (L.kind === 'ammo') { if (brHasGun()) { brRefillAmmo(); brTakeLoot(L, '+AMMO', '#8aa0b0', true); } continue; }   // (Part 2) ammo always auto-refills your guns
     if (L.kind === 'weapon') { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }                  // (Part 2) weapons ALWAYS need E (never an accidental swap)
     // (Part 2) consumable: AUTO-stack if you ALREADY carry it (with room); a NEW type needs E
@@ -10439,8 +10433,7 @@ function brUpdateLoot(dt) {
       if (L.chest) sp.innerHTML = 'Press ' + ekey + ' to OPEN ' + (L.rarity !== 'common' ? '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + '</b> ' : '') + 'CHEST';
       else if (L.kind === 'weapon') { const full = brFirstEmpty() < 0; sp.innerHTML = 'Press ' + ekey + (full ? ' to SWAP for ' : ' to PICK UP ') + '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'weapon') + '</b>'; }
       else { const m = brItemMeta(L.kind); sp.innerHTML = 'Press ' + ekey + ' to PICK UP <b style="color:' + brLootCol(L.kind) + '">' + m.name + '</b>'; }
-    } else if (lootedNear) { sp.style.display = 'block'; sp.innerHTML = '<b style="color:#8a98a6; letter-spacing:1px;">[ LOOTED ]</b>'; }   // (Part 3) empty chest — no interaction
-    else sp.style.display = 'none';
+    } else sp.style.display = 'none';
   }
 }
 function brRarHex(r) { return '#' + (BR_RAR[r] ? BR_RAR[r].c : 0xffffff).toString(16).padStart(6, '0'); }
@@ -10845,7 +10838,7 @@ function brDrawMinimap() {
   if (z) { const zm = w2m(z.cx, z.cz); ctx.beginPath(); ctx.arc(zm[0], zm[1], z.r * ppu, 0, 7); ctx.strokeStyle = '#3aa0ff'; ctx.lineWidth = 2; ctx.stroke();
     if ((z.state === 'warn' || z.state === 'shrink') && z.toR != null) { const nm = w2m(z.toCx, z.toCz); ctx.beginPath(); ctx.arc(nm[0], nm[1], z.toR * ppu, 0, 7); ctx.strokeStyle = '#ff9a3a'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]); } }
   for (const Lo of BR_LOOT) { if (!Lo.chest) continue; const d = Math.hypot(Lo.pos.x - vp.x, Lo.pos.z - vp.z); if (d > zoom * 0.7) continue; const m = w2m(Lo.pos.x, Lo.pos.z);
-    if (Lo.state !== 'closed') { ctx.strokeStyle = 'rgba(180,180,180,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1] - 3); ctx.lineTo(m[0] + 3, m[1] + 3); ctx.moveTo(m[0] + 3, m[1] - 3); ctx.lineTo(m[0] - 3, m[1] + 3); ctx.stroke(); }   // opened/looted = gray X
+    if (Lo.open) { ctx.strokeStyle = 'rgba(180,180,180,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1] - 3); ctx.lineTo(m[0] + 3, m[1] + 3); ctx.moveTo(m[0] + 3, m[1] - 3); ctx.lineTo(m[0] - 3, m[1] + 3); ctx.stroke(); }
     else if (d < 30) { ctx.fillStyle = '#ffd34a'; ctx.beginPath(); ctx.arc(m[0], m[1], 2.5, 0, 7); ctx.fill(); } }
   const now = performance.now();
   for (let i = brGunshots.length - 1; i >= 0; i--) { const g = brGunshots[i], age = (now - g.t) / 1000; if (age > 3) { brGunshots.splice(i, 1); continue; } const m = w2m(g.x, g.z); ctx.fillStyle = 'rgba(255,60,60,' + (1 - age / 3).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(m[0], m[1], 3, 0, 7); ctx.fill(); }
@@ -13020,11 +13013,6 @@ const NET = {
       case 'boost': {                                  // a peer triggered a boost pad — dim it + whoosh (their flight syncs via pmove)
         const pad = boostPads[msg.i];
         if (pad) { pad.cd = BOOST.cooldown; sfxBoostLaunch(new THREE.Vector3(pad.x, pad.y, pad.z)); }
-        if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
-        break;
-      }
-      case 'brchest': {                                // (Part 3) a peer opened a BR chest — show its lid go up + mark looted (their items are theirs)
-        if (typeof BR_LOOT !== 'undefined') { const L = BR_LOOT.find(x => x.chest && x.id === msg.id); if (L && L.state === 'closed' && typeof brOpenChest === 'function') brOpenChest(L, true); }
         if (this.isHost) for (const id in this.conns) { if (id !== fromId && this.conns[id]) this.conns[id].send(msg); }
         break;
       }

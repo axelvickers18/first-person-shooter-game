@@ -2892,23 +2892,23 @@ function buildMansion(cx, cz) {
   // --- BALLROOM (north wing): biggest room, double-height feel, 2 chandeliers, grand fireplace ---
   chandelier(-9, 4.4, 15, 1.0); chandelier(-15, 4.4, 15, 1.0);
   fireplace(-10.5, 18.4, 'x', 1);                                            // fireplace on the outer wall
-  B(-7, GF, 13, 2.4, 0.9, 1.0, woodLt);                                      // a long couch (SOLID low cover)
-  B(-13, GF, 17, 1.4, 0.8, 2.4, woodLt);                                     // chaise (SOLID)
+  B(-7, GF, 13, 2.4, 0.9, 1.0, woodLt, { noCollide: true });                 // a long couch (low cover)
+  B(-13, GF, 17, 1.4, 0.8, 2.4, woodLt, { noCollide: true });                // chaise
 
   // --- LIBRARY (south wing): tall bookshelves (solid), reading table, globe, fireplace, darker ---
   for (let i = 0; i < 5; i++) { const lz = -19 + 1.0 + i * 1.55; B(-18.2, GF, lz, 1.0, 4.6, 1.2, woodDk); shelfBooks(-17.7, lz); }   // shelves on outer wall
   for (let i = 0; i < 4; i++) { const lz = -18.5 + i * 1.6; B(-3.0, GF, lz, 0.9, 4.2, 1.2, woodDk); shelfBooks(-3.4, lz); }          // shelves on the courtyard-side
   function shelfBooks(lx, lz) { for (let y = 0.7; y < 4.0; y += 0.85) for (let k = -0.4; k < 0.45; k += 0.18) BD(lx, GF + y, lz + k, 0.12, 0.7, 0.15, [0x6a2a2a, 0x2a4a2a, 0x2a3a5a, 0x6a5a2a][Math.floor(Math.random() * 4)]); }
-  B(-10.5, GF, -15, 3.6, 0.9, 1.2, woodLt);                                  // long reading table (SOLID)
+  B(-10.5, GF, -15, 3.6, 0.9, 1.2, woodLt, { noCollide: true });             // long reading table
   fireplace(-10.5, -18.4, 'x', -1);
   BD(-7, GF + 0.9, -13, 0.5, 1.0, 0.5, 0x3a5a3a); cyl(cx - 7, GF + 1.7, cz - 13, 0.5, 0.5, gold);  // globe on a stand
 
   // --- DINING (central-block north): long table + chairs + chandelier + mirror ---
-  B(4, GF, 13, 2.0, 1.0, 6.0, woodDk);                                       // long dining table (SOLID — stand on / take cover behind)
+  B(4, GF, 13, 2.0, 1.0, 6.0, woodDk, { noCollide: true });                  // long dining table
   for (let z = 10.5; z <= 15.5; z += 1.6) { B(2.4, GF, z, 0.5, 1.4, 0.5, wood, { noCollide: true }); B(5.6, GF, z, 0.5, 1.4, 0.5, wood, { noCollide: true }); }  // chairs
   chandelier(4, F2 - 0.6, 13, 0.8);
   // --- KITCHEN (central-block south): island + counters + brick oven + stair down to the cellar ---
-  B(4, GF, -13, 3.2, 1.1, 2.0, marbleDk);                                    // island (SOLID)
+  B(4, GF, -13, 3.2, 1.1, 2.0, marbleDk, { noCollide: true });               // island
   B(0.5, GF, -18, 5.0, 1.2, 1.4, stoneCool);                                 // counter along the back
   B(9.0, GF, -13, 1.8, 2.6, 1.8, 0x6a3326);                                  // brick oven block (solid)
   for (let i = 0; i < 4; i++) BD(2 + i * 1.4, GF + 2.6, -18.6, 0.5, 0.6, 0.2, 0xb5742a);  // hanging copper pots
@@ -2919,13 +2919,13 @@ function buildMansion(cx, cz) {
   wallX(-2, 11, 19, GF, F2, stoneDk, [{ a0: 13, a1: 15.5, y0: 0, y1: 2.6 }]);   // cellar | back-hall divider (dark stone) w/ doorway (reached from the kitchen via the x=92 partition door)
   BD(15, GF + 0.02, -10.5, 8, 0.04, 17, 0x4a4640);                            // cellar stone floor (dark)
   for (let i = 0; i < 4; i++) { const lz = -18 + i * 3.6; B(18.2, GF, lz, 1.0, 3.4, 2.8, woodDk); for (let y = 0.6; y < 3.0; y += 0.7) for (let k = -1.0; k < 1.05; k += 0.5) BD(17.6, GF + y, lz + k, 0.2, 0.5, 0.2, 0x2a1414); }  // wine racks + bottles
-  B(12.5, GF, -15, 1.3, 1.3, 1.3, woodLt); B(14, GF, -16.5, 1.0, 1.0, 1.0, wood);   // crates for cover (SOLID)
+  B(12.5, GF, -15, 1.3, 1.3, 1.3, woodLt, { noCollide: true }); B(14, GF, -16.5, 1.0, 1.0, 1.0, wood, { noCollide: true });   // crates for cover
   glow(16, GF + 2.4, -10.5, 1.0, 0.8, 1.0, 0xffb060, 0.5);                    // single dim cellar lantern
   // SECRET PASSAGE: a HOLLOW tunnel from the cellar (through the back-wall door slot) out to a hidden
   // garden door. Two solid side walls + a ceiling cap; the interior + far end stay open so you can run it.
   B(22.5, GF, -16.1, 7, 2.8, 0.4, stoneDk);                                  // tunnel side wall (-Z)
   B(22.5, GF, -13.4, 7, 2.8, 0.4, stoneDk);                                  // tunnel side wall (+Z)
-  B(22.5, GF + 2.6, -14.75, 7, 0.4, 2.7, stoneDk);                           // tunnel ceiling cap (SOLID — can't impulse-jump out the top)
+  BD(22.5, GF + 2.6, -14.75, 7, 0.4, 2.7, stoneDk);                          // tunnel ceiling cap
   BD(22.5, GF + 0.02, -14.75, 7, 0.04, 2.2, 0x4a4640);                       // tunnel floor (dark)
   glow(22, GF + 2.0, -14.75, 0.8, 0.7, 0.8, 0xffb060, 0.45);                 // dim passage lantern
   BD(26.1, GF + 1.3, -14.75, 0.12, 2.4, 2.3, 0x223018);                      // camouflaged ivy "door" at the garden end (passable)
@@ -2935,8 +2935,6 @@ function buildMansion(cx, cz) {
   slab(4, 13, 21, 12, F2, marbleDk);          // over dining (north)
   slab(4, -13, 21, 12, F2, marbleDk);         // over kitchen + cellar (south)
   slab(15, 0, 8, 14, F2, marbleDk);           // back service strip (behind the foyer void)
-  slab(15, 10, 8, 6, F2, marbleDk);           // NE back-corner fill (dining slab stops at x≈14.5; closes the gap to the back wall + tower)
-  slab(15, -10, 8, 6, F2, marbleDk);          // SE back-corner fill (mirror, over the cellar back corner)
   slab(-2.5, 0, 1.5, 14, F2, marbleDk);       // thin front landing strip across the void front
   balus('z', cx - 1.7, cz - 7, cz + 7, F2);   // balustrade around the void front edge (look down into foyer)
   balus('x', cz + 7, -2, 11, F2); balus('x', cz - 7, -2, 11, F2);            // void side balustrades
@@ -2953,14 +2951,14 @@ function buildMansion(cx, cz) {
   for (let i = 0; i < 4; i++) { glow(2 + i * 4.2, F2 + 2.4, 3.0, 0.5, 0.7, 0.3, 0xffd98a, 0.6); glow(2 + i * 4.2, F2 + 2.4, -3.0, 0.5, 0.7, 0.3, 0xffd98a, 0.6); }  // wall sconces
   // BEDROOMS (4) — four-poster bed + wardrobe + fireplace; alternating fabric colours
   function bedroom(lx, lz, col) {
-    B(lx, F2, lz, 2.6, 0.7, 3.0, woodDk);                                    // bed base (SOLID — crouch behind)
+    B(lx, F2, lz, 2.6, 0.7, 3.0, woodDk, { noCollide: true });               // bed base
     BD(lx, F2 + 0.7, lz, 2.4, 0.35, 2.8, col);                               // mattress/cover
     [[-1.1, -1.3], [1.1, -1.3], [-1.1, 1.3], [1.1, 1.3]].forEach(([ox, oz]) => BD(lx + ox, F2, lz + oz, 0.16, 2.6, 0.16, woodDk));  // bed posts
-    B(lx + 2.0, F2, lz - 1.0, 0.8, 2.4, 1.6, wood);                           // wardrobe (SOLID)
+    B(lx + 2.0, F2, lz - 1.0, 0.8, 2.4, 1.6, wood, { noCollide: true });      // wardrobe
   }
   bedroom(5, 16, carpet); bedroom(14, 16, 0x2a4a3a); bedroom(5, -16, 0x2a3a5a); bedroom(14, -16, 0x4a3a5a);
   // PRIVATE STUDY (off the hallway): desk, chair, shelves, globe
-  B(17, F2, 0, 2.2, 1.0, 1.2, woodDk); B(15.6, F2, 0, 0.5, 1.4, 0.5, wood, { noCollide: true });   // study desk SOLID (chair stays passable)
+  B(17, F2, 0, 2.2, 1.0, 1.2, woodDk, { noCollide: true }); B(15.6, F2, 0, 0.5, 1.4, 0.5, wood, { noCollide: true });
   B(18.2, F2, 3, 1.0, 3.0, 2.0, woodDk);
 
   // ============ THIRD FLOOR / ATTIC (y 11→15.5): central core, lower narrow rooms ============
@@ -2977,12 +2975,7 @@ function buildMansion(cx, cz) {
   hipRoof(-10.5, 15, 18, 9, F2 + 0.2, 2.6);                                  // ballroom (north wing) roof
   hipRoof(-10.5, -15, 18, 9, F2 + 0.2, 2.6);                                 // library (south wing) roof
   function hipRoof(lx, lz, w, d, base, rise) {
-    // A single flat SOLID roof deck (a player who climbs/lands up here stands cleanly on the roof, and it
-    // caps the room/attic below so looking up no longer shows sky) + a DECORATIVE stepped pyramid on top
-    // for the low-poly hip silhouette. Only the deck collides: stacking the steps as solids would let a
-    // fast fall settle inside an upper step and then get shoved sideways by resolveHorizontal.
-    B(lx, base - 0.1, lz, w, 0.5, d, slateDk);                                                              // solid roof deck (walk-on top ≈ base+0.4)
-    for (let i = 0; i < 5; i++) { const f = i / 5, ny = base + 0.4 + f * rise; BD(lx, ny, lz, w * (1 - f * 0.8), 0.5, d * (1 - f * 0.8), i % 2 ? slate : slateDk); }
+    for (let i = 0; i < 5; i++) { const f = i / 5, ny = base + f * rise; BD(lx, ny, lz, w * (1 - f * 0.8), 0.5, d * (1 - f * 0.8), i % 2 ? slate : slateDk); }   // stepped pyramid (low-poly hip)
   }
   // Roof parapet balustrades around the central block + dormers + chimneys
   balus('x', 14, -2, 19, RF + 0.2); balus('x', -14, -2, 19, RF + 0.2);
@@ -3475,20 +3468,14 @@ function groundHeightAt(x, z, feetY) {
 
 // Push an entity out of any wall/crate it's overlapping (only when feet are
 // below the box top — so you can still stand on top of crates/platforms).
-function resolveHorizontal(pos, bodyHeight, prevY) {
+function resolveHorizontal(pos, bodyHeight) {
   const r = MOVE.radius;
-  if (prevY == null) prevY = pos.y;               // NPC callers omit prevY -> reduces to the original behavior
   for (const s of solids) {
     const top = s.max.y, bot = s.min.y;
     // Don't push out of a surface you're standing ON or can step ONTO (top within STEP of the
     // feet). This matches groundHeightAt's step rule, so the per-frame gravity dip while standing
     // on an elevated surface (2nd floor, crate, watchtower platform) never shoves you off the edge.
     if (pos.y >= top - STEP) continue;            // standing on / stepping onto / above it
-    // ...nor off a floor you were on/above LAST frame and are now (fast-)falling onto. A hard drop can
-    // dip the feet >STEP below a floor top in a single frame; without this guard the floor would be read
-    // as a wall and the player flung sideways off its edge — landing on nothing and phasing through.
-    // (Walls you run into have prevY well below their top, so they still push you out normally.)
-    if (prevY >= top - 0.02) continue;
     if (pos.y + bodyHeight <= bot) continue;      // entirely below it
     if (pos.x > s.min.x - r && pos.x < s.max.x + r &&
         pos.z > s.min.z - r && pos.z < s.max.z + r) {
@@ -4497,48 +4484,14 @@ function updateMovement(dt) {
   // can move under low cover. A dive that slams a wall cancels into a crouch.
   const ix = player.pos.x, iz = player.pos.z;
   const bodyH = player.diving ? MOVE.diveEye : (MOVE.eyeHeight - (MOVE.eyeHeight - MOVE.crouchEye) * player.crouchBlend);
-  resolveHorizontal(player.pos, bodyH, py0);
+  resolveHorizontal(player.pos, bodyH);
   if (player.diving && Math.hypot(player.pos.x - ix, player.pos.z - iz) > 0.2) {
     player.vel.x = 0; player.vel.z = 0; endDive();    // dove into a wall -> drop crouched
   }
 
   // Ground / standing
   const wasAir = !player.onGround;
-  let gh = groundHeightAt(player.pos.x, player.pos.z, player.pos.y);
-  // --- SWEPT DOWNWARD landing (continuous vertical collision). A fast fall — off a tower or roof,
-  // a dive, an impulse/boost-pad arc, a scooter launch — can drop the feet from above a thin floor
-  // slab to well below its top in a SINGLE frame, skipping past groundHeightAt's STEP (0.7) window,
-  // so the floor is never "found" and the player phases straight through it (often through several
-  // floors to the ground). Re-scan solids for any whose top the feet crossed downward this frame
-  // (feet were on/above it last frame at py0, below it now) and land on the HIGHEST such surface.
-  // This is independent of STEP, so it catches every floor/roof/deck regardless of fall speed;
-  // groundHeightAt still handles step-ups and ramps as before. ---
-  if (player.vel.y < 0) {
-    if (window.__colDebug && player.vel.y < -22) {   // Part 9: high-speed vertical movement trace (throttled ~5/s)
-      player._fastFallLogT = (player._fastFallLogT || 0) - dt;
-      if (player._fastFallLogT <= 0) { player._fastFallLogT = 0.2; console.log('[collision] fast fall @(' + player.pos.x.toFixed(1) + ',' + player.pos.y.toFixed(1) + ',' + player.pos.z.toFixed(1) + ') vy=' + player.vel.y.toFixed(1) + ' — sweeping floors'); }
-    }
-    for (const s of solids) {
-      const top = s.max.y;
-      if (top > gh && py0 >= top - 0.02 && player.pos.y < top &&
-          player.pos.x > s.min.x && player.pos.x < s.max.x &&
-          player.pos.z > s.min.z && player.pos.z < s.max.z) {
-        gh = top;
-        if (window.__colDebug) console.log('[collision] swept-land top=' + top.toFixed(2) + ' caught fast fall: py0=' + py0.toFixed(2) + ' newY=' + player.pos.y.toFixed(2) + ' vy=' + player.vel.y.toFixed(1) + ' @(' + player.pos.x.toFixed(1) + ',' + player.pos.z.toFixed(1) + ')');
-      }
-    }
-    // PHASE-THROUGH diagnostic (Part 9): feet started above a solid's top and ended below its BOTTOM
-    // while horizontally inside it, yet we did NOT land on it -> a genuine tunnel-through. Should never
-    // fire now that swept-land is in place; logged (behind __colDebug) to flag any surface still slipping.
-    if (window.__colDebug) {
-      for (const s of solids) {
-        if (py0 >= s.max.y - 0.02 && player.pos.y + 0.05 < s.min.y && gh < s.max.y &&
-            player.pos.x > s.min.x && player.pos.x < s.max.x && player.pos.z > s.min.z && player.pos.z < s.max.z) {
-          console.log('[collision] PHASE-THROUGH DETECTED @(' + player.pos.x.toFixed(1) + ',' + player.pos.y.toFixed(1) + ',' + player.pos.z.toFixed(1) + ') through solid top=' + s.max.y.toFixed(2) + ' bot=' + s.min.y.toFixed(2) + ' vy=' + player.vel.y.toFixed(1));
-        }
-      }
-    }
-  }
+  const gh = groundHeightAt(player.pos.x, player.pos.z, player.pos.y);
   if (player.pos.y <= gh) {
     if (wasAir && player.vel.y < -6 && !player.diving) sfxLand(player.pos, Math.min(1.3, -player.vel.y / 13));   // thud scales with fall speed
     player.pos.y = gh;

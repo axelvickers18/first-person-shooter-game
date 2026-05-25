@@ -803,26 +803,10 @@
     <div id="brSwapPrompt" style="position:fixed; left:50%; bottom:118px; transform:translateX(-50%); z-index:7; pointer-events:none; font:700 16px 'Segoe UI',sans-serif; color:#fff; background:rgba(0,0,0,.5); padding:6px 14px; border-radius:8px; display:none;"></div>
     <div id="brPickup" style="position:fixed; left:50%; bottom:205px; transform:translateX(-50%); z-index:7; pointer-events:none; font:800 17px 'Segoe UI',sans-serif; text-shadow:0 2px 6px #000; opacity:0;"></div>
     <div id="brSpec" style="position:fixed; left:50%; bottom:60px; transform:translateX(-50%); z-index:7; pointer-events:none; font:800 18px 'Segoe UI',sans-serif; color:#9fd0ff; text-shadow:0 2px 6px #000; display:none;"></div>
-    <div id="brMap" style="display:none; position:fixed; inset:0; z-index:30; background:rgba(12,20,28,0.86); pointer-events:auto; align-items:center; justify-content:center; flex-direction:column; cursor:crosshair; font-family:'Segoe UI',sans-serif;">
-      <div style="font:800 22px 'Segoe UI',sans-serif; color:#f0e6c8; text-shadow:0 2px 6px #000; letter-spacing:3px;">PARADISE ISLAND</div>
-      <div id="brMapZoneInfo" style="font:800 16px 'Segoe UI',sans-serif; color:#9fd0ff; text-shadow:0 2px 6px #000; min-height:20px; margin:3px 0 5px;"></div>
-      <div style="position:relative;">
-        <canvas id="brMapCanvas" width="760" height="760" style="width:min(76vh,80vw); height:min(76vh,80vw); border:3px solid #5a4a2a; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.6); background:#26506b;"></canvas>
-        <div style="position:absolute; left:8px; bottom:8px; background:rgba(8,14,20,0.7); border:1px solid #3a4a5a; border-radius:6px; padding:6px 9px; font:700 11px 'Segoe UI',sans-serif; color:#cfe0f0; line-height:1.55; pointer-events:none;">
-          <div><span style="color:#fff;">▲</span> You</div><div><span style="color:#3aa0ff;">◯</span> Safe zone</div><div><span style="color:#ff9a3a;">◯</span> Next zone</div><div><span style="color:#e05a4a;">▨</span> Danger</div><div><span style="color:#ff4040;">●</span> Gunshot</div><div><span style="color:#ffe600;">✚</span> Your ping</div>
-        </div>
-      </div>
-      <div style="font:700 13px 'Segoe UI',sans-serif; color:#cfe0f0; margin-top:8px; opacity:.9;">Press <b style="color:#ffe600">M</b> / <b style="color:#ffe600">ESC</b> to close • <b style="color:#ffe600">Click</b> to ping • <b style="color:#ffe600">Scroll</b> to zoom • walk slowly while open</div>
-    </div>
-    <div id="brInvPanel" style="display:none; position:fixed; inset:0; z-index:31; background:rgba(8,14,20,0.80); pointer-events:auto; align-items:center; justify-content:center; font-family:'Segoe UI',sans-serif;">
-      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-        <div style="font:800 22px 'Segoe UI',sans-serif; color:#f0e6c8; text-shadow:0 2px 6px #000; letter-spacing:3px;">INVENTORY</div>
-        <div style="display:flex; gap:22px; align-items:flex-start;">
-          <div id="brInvSlots" style="display:flex; flex-direction:column; gap:8px;"></div>
-          <div id="brInvDetail" style="width:340px; min-height:430px; background:rgba(10,16,24,0.92); border:2px solid #2f3a48; border-radius:10px; padding:16px;"></div>
-        </div>
-        <div style="font:700 13px 'Segoe UI',sans-serif; color:#cfe0f0; opacity:.9;"><b style="color:#ffe600">Click</b> equip • <b style="color:#ffe600">Right-click</b> drop • <b style="color:#ffe600">Drag</b> to reorder • <b style="color:#ffe600">1-5</b> select • <b style="color:#ffe600">I</b>/<b style="color:#ffe600">ESC</b> close</div>
-      </div>
+    <div id="brMap" style="display:none; position:fixed; inset:0; z-index:30; background:rgba(18,28,38,0.82); pointer-events:none; align-items:center; justify-content:center; flex-direction:column;">
+      <div style="font:800 22px 'Segoe UI',sans-serif; color:#f0e6c8; text-shadow:0 2px 6px #000; margin-bottom:6px; letter-spacing:3px;">PARADISE ISLAND</div>
+      <canvas id="brMapCanvas" width="680" height="680" style="width:min(72vh,72vw); height:min(72vh,72vw); border:3px solid #5a4a2a; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.6); background:#26506b;"></canvas>
+      <div style="font:700 14px 'Segoe UI',sans-serif; color:#cfe0f0; margin-top:8px; opacity:.85;">Press <b style="color:#ffe600">M</b> to close • walk slowly while open</div>
     </div>
   </div>
   <div id="teamScoreHud"><span class="tA">0</span><span class="vs">RED · BLUE</span><span class="tB">0</span></div>
@@ -3673,14 +3657,14 @@ function buildParadiseIsland(cx, cz) {
   function chestSpot(lx, lz, rar) { lootSpots.push({ lx: lx, lz: lz, rar: rar || 'common' }); }
   function smokePlume(lx, lz, h) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 2.0, h, 7), new THREE.MeshBasicMaterial({ color: 0x6a6a6a, transparent: true, opacity: 0.16, depthWrite: false })); m.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 50) + h / 2 + 2, cz + lz); scene.add(m); }
   function campfire(lx, lz) { for (let a = 0; a < 6; a++) iD(lx + Math.cos(a) * 0.8, 0, lz + Math.sin(a) * 0.8, 0.4, 0.3, 0.4, 0x6a6a6a); iD(lx, 0.1, lz, 0.7, 0.3, 0.7, 0x2a2018); const f = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.9, 6), new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0.5 })); f.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 5) + 0.5, cz + lz); scene.add(f); iGlow(lx, 0.6, lz, 1.4, 1, 1.4, 0xff8a3a, 0.4); }
-  function vineRuin(lx, lz) { iB(lx, 0, lz, 2.4, 2.6 + (lx % 2) * 1.5, 1.4, 0x837c6e); iB(lx + 3, 0, lz + 1, 1.4, 1.6, 2.4, 0x9a9384); iD(lx + 1.5, 0, lz - 2, 3, 0.4, 0.4, 0x6d675d); for (let i = 0; i < 4; i++) iD(lx + (i - 1.5), 2, lz, 0.1, 1.6, 0.1, 0x3a6a2a); chestSpot(lx + 1, lz - 3, (lx % 4 === 0) ? 'rare' : 'common'); }   // (Part 1) 1 chest per ruin (5 clusters), beside the walls
+  function vineRuin(lx, lz) { iB(lx, 0, lz, 2.4, 2.6 + (lx % 2) * 1.5, 1.4, 0x837c6e); iB(lx + 3, 0, lz + 1, 1.4, 1.6, 2.4, 0x9a9384); iD(lx + 1.5, 0, lz - 2, 3, 0.4, 0.4, 0x6d675d); for (let i = 0; i < 4; i++) iD(lx + (i - 1.5), 2, lz, 0.1, 1.6, 0.1, 0x3a6a2a); chestSpot(lx + 1, lz - 3, (lx % 4 === 0) ? 'rare' : 'common'); chestSpot(lx - 2, lz + 2, 'common'); }   // 2 chests per ruin, beside the walls
   function tent(lx, lz, col) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 2, 3, 3), flatMat(col)); t.rotation.y = Math.PI / 4; t.position.set(cx + lx, groundHeightAt(cx + lx, cz + lz, 5) + 1.5, cz + lz); scene.add(t); }
   function signpost(lx, lz) { iD(lx, 0, lz, 0.3, 2.4, 0.3, 0x6f5333); [[-0.9, 1.8, -0.4], [0.9, 1.5, 0.5]].forEach(s => { const b = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.1), flatMat(0x8c6a3c)); b.position.set(cx + lx + s[0], groundHeightAt(cx + lx, cz + lz, 5) + s[1], cz + lz); b.rotation.y = s[2]; scene.add(b); }); }
   function zipline(ax, az, ay, bx, bz, by) { const a = new THREE.Vector3(cx + ax, ay, cz + az), b = new THREE.Vector3(cx + bx, by, cz + bz), mid = a.clone().add(b).multiplyScalar(0.5), m = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, a.distanceTo(b), 5), flatMat(0x1a1a1a)); m.position.copy(mid); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); scene.add(m); brZiplines.push({ a, b }); }
-  smokePlume(-40, 160, 14); iB(-40, 0, 160, 6, 2.2, 3, 0x3a4a3a); iB(-38, 1.4, 162, 4, 1.5, 2, 0x2a3a2a); cyl(cx - 36, 4, cz + 160, 0.2, 9, 0x555555, 'z'); chestSpot(-45, 161, 'legendary'); chestSpot(-36, 166, 'rare');   // CRASHED HELICOPTER + smoke landmark (Part 1: 2 chests around the wreck)
-  smokePlume(-90, -70, 10); iB(-90, 0, -70, 5, 1.8, 2.5, 0xc8c8c0); iB(-86, 0, -72, 3, 1.4, 5, 0xb0b0a8); chestSpot(-94, -68, 'rare'); chestSpot(-95, -73, 'common');   // CRASHED CIVILIAN PLANE (Part 1: 2 chests beside the fuselage)
-  (function (lx, lz) { iB(lx, 0.6, lz, 7, 4, 18, 0x7a6a4a); cyl(cx + lx, 8, cz + lz, 0.4, 13, 0x6a5a3a); iWallX(lz + 9, lx - 3.5, lx + 3.5, 0.6, 4.6, 0.5, 0x7a6a4a, [{ a0: lx - 1.5, a1: lx + 1.5, y0: 0.6, y1: 3.4 }]); chestSpot(lx, lz + 11, 'rare'); chestSpot(lx + 3, lz + 11, 'common'); })(228, 95);   // SHIPWRECK on the east beach (Part 1: 2 chests on the sand at the hull door)
-  (function (lx, lz) { tent(lx - 4, lz, 0x4a6a3a); tent(lx + 4, lz + 2, 0x6a5a3a); tent(lx, lz - 4, 0x4a5a6a); chestSpot(lx + 4, lz + 2, 'rare'); chestSpot(lx, lz, 'common'); })(-130, 30);   // ABANDONED TENT CAMP (Part 1: 2 chests inside the tents)
+  smokePlume(-40, 160, 14); iB(-40, 0, 160, 6, 2.2, 3, 0x3a4a3a); iB(-38, 1.4, 162, 4, 1.5, 2, 0x2a3a2a); cyl(cx - 36, 4, cz + 160, 0.2, 9, 0x555555, 'z'); chestSpot(-45, 161, 'legendary'); chestSpot(-36, 166, 'rare'); chestSpot(-44, 157, 'common'); chestSpot(-48, 164, 'common');   // CRASHED HELICOPTER + smoke landmark (4 chests on the ground around the wreck)
+  smokePlume(-90, -70, 10); iB(-90, 0, -70, 5, 1.8, 2.5, 0xc8c8c0); iB(-86, 0, -72, 3, 1.4, 5, 0xb0b0a8); chestSpot(-94, -68, 'rare'); chestSpot(-95, -73, 'common'); chestSpot(-88, -66, 'common');   // CRASHED CIVILIAN PLANE (3 chests beside the fuselage)
+  (function (lx, lz) { iB(lx, 0.6, lz, 7, 4, 18, 0x7a6a4a); cyl(cx + lx, 8, cz + lz, 0.4, 13, 0x6a5a3a); iWallX(lz + 9, lx - 3.5, lx + 3.5, 0.6, 4.6, 0.5, 0x7a6a4a, [{ a0: lx - 1.5, a1: lx + 1.5, y0: 0.6, y1: 3.4 }]); chestSpot(lx, lz + 11, 'rare'); chestSpot(lx + 3, lz + 11, 'common'); chestSpot(lx - 3, lz + 12, 'common'); chestSpot(lx, lz + 14, 'common'); })(228, 95);   // SHIPWRECK on the east beach (4 chests on the sand at the hull door)
+  (function (lx, lz) { tent(lx - 4, lz, 0x4a6a3a); tent(lx + 4, lz + 2, 0x6a5a3a); tent(lx, lz - 4, 0x4a5a6a); chestSpot(lx, lz, 'common'); chestSpot(lx + 4, lz + 2, 'rare'); chestSpot(lx - 4, lz, 'common'); chestSpot(lx, lz - 4, 'common'); })(-130, 30);   // ABANDONED TENT CAMP (4 chests inside the tents)
   for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.3, rr = 80 + (i % 3) * 30, vx = Math.cos(a) * rr, vz = Math.sin(a) * rr; if (dist2(vx, vz) < R - 30) vineRuin(vx, vz); }
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 1.1, rr = 45 + (i % 4) * 38; campfire(Math.cos(a) * rr, Math.sin(a) * rr); }
   (function lighthouse(lx, lz) { iCyl(lx, 8, lz, 3, 16, 0xe8e8e8); iCyl(lx, 16.5, lz, 3.4, 1, 0xc0392b); const lamp = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0xfff0b0 })); lamp.position.set(cx + lx, 17.6, cz + lz); scene.add(lamp); iGlow(lx, 17.6, lz, 5, 3, 5, 0xfff0b0, 0.8); peaks.push({ name: 'LIGHTHOUSE', lx, lz, top: 16 }); })(-215, 60);
@@ -4279,11 +4263,11 @@ const IM = {
     ['weapon1', 'Weapon Slot 1 / BR Inv Slot 1'], ['weapon2', 'Weapon Slot 2 / BR Inv Slot 2'], ['karambit', 'Equip Karambit / BR Inv Slot 3'], ['brSlot4', 'BR Inventory Slot 4'], ['brSlot5', 'BR Inventory Slot 5'], ['equipRC', 'Equip RC Launcher', 'when unlocked'],
     ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['reload', 'Reload'], ['prevWeapon', 'Previous Weapon'], ['nextWeapon', 'Next Weapon'], ['toggleLaser', 'Toggle Laser Sight', 'laser weapons'], ['flashlight', 'Toggle Flashlight', 'flashlight attachment'],
     ['CONSUMABLES / ABILITIES', null],
-    ['use', 'Use Cigar / Drink JD  •  BR: Equip Melee'], ['grenade', 'Throw Impulse  •  BR: Drop Held Item'], ['lethal', 'Throw Lethal (Smoke / Axe)'], ['interact', 'Interact / Climb Ladder  •  BR: Pick Up Loot'],
+    ['use', 'Use Cigar / Drink JD  •  BR: Equip Melee'], ['grenade', 'Throw Impulse  •  BR: Drop Held Item'], ['lethal', 'Throw Lethal (Smoke / Axe)'], ['interact', 'Interact / Climb Ladder'],
     ['SCORESTREAKS', null],
-    ['saber', 'Saber + Jack Daniels  •  BR: Toggle Minimap', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers  •  BR: Open Full Map', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
+    ['saber', 'Saber + Jack Daniels', '3-kill streak'], ['flamethrower', 'Flamethrower', '4-kill streak'], ['rcStreak', 'RC Rocket Launcher', '5-kill streak'], ['dogs', 'Kirks Avengers', '10-kill streak'], ['kong', 'Summon King Kong', 'secret'],
     ['UI / MENUS', null],
-    ['inventory', 'Inventory / FFA Loadout  •  BR: Inventory Pop-up'], ['pause', 'Pause / Settings'], ['scoreboard', 'Scoreboard'], ['chat', 'Chat'], ['toggleHints', 'Toggle Control Hints'], ['inspect', 'Inspect Weapon']
+    ['inventory', 'Inventory / FFA Loadout'], ['pause', 'Pause / Settings'], ['scoreboard', 'Scoreboard'], ['chat', 'Chat'], ['toggleHints', 'Toggle Control Hints'], ['inspect', 'Inspect Weapon']
   ],
   PRESETS: {
     default: {},   // = defaults (filled in load)
@@ -4520,7 +4504,7 @@ document.addEventListener('pointerlockchange', () => {
     // Pressing ESC (or otherwise losing the lock) mid-match with no menu open → open the pause menu.
     setTimeout(() => {
       if (!pointerLocked && fullControlsOpen()) { toggleFullControls(false); if (gameState.running && player.alive) lockPointer(); return; }   // ESC closes the controls overlay (no pause)
-      if (!pointerLocked && gameState.running && !gameState.over && !paused && !invOpen && !brInvOpen && !brMapOpen && el('settingsScreen').classList.contains('hidden') && el('skinCreator').classList.contains('hidden')) openPauseMenu();
+      if (!pointerLocked && gameState.running && !gameState.over && !paused && !invOpen && el('settingsScreen').classList.contains('hidden') && el('skinCreator').classList.contains('hidden')) openPauseMenu();
     }, 40);
   }
 });
@@ -4611,7 +4595,6 @@ function gameAction(act, rep) {
   if (BR.active && player.alive && !brSpectating) {   // BR 5-slot inventory OWNS the slot / melee / drop / quick-use keys
     if (act === 'weapon1' || act === 'weapon2' || act === 'karambit' || act === 'brSlot4' || act === 'brSlot5' || act === 'prevWeapon' || act === 'nextWeapon') { if (cigSmoking) cigCancel(); brWeaponAction(act); return; }   // 1-5 = inventory slots, wheel cycles
     if (act === 'use' && !rep) { if (cigSmoking) cigCancel(); brWeaponAction('melee'); return; }            // Q -> equip melee (separate from the 5 slots)
-    if (act === 'inventory' && !rep) { brToggleInv(); return; }                                              // I -> open/close the pop-up inventory (Part 3)
     if ((act === 'grenade' || act === 'dropWeapon') && !rep) { brWeaponAction('dropItem'); return; }         // G / X -> drop ONE of the held item
     if (act === 'lethal' && !rep) { brUseType('lethal'); return; }                                           // H -> quick-throw a lethal from its slot
     if (act === 'drinkJD' && !rep) { brUseType('jd'); return; }                                              // Z -> quick-drink a JD from its slot
@@ -10012,7 +9995,7 @@ function brStart() {
   brGunshots.length = 0; const mm = el('brMinimap'); if (mm) mm.style.display = brMinimapOn ? 'block' : 'none';   // minimap
   brHudShow(true); updateBRHud();
 }
-function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
+function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); }
 function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
 function brEliminate(name) {                              // record an elimination + crown the winner when one remains
   if (!BR.active) return;
@@ -10049,7 +10032,6 @@ function brUpdate(dt) {
   if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);   // 5-slot: show held consumable / hide gun for empty hands
   if (island && island.fireflies) island.fireflies.material.opacity = dnStarF * (0.5 + 0.3 * Math.sin(BR.t * 2.2));   // glow + gently twinkle at night, hidden by day
   if (brMapOpen) brDrawMap();
-  if (brInvOpen && brInvDrag < 0) brRenderInv();   // (Part 3) refresh the pop-up inventory (skip mid-drag)
   if (brMinimapOn) brDrawMinimap();
   updateBRHud();
 }
@@ -10244,39 +10226,29 @@ function brIndoorPoint(cxp, czp, maxR) {   // sample for a point in a real, walk
   return null;
 }
 // (Part 1) ALL loot lives in CHESTS, placed inside roofed rooms — no naked ground weapons/consumables. Player drops/death loot are the only loose items.
-// (Part 1) Per-POI TOTAL chest budget (strategic FIXED chests + random fill). Loot is deliberately
-// sparser now — fewer, more meaningful chests, encouraging exploration & competition. Strategic fixed
-// chests (esp. legendaries: mansion suite/panic room, temple crypt, cargo bridge, longhouse, armory,
-// control-tower top) are ALWAYS kept; the remaining commons are capped to the budget.
-const POI_TARGET = { 'PARADISE COVE': [7, 10], 'LAGOON RESORT': [10, 12], 'ANCIENT RUINS': [9, 11], 'CAMP DELTA': [12, 14], "HARBOR'S EDGE": [7, 9], 'CLIFF SETTLEMENT': [7, 9], 'RUSTED HULL': [12, 14], 'AIRSTRIP': [10, 12], "MILLIONAIRE'S RETREAT": [12, 14] };
+const POI_CHESTS = { 'PARADISE COVE': [10, 14], 'LAGOON RESORT': [12, 15], 'ANCIENT RUINS': [10, 14], 'CAMP DELTA': [18, 22], "HARBOR'S EDGE": [12, 16], 'CLIFF SETTLEMENT': [8, 12], 'RUSTED HULL': [9, 12], 'AIRSTRIP': [14, 18], "MILLIONAIRE'S RETREAT": [16, 20] };   // ship/mansion: fewer ground-floor random chests; fixed chests cover their upper levels   // mansion: ground-floor random chests; +8 fixed chests placed on its upper floors / special rooms
 const POI_LEG = { 'ANCIENT RUINS': 1.8, 'CAMP DELTA': 1.6, 'RUSTED HULL': 1.6, "MILLIONAIRE'S RETREAT": 2.0, 'AIRSTRIP': 1.4 };   // higher-risk POIs roll more legendaries (strategic placement, approximated)
 function brSpawnLoot() {
   brClearLoot(); if (!island) return;
   let indoorCount = 0, placedCount = 0, last = {};
-  // assign each FIXED chest to its nearest POI so it counts against that POI's budget (keeps legendaries)
-  const poiFixed = {}; island.pois.forEach(p => poiFixed[p.name] = []);
-  (island.fixedChests || []).forEach(c => { let best = null, bd = Infinity; island.pois.forEach(p => { const d = Math.hypot(c.x - (island.cx + p.lx), c.z - (island.cz + p.lz)); if (d < bd) { bd = d; best = p; } }); if (best && bd < 70) poiFixed[best.name].push(c); else brAddChest(c.x, c.z, c.rar, c.y); });
-  const rank = c => c.rar === 'legendary' ? 0 : (c.rar === 'rare' ? 1 : 2);
   island.pois.forEach(poi => {
-    const cxp = island.cx + poi.lx, czp = island.cz + poi.lz, rng = POI_TARGET[poi.name] || [10, 12], legMul = POI_LEG[poi.name] || 1;
-    const target = rng[0] + (Math.random() * (rng[1] - rng[0] + 1) | 0);
-    let n = 0;
-    const fx = (poiFixed[poi.name] || []).slice().sort((a, b) => rank(a) - rank(b));   // legendaries first, then rares, then commons
-    for (const c of fx) { if (n >= target && c.rar !== 'legendary') continue; brAddChest(c.x, c.z, c.rar, c.y); n++; }   // always keep legendaries; cap the rest at the budget
-    while (n < target) {   // fill the remaining budget with random indoor chests
+    const cxp = island.cx + poi.lx, czp = island.cz + poi.lz, rng = POI_CHESTS[poi.name] || [12, 16], legMul = POI_LEG[poi.name] || 1;
+    const nChest = rng[0] + (Math.random() * (rng[1] - rng[0] + 1) | 0);
+    for (let i = 0; i < nChest; i++) {
       let p = null; for (let tries = 0; tries < 4 && !p; tries++) { const c = brIndoorPoint(cxp, czp, 30); if (c && (!last[poi.name] || Math.hypot(c[0] - last[poi.name][0], c[1] - last[poi.name][1]) > 3)) p = c; else if (c && tries === 3) p = c; }
-      if (!p) break; last[poi.name] = p; placedCount++; if (brIsIndoors(p[0], p[1])) indoorCount++;
+      if (!p) continue; last[poi.name] = p; placedCount++; if (brIsIndoors(p[0], p[1])) indoorCount++;
       const rr = Math.random();   // 70% common / 23% rare / 7% legendary
       let tier = rr < 0.70 ? 'common' : (rr < 0.93 ? 'rare' : 'legendary');
       if (tier === 'rare' && Math.random() < (legMul - 1) * 0.15) tier = 'legendary';   // high-risk POIs upgrade some rares -> more legendaries
-      brAddChest(p[0], p[1], tier); n++;
+      brAddChest(p[0], p[1], tier);
     }
   });
   BR._lootIndoorRatio = placedCount ? indoorCount / placedCount : 1;   // verification hook
   // Enclosed non-POI sources (wrecks / shipwreck / plane / vine ruins / tent camps / caves / secret rooms) — all chests
   (island.lootSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar); });
-  (island.caveSpots || []).forEach(cv => { for (let i = 0; i < 2; i++) brAddChest(island.cx + cv[0] + (i - 0.5) * 3, island.cz + cv[1] + (i % 2) * 2.4, (i === 0 && Math.random() < 0.4) ? 'rare' : (Math.random() < 0.12 ? 'legendary' : 'common')); });   // (Part 1) 2 chests per cave (3 caves -> ~6)
-  (island.secretSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar || 'legendary'); });   // secret rooms: a single legendary chest
+  (island.caveSpots || []).forEach(cv => { const n = 4 + (Math.random() * 2 | 0); for (let i = 0; i < n; i++) brAddChest(island.cx + cv[0] + (i - 2) * 2.4, island.cz + cv[1] + (i % 2) * 2.4, Math.random() < 0.35 ? 'rare' : (Math.random() < 0.1 ? 'legendary' : 'common')); });   // 4-5 cave chests
+  (island.secretSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar || 'legendary'); brAddChest(island.cx + s.lx + 3, island.cz + s.lz, 'rare'); });   // secret rooms: a legendary + a rare
+  (island.fixedChests || []).forEach(c => brAddChest(c.x, c.z, c.rar, c.y));   // explicit upper-floor / special-room chests (mansion etc.)
 }
 // --- BR weapon slots: two primaries (1/2) + the melee (3). Each slot's ammo lives in weaponState[key]. ---
 function brWeaponMags(rar, key) {     // reserve magazines by rarity (snipers/DMRs/LMGs carry fewer)
@@ -10375,25 +10347,16 @@ function brUseSelected() {   // use the held consumable (cigar smoke / JD drink 
   else if (it.t === 'lethal') { throwLethal(); ok = brCount('lethal') < before; }
   if (ok) { brHeldUseT = 0.45; if (brCount(it.t) <= 0) { const i = brSel; brInv[i] = null; brSelectAfterEmpty(i); } updateHUD(); }
 }
-function brTakeLoot(L, label, col, raw) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col, raw); }
-function brPickupToast(label, col, raw) { const p = el('brPickup'); if (!p) return; p.textContent = (raw ? '' : 'PICKED UP: ') + label; p.style.color = col || '#fff'; p.style.transition = 'none'; p.style.opacity = '1'; clearTimeout(p._t); requestAnimationFrame(() => { p.style.transition = 'opacity 1.4s'; }); p._t = setTimeout(() => { p.style.opacity = '0'; }, 900); }
+function brTakeLoot(L, label, col) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col); }
+function brPickupToast(label, col) { const p = el('brPickup'); if (!p) return; p.textContent = 'PICKED UP: ' + label; p.style.color = col || '#fff'; p.style.transition = 'none'; p.style.opacity = '1'; clearTimeout(p._t); requestAnimationFrame(() => { p.style.transition = 'opacity 1.4s'; }); p._t = setTimeout(() => { p.style.opacity = '0'; }, 900); }
 function brPickWeapon(L) {
   brGiveWeapon(L.key, L.cfg, L.rarity, (L.ammo != null) ? { ammo: L.ammo, reserve: L.reserve } : null);
   brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
 }
-function brPickConsumable(L) {   // (Part 2) E to pick up a NEW consumable type into a free slot
-  if (!brTakeConsumable(L.kind)) return false;
-  const m = brItemMeta(L.kind), c = brCount(L.kind);
-  brTakeLoot(L, m.name + (L.kind === 'second' ? '!' : (c > 1 ? ' ×' + c : '')), brLootCol(L.kind));
-  return true;
-}
-function brTrySwapLoot() {   // (Part 2) E handles every loot pickup: chest open / weapon pickup-or-swap / new consumable
+function brTrySwapLoot() {
   if (!BR.active || !brSwapTarget || brSwapTarget.taken) return false;
-  const L = brSwapTarget; brSwapTarget = null;
-  if (L.chest) { brOpenChest(L); return true; }
-  if (L.kind === 'weapon') { brPickWeapon(L); return true; }
-  if (L.kind === 'ammo') { if (brHasGun()) { brRefillAmmo(); brTakeLoot(L, '+AMMO', '#8aa0b0', true); } return true; }
-  return brPickConsumable(L);
+  if (brSwapTarget.chest) { brOpenChest(brSwapTarget); brSwapTarget = null; return true; }   // E opens a chest
+  brPickWeapon(brSwapTarget); brSwapTarget = null; return true;                               // E swaps a weapon (both slots full)
 }
 function brRefillAmmo() {   // ammo box: +2 magazines of reserve to EVERY carried weapon (held one updates its live state too)
   brInv.forEach(it => {
@@ -10418,21 +10381,19 @@ function brUpdateLoot(dt) {
     if (!player.alive) continue;
     const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
     if (d > 2.8 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;
-    if (L.chest) { if (!L.open && d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }   // chest: E to open
-    if (L.kind === 'ammo') { if (brHasGun()) { brRefillAmmo(); brTakeLoot(L, '+AMMO', '#8aa0b0', true); } continue; }   // (Part 2) ammo always auto-refills your guns
-    if (L.kind === 'weapon') { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }                  // (Part 2) weapons ALWAYS need E (never an accidental swap)
-    // (Part 2) consumable: AUTO-stack if you ALREADY carry it (with room); a NEW type needs E
-    const haveSlot = brSlotOfType(L.kind) >= 0, lim = BR_STACK[L.kind] || 1;
-    if (haveSlot && brCount(L.kind) < lim) { brTakeConsumable(L.kind); const m = brItemMeta(L.kind), c = brCount(L.kind); brTakeLoot(L, '+1 ' + m.name + (c > 1 ? ' ×' + c : ''), brLootCol(L.kind), true); continue; }
-    if (!haveSlot && brCanTake(L.kind)) { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } }                 // new consumable, inventory has room -> E to pick up
+    if (L.chest) { if (!L.open && d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }   // chest: E to open (handled below)
+    if (L.kind === 'weapon') { if (brFirstEmpty() >= 0) brPickWeapon(L); else if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } }   // auto-pickup into an empty slot; else E-swaps the held item
+    else if (L.kind === 'ammo') { if (brHasGun()) { brRefillAmmo(); brTakeLoot(L, 'AMMO', '#8aa0b0'); } }
+    else if (L.kind === 'cigar' || L.kind === 'jd' || L.kind === 'impulse' || L.kind === 'lethal' || L.kind === 'second') {   // auto-stack consumables into the 5-slot inventory
+      if (brCanTake(L.kind)) { brTakeConsumable(L.kind); const m = brItemMeta(L.kind); brTakeLoot(L, m.name + (L.kind === 'second' ? '!' : (brCount(L.kind) > 1 ? ' ×' + brCount(L.kind) : '')), brLootCol(L.kind)); }
+    }
   }
   const sp = el('brSwapPrompt');
   if (sp) {
     if (brSwapTarget) {
-      sp.style.display = 'block'; const ekey = '<b style="color:#ffe600">' + IM.keyLabel(IM.bind.interact) + '</b>', L = brSwapTarget;
-      if (L.chest) sp.innerHTML = 'Press ' + ekey + ' to OPEN ' + (L.rarity !== 'common' ? '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + '</b> ' : '') + 'CHEST';
-      else if (L.kind === 'weapon') { const full = brFirstEmpty() < 0; sp.innerHTML = 'Press ' + ekey + (full ? ' to SWAP for ' : ' to PICK UP ') + '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'weapon') + '</b>'; }
-      else { const m = brItemMeta(L.kind); sp.innerHTML = 'Press ' + ekey + ' to PICK UP <b style="color:' + brLootCol(L.kind) + '">' + m.name + '</b>'; }
+      sp.style.display = 'block'; const ekey = '<b style="color:#ffe600">' + IM.keyLabel(IM.bind.interact) + '</b>';
+      if (brSwapTarget.chest) sp.innerHTML = 'Press ' + ekey + ' to OPEN ' + (brSwapTarget.rarity !== 'common' ? '<b style="color:' + brRarHex(brSwapTarget.rarity) + '">' + BR_RAR[brSwapTarget.rarity].name + '</b> ' : '') + 'CHEST';
+      else sp.innerHTML = 'Press ' + ekey + ' to swap for <b style="color:' + brRarHex(brSwapTarget.rarity) + '">' + BR_RAR[brSwapTarget.rarity].name + ' ' + (WEAPONS[brSwapTarget.key] ? WEAPONS[brSwapTarget.key].name : 'weapon') + '</b>';
     } else sp.style.display = 'none';
   }
 }
@@ -10441,39 +10402,9 @@ function brWeaponAmmoOf(it) {   // {ammo,reserve,out} for a weapon slot — live
   let a, rsv; if (brHeldWeapon() === it && weaponState[it.key]) { a = weaponState[it.key].ammo; rsv = weaponState[it.key].reserve; } else { a = it.ammo; rsv = it.reserve; }
   const inf = (rsv === Infinity); return { ammo: a, reserve: rsv, txt: inf ? '∞' : (a + ' / ' + rsv), out: (!inf && a === 0 && rsv === 0) };
 }
-// ----- (Part 6) weapon identification: low-poly SILHOUETTES per class + attachment indicators -----
-function brWpnClass(key) { return WPN_CLASS[key] || 'ar'; }
-function brWeaponSilhouette(key, color, h) {   // simple filled SVG gun shape, distinct per class (viewBox 0 0 42 20)
-  const cls = brWpnClass(key); h = h || 22; const w = Math.round(h * 2.0); let s;
-  if (cls === 'pistol' || cls === 'revolver') s = '<rect x="7" y="6" width="19" height="4" rx="1"/><path d="M11 9 L10 17 L15 17 L16 9 Z"/>' + (cls === 'revolver' ? '<circle cx="18" cy="8" r="2.6"/>' : '');
-  else if (cls === 'smg') s = '<rect x="5" y="6" width="21" height="5" rx="1"/><rect x="26" y="7" width="9" height="2.4"/><path d="M12 10 L11 18 L16 18 L17 10 Z"/>';
-  else if (cls === 'shotgun') s = '<rect x="3" y="6" width="26" height="5" rx="1"/><rect x="29" y="7" width="10" height="2.4"/><rect x="15" y="11" width="12" height="2"/><path d="M3 7 L1 15 L5 15 L5 7 Z"/>';
-  else if (cls === 'lmg') s = '<rect x="3" y="5" width="24" height="6" rx="1"/><rect x="27" y="7" width="12" height="2.6"/><rect x="10" y="11" width="9" height="5"/><path d="M29 9 L26 18 L28 18 L31 9 Z"/><path d="M35 9 L38 18 L36 18 L33 9 Z"/>';
-  else if (cls === 'dmr') s = '<rect x="3" y="6.5" width="22" height="4" rx="1"/><rect x="25" y="7.5" width="14" height="2"/><rect x="13" y="3.5" width="9" height="2.6" rx="1"/><path d="M7 10 L6 16 L10 16 L11 10 Z"/>';
-  else if (cls === 'sniper') s = '<rect x="2" y="7" width="18" height="3.6" rx="1"/><rect x="20" y="8" width="19" height="1.8"/><rect x="11" y="3" width="12" height="2.8" rx="1"/><path d="M5 10 L4 17 L8 17 L9 10 Z"/>';
-  else if (cls === 'crossbow') s = '<rect x="12" y="8" width="24" height="2.4"/><path d="M13 2 L8 9 L13 16 L15 15 L11 9 L15 3 Z"/><path d="M35 3 L31 9 L33 10 L37 4 Z"/>';
-  else s = '<rect x="3" y="6" width="23" height="4.6" rx="1"/><rect x="26" y="7.2" width="13" height="2.2"/><path d="M12 10 L11 17 L16 17 L17 10 Z"/><path d="M3 7 L0 8 L0 11 L3 11 Z"/>';   // ar / default
-  return '<svg viewBox="0 0 42 20" width="' + w + '" height="' + h + '" style="display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.6));"><g fill="' + color + '">' + s + '</g></svg>';
-}
-function brAttachIcons(cfg, sz) {   // small badges: optic / extended-or-drum mag / laser / flashlight
-  if (!cfg) return ''; sz = sz || 9; let h = '';
-  if (cfg.sight && cfg.sight !== 'iron') h += '<span title="Optic">' + (cfg.sight === 'red_dot' ? '🎯' : '🔭') + '</span>';
-  if (cfg.magazine === 'extended' || cfg.magazine === 'drum') h += '<span title="' + (cfg.magazine === 'drum' ? 'Drum' : 'Extended') + ' Mag">🥁</span>';
-  if (cfg.laser && cfg.laser !== 'off') h += '<span title="Laser" style="color:#ff4a4a;">●</span>';
-  if (cfg.flashlight === 'on') h += '<span title="Flashlight">🔦</span>';
-  return h ? '<span style="position:absolute; top:2px; left:3px; font-size:' + sz + 'px; line-height:1.1; letter-spacing:1px; text-shadow:0 1px 2px #000;">' + h + '</span>' : '';
-}
-function brMeleeSlotHtml() {   // (Part 4) MELEE = permanent slot, distinct cyan tint, never empty
-  const mk = IM.keyLabel(IM.bind.use), mn = (typeof MELEE_NAMES !== 'undefined' ? MELEE_NAMES[meleeChoice] : 'KNIFE'), on = ggKarambit;
-  return '<div data-brmelee="1" title="Melee — ' + mn + ' (always available)" style="position:relative; width:56px; height:62px; margin-right:7px; border:2px solid ' + (on ? '#7fe9ff' : '#356069') + '; border-radius:7px; background:' + (on ? 'rgba(18,44,52,0.94)' : 'rgba(14,30,34,0.6)') + ';' +
-    (on ? ' box-shadow:0 0 0 2px #7fe9ff, 0 0 12px rgba(127,233,255,.55); transform:translateY(-5px);' : '') + ' cursor:pointer; transition:transform .08s;">' +
-    '<span style="position:absolute; left:0; right:0; top:18px; text-align:center; font-size:23px;">🔪</span>' +
-    '<span style="position:absolute; left:0; right:0; bottom:3px; text-align:center; font:800 8px \'Segoe UI\',sans-serif; color:#7fe9ff; letter-spacing:.5px;">MELEE</span>' +
-    '<span style="position:absolute; left:50%; transform:translateX(-50%); bottom:-17px; font:800 10px \'Segoe UI\',sans-serif; color:' + (on ? '#7fe9ff' : '#9fb0c0') + '; background:rgba(0,0,0,.5); padding:0 4px; border-radius:3px;">' + mk + '</span></div>';
-}
-// ----- bottom-center HOTBAR: melee (6th slot, left) + 5 universal slots, active outlined, dynamic key labels -----
+// ----- bottom-center HOTBAR: 5 universal slots (weapons/consumables), active outlined, dynamic key labels -----
 function brHotbarHtml() {
-  let h = brMeleeSlotHtml();   // (Part 4) melee always present, to the LEFT of the 5 slots
+  let h = '';
   for (let i = 0; i < 5; i++) {
     const it = brInv[i], active = (!ggKarambit && brSel === i && it), keyLbl = IM.keyLabel(brSlotKeyBind(i));
     let inner = '<span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#5e6b78; font:700 11px \'Segoe UI\',sans-serif;">EMPTY</span>';
@@ -10481,10 +10412,9 @@ function brHotbarHtml() {
     if (it && it.t === 'weapon') {
       const col = brRarHex(it.rar || 'common'), am = brWeaponAmmoOf(it), nm = WEAPONS[it.key] ? WEAPONS[it.key].name : it.key;
       border = col;
-      inner = '<span style="position:absolute; top:2px; right:4px; font:800 10px \'Segoe UI\',sans-serif; color:' + (am.out ? '#ff5a5a' : '#fff') + ';">' + am.txt + '</span>' +
-              brAttachIcons(it.cfg, 9) +
-              '<span style="position:absolute; left:0; right:0; top:23px; display:flex; justify-content:center;">' + brWeaponSilhouette(it.key, col, 19) + '</span>' +
-              '<span style="position:absolute; left:0; right:0; bottom:2px; text-align:center; font:800 8px \'Segoe UI\',sans-serif; color:#eef4fa; overflow:hidden; white-space:nowrap; text-shadow:0 1px 2px #000;">' + nm + '</span>';
+      inner = '<span style="position:absolute; top:3px; right:5px; font:800 11px \'Segoe UI\',sans-serif; color:' + (am.out ? '#ff5a5a' : '#fff') + ';">' + am.txt + '</span>' +
+              '<span style="position:absolute; left:0; right:0; top:24px; text-align:center; font:900 19px \'Segoe UI\',sans-serif; color:' + col + ';">🔫</span>' +
+              '<span style="position:absolute; left:0; right:0; bottom:3px; text-align:center; font:700 9px \'Segoe UI\',sans-serif; color:#cfe0f0; overflow:hidden; white-space:nowrap;">' + nm + '</span>';
       tip = (BR_RAR[it.rar] ? BR_RAR[it.rar].name : '') + ' ' + nm + '  ' + am.txt;
     } else if (it) {
       const m = brItemMeta(it.t), cnt = brCount(it.t); border = '#7a6f57';
@@ -10497,6 +10427,12 @@ function brHotbarHtml() {
          (active ? ' box-shadow:0 0 0 2px #ffd34a, 0 0 12px rgba(255,211,74,.6); transform:translateY(-5px);' : '') + ' cursor:pointer; transition:transform .08s;">' + inner +
          '<span style="position:absolute; left:50%; transform:translateX(-50%); bottom:-17px; font:800 10px \'Segoe UI\',sans-serif; color:' + (active ? '#ffd34a' : '#9fb0c0') + '; background:rgba(0,0,0,.5); padding:0 4px; border-radius:3px;">' + keyLbl + '</span></div>';
   }
+  // melee chip (separate from the 5 slots; its own key)
+  const mk = IM.keyLabel(IM.bind.use), mn = (typeof MELEE_NAMES !== 'undefined' ? MELEE_NAMES[meleeChoice] : 'KNIFE');
+  h += '<div title="Melee — ' + mn + '" style="position:relative; width:50px; height:62px; margin-left:10px; border:2px solid ' + (ggKarambit ? '#ffd34a' : '#3a4451') + '; border-radius:7px; background:rgba(10,14,20,' + (ggKarambit ? '0.92' : '0.62') + ');' + (ggKarambit ? ' box-shadow:0 0 10px rgba(255,211,74,.5); transform:translateY(-5px);' : '') + '">' +
+       '<span style="position:absolute; left:0; right:0; top:20px; text-align:center; font-size:20px;">🔪</span>' +
+       '<span style="position:absolute; left:0; right:0; bottom:3px; text-align:center; font:700 8px \'Segoe UI\',sans-serif; color:#7fe9ff;">MELEE</span>' +
+       '<span style="position:absolute; left:50%; transform:translateX(-50%); bottom:-17px; font:800 10px \'Segoe UI\',sans-serif; color:' + (ggKarambit ? '#ffd34a' : '#9fb0c0') + '; background:rgba(0,0,0,.5); padding:0 4px; border-radius:3px;">' + mk + '</span></div>';
   return h;
 }
 // ----- bottom-right DETAIL panel for whatever is in hand -----
@@ -10517,83 +10453,8 @@ function brHeldDetailHtml() {
     '<div style="font:600 12px \'Segoe UI\',sans-serif; color:#dfe7f0;">' + m.desc + '</div>' +
     '<div style="font:700 11px \'Segoe UI\',sans-serif; color:#ffd34a; margin-top:3px;">' + (it.t === 'second' ? 'PASSIVE — carry to survive death once' : 'PRESS [' + keyLbl + '] TO ' + m.verb) + '</div>';
 }
-/* ----------------- BATTLE ROYALE — POP-UP INVENTORY (Part 3, key I) -----------------
-   Centered modal (no pause; you can still move & take damage). LEFT = 5 large slots + the
-   permanent melee slot; RIGHT = full detail for the hovered slot. Left-click equips,
-   right-click drops, drag swaps slots, 1-5 select, I/ESC closes. Frees the cursor while open. */
-let brInvOpen = false, brInvHover = -1, brInvDrag = -1;
-function brSlotMag(it) { return (isCustomizable(it.key) && _baseMag[it.key]) ? Math.round(_baseMag[it.key] * ((ATT_MAGS[(it.cfg || {}).magazine] || ATT_MAGS.standard).mult)) : (WEAPONS[it.key] ? WEAPONS[it.key].mag : 0); }
-function brStatBar(label, pct, valTxt, color) {
-  pct = Math.max(2, Math.min(100, pct));
-  return '<div style="display:flex; align-items:center; gap:8px; margin:6px 0; font:700 11px \'Segoe UI\',sans-serif;">' +
-    '<span style="width:84px; color:#9fb0c0;">' + label + '</span>' +
-    '<span style="flex:1; height:7px; background:#1c2632; border-radius:4px; overflow:hidden;"><span style="display:block; height:100%; width:' + pct.toFixed(0) + '%; background:' + (color || '#3aa0ff') + ';"></span></span>' +
-    '<span style="width:54px; text-align:right; color:#e8f0f8;">' + valTxt + '</span></div>';
-}
-function brInvSlotBig(idx) {
-  const isM = (idx === 'm');
-  const active = isM ? ggKarambit : (!ggKarambit && brSel === idx && !!brInv[idx]);
-  const hover = (brInvHover === idx);
-  let border = isM ? '#356069' : '#3a4451', icon = '<div style="font-size:24px; color:#46535f;">▢</div>', title = '<span style="color:#5e6b78;">EMPTY</span>', sub = '', keyLbl;
-  if (isM) { keyLbl = IM.keyLabel(IM.bind.use); const mn = (MELEE_NAMES[meleeChoice] || 'KNIFE'); icon = '<div style="font-size:30px;">🔪</div>'; title = mn; sub = 'Melee • always available'; border = active ? '#7fe9ff' : '#356069'; }
-  else {
-    keyLbl = IM.keyLabel(brSlotKeyBind(idx)); const it = brInv[idx];
-    if (it && it.t === 'weapon') { const col = brRarHex(it.rar || 'common'), am = brWeaponAmmoOf(it); border = col; icon = brWeaponSilhouette(it.key, col, 26); title = WEAPONS[it.key] ? WEAPONS[it.key].name : it.key; sub = '<span style="color:' + col + '">' + (BR_RAR[it.rar] ? BR_RAR[it.rar].name : '') + '</span> • ' + (am.out ? '<span style="color:#ff5a5a">' + am.txt + '</span>' : am.txt); }
-    else if (it) { const m = brItemMeta(it.t), cnt = brCount(it.t); border = '#7a6f57'; icon = '<div style="font-size:28px;">' + m.icon + '</div>'; title = m.name + (cnt > 1 ? ' ×' + cnt : ''); sub = m.desc; }
-  }
-  const bg = active ? 'rgba(40,34,10,0.92)' : (hover ? 'rgba(26,34,46,0.96)' : 'rgba(14,20,28,0.9)');
-  const ring = active ? 'box-shadow:0 0 0 2px #ffd34a, 0 0 14px rgba(255,211,74,.5);' : (hover ? 'box-shadow:0 0 0 2px ' + (isM ? '#7fe9ff' : '#5a7fb0') + ';' : '');
-  return '<div ' + (isM ? 'data-invmelee="1" draggable="false"' : 'data-invslot="' + idx + '" draggable="true"') + ' style="position:relative; display:flex; align-items:center; gap:12px; width:230px; height:80px; padding:0 14px 0 12px; border:2px solid ' + border + '; border-radius:9px; background:' + bg + '; ' + ring + ' cursor:pointer; transition:box-shadow .08s;">' +
-    '<div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;">' + icon + '</div>' +
-    '<div style="flex:1; min-width:0;"><div style="font:800 14px \'Segoe UI\',sans-serif; color:#eef4fa; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">' + title + '</div>' +
-    '<div style="font:600 10px \'Segoe UI\',sans-serif; color:#9fb0c0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">' + sub + '</div></div>' +
-    '<div style="position:absolute; top:4px; right:6px; font:800 10px \'Segoe UI\',sans-serif; color:' + (active ? '#ffd34a' : '#7a8794') + '; background:rgba(0,0,0,.45); padding:0 5px; border-radius:3px;">' + keyLbl + '</div></div>';
-}
-function brInvDetailHtml(idx) {
-  const head = (t, c, s) => '<div style="font:800 22px \'Segoe UI\',sans-serif; color:' + c + ';">' + t + '</div>' + (s ? '<div style="font:700 12px \'Segoe UI\',sans-serif; color:#9fb0c0; margin-bottom:6px;">' + s + '</div>' : '');
-  if (idx === 'm') { const mn = (MELEE_NAMES[meleeChoice] || 'KNIFE'); return head(mn, '#7fe9ff', 'MELEE WEAPON') + '<div style="font-size:64px; text-align:center; margin:18px 0;">🔪</div><div style="font:600 13px \'Segoe UI\',sans-serif; color:#dfe7f0;">Always available — press <b style="color:#ffe600">' + IM.keyLabel(IM.bind.use) + '</b> to equip. Fast, silent, infinite. Your default empty-handed weapon.</div>'; }
-  const it = (idx >= 0 && idx < 5) ? brInv[idx] : null;
-  if (!it) return head('EMPTY SLOT', '#9fb0c0', '') + '<div style="font:600 13px \'Segoe UI\',sans-serif; color:#7a8794; margin-top:14px;">Loot weapons, ammo and items to fill this slot. Open a chest with <b style="color:#ffe600">' + IM.keyLabel(IM.bind.interact) + '</b>, then pick items up.</div>';
-  if (it.t === 'weapon') {
-    const w = WEAPONS[it.key] || {}, col = brRarHex(it.rar || 'common'), am = brWeaponAmmoOf(it), rpm = w.fireRate ? Math.round(60 / w.fireRate) : 0, mag = brSlotMag(it), spd = Math.round((w.speed || 1) * 100), acc = Math.max(8, Math.round(100 - (w.spreadBase || 0) * 850));
-    const cfg = it.cfg || {}, att = []; if (cfg.sight && cfg.sight !== 'iron') att.push(cfg.sight.replace('_', ' ')); if (cfg.magazine && cfg.magazine !== 'standard') att.push(cfg.magazine + ' mag'); if (cfg.laser && cfg.laser !== 'off') att.push('laser'); if (cfg.flashlight === 'on') att.push('flashlight');
-    return head(w.name || it.key, '#fff', '<span style="color:' + col + '">' + (BR_RAR[it.rar] ? BR_RAR[it.rar].name : '') + '</span> • ' + brWpnClass(it.key).toUpperCase()) +
-      '<div style="height:70px; display:flex; align-items:center; justify-content:center; margin:4px 0 8px;">' + brWeaponSilhouette(it.key, col, 48) + '</div>' +
-      '<div style="font:800 16px \'Segoe UI\',sans-serif; color:' + (am.out ? '#ff5a5a' : '#e8f0f8') + '; text-align:center; margin-bottom:6px;">AMMO ' + am.txt + '</div>' +
-      brStatBar('DAMAGE', w.damage / 200 * 100, String(w.damage || '—'), '#ff7a4a') +
-      brStatBar('FIRE RATE', rpm / 1200 * 100, rpm + ' rpm', '#ffd34a') +
-      brStatBar('ACCURACY', acc, acc + '%', '#3aa0ff') +
-      brStatBar('MAGAZINE', mag / 120 * 100, String(mag), '#9ad0ff') +
-      brStatBar('MOBILITY', spd / 110 * 100, spd + '%', '#7fe9ff') +
-      '<div style="display:flex; justify-content:space-between; font:700 11px \'Segoe UI\',sans-serif; color:#9fb0c0; margin-top:8px; border-top:1px solid #243140; padding-top:8px;"><span>RELOAD</span><span style="color:#e8f0f8;">' + (w.reload || '—') + 's</span></div>' +
-      '<div style="display:flex; justify-content:space-between; font:700 11px \'Segoe UI\',sans-serif; color:#9fb0c0; margin-top:4px;"><span>RANGE</span><span style="color:#e8f0f8;">' + (w.range || '—') + 'm</span></div>' +
-      '<div style="font:700 11px \'Segoe UI\',sans-serif; color:#9fb0c0; margin-top:10px;">ATTACHMENTS</div><div style="font:700 12px \'Segoe UI\',sans-serif; color:' + col + ';">' + (att.length ? att.join(' • ') : 'None') + '</div>';
-  }
-  const m = brItemMeta(it.t), cnt = brCount(it.t), lim = BR_STACK[it.t] || 1;
-  return head(m.name, brLootCol(it.t), 'CONSUMABLE') +
-    '<div style="font-size:60px; text-align:center; margin:16px 0;">' + m.icon + '</div>' +
-    '<div style="font:800 16px \'Segoe UI\',sans-serif; color:#e8f0f8; text-align:center;">×' + cnt + ' <span style="color:#7a8794; font-size:12px;">/ ' + lim + '</span></div>' +
-    '<div style="font:600 13px \'Segoe UI\',sans-serif; color:#dfe7f0; margin-top:12px;">' + m.desc + '</div>' +
-    '<div style="font:700 12px \'Segoe UI\',sans-serif; color:#ffd34a; margin-top:10px;">' + (it.t === 'second' ? 'PASSIVE — survive one lethal hit' : 'Press <b>' + IM.keyLabel(brSlotKeyBind(idx)) + '</b> (or click) to ' + m.verb.toLowerCase()) + '</div>';
-}
-function brRenderInv() { const sc = el('brInvSlots'), dt = el('brInvDetail'); if (!sc || !dt) return; let h = ''; for (let i = 0; i < 5; i++) h += brInvSlotBig(i); h += brInvSlotBig('m'); sc.innerHTML = h; dt.innerHTML = brInvDetailHtml(brInvHover); }
-function brInvSwap(a, b) {   // drag-reorder: swap two slots (consumable counts live by type, so this is safe)
-  if (a === b || a < 0 || b < 0 || a > 4 || b > 4) return;
-  const t = brInv[a]; brInv[a] = brInv[b]; brInv[b] = t;
-  if (brSel === a) brSel = b; else if (brSel === b) brSel = a;   // keep pointing at the same held item
-  updateHUD();
-}
-function brToggleInv() { if (brInvOpen) brCloseInv(); else brOpenInv(); }
-function brOpenInv() {
-  if (!BR.active || !gameState.running || !player.alive || brSpectating) return;
-  if (brMapOpen) brCloseMap();
-  brInvOpen = true; brInvHover = (!ggKarambit && brSel >= 0 && brInv[brSel]) ? brSel : 'm';
-  const p = el('brInvPanel'); if (p) p.style.display = 'flex';
-  brRenderInv(); document.exitPointerLock && document.exitPointerLock();
-}
-function brCloseInv() { brInvOpen = false; brInvDrag = -1; const p = el('brInvPanel'); if (p) p.style.display = 'none'; if (gameState.running && player.alive && !paused) lockPointer(); }
 // ----- in-hand consumable viewmodel (BR-only; weapons/melee use the existing gun viewmodel) -----
-let brHeldVM = null, brHeldVMType = null, brHeldUseT = 0, brSwapT = 0;   // brSwapT = brief (~150ms) equip-in dip for consumables (Part 5)
+let brHeldVM = null, brHeldVMType = null, brHeldUseT = 0;
 function brBuildHeldVM(t) {
   const g = new THREE.Group();
   if (t === 'cigar') { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), flatMat(0xb5742a)); c.rotation.z = Math.PI / 2; g.add(c); const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.08, 8), flatMat(0xe8d8b0)); tip.rotation.z = Math.PI / 2; tip.position.x = -0.28; g.add(tip); }
@@ -10606,11 +10467,10 @@ function brBuildHeldVM(t) {
 }
 function brShowHeldVM(t, dt) {
   if (cigSmoking) { if (brHeldVM) brHeldVM.visible = false; return; }   // the cigar smoke animation has its own viewmodel
-  if (brHeldVMType !== t) { if (brHeldVM) { camera.remove(brHeldVM); disposeGroup(brHeldVM); } brHeldVM = brBuildHeldVM(t); brHeldVMType = t; camera.add(brHeldVM); brSwapT = 0.15; }   // (Part 5) ~150ms equip-in dip on swap
+  if (brHeldVMType !== t) { if (brHeldVM) { camera.remove(brHeldVM); disposeGroup(brHeldVM); } brHeldVM = brBuildHeldVM(t); brHeldVMType = t; camera.add(brHeldVM); }
   brHeldVM.visible = !rcCamLive;
   const leftHand = (t === 'cigar' || t === 'jd' || t === 'second');
   let lift = 0; if (brHeldUseT > 0) { brHeldUseT = Math.max(0, brHeldUseT - dt); lift = Math.sin((1 - brHeldUseT / 0.45) * Math.PI) * 0.22; }
-  if (brSwapT > 0) { brSwapT = Math.max(0, brSwapT - dt); lift -= (brSwapT / 0.15) * 0.34; }   // (Part 5) dips down then rises into view
   brHeldVM.position.set(leftHand ? -0.34 : 0.32, -0.52 + lift, -0.62);
   brHeldVM.rotation.set(0.1, leftHand ? 0.3 : -0.3, 0);
 }
@@ -10794,29 +10654,13 @@ let brMapOpen = false, brSpectating = false, brSpecIdx = 0, brSpecFree = false, 
 const brSpecFromCam = new THREE.Vector3(), brFreePos = new THREE.Vector3();
 function brSpecList() { const list = bots.filter(b => b.alive && !b.dying); if (NET.active) NET.players.forEach(rp => { if (rp.alive) list.push(rp); }); return list; }   // living players to spectate (bots + remotes)
 function brViewPos() { return (brSpectating && brSpecFree) ? brFreePos : ((brSpectating && brSpecCur) ? brSpecCur.pos : player.pos); }   // minimap/compass centre
-let brMapZoom = 1; const brPings = [];   // (Part 7) scroll-zoom level + personal ping markers
-function brToggleMap() { if (!BR.active) return; if (brMapOpen) brCloseMap(); else brOpenMap(); }
-function brOpenMap() {
-  if (!BR.active || !gameState.running) return;
-  if (brInvOpen) brCloseInv();
-  brMapOpen = true; brMapZoom = 1; const m = el('brMap'); if (m) m.style.display = 'flex';
-  brDrawMap(); if (player.alive && !brSpectating) document.exitPointerLock && document.exitPointerLock();   // free the cursor for ping/zoom (game keeps running)
+function brToggleMap() {
+  if (!BR.active) return;
+  brMapOpen = !brMapOpen;
+  const m = el('brMap'); if (m) m.style.display = brMapOpen ? 'flex' : 'none';
+  if (brMapOpen) brDrawMap();
 }
-function brCloseMap() { brMapOpen = false; const m = el('brMap'); if (m) m.style.display = 'none'; if (BR.active && gameState.running && player.alive && !brSpectating && !paused && !brInvOpen) lockPointer(); }
-function brMapPing(clientX, clientY) {   // (Part 7) click the map -> a personal-only marker at that world position
-  const cv = el('brMapCanvas'); if (!cv || !island || !brMapOpen) return;
-  const rect = cv.getBoundingClientRect(); if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
-  const m = brMapXf(); const px = (clientX - rect.left) / rect.width * cv.width, py = (clientY - rect.top) / rect.height * cv.height;
-  const wx = m.viewCx + (px - m.cm) / m.scale, wz = m.viewCz + (py - m.cm) / m.scale;
-  brPings.push({ x: wx, z: wz, t: performance.now() }); if (brPings.length > 6) brPings.shift();
-  if (typeof sfxClick === 'function') sfxClick();
-}
-function brMapXf() {   // shared world<->map transform (so brDrawMap and brMapPing agree), honouring zoom
-  const cv = el('brMapCanvas'), S = cv.width, pad = 46, inner = S - 2 * pad, R = island.R, cm = pad + inner / 2;
-  const zoom = Math.max(1, brMapZoom), vp = brViewPos();
-  const viewCx = zoom > 1 ? vp.x : island.cx, viewCz = zoom > 1 ? vp.z : island.cz, scale = inner / (2 * R) * zoom;
-  return { S, pad, inner, R, cm, zoom, viewCx, viewCz, scale, w2m: (wx, wz) => [cm + (wx - viewCx) * scale, cm + (wz - viewCz) * scale] };
-}
+function brCloseMap() { brMapOpen = false; const m = el('brMap'); if (m) m.style.display = 'none'; }
 /* ----------------- BATTLE ROYALE — MINIMAP (B) -----------------
    Top-right, north-up, player-centred (~80×80 units). Terrain + nearby POIs, the safe
    zone (blue) + next zone (orange), available chests (yellow dots ≤30u) / looted ones
@@ -10849,49 +10693,31 @@ function brDrawMinimap() {
   ctx.save(); ctx.translate(half, half); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4, 5); ctx.lineTo(-4, 5); ctx.closePath(); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.fill(); ctx.stroke(); ctx.restore();
   ctx.fillStyle = '#ff6a6a'; ctx.font = "bold 11px 'Segoe UI',sans-serif"; ctx.textAlign = 'center'; ctx.fillText('N', half, 11);
 }
-function brMapLabel(ctx, txt, x, y, col) { ctx.fillStyle = 'rgba(245,240,220,0.85)'; ctx.fillText(txt, x + 0.6, y + 0.6); ctx.fillStyle = col || '#15110a'; ctx.fillText(txt, x, y); }
-function brPoiIcon(t) { return ({ town: '🏘️', resort: '🏖️', temple: '🛕', military: '🪖', harbor: '⚓', cliff: '🏔️', ship: '🚢', air: '✈️', mansion: '🏛️' })[t] || '📍'; }
-function brMapLandmarks() { return [{ lx: -40, lz: 160, name: 'Helicopter', icon: '🚁' }, { lx: -90, lz: -70, name: 'Plane Wreck', icon: '✈️' }, { lx: 228, lz: 95, name: 'Shipwreck', icon: '⛵' }, { lx: -130, lz: 30, name: 'Tent Camp', icon: '⛺' }]; }
-function brUpdateMapZoneInfo() {
-  const e = el('brMapZoneInfo'); if (!e) return; const z = BR.zone;
-  const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
-  if (!z) { e.textContent = ''; return; }
-  if (z.state === 'hold') { e.innerHTML = '🔵 ZONE CLOSES IN <b>' + fmt(z.timer) + '</b>'; e.style.color = '#7fd0ff'; }
-  else if (z.state === 'warn') { e.innerHTML = '⚠ ZONE CLOSING IN <b>' + Math.ceil(z.timer) + 's</b> — RUN TO THE BLUE CIRCLE'; e.style.color = '#ff8a5a'; }
-  else { e.innerHTML = '🟠 ZONE IS CLOSING — GET INSIDE THE BLUE'; e.style.color = '#ffb05a'; }
-}
 function brDrawMap() {
   const cv = el('brMapCanvas'); if (!cv || !island) return;
-  const ctx = cv.getContext('2d'), X = brMapXf(), S = X.S, R = X.R, w2m = X.w2m, now = performance.now();
+  const ctx = cv.getContext('2d'); const S = cv.width, pad = 42, inner = S - 2 * pad, R = island.R, cm = pad + inner / 2, rm = inner / 2;
+  const w2m = (wx, wz) => [pad + (wx - (island.cx - R)) / (2 * R) * inner, pad + (wz - (island.cz - R)) / (2 * R) * inner];
   ctx.clearRect(0, 0, S, S);
-  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, S, S); ctx.clip();
   ctx.fillStyle = '#2a566f'; ctx.fillRect(0, 0, S, S);                                   // ocean
-  const ic = w2m(island.cx, island.cz), ir = R * X.scale;
-  ctx.beginPath(); ctx.arc(ic[0], ic[1], ir, 0, 7); ctx.fillStyle = '#d9c79a'; ctx.fill();      // sand / grass rings
-  ctx.beginPath(); ctx.arc(ic[0], ic[1], ir * 0.86, 0, 7); ctx.fillStyle = '#6f9d5a'; ctx.fill();
-  ctx.beginPath(); ctx.arc(ic[0], ic[1], ir * 0.55, 0, 7); ctx.fillStyle = '#507f44'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cm, cm, rm, 0, 7); ctx.fillStyle = '#d9c79a'; ctx.fill();      // sand
+  ctx.beginPath(); ctx.arc(cm, cm, rm * 0.86, 0, 7); ctx.fillStyle = '#6f9d5a'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cm, cm, rm * 0.55, 0, 7); ctx.fillStyle = '#507f44'; ctx.fill();
   const z = BR.zone;
   if (z) {
-    const zm = w2m(z.cx, z.cz), zr = Math.max(2, z.r * X.scale);
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, S, S); ctx.arc(zm[0], zm[1], zr, 0, 7, true); ctx.fillStyle = 'rgba(210,40,40,0.26)'; ctx.fill('evenodd'); ctx.restore();   // DANGER (outside the blue)
+    const zm = w2m(z.cx, z.cz), zr = Math.max(2, z.r / (2 * R) * inner);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, S, S); ctx.arc(zm[0], zm[1], zr, 0, 7, true); ctx.fillStyle = 'rgba(210,40,40,0.24)'; ctx.fill('evenodd'); ctx.restore();   // OOB red
     ctx.beginPath(); ctx.arc(zm[0], zm[1], zr, 0, 7); ctx.strokeStyle = '#3aa0ff'; ctx.lineWidth = 3; ctx.stroke();
-    if ((z.state === 'warn' || z.state === 'shrink') && z.toR != null) { const nm = w2m(z.toCx, z.toCz), nr = Math.max(2, z.toR * X.scale); ctx.beginPath(); ctx.arc(nm[0], nm[1], nr, 0, 7); ctx.strokeStyle = '#ff9a3a'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.stroke(); ctx.setLineDash([]); }
+    if ((z.state === 'warn' || z.state === 'shrink') && z.toR != null) { const nm = w2m(z.toCx, z.toCz), nr = Math.max(2, z.toR / (2 * R) * inner); ctx.beginPath(); ctx.arc(nm[0], nm[1], nr, 0, 7); ctx.strokeStyle = '#ff9a3a'; ctx.lineWidth = 2; ctx.setLineDash([7, 5]); ctx.stroke(); ctx.setLineDash([]); }
   }
-  ctx.textAlign = 'center'; ctx.font = "700 10px 'Segoe UI',sans-serif";                  // landmarks: caves + wrecks
-  (island.caveSpots || []).forEach(c => { const m = w2m(island.cx + c[0], island.cz + c[1]); ctx.fillStyle = '#2a2a2a'; ctx.beginPath(); ctx.arc(m[0], m[1], 3, 0, 7); ctx.fill(); brMapLabel(ctx, '🕳 Cave', m[0], m[1] - 7, '#1a1a1a'); });
-  brMapLandmarks().forEach(L => { const m = w2m(island.cx + L.lx, island.cz + L.lz); brMapLabel(ctx, L.icon + ' ' + L.name, m[0], m[1], '#241a10'); });
-  island.pois.forEach(p => { const m = w2m(island.cx + p.lx, island.cz + p.lz);          // POIs: type icon + name
-    ctx.font = "16px 'Segoe UI',sans-serif"; ctx.fillStyle = '#15110a'; ctx.fillText(brPoiIcon(p.icon), m[0], m[1] + 5);
-    ctx.font = "bold 12px 'Segoe UI',sans-serif"; brMapLabel(ctx, p.name, m[0], m[1] - 12, '#15110a'); });
-  for (let i = brGunshots.length - 1; i >= 0; i--) { const g = brGunshots[i], age = (now - g.t) / 1000; if (age > 3) continue; const m = w2m(g.x, g.z); ctx.fillStyle = 'rgba(255,50,50,' + (1 - age / 3).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(m[0], m[1], 4.5, 0, 7); ctx.fill(); }   // gunshots heard
-  for (let i = brPings.length - 1; i >= 0; i--) { const pg = brPings[i], age = (now - pg.t) / 1000; if (age > 45) { brPings.splice(i, 1); continue; } const m = w2m(pg.x, pg.z), a = Math.max(0.25, 1 - age / 45); ctx.strokeStyle = 'rgba(255,214,0,' + a.toFixed(2) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(m[0] - 7, m[1]); ctx.lineTo(m[0] + 7, m[1]); ctx.moveTo(m[0], m[1] - 7); ctx.lineTo(m[0], m[1] + 7); ctx.stroke(); }   // your pings
-  const pm = w2m(player.pos.x, player.pos.z), fwd = horizontalForward(), ang = Math.atan2(fwd.x, -fwd.z);   // player triangle (rotates; N up)
-  ctx.save(); ctx.translate(pm[0], pm[1]); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(8, 9); ctx.lineTo(-8, 9); ctx.closePath(); ctx.fillStyle = brSpectating ? '#9fd0ff' : '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke(); ctx.restore();
-  ctx.restore();   // un-clip
-  ctx.fillStyle = '#15110a'; ctx.font = "bold 16px 'Segoe UI',sans-serif"; ctx.textAlign = 'center';   // compass rose (north-up)
-  ctx.fillText('N', X.cm, 22); ctx.fillText('S', X.cm, S - 8); ctx.textAlign = 'left'; ctx.fillText('W', 7, X.cm + 5); ctx.textAlign = 'right'; ctx.fillText('E', S - 7, X.cm + 5); ctx.textAlign = 'center';
-  if (X.zoom > 1) { ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.font = "700 12px 'Segoe UI',sans-serif"; ctx.textAlign = 'right'; ctx.fillText(X.zoom.toFixed(1) + '×', S - 12, S - 14); ctx.textAlign = 'center'; }
-  brUpdateMapZoneInfo();
+  ctx.textAlign = 'center';                                                               // POIs
+  island.pois.forEach(p => { const m = w2m(island.cx + p.lx, island.cz + p.lz);
+    ctx.beginPath(); ctx.arc(m[0], m[1], 4, 0, 7); ctx.fillStyle = '#1c1c1c'; ctx.fill();
+    ctx.fillStyle = '#15110a'; ctx.font = "bold 11px 'Segoe UI',sans-serif"; ctx.fillText(p.name, m[0], m[1] - 8); });
+  const pm = w2m(player.pos.x, player.pos.z), fwd = horizontalForward(), ang = Math.atan2(fwd.x, -fwd.z);   // player triangle (N up)
+  ctx.save(); ctx.translate(pm[0], pm[1]); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(7, 8); ctx.lineTo(-7, 8); ctx.closePath(); ctx.fillStyle = brSpectating ? '#9fd0ff' : '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = '#15110a'; ctx.font = "bold 16px 'Segoe UI',sans-serif";               // compass rose
+  ctx.textAlign = 'center'; ctx.fillText('N', cm, 20); ctx.fillText('S', cm, S - 7);
+  ctx.textAlign = 'left'; ctx.fillText('W', 6, cm + 5); ctx.textAlign = 'right'; ctx.fillText('E', S - 6, cm + 5); ctx.textAlign = 'center';
 }
 
 function updateHUD() {
@@ -11693,7 +11519,6 @@ buildInventory();
 // Pause-key (default ESC) toggles the in-match pause menu — and closes the inventory/settings first.
 document.addEventListener('keydown', (e) => {
   if (e.repeat || IM.codeAction(e.code) !== 'pause') return;
-  if (brInvOpen) { brCloseInv(); return; }                                 // BR: ESC closes the pop-up inventory (no pause)
   if (brMapOpen) { brCloseMap(); return; }                                 // BR: ESC closes the paper map (no pause)
   if (invOpen) { closeInventory(); return; }
   if (!el('skinCreator').classList.contains('hidden')) return;             // skin creator has its own close
@@ -12537,31 +12362,7 @@ el('endMenuButton').onclick = () => leaveToMenu();
 // If the player presses ESC mid-match, re-lock on the next canvas click
 canvas.addEventListener('click', () => { if (gameState.running && !pointerLocked) lockPointer(); });
 // BR hotbar: click a slot to select/use it (delegated; works whenever the cursor is free)
-(function () { const hb = el('brHotbar'); if (!hb) return; hb.addEventListener('mousedown', (e) => { if (!BR.active) return; if (e.target.closest('[data-brmelee]')) { e.stopPropagation(); brEquipMelee(); return; } const s = e.target.closest('[data-brslot]'); if (!s) return; e.stopPropagation(); brSelect(+s.getAttribute('data-brslot')); }); })();
-// (Part 3) pop-up inventory interaction: hover -> detail, left-click equip, right-click drop, drag to reorder
-(function () {
-  const p = el('brInvPanel'); if (!p) return;
-  const idxOf = (t) => { if (t.closest('[data-invmelee]')) return 'm'; const s = t.closest('[data-invslot]'); return s ? +s.getAttribute('data-invslot') : null; };
-  p.addEventListener('mouseover', (e) => { if (brInvDrag >= 0) return; const i = idxOf(e.target); if (i === null || brInvHover === i) return; brInvHover = i; brRenderInv(); });
-  p.addEventListener('mousedown', (e) => {
-    e.stopPropagation(); const i = idxOf(e.target); if (i === null) return; e.preventDefault();
-    if (e.button === 2) { if (i !== 'm') { brDropSlotAll(i); if (brSel === i) brSelectAfterEmpty(i); brInvHover = i; brRenderInv(); } return; }   // right-click: drop the whole slot
-    if (i === 'm') brEquipMelee(); else brSelect(i); brInvHover = i; brRenderInv();                                                                  // left-click: equip
-  });
-  p.addEventListener('contextmenu', (e) => e.preventDefault());
-  p.addEventListener('dragstart', (e) => { const s = e.target.closest('[data-invslot]'); if (!s) { e.preventDefault(); return; } brInvDrag = +s.getAttribute('data-invslot'); if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(brInvDrag)); } catch (x) {} } });
-  p.addEventListener('dragover', (e) => { if (brInvDrag >= 0 && e.target.closest('[data-invslot]')) e.preventDefault(); });
-  p.addEventListener('drop', (e) => { const s = e.target.closest('[data-invslot]'); if (s && brInvDrag >= 0) { e.preventDefault(); brInvSwap(brInvDrag, +s.getAttribute('data-invslot')); } brInvDrag = -1; brRenderInv(); });
-  p.addEventListener('dragend', () => { if (brInvDrag >= 0) { brInvDrag = -1; brRenderInv(); } });
-})();
-// (Part 7) map pop-up interaction: click the canvas to ping, scroll to zoom; backdrop clicks don't fall through
-(function () {
-  const mp = el('brMap'), cv = el('brMapCanvas'); if (!mp || !cv) return;
-  cv.addEventListener('mousedown', (e) => { if (!brMapOpen) return; e.stopPropagation(); e.preventDefault(); brMapPing(e.clientX, e.clientY); });
-  mp.addEventListener('mousedown', (e) => { if (brMapOpen) e.stopPropagation(); });
-  mp.addEventListener('contextmenu', (e) => e.preventDefault());
-  mp.addEventListener('wheel', (e) => { if (!brMapOpen) return; e.stopPropagation(); e.preventDefault(); brMapZoom = Math.max(1, Math.min(4, brMapZoom + (e.deltaY < 0 ? 0.5 : -0.5))); brDrawMap(); }, { passive: false });
-})();
+(function () { const hb = el('brHotbar'); if (!hb) return; hb.addEventListener('mousedown', (e) => { const s = e.target.closest('[data-brslot]'); if (!s || !BR.active) return; e.stopPropagation(); brSelect(+s.getAttribute('data-brslot')); }); })();
 
 /* ============================================================================
    9b. MULTIPLAYER — WebRTC peer-to-peer (PeerJS) private lobbies + FFA netcode

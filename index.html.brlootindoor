@@ -1660,13 +1660,7 @@ function brUpdateZip(dt) {
   if (camera.fov !== DEFAULT_FOV) { camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix(); }
   if (f >= 1) brZip = null;   // released at the far end; normal physics resumes next frame
 }
-function ensureParadiseIsland() {
-  if (!island && typeof buildParadiseIsland === 'function') {
-    island = buildParadiseIsland(1200, 0);
-    if (island.glows) island.glows.forEach(g => addNightGlow(g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7]));   // instantiate interior / cave / campfire / lighthouse / light-fixture glows (lit at night)
-  }
-  return island;
-}
+function ensureParadiseIsland() { if (!island && typeof buildParadiseIsland === 'function') island = buildParadiseIsland(1200, 0); return island; }
 // Map-aware horizontal boundary (replaces the old fixed ARENA clamp so the bigger island fits).
 function clampToMap(pos, margin) {
   margin = (margin == null) ? 1.2 : margin;
@@ -3897,90 +3891,27 @@ function buildParadiseIsland(cx, cz) {
 
   // ============ POI DEPTH PASS (Part 3): extra enterable buildings + interior furniture + verticality ============
   function furnish(lx, lz, by, n) { for (let i = 0; i < (n || 3); i++) { const a = i * 1.9, r = 1.2 + (i % 3); iD(lx + Math.cos(a) * r, (by || 0) + 0.02, lz + Math.sin(a) * r, 1.0, 0.55 + (i % 2) * 0.5, 1.0, [0x6f5333, 0x8a7a5a, 0x55554a, 0x7a6f55][i % 4]); } }
-  // ===== (Part 2) INTERIOR DETAIL: themed furniture library + ceiling lights + framed windows =====
-  const FURN = {   // [w, h, d, colour] per furniture piece
-    bed: [2.0, 0.5, 1.1, 0x5a4a6a], pillow: [0.7, 0.22, 1.0, 0xe8e2ee], table: [1.5, 0.7, 0.95, 0x6f5333], chair: [0.6, 0.9, 0.6, 0x7a6f55],
-    shelf: [1.7, 1.9, 0.45, 0x7a6f55], counter: [2.6, 0.95, 0.8, 0x8a7a5a], crate: [1.1, 1.0, 1.1, 0x6a5a3a], couch: [2.3, 0.7, 0.95, 0x46688a],
-    desk: [1.6, 0.8, 0.85, 0x55504a], locker: [0.85, 1.9, 0.7, 0x586272], bunk: [2.1, 1.7, 0.95, 0x4a4a44], barrel: [0.8, 1.05, 0.8, 0x8c3a2a],
-    pew: [2.4, 0.55, 0.6, 0x6f5a3a], altar: [1.7, 1.05, 1.1, 0x9a9384], rack: [1.8, 1.7, 0.4, 0x40454c], bookshelf: [2.0, 2.2, 0.5, 0x5a4632],
-    stove: [1.2, 1.0, 0.9, 0x55585c], crates2: [1.4, 1.6, 1.4, 0x7a6a4a], toilet: [0.7, 0.7, 0.9, 0xe2e6ea], sink: [1.0, 0.85, 0.6, 0xd2d8dc],
-    car: [2.4, 1.3, 5.0, 0x8a2a2a], winerack: [1.7, 2.0, 0.6, 0x4a3a2a], cot: [2.0, 0.45, 0.9, 0x6a6a5e], tank: [1.3, 1.9, 1.3, 0x6a7a5a]
-  };
-  function lightFix(lx, lz, y) { iD(lx, y - 0.1, lz, 0.7, 0.12, 0.7, 0x2b2b2e); iGlow(lx, y - 0.42, lz, 1.05, 0.5, 1.05, 0xffe6a8, 0.7); }   // ceiling lamp + warm glow (lit at night)
-  function furnishRoom(lx, lz, by, kinds, ceilY) {   // scatter themed furniture pieces (decorative) round a room + a ceiling light
+  function enterBox(lx, lz, w, d, h, col, dd, by) {   // a single-storey enterable room (door on dd), solid roof + furniture
     by = by || 0;
-    kinds.forEach((k, i) => { const f = FURN[k] || FURN.crate, a = i * 2.39 + 0.6, r = 0.9 + (i % 3) * 0.95; const fx = lx + Math.cos(a) * r, fz = lz + Math.sin(a) * r; iD(fx, by + f[1] / 2 + 0.02, fz, f[0], f[1], f[2], f[3]); if (k === 'bed') iD(fx - 0.6, by + 0.5 + 0.13, fz, FURN.pillow[0], FURN.pillow[1], FURN.pillow[2], FURN.pillow[3]); });
-    if (ceilY) lightFix(lx, lz, by + ceilY);
-  }
-  function windowPane(lx, lz, axis, span, y) {   // a translucent glass pane on a wall (framed look from outside)
-    const m = new THREE.Mesh(axis === 'x' ? new THREE.BoxGeometry(span, 1.3, 0.12) : new THREE.BoxGeometry(0.12, 1.3, span), new THREE.MeshLambertMaterial({ color: 0xbfe0ee, transparent: true, opacity: 0.32, flatShading: true }));
-    m.position.set(cx + lx, y, cz + lz); scene.add(m);
-    const fr = axis === 'x' ? [span + 0.18, 1.5, 0.16] : [0.16, 1.5, span + 0.18]; iD(lx, y, lz, fr[0], fr[1], fr[2], 0x4a4038);   // dark frame
-  }
-  function enterBox(lx, lz, w, d, h, col, dd, by, kinds) {   // a single-storey enterable room (door on dd), roof + framed door/windows + furniture + ceiling light
-    by = by || 0;
-    const dh = (dir) => dd === dir ? [{ a0: lx - 1, a1: lx + 1, y0: by, y1: by + 2.4 }] : [];
-    const dhZ = (dir) => dd === dir ? [{ a0: lz - 1, a1: lz + 1, y0: by, y1: by + 2.4 }] : [];
-    iWallX(lz + d / 2, lx - w / 2, lx + w / 2, by, by + h, 0.35, col, dh('n'));
-    iWallX(lz - d / 2, lx - w / 2, lx + w / 2, by, by + h, 0.35, col, dh('s'));
-    iWallZ(lx + w / 2, lz - d / 2, lz + d / 2, by, by + h, 0.35, col, dhZ('e'));
-    iWallZ(lx - w / 2, lz - d / 2, lz + d / 2, by, by + h, 0.35, col, dhZ('w'));
-    iB(lx, by + h, lz, w + 0.3, 0.4, d + 0.3, 0x8a8276); iD(lx, by + 0.02, lz, w - 0.6, 0.05, d - 0.6, 0x55504a);
-    if (dd !== 'n') windowPane(lx, lz + d / 2 - 0.1, 'x', Math.min(2.2, w - 2), by + 1.7); if (dd !== 's') windowPane(lx, lz - d / 2 + 0.1, 'x', Math.min(2.2, w - 2), by + 1.7);   // framed windows on the wall-less sides
-    if (dd === 'n' || dd === 's') { const fp = 0.9; [-1, 1].forEach(s => iD(lx + s * 1.05, by + 1.2, lz + (dd === 'n' ? d / 2 : -d / 2), 0.18, 2.4, 0.4, 0x4a4038)); iD(lx, by + 2.45, lz + (dd === 'n' ? d / 2 : -d / 2), 2.4, 0.25, 0.4, 0x4a4038); }   // door frame posts + lintel
-    furnishRoom(lx, lz, by, kinds || ['table', 'shelf', 'crate', 'chair'], h - 0.3);
+    iWallX(lz + d / 2, lx - w / 2, lx + w / 2, by, by + h, 0.35, col, dd === 'n' ? [{ a0: lx - 1, a1: lx + 1, y0: by, y1: by + 2.4 }] : []);
+    iWallX(lz - d / 2, lx - w / 2, lx + w / 2, by, by + h, 0.35, col, dd === 's' ? [{ a0: lx - 1, a1: lx + 1, y0: by, y1: by + 2.4 }] : []);
+    iWallZ(lx + w / 2, lz - d / 2, lz + d / 2, by, by + h, 0.35, col, dd === 'e' ? [{ a0: lz - 1, a1: lz + 1, y0: by, y1: by + 2.4 }] : []);
+    iWallZ(lx - w / 2, lz - d / 2, lz + d / 2, by, by + h, 0.35, col, dd === 'w' ? [{ a0: lz - 1, a1: lz + 1, y0: by, y1: by + 2.4 }] : []);
+    iB(lx, by + h, lz, w + 0.3, 0.4, d + 0.3, 0x8a8276); iD(lx, by + 0.02, lz, w - 0.6, 0.05, d - 0.6, 0x55504a); furnish(lx, lz, by, 3);
   }
   function ladderTo(lx, lz, top) { for (let y = 0.5; y < top; y += 0.6) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.1), flatMat(0x6a6a6a)); m.position.set(cx + lx, y, cz + lz); scene.add(m); } ladders.push({ x: cx + lx, z: cz + lz, bottom: 0, top: top, cx: cx + lx, cz: cz + lz - 1.2, outX: 0, outZ: -1 }); }
   pois.forEach(p => {
     const lx = p.lx, lz = p.lz, n = p.name;
-    if (n === 'PARADISE COVE') {
-      enterBox(lx + 31, lz + 4, 10, 8, 4.2, pastel[1], 'w', 0, ['bed', 'bed', 'table', 'chair', 'counter']); ladderTo(lx + 31, lz + 8.3, 4.6);   // inn: bar downstairs, beds up
-      enterBox(lx - 29, lz + 11, 9, 7, 3.6, pastel[2], 'e', 0, ['counter', 'crate', 'shelf', 'crate']);                                          // fish market
-      furnishRoom(lx - 24, lz - 15, 0, ['pew', 'pew', 'pew', 'altar'], 4.6);   // chapel pews + altar
-      furnishRoom(lx + 26, lz - 17, 0, ['shelf', 'shelf', 'counter', 'crate'], 4.4);   // general store
-    }
-    else if (n === 'LAGOON RESORT') {
-      enterBox(lx + 27, lz + 9, 10, 9, 4, 0xd8cdae, 'w', 0, ['rack', 'locker', 'rack', 'crate']);   // gym / sauna
-      enterBox(lx + 27, lz - 9, 9, 8, 3.8, 0xcdc6b2, 'w', 0, ['table', 'couch', 'shelf']);          // spa
-      furnishRoom(lx, lz, 0, ['couch', 'couch', 'table', 'counter'], 3.6);                          // hotel lobby (reception + couches)
-      furnishRoom(lx - 6, lz, 4, ['bed', 'bed', 'table'], 3.6); furnishRoom(lx + 6, lz - 3, 8, ['bed', 'couch', 'shelf'], 3.6);   // upstairs hotel rooms (floors y4 / y8)
-    }
-    else if (n === 'ANCIENT RUINS') {
-      enterBox(lx + 28, lz + 7, 8, 7, 4, 0x837c6e, 'w', 0, ['altar', 'shelf', 'crate']);            // priests' quarters
-      enterBox(lx - 28, lz - 7, 9, 7, 4, 0x9a9384, 'e', 0, ['altar', 'altar', 'pew']);              // ceremonial hall
-      furnishRoom(lx, lz, 0, ['altar', 'crate', 'shelf'], 4.2);                                     // pyramid base chamber
-    }
-    else if (n === 'CAMP DELTA') {
-      enterBox(lx - 4, lz + 24, 15, 9, 3.6, 0x6a6a5e, 's', 0, ['bunk', 'bunk', 'bunk', 'locker', 'locker']);   // barracks
-      enterBox(lx + 22, lz - 16, 8, 7, 3.4, 0x5a5a50, 'n', 0, ['rack', 'rack', 'crate', 'barrel']);            // armoury (weapon racks)
-      furnishRoom(lx, lz, 0, ['desk', 'rack', 'crate', 'table'], 3.8);                                          // command center briefing
-    }
-    else if (n === "HARBOR'S EDGE") {
-      enterBox(lx - 18, lz + 24, 12, 10, 4, 0x6a6f78, 'n', 0, ['crates2', 'crate', 'shelf', 'crates2']); ladderTo(lx - 18, lz + 29.3, 4.6);   // warehouse
-      furnishRoom(lx + 6, lz + 4, 0, ['table', 'counter', 'crate'], 3.6);   // fish processing tables
-    }
-    else if (n === 'CLIFF SETTLEMENT') {
-      enterBox(lx + 16, lz + 6, 8, 7, 3.4, rockDk, 'w', 0, ['bed', 'table', 'crate']);              // hut
-      enterBox(lx - 15, lz + 4, 7, 6, 3.2, rockC, 'e', 0, ['cot', 'shelf', 'crate']);               // hut
-      furnishRoom(lx, lz, 0, ['table', 'pew', 'pew', 'crate'], 3.8);                                 // longhouse meeting hall
-    }
-    else if (n === 'RUSTED HULL') {
-      enterBox(lx + 2, lz - 8, 13, 9, 3.8, 0x6a4632, 'n', 0, ['table', 'table', 'counter', 'bunk', 'bunk']);   // mess hall + crew quarters
-      furnishRoom(lx, lz + 4, 0, ['desk', 'rack', 'crate'], 3.6);   // bridge / control (charts + console)
-      for (let i = 0; i < 4; i++) iD(lx - 6 + i * 4, 0.8, lz - 14, 2.6, 1.6, 2.6, 0x5a6a4a);   // stacked cargo containers
-    }
-    else if (n === 'AIRSTRIP') {
-      enterBox(lx + 26, lz - 8, 16, 11, 4.2, 0xa0a094, 'w', 0, ['chair', 'chair', 'counter', 'couch', 'shelf']);   // passenger terminal
-      furnishRoom(lx, lz, 0, ['crate', 'barrel', 'rack', 'crates2'], 4.2);   // hangar work area
-      furnishRoom(lx - 22, lz + 6, 0, ['barrel', 'barrel', 'tank'], 3.4);    // fuel depot props
-    }
-    else if (n === "MILLIONAIRE'S RETREAT") {
-      enterBox(lx + 37, lz + 0, 14, 10, 4, 0xd9d2c0, 'w', 2, ['car', 'car', 'crate']);              // garage (luxury cars)
-      enterBox(lx + 2, lz + 5, 9, 8, 3.4, 0x6a5a4a, 'n', 2, ['winerack', 'winerack', 'rack']);      // wine cellar
-      furnishRoom(lx, lz + 2, 2, ['bookshelf', 'bookshelf', 'couch', 'table'], 4);                  // library
-      furnishRoom(lx - 6, lz - 4, 2, ['table', 'chair', 'chair', 'shelf'], 4);                      // dining room
-      furnishRoom(lx + 6, lz - 4, 2, ['bed', 'couch', 'shelf'], 4);                                 // master suite
-    }
+    furnish(lx, lz, 0.3, 4);   // furnish the main POI building
+    if (n === 'PARADISE COVE') { enterBox(lx + 31, lz + 4, 10, 8, 4.2, pastel[1], 'w'); ladderTo(lx + 31, lz + 8.3, 4.6); enterBox(lx - 29, lz + 11, 9, 7, 3.6, pastel[2], 'e'); }   // 2-storey inn (roof access) + fish market
+    else if (n === 'LAGOON RESORT') { enterBox(lx + 27, lz + 9, 10, 9, 4, 0xd8cdae, 'w'); enterBox(lx + 27, lz - 9, 9, 8, 3.8, 0xcdc6b2, 'w'); }   // pool house (gym/sauna) + spa rooms
+    else if (n === 'ANCIENT RUINS') { enterBox(lx + 28, lz + 7, 8, 7, 4, 0x837c6e, 'w'); enterBox(lx - 28, lz - 7, 9, 7, 4, 0x9a9384, 'e'); }   // priests' quarters + ceremonial hall
+    else if (n === 'CAMP DELTA') { enterBox(lx - 4, lz + 24, 15, 9, 3.6, 0x6a6a5e, 's'); for (let i = 0; i < 8; i++) iD(lx - 10 + (i % 4) * 3, 0.5, lz + 22 + ((i / 4) | 0) * 3, 2.4, 0.9, 1.2, 0x4a4a44); enterBox(lx + 22, lz - 16, 8, 7, 3.4, 0x5a5a50, 'n'); }   // barracks (bunk beds) + armoury
+    else if (n === "HARBOR'S EDGE") { enterBox(lx - 18, lz + 24, 12, 10, 4, 0x6a6f78, 'n'); ladderTo(lx - 18, lz + 29.3, 4.6); }   // 2-storey warehouse + roof ladder
+    else if (n === 'CLIFF SETTLEMENT') { enterBox(lx + 16, lz + 6, 8, 7, 3.4, rockDk, 'w'); enterBox(lx - 15, lz + 4, 7, 6, 3.2, rockC, 'e'); }   // cliff caves
+    else if (n === 'RUSTED HULL') { enterBox(lx + 2, lz - 8, 13, 9, 3.8, 0x6a4632, 'n'); }   // mess hall / crew quarters (beside the hull at grade)
+    else if (n === 'AIRSTRIP') { enterBox(lx + 26, lz - 8, 16, 11, 4.2, 0xa0a094, 'w'); furnish(lx + 26, lz - 8, 0, 5); }   // passenger terminal (waiting area / counter)
+    else if (n === "MILLIONAIRE'S RETREAT") { enterBox(lx + 37, lz + 0, 13, 10, 4, 0xd9d2c0, 'w', 2); enterBox(lx + 2, lz + 5, 9, 8, 3.4, 0x6a5a4a, 'n', 2); }   // garage + basement-style room on the estate pad
   });
 
   // --- generic loot/exploration spawns: a ring of beach drop-in points (more added per-POI) ---

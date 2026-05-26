@@ -2449,6 +2449,8 @@ function sfxHurt(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur:
 let _hitThudT = 0, _hitGruntT = 0;
 const HIT_THUD_CD = 80, HIT_GRUNT_CD = 600, HIT_GRUNT_MIN = 8;
 function sfxHitTaken(dmg, srcPos) {
+  if (SND.resume) SND.resume();   // (FIX 3) make sure the audio context is live even if it got suspended (covers cause (a))
+  console.log('[DMG-DEBUG] sfxHitTaken dmg=' + (+dmg).toFixed(1) + ' ctx=' + (SND.ctx && SND.ctx.state) + ' ready=' + SND.ready + ' muted=' + SND.muted + ' master=' + SND.vol.master + ' voice=' + SND.vol.voice);
   const now = performance.now();
   // direction-preserving, distance-clamped source position (so it's always audible, still directional)
   let pos = null;
@@ -2463,6 +2465,7 @@ function sfxHitTaken(dmg, srcPos) {
       aTone(ctx, out, t, { type: 'sine', f0, f1: f0 * 0.42, dur: heavy ? 0.16 : 0.1, peak: Math.min(0.62, 0.22 + dmg * 0.009) });
       aNoise(ctx, out, t, { dur: 0.06, peak: heavy ? 0.32 : 0.18, filter: 'lowpass', freq: heavy ? 640 : 1000 });
     };
+    console.log('[DMG-DEBUG] thud play ' + (pos ? '3D@' + pos.x.toFixed(0) + ',' + pos.z.toFixed(0) : '2D') + ' f0=' + f0.toFixed(0));
     if (pos) SND.play3d(thud, pos, 'voice', 'hitthud', 1.0, 0.16); else SND.play2d(thud, 'voice', 'hitthud', 0.9, 0.16);
   }
   if (dmg >= HIT_GRUNT_MIN && now - _hitGruntT >= HIT_GRUNT_CD) {   // GRUNT — brief pained "ugh"
@@ -7459,7 +7462,7 @@ function floatText(worldPos, text, color) {
 // --- Floating damage numbers (stack rapid hits on the same target) ---
 const _dmgNums = [];
 function showDamageNumber(worldPos, dmg, headshot) {
-  if (BR.active || !OPT.dmgNumbers || dmg <= 0) return;   // BR: no damage numbers
+  if (!OPT.dmgNumbers || dmg <= 0) return;   // (FIX 4) now also shows in BR (was gated off)
   _proj.copy(worldPos).project(camera); if (_proj.z > 1) return;
   const sx = (_proj.x * 0.5 + 0.5) * window.innerWidth, sy = (-_proj.y * 0.5 + 0.5) * window.innerHeight, now = performance.now();
   for (const d of _dmgNums) {   // merge into a recent nearby number (same target within 320ms)
@@ -10481,9 +10484,9 @@ function brChestForward(L) {
   return f.lengthSq() > 1e-4 ? f.normalize() : new THREE.Vector3(0, 0, 1);
 }
 // (FIX 3) begin a chest item's pop: it starts at the chest top and ballistically arcs to its floor spot.
-function brStartLootPop(o, fromTop) {
+function brStartLootPop(o, fromTop, arc) {
   o.popping = true;
-  o.pop = { from: fromTop.clone(), to: o.pos.clone(), t: 0, dur: 0.6, arc: 1.3,
+  o.pop = { from: fromTop.clone(), to: o.pos.clone(), t: 0, dur: 0.6, arc: (arc != null ? arc : 1.3),
             spinAxis: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize() };
   o.mesh.position.copy(fromTop);
 }
@@ -10658,26 +10661,42 @@ function brTakeConsumable(t) {   // stack into an existing slot, else take a new
   brSetCount(t, brCount(t) + 1); return true;
 }
 function brCanTake(t) { const lim = BR_STACK[t] || 1; return (brSlotOfType(t) >= 0) ? brCount(t) < lim : brFirstEmpty() >= 0; }
-function brSpawnDroppedWeapon(wx, wz, it) {
-  const y = brSafeY(wx, wz) + 0.35, g = brLootMesh('weapon', it.rar || 'common', it.key, it.cfg); g.position.set(wx, y, wz); scene.add(g);
-  BR_LOOT.push({ kind: 'weapon', rarity: it.rar || 'common', key: it.key, cfg: it.cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false, ammo: it.ammo, reserve: it.reserve });
+function brSpawnDroppedWeapon(wx, wz, it, atY) {
+  const y = (atY != null ? atY : brSafeY(wx, wz)) + 0.35, g = brLootMesh('weapon', it.rar || 'common', it.key, it.cfg); g.position.set(wx, y, wz); scene.add(g);
+  const o = { kind: 'weapon', rarity: it.rar || 'common', key: it.key, cfg: it.cfg, mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false, ammo: it.ammo, reserve: it.reserve };
+  BR_LOOT.push(o); return o;
 }
-function brSpawnDroppedItem(wx, wz, t) {
-  const y = brSafeY(wx, wz) + 0.35, g = brLootMesh(t, t === 'second' ? 'legendary' : 'common'); g.position.set(wx, y, wz); scene.add(g);
-  BR_LOOT.push({ kind: t, rarity: t === 'second' ? 'legendary' : 'common', mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false });
+function brSpawnDroppedItem(wx, wz, t, atY) {
+  const y = (atY != null ? atY : brSafeY(wx, wz)) + 0.35, g = brLootMesh(t, t === 'second' ? 'legendary' : 'common'); g.position.set(wx, y, wz); scene.add(g);
+  const o = { kind: t, rarity: t === 'second' ? 'legendary' : 'common', mesh: g, pos: new THREE.Vector3(wx, y, wz), taken: false };
+  BR_LOOT.push(o); return o;
+}
+// (FIX 1) the floor the PLAYER is standing on: snap to a surface ≤1u below the feet; else keep player.y (mid-air).
+// player.y is the ground truth — NEVER recompute from a sky raycast (that drops items to the map floor).
+function brDropFloorY(x, z) {
+  const base = player.pos.y; let best = null;
+  for (const s of solids) { if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && s.max.y <= base + 0.1 && s.max.y >= base - 1.0 && (best === null || s.max.y > best)) best = s.max.y; }
+  const g = groundHeightAt(x, z, base + 0.1); if (g <= base + 0.1 && g >= base - 1.0 && (best === null || g > best)) best = g;
+  return (best != null) ? best : base;
+}
+// (FIX 1) a drop target ~1.2u in FRONT of the player, snapped to the current floor (small forward toss).
+function brDropTarget() {
+  const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+  const tx = player.pos.x + fx * 1.2 + (Math.random() - 0.5) * 0.5, tz = player.pos.z + fz * 1.2 + (Math.random() - 0.5) * 0.5;
+  return { x: tx, z: tz, y: brDropFloorY(tx, tz) };
 }
 function brDropSlotAll(i) {   // drop a whole slot (the weapon, or the entire consumable stack) as loot
   const it = brInv[i]; if (!it) return;
-  const jit = () => [player.pos.x + (Math.random() - 0.5) * 1.8, player.pos.z + (Math.random() - 0.5) * 1.8];
-  if (it.t === 'weapon') { if (brHeldWeapon() === it) brSyncHeldAmmo(); const p = jit(); brSpawnDroppedWeapon(p[0], p[1], it); }
-  else { const n = brCount(it.t); for (let k = 0; k < n; k++) { const p = jit(); brSpawnDroppedItem(p[0], p[1], it.t); } brSetCount(it.t, 0); }
+  const fromTop = new THREE.Vector3(player.pos.x, player.pos.y + 1.0, player.pos.z);   // toss out of the chest/hands height
+  if (it.t === 'weapon') { if (brHeldWeapon() === it) brSyncHeldAmmo(); const t = brDropTarget(); const o = brSpawnDroppedWeapon(t.x, t.z, it, t.y); if (o) brStartLootPop(o, fromTop, 0.5); }
+  else { const n = brCount(it.t); for (let k = 0; k < n; k++) { const t = brDropTarget(); const o = brSpawnDroppedItem(t.x, t.z, it.t, t.y); if (o) brStartLootPop(o, fromTop, 0.5); } brSetCount(it.t, 0); }
   brInv[i] = null;
 }
-function brDropHeldItem() {   // G / X: drop ONE of the currently-held item
+function brDropHeldItem() {   // G / X: drop ONE of the currently-held item — onto the CURRENT floor, tossed forward
   if (ggKarambit) return; const i = brSel; if (i < 0 || !brInv[i]) return;
-  const it = brInv[i], p = [player.pos.x + (Math.random() - 0.5) * 1.6, player.pos.z + (Math.random() - 0.5) * 1.6];
-  if (it.t === 'weapon') { brSyncHeldAmmo(); brSpawnDroppedWeapon(p[0], p[1], it); brInv[i] = null; }
-  else { brSpawnDroppedItem(p[0], p[1], it.t); brSetCount(it.t, brCount(it.t) - 1); if (brCount(it.t) <= 0) brInv[i] = null; }
+  const it = brInv[i], t = brDropTarget(), fromTop = new THREE.Vector3(player.pos.x, player.pos.y + 1.0, player.pos.z);
+  if (it.t === 'weapon') { brSyncHeldAmmo(); const o = brSpawnDroppedWeapon(t.x, t.z, it, t.y); if (o) brStartLootPop(o, fromTop, 0.5); brInv[i] = null; }
+  else { const o = brSpawnDroppedItem(t.x, t.z, it.t, t.y); if (o) brStartLootPop(o, fromTop, 0.5); brSetCount(it.t, brCount(it.t) - 1); if (brCount(it.t) <= 0) brInv[i] = null; }
   if (!brInv[i]) brSelectAfterEmpty(i); else updateHUD();
 }
 function brDropAllOnDeath() { for (let i = 0; i < 5; i++) if (brInv[i]) brDropSlotAll(i); }
@@ -11040,12 +11059,14 @@ function brClearArc() { brArcOn = false; if (brArcGroup) { scene.remove(brArcGro
    marks the current circle; the HUD shows the countdown. The whole island is the first
    safe zone; the final tiny circle forces the last fight. (Timers below are tuned for a
    ~12-16 min match; bots taking zone damage is a later refinement.) */
+// (FIX 2) zone damage HP/sec per phase — each ~2x the last, scaled up to keep pace with the 150 BR HP.
+const BR_ZONE_DAMAGE = [3, 6, 12, 25, 50];
 const BR_ZONES = [
-  { hold: 55, warn: 15, shrink: 45, rFrac: 0.72, dmg: 1 },
-  { hold: 30, warn: 15, shrink: 40, rFrac: 0.46, dmg: 3 },
-  { hold: 25, warn: 12, shrink: 35, rFrac: 0.26, dmg: 8 },
-  { hold: 20, warn: 10, shrink: 28, rFrac: 0.12, dmg: 12 },
-  { hold: 16, warn: 8,  shrink: 22, rFrac: 0.04, dmg: 15 }
+  { hold: 55, warn: 15, shrink: 45, rFrac: 0.72, dmg: BR_ZONE_DAMAGE[0] },
+  { hold: 30, warn: 15, shrink: 40, rFrac: 0.46, dmg: BR_ZONE_DAMAGE[1] },
+  { hold: 25, warn: 12, shrink: 35, rFrac: 0.26, dmg: BR_ZONE_DAMAGE[2] },
+  { hold: 20, warn: 10, shrink: 28, rFrac: 0.12, dmg: BR_ZONE_DAMAGE[3] },
+  { hold: 16, warn: 8,  shrink: 22, rFrac: 0.04, dmg: BR_ZONE_DAMAGE[4] }
 ];
 function brInitZone() {
   if (!island) return;
@@ -11408,8 +11429,7 @@ function updateHUD() {
 
 let hitMarkerTimer = 0;
 function showHitMarker(headshot) {
-  if (BR.active) return;   // BR: no hit markers
-  if (!OPT.hitMarkers) return;
+  if (!OPT.hitMarkers) return;   // (FIX 4) now also shows in BR (was gated off)
   const hm = el('hitmarker'); hm.style.opacity = 1; hm.classList.toggle('hs', !!headshot); hitMarkerTimer = 0.15;
   sfxHitMarker(!!headshot);   // TINK (body) / DING (headshot)
 }
@@ -11622,6 +11642,7 @@ function hurtPlayer(dmg, srcPos) {
   player.health -= dmg;
   if (dmg > 0) GP.rumble(Math.min(0.9, 0.35 + dmg * 0.02), 0.5, 200);   // damage pulse (scales with the hit)
   showHurtFlash();
+  console.log('[DMG-DEBUG] local damage taken: ' + (+dmg).toFixed(1) + ' from: ' + (srcPos ? 'positional' : 'non-positional/zone') + ' mode: ' + gameMode + ' health->' + player.health.toFixed(0));
   if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg, srcPos);   // (CHANGE 4) directional thud + grunt toward the shooter (srcPos)
   if (dmg >= 1 && srcPos) showDamageArc(srcPos);          // red directional arc toward the source
   updateHUD();

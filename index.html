@@ -2441,15 +2441,39 @@ function sfxLadderTap(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { 
 /* --- DAMAGE / HEALTH / KILL feedback --- */
 function sfxHurt(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur: 0.16, peak: 0.4, filter: 'bandpass', freq: 500, freq1: 300, q: 0.9 }); aTone(ctx, out, t, { type: 'sine', f0: 150, f1: 90, dur: 0.12, peak: 0.25 }); }, pos || playerEarPos(), 'voice', 'hurt', 0.9, 0.16); }
 // LOCAL player took damage: a bass body-impact thud + a varied pained vocal grunt, scaled by the hit size. Non-positional.
-function sfxHitTaken(dmg) {
-  const heavy = dmg >= 40, med = dmg >= 15, vol = heavy ? 1.0 : med ? 0.8 : 0.5;
-  const gf = [118, 142, 168, 196][(Math.random() * 4) | 0];   // varied grunt pitch so it doesn't repeat
-  SND.play2d((ctx, out, t) => {
-    aTone(ctx, out, t, { type: 'sine', f0: heavy ? 105 : 145, f1: 48, dur: heavy ? 0.17 : 0.1, peak: heavy ? 0.55 : med ? 0.38 : 0.24 });   // bass body-impact thud
-    aNoise(ctx, out, t, { dur: 0.07, peak: heavy ? 0.32 : 0.18, filter: 'lowpass', freq: heavy ? 650 : 1000 });
-    aTone(ctx, out, t + 0.02, { type: 'sawtooth', f0: gf, f1: gf * 0.6, dur: heavy ? 0.24 : med ? 0.16 : 0.1, peak: heavy ? 0.3 : med ? 0.2 : 0.11 });   // pained grunt
-    aNoise(ctx, out, t + 0.02, { dur: 0.12, peak: 0.1 * vol, filter: 'bandpass', freq: 850, freq1: 480, q: 1.3 });
-  }, 'voice', 'hittaken', vol, 0.3);
+// (CHANGE 4) DAMAGE FEEDBACK — wet meaty THUD (every hit, pitched DOWN with bigger damage) + a pained
+// GRUNT (only for dmg ≥ 8). Plays 3D toward the shooter (srcPos) so you hear which way the hit came from;
+// non-positional sources (zone/fall/fire/self) play 2D. The 3D source is distance-CLAMPED to ~10u from the
+// player so a far-off shot is still clearly audible while keeping its direction. Cooldowns stop full-auto
+// spam: ≥80ms between thuds, ≥600ms between grunts (one grunt per burst). Heartbeat (low HP) is separate.
+let _hitThudT = 0, _hitGruntT = 0;
+const HIT_THUD_CD = 80, HIT_GRUNT_CD = 600, HIT_GRUNT_MIN = 8;
+function sfxHitTaken(dmg, srcPos) {
+  const now = performance.now();
+  // direction-preserving, distance-clamped source position (so it's always audible, still directional)
+  let pos = null;
+  if (srcPos) {
+    const dx = srcPos.x - player.pos.x, dy = srcPos.y - player.pos.y, dz = srcPos.z - player.pos.z, len = Math.hypot(dx, dy, dz);
+    if (len > 0.05) { const k = Math.min(len, 10) / len; pos = new THREE.Vector3(player.pos.x + dx * k, player.pos.y + dy * k, player.pos.z + dz * k); }
+  }
+  if (now - _hitThudT >= HIT_THUD_CD) {   // THUD — kick-drum body + wet flesh slap; lower pitch on bigger hits
+    _hitThudT = now;
+    const f0 = Math.max(55, 150 - dmg * 0.5), heavy = dmg >= 30;   // base-pitch shift = -0.5 Hz per HP
+    const thud = (ctx, out, t) => {
+      aTone(ctx, out, t, { type: 'sine', f0, f1: f0 * 0.42, dur: heavy ? 0.16 : 0.1, peak: Math.min(0.62, 0.22 + dmg * 0.009) });
+      aNoise(ctx, out, t, { dur: 0.06, peak: heavy ? 0.32 : 0.18, filter: 'lowpass', freq: heavy ? 640 : 1000 });
+    };
+    if (pos) SND.play3d(thud, pos, 'voice', 'hitthud', 1.0, 0.16); else SND.play2d(thud, 'voice', 'hitthud', 0.9, 0.16);
+  }
+  if (dmg >= HIT_GRUNT_MIN && now - _hitGruntT >= HIT_GRUNT_CD) {   // GRUNT — brief pained "ugh"
+    _hitGruntT = now;
+    const gf = [120, 145, 170, 195][(Math.random() * 4) | 0];
+    const grunt = (ctx, out, t) => {
+      aTone(ctx, out, t, { type: 'sawtooth', f0: gf, f1: gf * 0.58, dur: 0.22, peak: 0.3 });
+      aNoise(ctx, out, t, { dur: 0.14, peak: 0.12, filter: 'bandpass', freq: 850, freq1: 480, q: 1.3 });
+    };
+    if (pos) SND.play3d(grunt, pos, 'voice', 'hitgrunt', 1.0, 0.24); else SND.play2d(grunt, 'voice', 'hitgrunt', 0.9, 0.24);
+  }
 }
 function sfxDeath(pos) { SND.play3d((ctx, out, t) => { aTone(ctx, out, t, { type: 'sawtooth', f0: 240, f1: 70, dur: 0.6, peak: 0.4 }); aNoise(ctx, out, t + 0.3, { dur: 0.2, peak: 0.3, filter: 'lowpass', freq: 600 }); }, pos || playerEarPos(), 'voice', 'death', 1.0, 0.6); }
 function sfxKill(headshot) { SND.play2d((ctx, out, t) => { if (headshot) aChime(ctx, out, t, [1320, 1980], 0.05, 0.12, 0.32, 'sine'); else aTone(ctx, out, t, { type: 'sine', f0: 1180, dur: 0.12, peak: 0.3, atk: 0.005 }); }, 'ui', 'kill', 0.8, 0.15); }
@@ -4830,6 +4854,10 @@ window.addEventListener('resize', () => {
 /* ============================================================================
    5. PLAYER MOVEMENT — Quake-style accel, double jump, slide, bunny hop
    ============================================================================ */
+// (CHANGE 1) per-mode max HP: Battle Royale spawns/heals to 150; every other mode stays at 100.
+// Shield (overheal) is separate and capped at OVERHEAL_MAX (100) in all modes — unchanged.
+const STD_MAX_HP = 100, BR_MAX_HP = 150;
+function playerMaxHP() { return gameMode === 'br' ? BR_MAX_HP : STD_MAX_HP; }
 const player = {
   pos: new THREE.Vector3(0, 0, 30),     // feet position
   vel: new THREE.Vector3(),
@@ -8601,7 +8629,7 @@ function updateCigar(dt) {
     return;
   }
   // Heal smoothly to full over the full duration (~33%/s); incoming damage still applies normally.
-  player.health = Math.min(100, player.health + (100 / CIGAR.dur) * dt);
+  { const M = playerMaxHP(); player.health = Math.min(M, player.health + (M / CIGAR.dur) * dt); }   // (CHANGE 1) heal to full over 1.5s — ceiling is 150 in BR
   updateHUD();
   cigT += dt;
   const lowerStart = CIGAR.dur - 0.3;
@@ -8744,7 +8772,7 @@ function buildJdVM() {
 function drinkJD() {
   if (!gameState.running || !player.alive || !saberMode || jdDrinking) return;
   jdDrinking = true; jdDrinkT = 0;
-  player.health = 100;
+  player.health = playerMaxHP();   // (CHANGE 1) saber-streak JD heals to full (150 in BR, though streaks are FFA/TDM)
   player.overheal = OVERHEAL_MAX;
   flashJD(); sfxJDDrink();
   updateHUD();
@@ -10489,6 +10517,24 @@ function brSpawnLoot() {
   (island.lootSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar); });
   (island.caveSpots || []).forEach(cv => { brAddChest(island.cx + cv[0], island.cz + cv[1], Math.random() < 0.30 ? 'rare' : 'common'); });   // (Part 1) 1 chest per cave (3 caves -> 3)
   (island.secretSpots || []).forEach(s => { brAddChest(island.cx + s.lx, island.cz + s.lz, s.rar || 'legendary'); });   // mansion panic room + temple crypt: legendary
+  brSpawnGroundConsumables();   // (CHANGE 3) uncommon ground-loot cigars/JD scattered INSIDE the POIs (additional to chest loot)
+}
+// (CHANGE 3) Scatter 25–35 standalone cigar/JD pickups (≈60% cigar / 40% JD) INDOORS across all 9 POIs.
+// Reuses brAddLoot (same procedural mesh + floor-snap as chest healing items) and the same E-pickup/auto-stack
+// path in brUpdateLoot. Rolled at match start in brStart (same place + same per-client scatter as the chests).
+function brSpawnGroundConsumables() {
+  if (!island || !island.pois || !island.pois.length) return;
+  const total = 25 + (Math.random() * 11 | 0);   // 25..35 per match (uncommon)
+  let placed = 0;
+  for (let i = 0; i < total; i++) {
+    const poi = island.pois[i % island.pois.length];   // round-robin so all 9 POIs get a share
+    const p = brIndoorPoint(island.cx + poi.lx, island.cz + poi.lz, 30);   // roofed, headroom, not buried (same sampler as chests)
+    if (!p) continue;
+    const kind = (Math.random() < 0.6) ? 'cigar' : 'jd';   // ~60/40 cigar/JD
+    const o = brAddLoot(p[0], p[1], kind, 'common');   // brAddLoot floor-snaps (brSafeY) + makes it E-pickup eligible
+    if (o) placed++;
+  }
+  if (brLootDebug) console.log('[T][LOOT] ground consumables placed=' + placed + '/' + total);
 }
 // --- BR weapon slots: two primaries (1/2) + the melee (3). Each slot's ammo lives in weaponState[key]. ---
 function brWeaponMags(rar, key) {     // reserve magazines by rarity (snipers/DMRs/LMGs carry fewer)
@@ -11296,11 +11342,13 @@ function updateHUD() {
   // saber+JD is active (the whiskey bottle replaces the cigar, and Q drinks instead).
   if (saberMode) { el('cigarCount').style.display = 'none'; }
   else { el('cigarCount').style.display = 'block'; el('cigarNum').textContent = player.cigar; el('cigarCount').style.opacity = player.cigar > 0 ? '1' : '0.35'; }
-  // Health bar
-  const hp = Math.max(0, player.health);
+  // Health bar — width is a PERCENT of the mode's max HP (150 in BR), so the bar stays the same
+  // pixel width on screen and "full" = 150 in BR / 100 elsewhere. (CHANGE 1)
+  const maxHp = playerMaxHP(), hp = Math.max(0, Math.min(maxHp, player.health)), hpFrac = maxHp > 0 ? hp / maxHp : 0;
   const bar = el('healthBar');
-  bar.style.width = hp + '%';
-  bar.style.background = hp > 50 ? '#34d058' : hp > 25 ? '#f0b429' : '#e0392b';
+  bar.style.width = (hpFrac * 100) + '%';
+  bar.style.background = hpFrac > 0.5 ? '#34d058' : hpFrac > 0.25 ? '#f0b429' : '#e0392b';
+  const hpLabel = el('healthLabel'); if (hpLabel) hpLabel.textContent = 'HEALTH  ' + Math.ceil(hp) + ' / ' + maxHp;   // numeric "150 / 150" readout
   // Whiskey overheal/shield bar (amber) — stacked above HP, shown only while it has charge.
   const oh = Math.max(0, Math.min(OVERHEAL_MAX, player.overheal || 0));
   const ohWrap = el('overhealBarBg');
@@ -11532,7 +11580,7 @@ function hurtPlayer(dmg, srcPos) {
   player.health -= dmg;
   if (dmg > 0) GP.rumble(Math.min(0.9, 0.35 + dmg * 0.02), 0.5, 200);   // damage pulse (scales with the hit)
   showHurtFlash();
-  if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg);   // body-impact thud + pained grunt, scaled by damage
+  if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg, srcPos);   // (CHANGE 4) directional thud + grunt toward the shooter (srcPos)
   if (dmg >= 1 && srcPos) showDamageArc(srcPos);          // red directional arc toward the source
   updateHUD();
   if (player.health <= 0) {
@@ -11588,7 +11636,7 @@ function doRespawn() {
   const sp = spawnForPlayer();   // TDM: respawn on my team's side, away from the nearest enemy
   player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
-  player.health = 100; player.alive = true;
+  player.health = playerMaxHP(); player.alive = true;   // (CHANGE 1) BR = 150, others 100
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.impulseT = 0; player.impulseGrace = 0; player.onLadder = false; player.ladder = null;
   player.cigar = CIGAR.maxCarry; if (cigSmoking) cigFinish();   // fresh cigar each life
@@ -11906,7 +11954,7 @@ function startMatch() {
   // Everyone spawns on a real spawn point (team side in TDM), facing the centre of the map.
   const sp = spawnForPlayer(); player.pos.set(sp.x, groundHeightAt(sp.x, sp.z, 0.5), sp.z);
   player.vel.set(0, 0, 0);
-  player.health = 100; player.alive = true; player.sliding = false; player.launchCd = 0;
+  player.health = playerMaxHP(); player.alive = true; player.sliding = false; player.launchCd = 0;   // (CHANGE 1) BR = 150, others 100
   player.crouching = false; player.diving = false; player.diveAir = false; player.crouchBlend = 0; player.diveTilt = 0; player.eye = MOVE.eyeHeight;
   player.impulseT = 0; player.impulseGrace = 0;
   player.cigar = CIGAR.maxCarry; cigSmoking = false; cigCanceling = false; if (_cigVM) _cigVM.visible = false;   // fresh cigar; clear any prior smoke
@@ -13720,7 +13768,12 @@ function lerpRemotePlayers(dt) {
     if (rp.flm && rp.weaponMesh) { const o = rp.weaponMesh.getWorldPosition(new THREE.Vector3()); const aim = new THREE.Vector3(-Math.sin(rp.renderYaw), 0, -Math.cos(rp.renderYaw)); flameSprayFX(o, aim); }
     if (rp.brn) burnFX(new THREE.Vector3(rp.pos.x, rp.pos.y + 1.0, rp.pos.z), 1.4);
     // TEAM DEATHMATCH: sync team, build/refresh the team outline + chevron, and gate enemy nameplate by line-of-sight.
-    if (gameMode === 'tdm') {
+    if (gameMode === 'br') {
+      // (CHANGE 2) BR: hide ENEMY nameplates entirely; show only teammates (BR squads — future). Solo BR has
+      // no teams (rp.team / myTeam null) so every other player is an enemy -> all tags hidden. Tag code is kept.
+      const teammate = !!(rp.team && myTeam && rp.team === myTeam);
+      if (rp.nameSprite) rp.nameSprite.visible = teammate;
+    } else if (gameMode === 'tdm') {
       const s = NET.scores.get(rp.id); rp.team = s ? s.team : rp.team;
       updateTeamMarker(rp);
       const enemy = rp.team && myTeam && rp.team !== myTeam;

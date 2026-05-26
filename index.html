@@ -1684,8 +1684,21 @@ function ensureParadiseIsland() {
   if (!island && typeof buildParadiseIsland === 'function') {
     island = buildParadiseIsland(1200, 0);
     if (island.glows) island.glows.forEach(g => addNightGlow(g[0], g[1], g[2], g[3], g[4], g[5], g[6], g[7]));   // instantiate interior / cave / campfire / lighthouse / light-fixture glows (lit at night)
+    brSpawnFrameworkTestCube();   // (PHASE 0 DEMO) one wall collider registered with the universal BR framework — proves it works in isolation
   }
   return island;
+}
+// PHASE 0 DEMO: a single visible magenta pillar at island centre, registered ONLY with the new BR
+// collision framework (NOT with solids/colliders), so walking into it proves brColliders blocks you.
+// World position is logged to the console on build. Remove once real BR rebuilds register their geometry.
+function brSpawnFrameworkTestCube() {
+  const gx = island.cx, gz = island.cz, gy = (typeof groundHeightAt === 'function') ? groundHeightAt(gx, gz, 5) : 0;
+  const w = 3, h = 4, d = 3;
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshLambertMaterial({ color: 0xff2bd6, emissive: 0x550044, flatShading: true }));
+  cube.position.set(gx, gy + h / 2, gz); scene.add(cube);
+  addBrCollider(cube, 'wall');   // <-- the ONLY thing in brColliders for now
+  console.log('[BR-FRAMEWORK] test wall cube at world x=' + gx.toFixed(0) + ' y=' + gy.toFixed(1) + ' z=' + gz.toFixed(0) + ' (island centre) — walk into it; brColliders.length=' + brColliders.length);
 }
 // Map-aware horizontal boundary (replaces the old fixed ARENA clamp so the bigger island fits).
 function clampToMap(pos, margin) {
@@ -1707,6 +1720,114 @@ function mapWallBounds(margin) {
   margin = (margin == null) ? 1 : margin;
   if (activeMap === 'paradise' && island) { const L = island.R + 55; return { xlo: island.cx - L, xhi: island.cx + L, zlo: island.cz - L, zhi: island.cz + L }; }
   const L = ARENA - margin; return { xlo: -L, xhi: L, zlo: -L, zhi: L };
+}
+
+/* ============================================================================
+   UNIVERSAL BR COLLISION FRAMEWORK (Phase 0 — infrastructure only; DORMANT until a
+   BR building rebuild registers geometry). Every future BR rebuild calls
+   addBrCollider(mesh, type, opts); the player-movement + projectile loops consult
+   THIS one registry. Nuketown keeps its own system (solids / colliders /
+   groundHeightAt) entirely — nothing here runs while brColliders is empty, and the
+   integration points are gated to gameMode==='br', so Nuketown is never touched.
+   Types: 'wall' | 'floor' | 'ramp' | 'roof' | 'prop' | 'invisible-bounds'.
+   ============================================================================ */
+const brColliders = [];
+const BR_RAMP_MAX = Math.PI / 4;   // ≤45° ramps are walkable; steeper acts as a wall
+const BR_COL_DEFAULTS = {
+  wall:               { blocksMovement: true,  blocksProjectiles: true,  walkable: false },
+  floor:              { blocksMovement: true,  blocksProjectiles: true,  walkable: true  },
+  ramp:               { blocksMovement: true,  blocksProjectiles: true,  walkable: true  },
+  roof:               { blocksMovement: true,  blocksProjectiles: true,  walkable: true  },
+  prop:               { blocksMovement: true,  blocksProjectiles: true,  walkable: false },
+  'invisible-bounds': { blocksMovement: true,  blocksProjectiles: false, walkable: false }
+};
+// Register a mesh's WORLD-SPACE axis-aligned bounding box as a BR collider. For ramps,
+// also derives the slope (along the longer horizontal axis) + surface normal.
+function addBrCollider(mesh, type, options) {
+  type = (type && BR_COL_DEFAULTS[type]) ? type : 'prop';
+  const opt = Object.assign({}, BR_COL_DEFAULTS[type], options || {});
+  mesh.updateWorldMatrix(true, false);
+  const box = new THREE.Box3().setFromObject(mesh);
+  const c = { mesh, type, opt, min: box.min.clone(), max: box.max.clone() };
+  if (type === 'ramp') {
+    const sx = box.max.x - box.min.x, sz = box.max.z - box.min.z, hy = box.max.y - box.min.y;
+    const axis = sx >= sz ? 'x' : 'z', len = (axis === 'x' ? sx : sz) || 0.001;
+    const slope = Math.atan2(hy, len), dir = (options && options.slopeDir) || 1;   // dir +1 rises toward +axis
+    const normal = (axis === 'x') ? new THREE.Vector3(-dir * Math.sin(slope), Math.cos(slope), 0)
+                                  : new THREE.Vector3(0, Math.cos(slope), -dir * Math.sin(slope));
+    c.ramp = { axis, len, slope, dir, baseY: box.min.y, topY: box.max.y, normal };
+  }
+  brColliders.push(c);
+  return c;
+}
+function brClearColliders() { brColliders.length = 0; }   // teardown hook for map rebuilds
+// First BR collider whose AABB contains the point (projectile world collision). null if none.
+function checkBrProjectileCollision(projectile) {
+  const p = projectile.pos || projectile;
+  for (const c of brColliders) {
+    if (!c.opt.blocksProjectiles) continue;
+    if (p.x > c.min.x && p.x < c.max.x && p.y > c.min.y && p.y < c.max.y && p.z > c.min.z && p.z < c.max.z) return c;
+  }
+  return null;
+}
+// Walking surface Y of a ramp at the player's XZ (or null if outside its footprint).
+function brRampSurfaceY(c, x, z) {
+  if (x < c.min.x || x > c.max.x || z < c.min.z || z > c.max.z) return null;
+  const r = c.ramp, a = (r.axis === 'x') ? x : z, f = Math.max(0, Math.min(1, (a - c.min[r.axis]) / r.len));
+  const up = (r.dir > 0) ? f : (1 - f);
+  return r.baseY + up * (r.topY - r.baseY);
+}
+// Resolve the player against ONE box collider (swept downward-land + horizontal MTV push-out).
+function brBoxResolve(c, px0, py0, pz0) {
+  const r = MOVE.radius, bodyH = 1.7, feet = player.pos.y, head = feet + bodyH;
+  const standTop = (c.type === 'floor' || c.type === 'roof' || c.type === 'wall' || c.type === 'prop');
+  // Swept landing: feet crossed the box top downward this frame while horizontally inside -> land on top.
+  if (standTop && player.vel.y <= 0 && py0 + 0.001 >= c.max.y - 0.03 && feet < c.max.y &&
+      player.pos.x > c.min.x && player.pos.x < c.max.x && player.pos.z > c.min.z && player.pos.z < c.max.z) {
+    player.pos.y = c.max.y; if (player.vel.y < 0) player.vel.y = 0; player.onGround = true; player.jumps = 0; return;
+  }
+  // Broad-phase overlap (player capsule approximated by its AABB).
+  if (!(player.pos.x > c.min.x - r && player.pos.x < c.max.x + r &&
+        player.pos.z > c.min.z - r && player.pos.z < c.max.z + r &&
+        head > c.min.y && feet < c.max.y)) return;
+  // 'floor'/'roof' resolve only vertically (you can walk off their edges); others push out horizontally.
+  if (c.type === 'roof' && player.vel.y > 0 && head > c.min.y && py0 + bodyH <= c.min.y + 0.03) {
+    player.pos.y = c.min.y - bodyH; if (player.vel.y > 0) player.vel.y = 0; return;   // bonk head under a roof
+  }
+  if (c.type === 'floor' || c.type === 'roof') return;   // top-stand handled above; underside handled for roof
+  // Horizontal minimum-translation-vector push-out (slide along the surface).
+  const penNX = (player.pos.x + r) - c.min.x, penPX = c.max.x - (player.pos.x - r);
+  const penNZ = (player.pos.z + r) - c.min.z, penPZ = c.max.z - (player.pos.z - r);
+  const m = Math.min(penNX, penPX, penNZ, penPZ);
+  if (m <= 0) return;
+  if (m === penNX) { player.pos.x = c.min.x - r; if (player.vel.x > 0) player.vel.x = 0; }
+  else if (m === penPX) { player.pos.x = c.max.x + r; if (player.vel.x < 0) player.vel.x = 0; }
+  else if (m === penNZ) { player.pos.z = c.min.z - r; if (player.vel.z > 0) player.vel.z = 0; }
+  else { player.pos.z = c.max.z + r; if (player.vel.z < 0) player.vel.z = 0; }
+}
+// Resolve the player against ONE ramp collider (walk up ≤45°, steeper = wall).
+function brRampResolve(c, px0, py0, pz0) {
+  if (c.ramp.slope > BR_RAMP_MAX) { brBoxResolve(Object.assign({}, c, { type: 'wall' }), px0, py0, pz0); return; }
+  const surfY = brRampSurfaceY(c, player.pos.x, player.pos.z);
+  if (surfY == null) return;
+  const surfYprev = brRampSurfaceY(c, px0, pz0);
+  // On / just above the ramp, or descending onto it this frame -> snap to the slope surface.
+  if (player.pos.y <= surfY + 0.12 && (player.pos.y >= surfY - 1.3 || (surfYprev != null && py0 >= surfYprev - 0.03))) {
+    player.pos.y = surfY; if (player.vel.y < 0) player.vel.y = 0;
+    player.onGround = true; player.jumps = 0; player._brRampN = c.ramp.normal;   // remembered for jump-off-along-normal
+  }
+}
+// FINAL movement pass: resolve the player against all registered BR geometry. Swept landing inside
+// each box/ramp prevents phase-through at parachute / boost / impulse speeds. No-op when the
+// registry is empty (dormant) — and only ever called in BR (Nuketown untouched).
+function brResolvePlayerCollision(px0, py0, pz0) {
+  if (!brColliders.length) return;
+  player._brRampN = null;
+  for (const c of brColliders) {
+    if (!c.opt.blocksMovement) continue;
+    if (c.type === 'ramp') brRampResolve(c, px0, py0, pz0);
+    else brBoxResolve(c, px0, py0, pz0);
+  }
 }
 let myTeam = null;      // TEAM DEATHMATCH: 'red' | 'blue' for the LOCAL player (null in FFA/GG)
 const TEAMS = { red: { name: 'TEAM RED', color: 0xe23b3b, css: '#ff5a5a', spawnSide: 'yellow' },
@@ -5192,7 +5313,8 @@ function updateMovement(dt) {
     const saberJump = (currentWeaponKey === 'saber');
     const jv = (saberJump ? MOVE.jumpVel * 2.5 : MOVE.jumpVel) * ((WEAPONS[currentWeaponKey] && WEAPONS[currentWeaponKey].minigun) ? 0.8 : 1);   // minigun's weight cuts jump height 20%
     let jumped = false;
-    if (player.onGround) { player.vel.y = jv; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; jumped = true; }
+    if (player.onGround) { player.vel.y = jv; player.jumps = 1; jumpedThisFrame = true; player.sliding = false; jumped = true;
+      if (player._brRampN) { player.vel.x += player._brRampN.x * jv * 0.45; player.vel.z += player._brRampN.z * jv * 0.45; } }   // (BR FRAMEWORK) jumping off a ramp launches along its slope normal
     else if (player.jumps < 2) { player.vel.y = jv; player.jumps++; jumpedThisFrame = true; jumped = true; }
     if (jumped) {
       if (saberJump) { player.impulseGrace = Math.max(player.impulseGrace, 4.0); spawnForceRing(player.pos); sfxForceJump(player.pos); }
@@ -5333,6 +5455,9 @@ function updateMovement(dt) {
   } else {
     player.onGround = false;
   }
+  // (BR COLLISION FRAMEWORK) final authority pass over registered BR building geometry. Dormant
+  // (no-op) unless a BR rebuild registered colliders; gated to BR so Nuketown is never touched.
+  if (gameMode === 'br') brResolvePlayerCollision(px0, py0, pz0);
   // Dive: mark airborne once we leave the ground, then land (crouched) when we touch down again.
   if (player.diving) {
     if (!player.onGround) player.diveAir = true;
@@ -7840,7 +7965,6 @@ function ggProjExplode(p, center) {
   addShake(0.18 * Math.max(0, 1 - pd / (p.cfg.blastR * 2)), 0.4);
 }
 function updateGGProjectiles(dt) {
-  const lim = ARENA - 1;
   for (let i = ggProjectiles.length - 1; i >= 0; i--) {
     const p = ggProjectiles[i], cfg = p.cfg;
     p.life -= dt;
@@ -7902,10 +8026,11 @@ function updateGGProjectiles(dt) {
     let world = false;
     const gh = groundHeightAt(p.pos.x, p.pos.z, p.pos.y);
     if (p.pos.y < gh + 0.1) { p.pos.y = gh + 0.1; world = true; }
-    if (Math.abs(p.pos.x) > lim || Math.abs(p.pos.z) > lim) world = true;
+    { const W = mapWallBounds(); if (p.pos.x < W.xlo || p.pos.x > W.xhi || p.pos.z < W.zlo || p.pos.z > W.zhi) world = true; }   // (BOW FIX) map-aware wall — old ±(ARENA-1) detonated the explosive bolt at the muzzle in BR (player at x~1200 >> 112 → instant self-blast)
     if (!world) for (const s of solids) {
       if (p.pos.y < s.max.y && p.pos.y > s.min.y && p.pos.x > s.min.x && p.pos.x < s.max.x && p.pos.z > s.min.z && p.pos.z < s.max.z) { world = true; break; }
     }
+    if (!world && gameMode === 'br' && brColliders.length) { const bc = checkBrProjectileCollision(p); if (bc) world = true; }   // (BR FRAMEWORK) registered BR geometry stops projectiles
 
     const impact = hitPoint || (world ? p.pos.clone() : null);
     if (impact || p.life <= 0) {

@@ -10378,13 +10378,53 @@ function brSpawnChestContents(L) {
   if (rar === 'legendary') { items.push(['lethal'], ['jd']); if (Math.random() < 0.05) items.push(['second']); }   // legendary: a lethal + premium JD (+5% Second Chance bonus)
   else if (rar === 'rare') { items.push([Math.random() < 0.5 ? 'impulse' : 'lethal'], [Math.random() < 0.5 ? 'cigar' : 'jd']); }
   else { items.push(['impulse'], ['cigar']); }                                                                     // common: impulse grenade + cigar
-  // (Bug 3) spawn the items ON the chest's OWN floor (its Y), not a recomputed ground-floor Y; tight fan so they don't fall away / stack.
-  const out = [], cy = L.pos.y, base = (L.mesh ? L.mesh.rotation.y : 0) - (items.length - 1) * 0.4;
-  items.forEach((it, i) => { const a = base + i * 0.8, o = brAddLoot(L.pos.x + Math.cos(a) * 0.7, L.pos.z + Math.sin(a) * 0.7, it[0], it[1], cy); if (o) { o.fromChest = true; out.push(o); } });
+  // (FIX 3 — Fortnite pop) items shoot FORWARD + up out of the chest and arc down ~2u in front, ON the
+  // chest's OWN floor (cy). Landing spots are validated forward (most-open direction); a blocked forward
+  // falls back to the old tight fan so items never clip into geometry. (Bug 3 floor-snap preserved.)
+  const out = [], cy = L.pos.y, fwd = brChestForward(L), chestTop = new THREE.Vector3(L.pos.x, cy + 1.1, L.pos.z), YUP = new THREE.Vector3(0, 1, 0);
+  const place = (kind, rar, i) => {
+    const ang = (i === 0) ? 0 : (i % 2 ? 1 : -1) * 0.2618 * Math.ceil(i / 2);   // item0 straight; others ±15°, ±30°…
+    const dir = fwd.clone().applyAxisAngle(YUP, ang);
+    let tx = L.pos.x + dir.x * 2.0, tz = L.pos.z + dir.z * 2.0;
+    if (brChestBlocked(tx, cy, tz)) { const a = (L.mesh ? L.mesh.rotation.y : 0) + i * 0.8; tx = L.pos.x + Math.cos(a) * 0.7; tz = L.pos.z + Math.sin(a) * 0.7; }   // forward walled -> fan fallback
+    const o = brAddLoot(tx, tz, kind, rar, cy);
+    if (o) { o.fromChest = true; brStartLootPop(o, chestTop); out.push(o); }
+    return o;
+  };
+  items.forEach((it, i) => place(it[0], it[1], i));
   // (Bug 1) hard guarantee EXACTLY 3 items — if any roll somehow produced nothing, fill a common fallback (weapon / smoke / cigar)
   const fb = ['weapon', 'lethal', 'cigar'];
-  while (out.length < 3) { const k = fb[out.length] || 'cigar'; console.warn('[BR] chest contents came up short — filling fallback "' + k + '"'); const a = base + out.length * 0.8, o = brAddLoot(L.pos.x + Math.cos(a) * 0.7, L.pos.z + Math.sin(a) * 0.7, k, 'common', cy); if (!o) break; o.fromChest = true; out.push(o); }
+  while (out.length < 3) { const k = fb[out.length] || 'cigar'; console.warn('[BR] chest contents came up short — filling fallback "' + k + '"'); if (!place(k, 'common', out.length)) break; }
   return out;
+}
+// (FIX 3) the direction items should pop out of a chest: the MOST-OPEN horizontal direction (away from
+// the wall it's against); falls back to the chest's facing, then world +Z. Keeps the pop arc clear of walls.
+function brChestForward(L) {
+  let best = null, bestClear = -1;
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * 6.2832, dx = Math.cos(a), dz = Math.sin(a);
+    let clear = 0; for (let r = 0.8; r <= 3.0; r += 0.4) { if (brChestClips(L.pos.x + dx * r, L.pos.y, L.pos.z + dz * r)) break; clear = r; }
+    if (clear > bestClear) { bestClear = clear; best = { x: dx, z: dz }; }
+  }
+  if (best && bestClear >= 0.8) return new THREE.Vector3(best.x, 0, best.z).normalize();
+  const ry = L.mesh ? L.mesh.rotation.y : 0, f = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));
+  return f.lengthSq() > 1e-4 ? f.normalize() : new THREE.Vector3(0, 0, 1);
+}
+// (FIX 3) begin a chest item's pop: it starts at the chest top and ballistically arcs to its floor spot.
+function brStartLootPop(o, fromTop) {
+  o.popping = true;
+  o.pop = { from: fromTop.clone(), to: o.pos.clone(), t: 0, dur: 0.6, arc: 1.3,
+            spinAxis: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize() };
+  o.mesh.position.copy(fromTop);
+}
+// (FIX 3) per-frame: forward+up arc (sin-bump over a linear glide) + a tumble; snap to the floor on land.
+function brUpdateLootPop(o, dt) {
+  const p = o.pop; p.t += dt; const u = Math.min(1, p.t / p.dur);
+  o.mesh.position.set(p.from.x + (p.to.x - p.from.x) * u,
+                      p.from.y + (p.to.y - p.from.y) * u + p.arc * Math.sin(Math.PI * u),
+                      p.from.z + (p.to.z - p.from.z) * u);
+  o.mesh.rotateOnAxis(p.spinAxis, dt * Math.PI * 2 / p.dur);   // ~one full tumble across the airtime
+  if (u >= 1) { o.mesh.position.copy(o.pos); o.mesh.rotation.set(0, 0, 0); o.popping = false; o.pop = null; if (typeof sfxImpact === 'function') sfxImpact('stick', o.pos); }
 }
 function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; brChestSeq = 0; }
 let brLootDebug = false;   // set true to log every loot spawn position (Part 1 diagnostics)
@@ -10632,7 +10672,7 @@ function brUpdateLoot(dt) {
   for (const L of BR_LOOT) {
     if (L.taken) continue;
     if (typeof brUpdateChestAnim === 'function') brUpdateChestAnim(L, dt);   // chests: lid-open animation (Part 5)
-    if (L.mesh && !L.chest) { L.mesh.rotation.y += dt * 1.2; L.mesh.position.y = L.pos.y + Math.sin(performance.now() * 0.003 + L.pos.x) * 0.12; }
+    if (L.mesh && !L.chest) { if (L.popping) brUpdateLootPop(L, dt); else { L.mesh.rotation.y += dt * 1.2; L.mesh.position.y = L.pos.y + Math.sin(performance.now() * 0.003 + L.pos.x) * 0.12; } }   // (FIX 3) arc out of the chest, then resume the idle bob/spin once landed
     if (!player.alive) continue;
     const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
     if (d > 2.8 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;

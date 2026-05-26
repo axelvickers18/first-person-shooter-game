@@ -1700,6 +1700,14 @@ function clampToMap(pos, margin) {
     pos.z = Math.max(-lim, Math.min(lim, pos.z));
   }
 }
+// World-space outer wall (x/z lo/hi) for the active map — projectiles bounce/stick/clamp here.
+// Mirrors clampToMap so thrown items respect the BR island's far-offset bounds instead of the
+// Nuketown ARENA fence (which, at the island's ~x=1200 region, teleported every projectile ~1km away).
+function mapWallBounds(margin) {
+  margin = (margin == null) ? 1 : margin;
+  if (activeMap === 'paradise' && island) { const L = island.R + 55; return { xlo: island.cx - L, xhi: island.cx + L, zlo: island.cz - L, zhi: island.cz + L }; }
+  const L = ARENA - margin; return { xlo: -L, xhi: L, zlo: -L, zhi: L };
+}
 let myTeam = null;      // TEAM DEATHMATCH: 'red' | 'blue' for the LOCAL player (null in FFA/GG)
 const TEAMS = { red: { name: 'TEAM RED', color: 0xe23b3b, css: '#ff5a5a', spawnSide: 'yellow' },
                 blue: { name: 'TEAM BLUE', color: 0x3b7fe2, css: '#5aa6ff', spawnSide: 'green' } };
@@ -3041,7 +3049,7 @@ function buildMansion(cx, cz) {
   // Upper exterior walls (y 6→11) — central block perimeter with windows + the balcony over the entrance
   wallZ(19, -19, 19, F2, F3, stone, wins(-18, 18, 7.4, 10.2, 6, 1.5));
   wallX(19, -2, 19, F2, F3, stone, wins(-1, 18, 7.4, 10.2, 4, 1.5)); wallX(-19, -2, 19, F2, F3, stone, wins(-1, 18, 7.4, 10.2, 4, 1.5));
-  wallZ(-2, -19, 19, F2, F3, stone, [{ a0: -4, a1: 4, y0: 6.2, y1: 10.0 }, ...wins(-18, -6, 7.4, 10.2, 3), ...wins(6, 18, 7.4, 10.2, 3)]);  // big French window onto the balcony
+  wallZ(-2, -19, 19, F2, F3, stone, [{ a0: -4, a1: 4, y0: 6.2, y1: 10.0 }, ...wins(-18, -6, 7.4, 10.2, 3, 1.5), ...wins(6, 18, 7.4, 10.2, 3, 1.5)]);  // big French window onto the balcony (NaN FIX: ww=1.5 was missing -> NaN window panes)
   // BALCONY over the grand entrance (stand-out terrace at F2 with balustrade + French doors above)
   B(-3.4, F2 - 0.4, 0, 2.8, 0.4, 8, stoneLt); balus('z', cx - 4.7, cz - 4, cz + 4, F2); balus('x', cz + 4, -4.7, -2, F2); balus('x', cz - 4, -4.7, -2, F2);
   // Upper hallway down the central block (connects toward both wings) + runner rug + sconces + doors
@@ -7379,7 +7387,6 @@ function throwTomahawk(pos, dir) {
   liveTomahawks.push({ mesh, pos: pos.clone(), vel, life: TOMAHAWK.life, spin: 0, stuck: false });
 }
 function updateTomahawks(dt) {
-  const lim = ARENA - 1;
   let promptAxe = null;
   for (let i = liveTomahawks.length - 1; i >= 0; i--) {
     const t = liveTomahawks[i];
@@ -7424,7 +7431,7 @@ function updateTomahawks(dt) {
     const gh = groundHeightAt(t.pos.x, t.pos.z, t.pos.y);
     let land = false;
     if (t.pos.y < gh + 0.15) { t.pos.y = gh + 0.15; land = true; }
-    if (Math.abs(t.pos.x) > lim || Math.abs(t.pos.z) > lim) land = true;
+    { const W = mapWallBounds(); if (t.pos.x < W.xlo || t.pos.x > W.xhi || t.pos.z < W.zlo || t.pos.z > W.zhi) land = true; }   // (BR FIX) map-aware edge (old ±lim made every island throw "land" instantly mid-air)
     for (const s of solids) {
       if (t.pos.y < s.max.y && t.pos.y > s.min.y &&
           t.pos.x > s.min.x && t.pos.x < s.max.x && t.pos.z > s.min.z && t.pos.z < s.max.z) { land = true; break; }
@@ -7487,12 +7494,12 @@ function spawnSmokeCloud(center, networked) {
   if (networked && NET.active) NET.broadcast({ t: 'smoke', id: NET.selfId, x: center.x, y: center.y, z: center.z });
 }
 function updateSmokes(dt) {
-  const lim = ARENA - 1, damp = 0.45;
+  const damp = 0.45;
   for (let i = liveSmokeNades.length - 1; i >= 0; i--) {
     const s = liveSmokeNades[i]; s.life -= dt; s.vel.y -= 30 * dt; s.pos.addScaledVector(s.vel, dt);
     const gh = groundHeightAt(s.pos.x, s.pos.z, s.pos.y); let resting = false;
     if (s.pos.y < gh + 0.13) { s.pos.y = gh + 0.13; if (s.vel.y < 0) { s.vel.y = -s.vel.y * damp; s.vel.x *= 0.6; s.vel.z *= 0.6; } if (Math.hypot(s.vel.x, s.vel.y, s.vel.z) < 1.4) resting = true; }
-    s.pos.x = Math.max(-lim, Math.min(lim, s.pos.x)); s.pos.z = Math.max(-lim, Math.min(lim, s.pos.z));
+    { const W = mapWallBounds(); s.pos.x = Math.max(W.xlo, Math.min(W.xhi, s.pos.x)); s.pos.z = Math.max(W.zlo, Math.min(W.zhi, s.pos.z)); }   // (BR FIX) map-aware clamp (old ±lim teleported island throws ~1km to the Nuketown fence)
     s.mesh.position.copy(s.pos); s.mesh.rotation.x += dt * 5;
     s.restT = resting ? s.restT + dt : 0;
     if (s.restT >= 1.0 || s.life <= 0) { scene.remove(s.mesh); disposeGroup(s.mesh); liveSmokeNades.splice(i, 1); spawnSmokeCloud(s.pos.clone().setY(gh + 0.8), true); }
@@ -8286,10 +8293,11 @@ function impulseTryStick(c, r, lim) {
   }
   const gh = groundHeightAt(c.pos.x, c.pos.z, c.pos.y);         // floor
   if (c.pos.y <= gh + r) return impulseStick(c, new THREE.Vector3(c.pos.x, gh + r, c.pos.z), new THREE.Vector3(0, 1, 0), null);
-  if (c.pos.x <= -lim) return impulseStick(c, new THREE.Vector3(-lim, c.pos.y, c.pos.z), new THREE.Vector3(1, 0, 0), null);   // arena fence
-  if (c.pos.x >= lim)  return impulseStick(c, new THREE.Vector3(lim, c.pos.y, c.pos.z),  new THREE.Vector3(-1, 0, 0), null);
-  if (c.pos.z <= -lim) return impulseStick(c, new THREE.Vector3(c.pos.x, c.pos.y, -lim), new THREE.Vector3(0, 0, 1), null);
-  if (c.pos.z >= lim)  return impulseStick(c, new THREE.Vector3(c.pos.x, c.pos.y, lim),  new THREE.Vector3(0, 0, -1), null);
+  const W = mapWallBounds();   // (BR FIX) map-aware outer wall — at the island's far-offset region the old ±(ARENA-1) fence stuck/teleported every throw ~1km away
+  if (c.pos.x <= W.xlo) return impulseStick(c, new THREE.Vector3(W.xlo, c.pos.y, c.pos.z), new THREE.Vector3(1, 0, 0), null);   // arena/island fence
+  if (c.pos.x >= W.xhi) return impulseStick(c, new THREE.Vector3(W.xhi, c.pos.y, c.pos.z), new THREE.Vector3(-1, 0, 0), null);
+  if (c.pos.z <= W.zlo) return impulseStick(c, new THREE.Vector3(c.pos.x, c.pos.y, W.zlo), new THREE.Vector3(0, 0, 1), null);
+  if (c.pos.z >= W.zhi) return impulseStick(c, new THREE.Vector3(c.pos.x, c.pos.y, W.zhi), new THREE.Vector3(0, 0, -1), null);
   for (const s of solids) {                                    // walls / crates / roofs / ceilings (closest face)
     if (c.pos.x > s.min.x - r && c.pos.x < s.max.x + r && c.pos.y > s.min.y - r && c.pos.y < s.max.y + r && c.pos.z > s.min.z - r && c.pos.z < s.max.z + r) {
       const dxn = c.pos.x - (s.min.x - r), dxp = (s.max.x + r) - c.pos.x, dyn = c.pos.y - (s.min.y - r), dyp = (s.max.y + r) - c.pos.y, dzn = c.pos.z - (s.min.z - r), dzp = (s.max.z + r) - c.pos.z;

@@ -818,7 +818,10 @@
       <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
         <div style="font:800 22px 'Segoe UI',sans-serif; color:#f0e6c8; text-shadow:0 2px 6px #000; letter-spacing:3px;">INVENTORY</div>
         <div style="display:flex; gap:22px; align-items:flex-start;">
-          <div id="brInvSlots" style="display:flex; flex-direction:column; gap:8px;"></div>
+          <div id="brInvSlots" style="display:flex; flex-direction:column; gap:16px;">
+            <div><div style="font:800 11px 'Segoe UI',sans-serif; color:#9ad0ff; letter-spacing:2px; margin-bottom:6px;">WEAPONS</div><div id="brInvRowGuns" style="display:flex; gap:9px;"></div></div>
+            <div><div style="font:800 11px 'Segoe UI',sans-serif; color:#ffd34a; letter-spacing:2px; margin-bottom:6px;">THROWABLES &amp; CONSUMABLES</div><div id="brInvRowUtil" style="display:flex; gap:9px;"></div></div>
+          </div>
           <div id="brInvDetail" style="width:340px; min-height:430px; background:rgba(10,16,24,0.92); border:2px solid #2f3a48; border-radius:10px; padding:16px;"></div>
         </div>
         <div style="font:700 13px 'Segoe UI',sans-serif; color:#cfe0f0; opacity:.9;"><b style="color:#ffe600">Click</b> equip • <b style="color:#ffe600">Right-click</b> drop • <b style="color:#ffe600">Drag</b> to reorder • <b style="color:#ffe600">1-5</b> select • <b style="color:#ffe600">I</b>/<b style="color:#ffe600">ESC</b> close</div>
@@ -1661,6 +1664,7 @@ if (!['ffa', 'gungame', 'tdm', 'br'].includes(gameMode)) gameMode = 'ffa';
 let activeMap = 'nuketown';     // 'nuketown' (FFA/GunGame/TDM) | 'paradise' (Battle Royale)
 let island = null;              // set by buildParadiseIsland(): { cx, cz, R, spawns, scooterSpawns, patrol, glows, peaks, caveSpots, lootSpots, secretSpots }
 const brZiplines = [];          // BR zip lines: { a:Vector3, b:Vector3 } — ride with E (Part 3)
+const brSpinners = [];          // BR decorative meshes spun about Z each frame in animate (windmill blades)
 let brZip = null;               // active zip-line ride { from, to, t, dur }
 function brTryZip() {
   if (!BR.active || !brZiplines.length || brZip) return false;
@@ -3735,6 +3739,7 @@ function buildParadiseIsland(cx, cz) {
   const spawns = [], scooterSpawns = [], patrol = [], pois = [], glows = [], peaks = [], caveSpots = [], lootSpots = [], secretSpots = [], fixedChests = [];
   brZiplines.length = 0;
   if (typeof brClearColliders === 'function') brClearColliders();   // fresh framework registry for this map
+  brSpinners.length = 0;
   brRegMode = true;                       // <-- every addBox/addRamp below ALSO registers with the BR framework
 
   // --- local(lx,lz)->world helpers (cx/cz offset) ---
@@ -4010,15 +4015,138 @@ function buildParadiseIsland(cx, cz) {
     crate(lx + 5, lz - 6); iSpawn(lx + 16, lz); iPatrol(lx, lz);
   }
 
-  // ===================== INSTANTIATE THE 8 POIs =====================
+  /* ===================== 8 MORE POIs (2 per biome) ===================== */
+  // --- JUNGLE (NW) ---
+  function buildWaterfallCave(lx, lz) {
+    pois.push({ name: 'WATERFALL CAVE', lx, lz, icon: 'cave' });
+    disc(lx, lz, 15, 0.05, jdirt, 22);
+    iB(lx, 0, lz + 7, 18, 11, 4, rockDk);                                 // cliff face behind
+    const wf = new THREE.Mesh(new THREE.PlaneGeometry(5, 10), new THREE.MeshLambertMaterial({ color: 0x6fc3e8, transparent: true, opacity: 0.5, flatShading: true })); wf.position.set(cx + lx, 5, cz + lz - 4.9); wf.userData.waterfall = true; scene.add(wf);   // waterfall over the entrance (NO collision — passable)
+    box4(lx, lz, 12, 10, 0, 6, 0.6, rockDk, [doorS(lx, 0)]);
+    iB(lx, 6, lz, 12.4, 0.5, 10.4, rockDk);                               // cave ceiling
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(3, 18), new THREE.MeshBasicMaterial({ color: 0x2f9fd0, transparent: true, opacity: 0.55 })); pool.rotation.x = -Math.PI / 2; pool.position.set(cx + lx - 2, 0.06, cz + lz + 2); scene.add(pool);
+    iGlow(lx - 2, 0.6, lz + 2, 2, 0.6, 2, 0x4ad0ff, 0.25);
+    iD(lx + 3, 3, lz, 0.4, 6, 0.4, woodLt); iD(lx - 3, 3, lz - 3, 0.4, 6, 0.4, woodLt);   // support beams
+    crate(lx + 3, lz + 2); crate(lx - 3.5, lz - 2);
+    iB(lx + 3.5, 0, lz - 3, 3, 2, 3, rockC);                              // rocky outcrop (chest on top)
+    fixed(lx, lz - 4, 0, 'common'); fixed(lx - 2.5, lz + 2.5, 0, 'rare'); fixed(lx + 2, lz + 3, 0, 'common'); fixed(lx + 3.5, lz - 3, 2.1, 'common');
+    iSpawn(lx, lz - 12); iPatrol(lx, lz);
+  }
+  function buildJungleOutpost(lx, lz) {
+    pois.push({ name: 'JUNGLE OUTPOST', lx, lz, icon: 'outpost' });
+    disc(lx, lz, 20, 0.05, jdirt, 26);
+    box4(lx - 10, lz + 6, 8, 6, 0, 4, 0.3, 0x6a6a4a, [doorS(lx - 10, 0)]); iB(lx - 10, 4, lz + 6, 8.4, 0.4, 6.4, 0x556644); iB(lx - 10, 0, lz + 6, 7.4, 0.08, 5.4, 0x4a4636); furnish(lx - 10, lz + 6, 0, ['desk', 'crate']);   // A: command tent
+    box4(lx + 9, lz + 5, 10, 8, 0, 4, 0.35, metal, [doorS(lx + 9, 0), winE(lz + 5, 0)]); iB(lx + 9, 4, lz + 5, 10.4, 0.4, 8.4, metalDk); iB(lx + 9, 0, lz + 5, 9.4, 0.08, 7.4, 0x4a4f44); furnish(lx + 9, lz + 5, 0, ['bed', 'bed', 'crate']);   // B: barracks
+    box4(lx, lz - 10, 6, 6, 0, 3, 0.3, woodLt, [doorN(lx, 0)]); iB(lx, 3, lz - 10, 6.4, 0.4, 6.4, woodDk); iB(lx, 0, lz - 10, 5.4, 0.08, 5.4, 0x6a5a3a); iD(lx, 1.0, lz - 11, 0.4, 2, 2.4, 0x40454c); crate(lx + 1.5, lz - 9);   // C: ammo shed
+    for (let a = 0; a < 7; a++) { const ang = -0.3 + a / 7 * Math.PI * 1.35; iB(lx + Math.cos(ang) * 6, 0, lz + Math.sin(ang) * 6, 2.4, 1.6, 1.6, 0x7a7050); }   // sandbag bunker ring
+    [[-16, -2], [16, -2], [0, 16]].forEach(f => iB(lx + f[0], 0, lz + f[1], 0.3, 2, 7, 0x55554a));   // barbed-wire fence (collision)
+    fixed(lx - 10, lz + 6, 0, 'common'); fixed(lx + 9, lz + 4, 0, 'rare'); fixed(lx + 10, lz + 6, 0, 'common'); fixed(lx, lz - 10, 0, 'legendary'); fixed(lx, lz, 0, 'common');
+    iSpawn(lx, lz + 18); iPatrol(lx, lz);
+  }
+  // --- BEACH (NE) ---
+  function buildFishingPier(lx, lz) {
+    pois.push({ name: 'FISHING PIER', lx, lz, icon: 'pier' });
+    disc(lx - 4, lz, 12, 0.05, sandDk, 20);
+    for (let i = 0; i < 6; i++) { const px = lx + i * 5; iB(px, 0.6, lz, 5.2, 0.4, 5, woodLt); iD(px, 0, lz + 2, 0.4, 1.2, 0.4, woodDk); iD(px, 0, lz - 2, 0.4, 1.2, 0.4, woodDk); }   // deck (top 1) + pilings
+    iB(lx + 12, 1, lz + 2.5, 30, 1.0, 0.18, woodDk); iB(lx + 12, 1, lz - 2.5, 30, 1.0, 0.18, woodDk);   // side railings
+    const hx = lx + 28;
+    box4(hx, lz, 8, 8, 1, 4, 0.35, woodLt, [{ side: 'w', a0: lz - 1, a1: lz + 1, y0: 1, y1: 3.4 }]); iB(hx, 5, lz, 8.4, 0.4, 8.4, mwood); iB(hx, 1, lz, 7.4, 0.08, 7.4, 0x6a5a3a); ramp(hx - 7, lz, 6, 3, 'x', 1, 5.4, mwood);   // fishing hut + roof ramp
+    box4(lx + 8, lz + 1, 3, 3, 1, 3, 0.3, woodLt, [doorN(lx + 8, 1)]); iB(lx + 8, 4, lz + 1, 3.4, 0.4, 3.4, mwood);   // bait kiosk
+    iD(lx + 16, 1.4, lz - 1.8, 1.0, 1.0, 0.3, 0x4a5a3a); iD(lx + 20, 1.6, lz, 0.6, 0.8, 0.6, 0x8c3a2a);   // nets + barrel props
+    fixed(hx, lz - 2, 1, 'rare'); fixed(hx, lz + 2, 1, 'common'); fixed(lx + 8, lz + 1, 1, 'common'); fixed(lx + 14, lz, 1, 'common');
+    iSpawn(lx - 8, lz); iPatrol(lx + 10, lz);
+  }
+  function buildBeachHuts(lx, lz) {
+    pois.push({ name: 'BEACH HUTS', lx, lz, icon: 'huts' });
+    disc(lx, lz, 20, 0.05, sandDk, 26);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, hx = lx + Math.cos(a) * 11, hz = lz + Math.sin(a) * 11;
+      box4(hx, hz, 5, 5, 0, 3, 0.3, woodLt, [{ side: 's', a0: hx - 1, a1: hx + 1, y0: 0, y1: 2.4 }]); iB(hx, 3, hz, 5.6, 0.35, 5.6, thatch); iB(hx, 0, hz, 4.4, 0.08, 4.4, 0x6a5a3a); ramp(hx, hz - 4, 2.6, 3, 'z', 0, 3.4, thatch); fixed(hx, hz, 0, i === 0 ? 'rare' : 'common'); }
+    for (let a = 0; a < 8; a++) iD(lx + Math.cos(a) * 1.2, 0.2, lz + Math.sin(a) * 1.2, 0.5, 0.4, 0.5, 0x6a6a62);
+    const fire = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.3, 6), new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0.55 })); fire.position.set(cx + lx, 0.9, cz + lz); scene.add(fire); iGlow(lx, 1, lz, 1.6, 1, 1.6, 0xff8a3a, 0.4);
+    iD(lx + 5, 1, lz, 0.3, 2, 0.3, woodLt);   // umbrella pole prop
+    iSpawn(lx, lz + 18); iPatrol(lx, lz);
+  }
+  // --- ICE (SE) ---
+  function buildSnowyCabin(lx, lz) {
+    pois.push({ name: 'SNOWY CABIN', lx, lz, icon: 'cabin' });
+    disc(lx, lz, 18, 0.05, snowDk, 24);
+    const W = 14, D = 12, fh = 4;
+    box4(lx, lz, W, D, 0, fh, 0.4, 0x4a3a2a, [doorS(lx, 0), winE(lz, 0), winW(lz, 0)]);
+    box4(lx, lz, W, D, fh, fh, 0.4, 0x4a3a2a, [winE(lz, fh), winW(lz, fh)]);
+    floorUp(lx, lz, W, D, fh, fh, mwood, 1);
+    iB(lx, fh * 2, lz, W + 0.6, 0.5, D + 0.6, snow);                      // snowy roof (top 8.5)
+    ramp(lx - W / 2 - 5.5, lz, 11, 3, 'x', 0, 8.5, snow);                 // long side ramp up to the roof
+    iB(lx + W / 2 + 0.6, 0, lz, 1.4, 9, 1.4, stoneM);                     // stone chimney
+    iGlow(lx - 4, 1, lz + 3, 1.6, 1, 1.6, 0xff7a3a, 0.4);                 // fireplace glow
+    furnish(lx, lz, 0, ['couch', 'table', 'shelf']); furnish(lx, lz, fh, ['bed', 'crate']);
+    box4(lx - 10, lz, 5, 5, 0, 3, 0.35, 0x4a3a2a, [doorN(lx - 10, 0)]); iB(lx - 10, 3, lz, 5.4, 0.4, 5.4, snow); iB(lx - 10, 0, lz, 4.4, 0.08, 4.4, 0x6a5a3a); iB(lx - 6, 2.6, lz, 3, 0.3, 2, 0x4a3a2a);   // shed + covered walkway
+    fixed(lx + 4, lz + 3, 0, 'common'); fixed(lx - 4, lz - 3, 0, 'rare'); fixed(lx + 3, lz - 3, fh + 0.1, 'common'); fixed(lx - 3, lz + 3, fh + 0.1, 'common'); fixed(lx - 10, lz, 0, 'common');
+    iSpawn(lx, lz - 12); iPatrol(lx, lz);
+  }
+  function buildIglooCluster(lx, lz) {
+    pois.push({ name: 'IGLOO CLUSTER', lx, lz, icon: 'igloo' });
+    disc(lx, lz, 18, 0.05, snow, 24);
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, ix = lx + Math.cos(a) * 9, iz = lz + Math.sin(a) * 9;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(3.4, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xdfeefa, flatShading: true })); dome.position.set(cx + ix, 0, cz + iz); scene.add(dome);
+      const dir = (Math.abs(Math.cos(a)) > Math.abs(Math.sin(a))) ? (Math.cos(a) > 0 ? 'w' : 'e') : (Math.sin(a) > 0 ? 's' : 'n'), ax = (dir === 'w' || dir === 'e') ? iz : ix;
+      box4(ix, iz, 5, 5, 0, 2.6, 0.3, 0xcfe2f0, [{ side: dir, a0: ax - 0.9, a1: ax + 0.9, y0: 0, y1: 2.0 }]);
+      iB(ix, 2.6, iz, 5.2, 0.3, 5.2, 0xdfeefa); fixed(ix, iz, 0, i === 0 ? 'rare' : 'common');
+    }
+    const fire = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.2, 6), new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0.55 })); fire.position.set(cx + lx, 0.8, cz + lz); scene.add(fire); iGlow(lx, 1, lz, 1.4, 1, 1.4, 0xff8a3a, 0.4);
+    iD(lx + 3, 1.2, lz, 0.3, 2, 3, mwood);   // drying rack
+    iSpawn(lx, lz - 16); iPatrol(lx, lz);
+  }
+  // --- MEDIEVAL (SW) ---
+  function buildWatchtower(lx, lz) {
+    pois.push({ name: 'WATCHTOWER', lx, lz, icon: 'watchtower' });
+    disc(lx, lz, 14, 0.05, cobbleDk, 22);
+    const W = 6, fh = 4.5;
+    box4(lx, lz, W, W, 0, fh * 3, 0.5, stoneM, [doorN(lx, 0), winE(lz + fh, 0), winW(lz + fh * 2, 0)]);
+    floorUp(lx, lz, W, W, fh, fh, cobbleDk, 1);
+    floorUp(lx, lz, W, W, fh * 2, fh, cobbleDk, -1);
+    floorUp(lx, lz, W, W, fh * 3, fh, cobbleDk, 1);
+    for (let s = -1; s <= 1; s += 2) { iB(lx + s * (W / 2 - 0.2), fh * 3, lz, 0.4, 1.2, W, stoneM); iB(lx, fh * 3, lz + s * (W / 2 - 0.2), W, 1.2, 0.4, stoneM); }   // crenellation
+    box4(lx + 8, lz, 5, 5, 0, 3, 0.4, stoneM, [doorS(lx + 8, 0)]); iB(lx + 8, 3, lz, 5.4, 0.4, 5.4, cobbleDk); iB(lx + 8, 0, lz, 4.4, 0.08, 4.4, 0x6a5a3a);   // guardhouse
+    [-1, 1].forEach(s => iB(lx + s * 9, 0, lz + s * 6, 1.0, 2.4, 8, stoneDk));   // ruined perimeter wall
+    fixed(lx + 8, lz, 0, 'common'); fixed(lx, lz, fh + 0.1, 'common'); fixed(lx, lz, fh * 2 + 0.1, 'rare'); fixed(lx, lz, fh * 3 + 0.1, 'legendary');
+    peaks.push({ name: 'WATCHTOWER', lx, lz, top: 14 }); iSpawn(lx, lz - 12); iPatrol(lx, lz);
+  }
+  function buildWindmill(lx, lz) {
+    pois.push({ name: 'WINDMILL', lx, lz, icon: 'windmill' });
+    disc(lx, lz, 14, 0.05, cobble, 22);
+    const W = 8, fh = 5;
+    box4(lx, lz, W, W, 0, fh * 2 + 2, 0.5, stoneM, [doorS(lx, 0), winE(lz + fh, 0)]);
+    floorUp(lx, lz, W, W, fh, fh, mwood, 1);
+    floorUp(lx, lz, W, W, fh * 2, fh, mwood, -1);
+    iB(lx, fh * 2, lz, W + 0.4, 0.4, W + 0.4, mwoodDk);                   // observation cap (top 12.4)
+    const skin = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 5.2, fh * 2 + 2, 14), new THREE.MeshLambertMaterial({ color: stoneM, flatShading: true, transparent: true, opacity: 0.5, depthWrite: false })); skin.position.set(cx + lx, (fh * 2 + 2) / 2, cz + lz); scene.add(skin);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(5.5, 4, 12), flatMat(mwoodDk)); roof.position.set(cx + lx, fh * 2 + 4.2, cz + lz); scene.add(roof);
+    const blades = new THREE.Group(); blades.position.set(cx + lx, fh * 2 + 1, cz + lz + 5.5);
+    for (let i = 0; i < 4; i++) { const holder = new THREE.Group(); holder.rotation.z = i * Math.PI / 2; const blade = new THREE.Mesh(new THREE.BoxGeometry(1.2, 8, 0.25), flatMat(woodLt)); blade.position.y = 4; holder.add(blade); blades.add(holder); }
+    scene.add(blades); brSpinners.push(blades);
+    box4(lx + 9, lz, 6, 5, 0, 3, 0.4, mwood, [doorS(lx + 9, 0)]); iB(lx + 9, 3, lz, 6.4, 0.4, 5.4, thatch); iB(lx + 9, 0, lz, 5.4, 0.08, 4.4, 0x6a5a3a);   // miller's cottage
+    iD(lx, 0.6, lz, 1.4, 1.2, 1.4, stoneDk);   // grindstone
+    fixed(lx + 9, lz, 0, 'common'); fixed(lx, lz, 0, 'common'); fixed(lx, lz, fh + 0.1, 'rare'); fixed(lx, lz, fh * 2 + 0.1, 'common');
+    peaks.push({ name: 'WINDMILL', lx, lz, top: 14 }); iSpawn(lx, lz - 12); iPatrol(lx, lz);
+  }
+
+  // ===================== INSTANTIATE THE 16 POIs =====================
   buildTempleRuins(-95, 95);        // NW jungle
   buildTreehouseVillage(-48, 52);   // NW jungle
+  buildWaterfallCave(-130, 75);     // NW jungle
+  buildJungleOutpost(-60, 130);     // NW jungle
   buildSurfShack(68, 92);           // NE beach
   buildLighthouse(112, 42);         // NE beach
+  buildFishingPier(140, 95);        // NE beach
+  buildBeachHuts(50, 140);          // NE beach
   buildIceFortress(95, -95);        // SE ice
   buildResearchStation(50, -52);    // SE ice
+  buildSnowyCabin(135, -60);        // SE ice
+  buildIglooCluster(60, -135);      // SE ice
   buildCastle(-95, -95);            // SW medieval
   buildBlacksmithVillage(-46, -46); // SW medieval
+  buildWatchtower(-130, -55);       // SW medieval
+  buildWindmill(-55, -130);         // SW medieval
 
   // ===================== BIOME SCATTER (trees / rocks / decoration) + ground chests =====================
   function clearOfPOI(lx, lz) { for (const p of pois) if (Math.hypot(lx - p.lx, lz - p.lz) < 26) return false; return Math.hypot(lx, lz) > HUB + 12 && Math.hypot(lx, lz) < R - 14; }
@@ -4030,9 +4158,8 @@ function buildParadiseIsland(cx, cz) {
   for (let i = 0; i < 40; i++) { const lx = (8 + Math.random() * (R - 30)), lz = -(8 + Math.random() * (R - 30)); if (!clearOfPOI(lx, lz)) continue; const r = Math.random(); if (r < 0.4) iceRock(lx, lz, 1.2 + Math.random() * 1.4); else if (r < 0.75) pine(lx, lz); else frozenPond(lx, lz, 3 + Math.random() * 3); }
   // medieval hay/rocks (SW)
   for (let i = 0; i < 28; i++) { const lx = -(8 + Math.random() * (R - 30)), lz = -(8 + Math.random() * (R - 30)); if (!clearOfPOI(lx, lz)) continue; if (Math.random() < 0.5) iD(lx, 0.7, lz, 1.6, 1.4, 1.6, 0xc8a94a); else bushDeco(lx, lz, 0.8, 0x6a7a4a); }
-  // 16 scattered ground chests (4 per biome, in walkable open terrain)
-  const biomeSign = [[-1, 1, 'common'], [1, 1, 'common'], [1, -1, 'rare'], [-1, -1, 'common']];
-  biomeSign.forEach(b => { let placed = 0, tries = 0; while (placed < 4 && tries < 60) { tries++; const lx = b[0] * (40 + Math.random() * (R - 80)), lz = b[1] * (40 + Math.random() * (R - 80)); if (!clearOfPOI(lx, lz)) continue; ground(lx, lz, (placed === 0 ? b[2] : (Math.random() < 0.2 ? 'rare' : 'common'))); placed++; } });
+  // (Scattered outdoor ground chests removed — 16 POIs now densely cover the map; only the 5 hub chests
+  //  remain outdoors. Chest total ≈ 81: old 8 POIs 39 + new 8 POIs 37 + hub 5.)
 
   // ===================== SPAWNS / PATROL / SCOOTERS / DROP-IN RING / NIGHT FIREFLIES =====================
   for (let a = 0; a < 12; a++) { const ang = a / 12 * Math.PI * 2; iSpawn(Math.cos(ang) * (R - 45), Math.sin(ang) * (R - 45)); iPatrol(Math.cos(ang) * (R - 70), Math.sin(ang) * (R - 70)); }
@@ -10295,8 +10422,9 @@ function brIndoorPoint(cxp, czp, maxR) {   // sample for a point in a real, walk
 // keep a guaranteed legendary; everything else rolls mostly common — overall ≈75% common / 18% rare / 7% legendary.
 // FOUR SEASONS ISLE chest targets — each POI spawns EXACTLY this many at its authored fixed slots
 // (Castle's 8th chest is its basement legendary in secretSpots). Hub (5) + scattered (16) come from lootSpots.
-const POI_TARGET = { 'TEMPLE RUINS': [4, 4], 'TREEHOUSE VILLAGE': [5, 5], 'SURF SHACK': [3, 3], 'LIGHTHOUSE': [4, 4], 'ICE FORTRESS': [6, 6], 'RESEARCH STATION': [4, 4], 'CASTLE': [7, 7], 'BLACKSMITH VILLAGE': [5, 5] };
-const POI_LEG_GUARANTEE = { 'CASTLE': 1, 'ICE FORTRESS': 1, 'LIGHTHOUSE': 1, 'TEMPLE RUINS': 1 };   // a guaranteed legendary at the key room of each tier-POI (+ castle-basement secretSpot) ≈ 5 legendaries total
+const POI_TARGET = { 'TEMPLE RUINS': [4, 4], 'TREEHOUSE VILLAGE': [5, 5], 'SURF SHACK': [3, 3], 'LIGHTHOUSE': [4, 4], 'ICE FORTRESS': [6, 6], 'RESEARCH STATION': [4, 4], 'CASTLE': [7, 7], 'BLACKSMITH VILLAGE': [5, 5],
+  'WATERFALL CAVE': [4, 4], 'JUNGLE OUTPOST': [5, 5], 'FISHING PIER': [4, 4], 'BEACH HUTS': [6, 6], 'SNOWY CABIN': [5, 5], 'IGLOO CLUSTER': [5, 5], 'WATCHTOWER': [4, 4], 'WINDMILL': [4, 4] };
+const POI_LEG_GUARANTEE = { 'CASTLE': 1, 'ICE FORTRESS': 1, 'LIGHTHOUSE': 1, 'TEMPLE RUINS': 1, 'JUNGLE OUTPOST': 1, 'WATCHTOWER': 1 };   // a guaranteed legendary at the key room of each tier-POI (+ castle-basement secretSpot) ≈ 7 legendaries total
 function brShuf(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0, t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function brSpawnLoot() {
   brClearLoot(); if (!island) return;
@@ -10598,7 +10726,7 @@ function brMeleeSlotHtml() {   // (Part 4) MELEE = permanent slot, distinct cyan
 }
 // ----- bottom-center HOTBAR: melee (6th slot, left) + 5 universal slots, active outlined, dynamic key labels -----
 function brHotbarHtml() {
-  let h = brMeleeSlotHtml();   // (Part 4) melee always present, to the LEFT of the 5 slots
+  let h = '';   // (Fortnite layout) 5 horizontal weapon/utility slots; melee is NOT shown here (Q toggles it)
   for (let i = 0; i < 5; i++) {
     const it = brInv[i], active = (!ggKarambit && brSel === i && it), keyLbl = IM.keyLabel(brSlotKeyBind(i));
     let inner = '<span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#5e6b78; font:700 11px \'Segoe UI\',sans-serif;">EMPTY</span>';
@@ -10701,7 +10829,36 @@ function brInvDetailHtml(idx) {
     '<div style="font:600 13px \'Segoe UI\',sans-serif; color:#dfe7f0; margin-top:12px;">' + m.desc + '</div>' +
     '<div style="font:700 12px \'Segoe UI\',sans-serif; color:#ffd34a; margin-top:10px;">' + (it.t === 'second' ? 'PASSIVE — survive one lethal hit' : 'Press <b>' + IM.keyLabel(brSlotKeyBind(idx)) + '</b> (or click) to ' + m.verb.toLowerCase()) + '</div>';
 }
-function brRenderInv() { const sc = el('brInvSlots'), dt = el('brInvDetail'); if (!sc || !dt) return; let h = ''; for (let i = 0; i < 5; i++) h += brInvSlotBig(i); h += brInvSlotBig('m'); sc.innerHTML = h; dt.innerHTML = brInvDetailHtml(brInvHover); }
+// FORTNITE-style pop-up cell (~120x80). kind 'weapon' = top row (guns only); 'util' = bottom row
+// (throwables/consumables only). A slot renders its item only in the matching row; otherwise an empty
+// placeholder (still data-invslot, so you can drag an item INTO it). Melee is NOT shown (Q toggles it).
+function brInvCell(idx, kind) {
+  const it = brInv[idx], match = !!it && ((kind === 'weapon') ? it.t === 'weapon' : it.t !== 'weapon');
+  const keyLbl = IM.keyLabel(brSlotKeyBind(idx)), active = !ggKarambit && brSel === idx && match, hover = brInvHover === idx;
+  let border = '#34404e', inner = '<span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#46535f; font:700 22px \'Segoe UI\',sans-serif;">▢</span>';
+  if (match && it.t === 'weapon') {
+    const col = brRarHex(it.rar || 'common'), am = brWeaponAmmoOf(it), nm = WEAPONS[it.key] ? WEAPONS[it.key].name : it.key; border = col;
+    inner = brAttachIcons(it.cfg, 9) +
+      '<span style="position:absolute; top:3px; right:5px; font:800 11px \'Segoe UI\',sans-serif; color:' + (am.out ? '#ff5a5a' : '#fff') + ';">' + am.txt + '</span>' +
+      '<span style="position:absolute; left:0; right:0; top:24px; display:flex; justify-content:center;">' + brWeaponSilhouette(it.key, col, 28) + '</span>' +
+      '<span style="position:absolute; left:0; right:0; bottom:3px; text-align:center; font:800 8px \'Segoe UI\',sans-serif; color:#eef4fa; overflow:hidden; white-space:nowrap; text-shadow:0 1px 2px #000;">' + nm + '</span>';
+  } else if (match) {
+    const m = brItemMeta(it.t), cnt = brCount(it.t); border = '#7a6f57';
+    inner = (cnt > 1 ? '<span style="position:absolute; top:3px; right:6px; font:800 14px \'Segoe UI\',sans-serif; color:#fff;">×' + cnt + '</span>' : '') +
+      '<span style="position:absolute; left:0; right:0; top:22px; text-align:center; font-size:30px;">' + m.icon + '</span>' +
+      '<span style="position:absolute; left:0; right:0; bottom:3px; text-align:center; font:700 8px \'Segoe UI\',sans-serif; color:#cfe0f0; overflow:hidden; white-space:nowrap;">' + m.name + '</span>';
+  }
+  const bg = active ? 'rgba(40,34,10,0.92)' : (hover && match ? 'rgba(26,34,46,0.96)' : 'rgba(12,18,26,0.9)');
+  const ring = active ? 'box-shadow:0 0 0 2px #ffd34a, 0 0 14px rgba(255,211,74,.5);' : (hover && match ? 'box-shadow:0 0 0 2px #5a7fb0;' : '');
+  return '<div data-invslot="' + idx + '"' + (match ? ' draggable="true"' : '') + ' title="Slot ' + keyLbl + '" style="position:relative; width:120px; height:80px; border:2px solid ' + border + '; border-radius:8px; background:' + bg + '; ' + ring + ' cursor:pointer; transition:box-shadow .08s;">' +
+    '<span style="position:absolute; top:3px; left:6px; font:800 10px \'Segoe UI\',sans-serif; color:' + (active ? '#ffd34a' : '#7a8794') + ';">' + keyLbl + '</span>' + inner + '</div>';
+}
+function brRenderInv() {
+  const rg = el('brInvRowGuns'), ru = el('brInvRowUtil'), dt = el('brInvDetail'); if (!rg || !ru || !dt) return;
+  let hg = '', hu = '';
+  for (let i = 0; i < 5; i++) { hg += brInvCell(i, 'weapon'); hu += brInvCell(i, 'util'); }
+  rg.innerHTML = hg; ru.innerHTML = hu; dt.innerHTML = brInvDetailHtml((brInvHover === 'm' || brInvHover == null) ? -1 : brInvHover);
+}
 function brInvSwap(a, b) {   // drag-reorder: swap two slots (consumable counts live by type, so this is safe)
   if (a === b || a < 0 || b < 0 || a > 4 || b > 4) return;
   const t = brInv[a]; brInv[a] = brInv[b]; brInv[b] = t;
@@ -10712,7 +10869,7 @@ function brToggleInv() { if (brInvOpen) brCloseInv(); else brOpenInv(); }
 function brOpenInv() {
   if (!gameState.running || !player.alive || brSpectating) return;   // (universal) pop-up inventory works in every mode
   if (brMapOpen) brCloseMap();
-  brInvOpen = true; brInvHover = (!ggKarambit && brSel >= 0 && brInv[brSel]) ? brSel : 'm';
+  brInvOpen = true; brInvHover = (!ggKarambit && brSel >= 0 && brInv[brSel]) ? brSel : 0;   // (no melee cell in the Fortnite layout)
   const p = el('brInvPanel'); if (p) p.style.display = 'flex';
   brRenderInv(); document.exitPointerLock && document.exitPointerLock();
 }
@@ -11080,7 +11237,7 @@ function brDrawMinimap() {
   ctx.fillStyle = '#ff6a6a'; ctx.font = "bold 11px 'Segoe UI',sans-serif"; ctx.textAlign = 'center'; ctx.fillText('N', half, 11);
 }
 function brMapLabel(ctx, txt, x, y, col) { ctx.fillStyle = 'rgba(245,240,220,0.85)'; ctx.fillText(txt, x + 0.6, y + 0.6); ctx.fillStyle = col || '#15110a'; ctx.fillText(txt, x, y); }
-function brPoiIcon(t) { return ({ temple: '🛕', tree: '🌴', surf: '🏄', light: '🗼', ice: '🏰', research: '📡', castle: '🏯', village: '⚒️' })[t] || '📍'; }
+function brPoiIcon(t) { return ({ temple: '🛕', tree: '🌴', surf: '🏄', light: '🗼', ice: '🏰', research: '📡', castle: '🏯', village: '⚒️', cave: '🕳️', outpost: '🪖', pier: '🎣', huts: '🏖️', cabin: '🏚️', igloo: '🛖', watchtower: '🗼', windmill: '🌬️' })[t] || '📍'; }
 function brMapLandmarks() { return [{ lx: 0, lz: 0, name: 'The Obelisk', icon: '🗿' }]; }   // central navigation landmark
 function brUpdateMapZoneInfo() {
   const e = el('brMapZoneInfo'); if (!e) return; const z = BR.zone;
@@ -14797,6 +14954,7 @@ function animate() {
   // (FIX 1) run the held-item viewmodel LAST — after updateSights/updateCigar/updateJD set gunMesh.visible — so holding a consumable definitively HIDES the parked knife (no persistent off-hand knife)
   if (typeof brUpdateHeldVM === 'function') brUpdateHeldVM(dt);
   if (typeof brUpdateArc === 'function') brUpdateArc();   // throw trajectory preview while right-click-aiming a throwable
+  if (brSpinners.length) for (const s of brSpinners) s.rotation.z += dt * 0.5;   // windmill blades (visual)
   updateLadderPrompt();   // "Press E to climb" when standing in a watchtower-ladder zone
   updateCtrlHints(dt);    // live control-hints panel (after the interaction prompts so its context rows are current)
   updateObjHint(dt);      // brief objective reminder at match start

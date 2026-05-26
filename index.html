@@ -10307,7 +10307,13 @@ function updateBRHud() {
    (Small legendary stat-bonus + the full downed/F self-revive are later refinements.) */
 const BR_LOOT = [];
 const BR_RAR = { common: { c: 0xd2d8de, name: 'COMMON' }, rare: { c: 0x3aa0ff, name: 'RARE' }, legendary: { c: 0xffc83a, name: 'LEGENDARY' } };
-const BR_WPN_POOL = Object.keys(WPN_CLASS);   // every customizable gun
+// (CHANGE 1/2) BR loot pools — BR-ONLY. The full 28-weapon arsenal stays in FFA/TDM/GG; BR's chest
+// WEAPON slot rolls equally (25% each) from just these 4 base guns. Rarity is driven by ATTACHMENTS
+// (brWeaponCfg: sight tier + mag + laser/flashlight), not different base weapons.
+const BR_WEAPONS = ['gg9', 'gg6', 'gg28', 'gg3'];   // Bolt Sniper, Pump Shotgun, AK-47, base SMG
+const BR_THROWABLES = ['impulse', 'smoke', 'axe'];  // 33/33/33 roll (smoke & axe share the 'lethal' pickup via lethalChoice)
+const BR_HEALING = ['cigar', 'jd'];                 // 50/50
+const BR_WPN_POOL = BR_WEAPONS;   // (was every customizable gun) — BR weapon slot only
 let brCurRarity = null, brSwapTarget = null;
 function brRollRarity() { const r = Math.random(); return r < 0.65 ? 'common' : (r < 0.93 ? 'rare' : 'legendary'); }
 function brWeaponCfg(key, rar) {
@@ -10359,24 +10365,59 @@ function brChestMesh(rar) {
 }
 function brSolidAtPt(x, y, z) { for (const s of solids) { if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && y > s.min.y && y < s.max.y) return s; } return null; }
 function brChestClips(x, y, z) { return brPointInSolid(x, y + 0.4, z) || brPointInSolid(x, y + 0.9, z); }   // chest occupies ~y..y+1; check base + body (walls have window gaps higher up)
-function brChestBlocked(x, y, z) {   // (Bug 4) ~0.6u footprint overlap: chest center + its four sides clear of walls/furniture
+function brChestBlocked(x, y, z) {   // (CHANGE 4) 0.8u footprint overlap (stricter): chest center + its four sides clear of walls/furniture
   if (brChestClips(x, y, z)) return true;
-  for (const o of [[0.65, 0], [-0.65, 0], [0, 0.65], [0, -0.65]]) if (brChestClips(x + o[0], y, z + o[1])) return true;
+  for (const o of [[0.8, 0], [-0.8, 0], [0, 0.8], [0, -0.8]]) if (brChestClips(x + o[0], y, z + o[1])) return true;
   return false;
 }
+// (CHANGE 4) a solid surface (or terrain) sits directly under the chest base, within 0.3u — so it never floats.
+function brChestFloorOk(x, y, z) {
+  for (const s of solids) { if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && s.max.y <= y + 0.06 && s.max.y >= y - 0.3) return true; }
+  return Math.abs(groundHeightAt(x, z, y + 0.5) - y) <= 0.3;
+}
+// (CHANGE 4) keep ≥ minD from other chests on roughly the same level (no clusters).
+function brChestTooClose(x, z, y, minD) {
+  for (const L of BR_LOOT) { if (L.chest && Math.abs(L.pos.y - y) <= 2.5 && Math.hypot(L.pos.x - x, L.pos.z - z) < minD) return true; }
+  return false;
+}
+// (CHANGE 4) horizontal line-of-sight from a known-walkable ref to the candidate — rejects spots walled off in a nook.
+function brChestReachable(rx, rz, x, z, y) {
+  if (typeof colliders === 'undefined' || !colliders || !colliders.length) return true;
+  if (brPointInSolid(rx, y + 1.0, rz)) return true;   // ref itself isn't walkable -> can't judge, don't block
+  const from = new THREE.Vector3(rx, y + 1.0, rz), to = new THREE.Vector3(x, y + 1.0, z), d = to.clone().sub(from), len = d.length();
+  if (len < 0.3) return true; d.normalize();
+  return new THREE.Raycaster(from, d, 0.2, len - 0.3).intersectObjects(colliders, false).length === 0;
+}
+function brChestSpotValid(x, z, y, rx, rz) {   // (CHANGE 4) full validation at a candidate spot
+  return !brChestBlocked(x, y, z) && brChestFloorOk(x, y, z) && !brChestTooClose(x, z, y, 3.0) && brChestReachable(rx, rz, x, z, y);
+}
 function brAddChest(wx, wz, rar, atY) {
-  const y = (atY != null) ? atY : brSafeY(wx, wz);
-  if (brChestClips(wx, y, wz)) {   // (Bug 4) TRULY-buried chest (center inside geometry) — flush-against-a-wall is fine. Keep it on the SAME floor.
-    let ly = y, lifted = false;
-    for (let k = 0; k < 7; k++) { ly += 0.2; if (!brChestClips(wx, ly, wz)) { lifted = true; break; } }   // (a) un-embed vertically: lift onto the surface it's stuck in (≤1.4u, stays on this floor)
-    if (lifted) { y = ly; }
-    else {                                                                                                   // (b) embedded in a wall column: relocate horizontally on the same floor (concentric rings to 5u)
-      let found = false;
-      outer: for (let r = 1.0; r <= 5.0 && !found; r += 0.7) { const n = Math.max(8, Math.round(r * 6)); for (let k = 0; k < n; k++) { const a = k / n * 6.2832, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestBlocked(nx, y, nz)) { wx = nx; wz = nz; found = true; break outer; } } }   // prefer a fully footprint-clear spot
-      if (!found) { outer2: for (let r = 1.0; r <= 5.0; r += 0.6) { const n = Math.max(8, Math.round(r * 6)); for (let k = 0; k < n; k++) { const a = k / n * 6.2832, nx = wx + Math.cos(a) * r, nz = wz + Math.sin(a) * r; if (!brChestClips(nx, y, nz)) { wx = nx; wz = nz; found = true; break outer2; } } } }   // else any center-clear spot
-      if (!found) console.warn('[BR] chest could not be placed clear of geometry near ' + wx.toFixed(0) + ',' + wz.toFixed(0) + ' (rarity ' + rar + ') — placing at original spot');
+  const ox = wx, oz = wz;                                   // original coords (relocation log + reachability ref)
+  let y = (atY != null) ? atY : brSafeY(wx, wz);
+  if (brChestClips(wx, y, wz)) { let ly = y; for (let k = 0; k < 7; k++) { ly += 0.2; if (!brChestClips(wx, ly, wz)) { y = ly; break; } } }   // un-embed vertically first (≤1.4u, stays on this floor)
+  let relocated = false;
+  if (!brChestSpotValid(wx, wz, y, ox, oz)) {
+    // (CHANGE 4) SPIRAL search on the SAME floor (y fixed): rings 0.5..8.0u @0.5, 12 evenly-spaced points each; first fully-valid wins.
+    let found = false;
+    for (let r = 0.5; r <= 8.0 && !found; r += 0.5) {
+      for (let k = 0; k < 12; k++) { const a = k / 12 * 6.2832, nx = ox + Math.cos(a) * r, nz = oz + Math.sin(a) * r;
+        if (brChestSpotValid(nx, nz, y, ox, oz)) { wx = nx; wz = nz; found = true; relocated = true; break; } }
+    }
+    if (!found) {   // FALLBACK: nearest center-clear spot on this floor (drops the stricter checks; small ≤0.8u vertical
+      // wiggle to escape an embed). Strict search caps at 8u; this last-resort widens to 14u so a chest is never left
+      // buried (a slightly-farther reachable spot beats clipping). Same floor (y only wiggles ≤0.8u).
+      for (let r = 0.5; r <= 14.0 && !found; r += 0.5) {   // pass 1: FLAT spots only (dy=0) so we never introduce a float
+        for (let k = 0; k < 12 && !found; k++) { const a = k / 12 * 6.2832, nx = ox + Math.cos(a) * r, nz = oz + Math.sin(a) * r;
+          if (!brChestClips(nx, y, nz)) { wx = nx; wz = nz; found = true; relocated = true; } }
+      }
+      for (let r = 0.5; r <= 14.0 && !found; r += 0.5) {   // pass 2 (last resort): allow a small ≤0.8u vertical wiggle to escape an embed
+        for (let k = 0; k < 12 && !found; k++) { const a = k / 12 * 6.2832, nx = ox + Math.cos(a) * r, nz = oz + Math.sin(a) * r;
+          for (const dy of [0.4, 0.8]) { if (!brChestClips(nx, y + dy, nz)) { wx = nx; wz = nz; y += dy; found = true; relocated = true; break; } } }
+      }
+      if (!found) console.warn('[BR] chest @(' + ox.toFixed(1) + ',' + oz.toFixed(1) + ') y=' + y.toFixed(1) + ' [' + rar + '] — NO clear spot within 14u; placed at original (may clip) — POI needs a hand-picked safe coord');
     }
   }
+  if (relocated) console.warn('[BR] chest relocated [' + rar + '] from (' + ox.toFixed(1) + ',' + oz.toFixed(1) + ') -> (' + wx.toFixed(1) + ',' + wz.toFixed(1) + ') y=' + y.toFixed(1));
   const g = brChestMesh(rar); g.position.set(wx, y, wz); g.rotation.y = Math.random() * 6; scene.add(g);   // chest base sits flush on the floor (or an explicit Y for upper floors)
   BR_LOOT.push({ chest: true, state: 'closed', id: brChestSeq++, openT: 0, spawned: false, rarity: rar, mesh: g, lid: g.userData.lid, pos: new THREE.Vector3(wx, y, wz), taken: false });   // state: closed -> opened -> looted (lid stays UP once opened)
   if (brLootDebug) console.log('[T][LOOT] chest ' + rar + ' @' + wx.toFixed(0) + ',' + y.toFixed(1) + ',' + wz.toFixed(0) + (brIsIndoors(wx, wz) ? ' INDOOR' : ' open'));
@@ -10402,10 +10443,11 @@ function brUpdateChestAnim(L, dt) {
 }
 // (Part 2) every chest = EXACTLY 3 items: 1 weapon + 1 throwable + 1 healing (NO ammo boxes — each weapon carries its own rarity-tier ammo).
 function brSpawnChestContents(L) {
-  const rar = L.rarity, items = [['weapon', rar]];
-  if (rar === 'legendary') { items.push(['lethal'], ['jd']); if (Math.random() < 0.05) items.push(['second']); }   // legendary: a lethal + premium JD (+5% Second Chance bonus)
-  else if (rar === 'rare') { items.push([Math.random() < 0.5 ? 'impulse' : 'lethal'], [Math.random() < 0.5 ? 'cigar' : 'jd']); }
-  else { items.push(['impulse'], ['cigar']); }                                                                     // common: impulse grenade + cigar
+  // (CHANGE 3) EXACTLY 3 items, same ratios at every rarity: 1 weapon + 1 throwable (33/33/33) + 1 healing (50/50).
+  // Second Chance is REMOVED from the BR loot table (its code/animations stay for a possible future re-add).
+  const rar = L.rarity;
+  const thr = BR_THROWABLES[(Math.random() * BR_THROWABLES.length) | 0];                  // 'impulse' | 'smoke' | 'axe'
+  const items = [['weapon', rar], [thr === 'impulse' ? 'impulse' : 'lethal'], [BR_HEALING[(Math.random() * BR_HEALING.length) | 0]]];   // smoke/axe both map to the 'lethal' pickup (engine uses lethalChoice for the model)
   // (FIX 3 — Fortnite pop) items shoot FORWARD + up out of the chest and arc down ~2u in front, ON the
   // chest's OWN floor (cy). Landing spots are validated forward (most-open direction); a blocked forward
   // falls back to the old tight fan so items never clip into geometry. (Bug 3 floor-snap preserved.)
@@ -10538,7 +10580,7 @@ function brSpawnGroundConsumables() {
 }
 // --- BR weapon slots: two primaries (1/2) + the melee (3). Each slot's ammo lives in weaponState[key]. ---
 function brWeaponMags(rar, key) {     // reserve magazines by rarity (snipers/DMRs/LMGs carry fewer)
-  let m = rar === 'legendary' ? 4 : (rar === 'rare' ? 3 : 2);
+  let m = rar === 'legendary' ? 5 : (rar === 'rare' ? 4 : 3);   // (CHANGE 2) common 3 / rare 4 / legendary 5
   const cls = WPN_CLASS[key]; if (cls === 'sniper') m = Math.max(1, m - 2); else if (cls === 'dmr' || cls === 'lmg') m = Math.max(1, m - 1);
   return m;
 }

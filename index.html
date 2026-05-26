@@ -4513,8 +4513,10 @@ const GP = {
   dzL: 0.12, dzR: 0.08, sensH: 2.0, sensV: 1.5, sensAds: 0.6, aimAssist: true, aimStr: 0.30,
   curve: 'exp', rumbleOn: true, rumbleInt: 0.7, invertY: false,
   // default action -> standard button index
-  bind: { jump: 0, crouch: 1, reload: 2, karambit: 3, grenade: 4, lethal: 5, ads: 6, fire: 7,
-          scoreboard: 8, pause: 9, sprint: 10, quickMelee: 11, use: 12, interact: 13, weapon1: 14, weapon2: 15 },
+  // (BUILDER PRO) action -> standard button index. Std layout: 0 A/✕,1 B/○,2 X/□,3 Y/△,4 LB/L1,5 RB/R1,
+  // 6 LT/L2,7 RT/R2,8 Back/Share,9 Start/Options,10 L3,11 R3,12 D↑,13 D↓,14 D←,15 D→.
+  bind: { jump: 0, interact: 1, reload: 2, meleeToggle: 3, slotLeft: 4, slotRight: 5, ads: 6, fire: 7,
+          scoreboard: 8, pause: 9, sprint: 10, meleeAttack: 11, inventory: 12, crouch: 13, prevWeapon: 14, nextWeapon: 15 },
   defaults: {},
   load() {
     this.defaults = Object.assign({}, this.bind);
@@ -4551,7 +4553,9 @@ const GP = {
     const F = this.type === 'ps'
       ? ['(✕)','(○)','(▢)','(△)','[L1]','[R1]','[L2]','[R2]','[Share]','[Options]','[L3]','[R3]','[D↑]','[D↓]','[D←]','[D→]']
       : ['(A)','(B)','(X)','(Y)','[LB]','[RB]','[LT]','[RT]','[Back]','[Start]','[L3]','[R3]','[D↑]','[D↓]','[D←]','[D→]'];
-    const combos = { saber: F[6] + '+' + F[12], flamethrower: F[6] + '+' + F[13], rcStreak: F[6] + '+' + F[14], dogs: F[6] + '+' + F[15], kong: F[4] + '+' + F[5], inventory: 'hold ' + F[8] };
+    // (BUILDER PRO) combos: scorestreaks = LB + face; BR map = LB+RB; King Kong = Start+Select(hold); drop = hold B/○.
+    const combos = { saber: F[4] + '+' + F[0], flamethrower: F[4] + '+' + F[1], rcStreak: F[4] + '+' + F[2], dogs: F[4] + '+' + F[3],
+                     brMap: F[4] + '+' + F[5], kong: F[9] + '+' + F[8] + ' (hold)', dropItem: 'hold ' + F[1] };
     if (combos[action]) return combos[action];
     const bi = this.bind[action]; return (bi != null && F[bi] != null) ? F[bi] : '?';
   }
@@ -4584,21 +4588,22 @@ GP.poll = function (dt) {
   // (Part 2) any menu / overlay open => the gamepad drives UI navigation instead of gameplay
   if (typeof GPUI !== 'undefined' && GPUI.menuOpen()) { GPUI.poll(dt, just, pressed, val, lx, ly); this.snapshot(b); return; }
 
-  const playing = gameState.running && !paused;
-  const ltDown = val(B.ads) > 0.5 || pressed(B.ads);    // LT = ADS (also the scorestreak modifier with the DPad)
-  const rtDown = val(B.fire) > 0.5 || pressed(B.fire);  // RT = fire
-  // ---- LEFT STICK -> movement (analog for updateMovement + 8-way held flags for ladder/scooter via IM.down) ----
+  const playing = gameState.running && !paused && !brWinning;
+  const ltDown = val(B.ads) > 0.5 || pressed(B.ads);    // LT/L2 = ADS / block
+  const rtDown = val(B.fire) > 0.5 || pressed(B.fire);  // RT/R2 = fire / use equipped
+  const lbDown = pressed(B.slotLeft), rbDown = pressed(B.slotRight);   // LB/RB = slot cycle + the scorestreak/map modifier
+  // ---- LEFT STICK -> movement (analog + 8-way held flags). A/✕ jumps unless LB is held (LB+A = scorestreak). ----
   this.held = {};
   if (playing && player.alive && !invOpen) {
     this.mvX = lx; this.mvY = ly;
     this.held.moveForward = ly < -0.35; this.held.moveBackward = ly > 0.35; this.held.moveLeft = lx < -0.35; this.held.moveRight = lx > 0.35;
-    if (pressed(B.jump)) this.held.jump = true;
-    if (pressed(B.crouch)) this.held.crouch = true;
-    if (pressed(B.sprint)) this.held.sprint = true;
+    if (pressed(B.jump) && !lbDown) this.held.jump = true;   // A/✕
+    if (pressed(B.crouch)) this.held.crouch = true;          // D-Pad ↓ = crouch (hold)
+    if (pressed(B.sprint)) this.held.sprint = true;          // L3
   } else { this.mvX = this.mvY = 0; }
-  // ---- RIGHT STICK -> look (response curve + per-axis sens + ADS multiplier + invert) ----
+  // ---- RIGHT STICK -> look (unchanged: response curve + per-axis sens + ADS multiplier + invert) ----
   if (playing && player.alive && !invOpen && !rcActive && !killcam.active && (rx || ry)) {
-    const cv = v => this.curve === 'exp' ? Math.sign(v) * v * v : v;   // exponential = precise centre, fast edges
+    const cv = v => this.curve === 'exp' ? Math.sign(v) * v * v : v;
     let sh = this.sensH, sv = this.sensV;
     if (aiming || camera.fov < DEFAULT_FOV - 0.5) { sh *= this.sensAds; sv *= this.sensAds; }
     const TURN = 3.0;
@@ -4607,34 +4612,52 @@ GP.poll = function (dt) {
     pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch));
   }
   if (playing && player.alive && !rcActive && !killcam.active && this.aimAssist) this.applyAimAssist(dt);
-  // ---- TRIGGERS -> fire / ADS (edge-detected; analog threshold 0.5) ----
+  // ---- TRIGGERS -> fire / ADS (unchanged) ----
   if (playing && !invOpen) {
     if (rtDown && !this._rt) firePress(); else if (!rtDown && this._rt) fireRelease(); this._rt = rtDown;
     if (ltDown && !this._lt) adsPress(); else if (!ltDown && this._lt) adsRelease(); this._lt = ltDown;
   } else { if (this._rt) { fireRelease(); this._rt = false; } if (this._lt) { adsRelease(); this._lt = false; } }
-  // ---- BUTTONS -> actions ----
-  // START: tap = pause/resume (or close the controls overlay); hold ≥0.5s = toggle the full-controls overlay
-  const startDown = pressed(B.pause);
-  if (startDown && !this._start) { this._startT = 0; this._startHeld = false; }
-  if (startDown) { this._startT += dt; if (this._startT >= 0.5 && !this._startHeld) { this._startHeld = true; toggleFullControls(); } }
-  if (!startDown && this._start && !this._startHeld) {
-    if (fullControlsOpen()) toggleFullControls(false); else if (paused) resumeGame(); else if (invOpen) toggleInventory(); else openPauseMenu();
-  }
-  this._start = startDown;
-  this.handleBack(dt, pressed(B.scoreboard));
+  // ---- START / SELECT: pause, scoreboard, + the King Kong secret (hold Start+Select 2s, FFA/TDM) ----
+  const startDown = pressed(B.pause), selDown = pressed(B.scoreboard);
+  if (startDown && selDown) { this._ssT = (this._ssT || 0) + dt; if (this._ssT >= 2.0 && !this._ssFired) { this._ssFired = true; if (!BR.active) requestSummonKong(); } }
+  else { this._ssT = 0; this._ssFired = false; }
+  if (!selDown) {   // START: tap = pause/resume/close; hold ≥0.5s = full-controls overlay (suppressed during the kong combo)
+    if (startDown && !this._start) { this._startT = 0; this._startHeld = false; }
+    if (startDown) { this._startT += dt; if (this._startT >= 0.5 && !this._startHeld) { this._startHeld = true; toggleFullControls(); } }
+    if (!startDown && this._start && !this._startHeld) {
+      if (fullControlsOpen()) toggleFullControls(false); else if (paused) resumeGame(); else if (invOpen) toggleInventory(); else openPauseMenu();
+    }
+    this._start = startDown;
+  } else this._start = startDown;
+  this.handleBack(dt, selDown && !startDown);   // Select/Touchpad = scoreboard (suppressed while Start is held for the kong combo)
   if (playing && player.alive && !invOpen && !rcActive) {
-    const lb = pressed(B.grenade), rb = pressed(B.lethal);
-    const kong = lb && rb;                                   // LB+RB = summon King Kong
-    if (kong && !this._kong) { requestSummonKong(); this._kong = true; } if (!kong) this._kong = false;
-    if (!kong) { if (just(B.grenade)) gameAction('grenade', false); if (just(B.lethal)) gameAction('lethal', false); }
-    if (just(B.reload)) gameAction('reload', false);
-    if (just(B.karambit)) gameAction('karambit', false);
-    if (just(B.quickMelee)) gameAction('inspect', false);   // R3 = inspect weapon (Part 5)
-    if (just(B.crouch)) gameAction('crouch', false);   // press = dive (when sprinting); hold = crouch via GP.held
-    if (just(B.sprint)) gameAction('sprint', false);   // press = slide + toggle-mode latch; hold = sprint via GP.held
-    // DPad: normal action, OR a scorestreak when LT (the modifier) is held
-    const dmap = [[B.use, 'use', 'saber'], [B.interact, 'interact', 'flamethrower'], [B.weapon1, 'weapon1', 'rcStreak'], [B.weapon2, 'weapon2', 'dogs']];
-    dmap.forEach(([btn, normal, streak]) => { if (just(btn)) gameAction(ltDown ? streak : normal, false); });
+    // ---- LB/RB modifier combos ----
+    if (lbDown && rbDown) { if (!this._lbrb) { this._lbrb = true; this._lbCombo = true; if (BR.active) gameAction('brMap', false); } }   // LB+RB = BR full-screen map
+    else this._lbrb = false;
+    if (lbDown && !BR.active) {   // LB + face = scorestreak (FFA/TDM only — does nothing in BR)
+      if (just(B.jump)) { gameAction('saber', false); this._lbCombo = true; }
+      if (just(B.interact)) { gameAction('flamethrower', false); this._lbCombo = true; }
+      if (just(B.reload)) { gameAction('rcStreak', false); this._lbCombo = true; }
+      if (just(B.meleeToggle)) { gameAction('dogs', false); this._lbCombo = true; }
+    }
+    // ---- LB tap = previous slot (only if no combo fired during the hold); RB tap = next slot ----
+    if (lbDown) this._lbHeld = true;
+    else { if (this._lbHeld && !this._lbCombo) gameAction('prevWeapon', false); this._lbHeld = false; this._lbCombo = false; }
+    if (just(B.slotRight) && !lbDown) gameAction('nextWeapon', false);
+    // ---- FACE BUTTONS (only when LB is NOT acting as the modifier) ----
+    if (!lbDown) {
+      // B/○ = Interact on a tap; HOLD 1.5s in BR = drop the held item (interact fires on release; drop on the hold threshold)
+      if (pressed(B.interact)) { this._bHeld = true; this._bT = (this._bT || 0) + dt; if (BR.active && this._bT >= 1.5 && !this._bFired) { this._bFired = true; gameAction('dropWeapon', false); } }
+      else { if (this._bHeld && !this._bFired) gameAction('interact', false); this._bHeld = false; this._bT = 0; this._bFired = false; }
+      if (just(B.reload)) gameAction('reload', false);             // X/□
+      if (just(B.meleeToggle)) gameAction('use', false);           // Y/△ = equip-melee toggle (Q)
+    } else { this._bHeld = false; this._bT = 0; this._bFired = false; }
+    if (just(B.meleeAttack)) { if (ggKarambit && typeof meleeAttack === 'function') meleeAttack(-1); else gameAction('use', false); }   // R3 = melee attack (swing if melee out, else draw it)
+    if (just(B.crouch)) gameAction('crouch', false);               // D-Pad ↓ press (dive when sprinting)
+    if (just(B.sprint)) gameAction('sprint', false);               // L3 press (slide / toggle latch)
+    if (just(B.inventory)) gameAction('inventory', false);         // D-Pad ↑ = open the inventory pop-up
+    if (just(B.prevWeapon)) gameAction('prevWeapon', false);       // D-Pad ←
+    if (just(B.nextWeapon)) gameAction('nextWeapon', false);       // D-Pad →
   }
   this.snapshot(b);
 };
@@ -4726,6 +4749,7 @@ function akimboEquipped() { return !!(WEAPONS[currentWeaponKey] && WEAPONS[curre
 
 // --- Fire / ADS press+release (shared by mouse + key bindings, so Fire/ADS can be remapped) ---
 function firePress() {
+  if (brWinning) return;   // (CHANGE 1) input locked during the win sequence
   console.log('[BR-DEBUG] firePress entry ggKarambit=' + ggKarambit + ' heldWeapon=' + (!!brHeldWeapon()) + ' holdingConsumable=' + brHoldingConsumable() + ' heldItem=' + JSON.stringify(brHeldItem()) + ' rcActive=' + rcActive + ' cigSmoking=' + cigSmoking + ' brJdDrinking=' + brJdDrinking + ' onLadder=' + player.onLadder);
   if (brSpectating) { brSpecCycle(-1); return; }   // BR spectator: L-click = previous player
   if (brMapOpen) return;   // BR: can't fire while the map is open
@@ -4746,6 +4770,7 @@ function fireRelease() {
   firing = false;
 }
 function adsPress() {
+  if (brWinning) return;   // (CHANGE 1) input locked during the win sequence
   if (brSpectating) { brSpecCycle(1); return; }   // BR spectator: R-click = next player
   if (brMapOpen) return;   // BR: can't ADS while the map is open
   if (!ggKarambit && !brHeldWeapon()) { if (brHoldingThrowable()) brArcShow(true); return; }   // (universal) holding a throwable: right-click previews the throw arc; other consumables: no ADS
@@ -4776,7 +4801,7 @@ function gameAction(act, rep) {
   if (act === 'brMap' && !rep) { if (BR.active) brToggleMap(); return; }                                   // M -> BR full-screen map (dedicated key; no scorestreak conflict)
   if (act === 'dogs' && !rep) { if (!BR.active) streakActivate('dogs'); return; }                          // H -> Kirks Avengers scorestreak (FFA/TDM; disabled in BR)
   // UNIVERSAL 5-slot inventory OWNS the slot / melee / pop-up / consumable keys in EVERY mode (FFA / GG / TDM / BR).
-  if (player.alive && !brSpectating && gameState.running && !rcActive) {   // saberMode (3-kill streak) locks the weapon: only Q-drink + I-popup pass through
+  if (player.alive && !brSpectating && gameState.running && !rcActive && !brWinning) {   // saberMode (3-kill streak) locks the weapon: only Q-drink + I-popup pass through
     if (!saberMode && (act === 'weapon1' || act === 'weapon2' || act === 'karambit' || act === 'brSlot4' || act === 'brSlot5' || act === 'prevWeapon' || act === 'nextWeapon')) { if (cigSmoking) cigCancel(); brWeaponAction(act); return; }   // 1-5 = inventory slots, wheel cycles
     if (act === 'use' && !rep) { if (saberMode) { drinkJD(); return; } if (cigSmoking) cigCancel(); brWeaponAction('melee'); return; }   // Q -> equip melee (saber scorestreak: drink JD instead)
     if (act === 'inventory' && !rep) { brToggleInv(); return; }                                              // I -> open/close the pop-up inventory (all modes)
@@ -10178,8 +10203,37 @@ function brAliveCount() {
   if (NET.active) NET.players.forEach(p => { if (p.alive) n++; });
   return n;
 }
+// (CHANGE 1) alive OTHERS (bots + remote humans), excluding the local player — for the last-man-standing check.
+let brWinning = false, brWinT = 0;
+function brOthersAlive() {
+  let n = 0; for (const b of bots) if (b.alive && !b.dying) n++;
+  if (NET.active) NET.players.forEach(p => { if (p.alive) n++; });
+  return n;
+}
+// (CHANGE 1) full-screen VICTORY overlay with a scale-in (built once, on demand — no HTML edit needed).
+function brShowWinOverlay(text, color) {
+  let o = el('brWinOverlay');
+  if (!o) {
+    o = document.createElement('div'); o.id = 'brWinOverlay';
+    o.style.cssText = 'position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(circle at center, rgba(12,34,20,0.5), rgba(0,0,0,0.8))';
+    const h = document.createElement('div'); h.id = 'brWinText';
+    h.style.cssText = "font:900 76px 'Segoe UI',sans-serif;letter-spacing:5px;text-align:center;text-shadow:0 6px 28px #000;transform:scale(0.55);opacity:0;transition:transform .55s cubic-bezier(.2,1.35,.4,1),opacity .4s";
+    o.appendChild(h); document.body.appendChild(o);
+  }
+  const h = el('brWinText'); h.textContent = text; h.style.color = color || '#aef0c0';
+  o.style.display = 'flex'; h.style.transform = 'scale(0.55)'; h.style.opacity = '0';
+  requestAnimationFrame(() => { h.style.transform = 'scale(1)'; h.style.opacity = '1'; });
+}
+function brHideWinOverlay() { const o = el('brWinOverlay'); if (o) o.style.display = 'none'; }
+// (CHANGE 1) the local player is the last one alive -> freeze input, show "YOU WIN" 2s, then the results screen.
+function brTriggerWin() {
+  if (brWinning || gameState.over || !BR.active || !player.alive) return;
+  brWinning = true; brWinT = 2.0; aiming = false; firing = false; firingL = false;   // lock further actions
+  brShowWinOverlay('#1 — YOU WIN!', '#ffe27a');
+}
 function brStart() {
   BR.reset(); BR.active = true; BR.phase = 'play'; BR.t = 0; brInv = [null, null, null, null, null]; brSel = -1; brEliminated = []; brElimLog = [];
+  brWinning = false; brWinT = 0; if (typeof brHideWinOverlay === 'function') brHideWinOverlay();   // (CHANGE 1) fresh win state
   brSpectating = false; brSpecFree = false; brSpecBlend = 1; brSpecCur = null; brZip = null; brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap();
   // empty 5-slot inventory — no weapons / ammo / cigars / JD / grenades until you loot them
   player.overheal = 0; player.cigar = 0; player.grenades = 0; player.impulses = 0; player.lethals = 0;
@@ -10194,17 +10248,17 @@ function brStart() {
   brGunshots.length = 0; const mm = el('brMinimap'); if (mm) mm.style.display = brMinimapOn ? 'block' : 'none';   // minimap
   brHudShow(true); updateBRHud();
 }
-function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); if (typeof brClearArc === 'function') brClearArc(); brJdDrinking = false; }
+function brEnd() { BR.active = false; BR.phase = 'play'; if (BR.drop) { if (BR.drop.chute) { scene.remove(BR.drop.chute); disposeGroup(BR.drop.chute); } if (BR.drop.plane) { scene.remove(BR.drop.plane); disposeGroup(BR.drop.plane); } BR.drop = null; } brHudShow(false); brSpectating = false; brZip = null; if (typeof brHideHeldVM === 'function') brHideHeldVM(); if (typeof brCloseMap === 'function') brCloseMap(); brInvOpen = false; { const ip = el('brInvPanel'); if (ip) ip.style.display = 'none'; } const sp = el('brSpec'); if (sp) sp.style.display = 'none'; const mm = el('brMinimap'); if (mm) mm.style.display = 'none'; const hb = el('brHotbar'); if (hb) hb.style.display = 'none'; const dh = el('brDropHud'); if (dh) dh.style.display = 'none'; if (typeof brClearLoot === 'function') brClearLoot(); if (typeof brClearZone === 'function') brClearZone(); if (typeof brClearPings === 'function') brClearPings(); if (typeof brClearArc === 'function') brClearArc(); brJdDrinking = false; brWinning = false; brWinT = 0; if (typeof brHideWinOverlay === 'function') brHideWinOverlay(); }
 function brHudShow(on) { const h = el('brHud'); if (h) h.style.display = on ? 'block' : 'none'; }
 function brEliminate(name) {                              // record an elimination + crown the winner when one remains
   if (!BR.active) return;
   brEliminated.push(name || '?'); brElimLog.push({ name: name || '?', t: BR.t });
   updateBRHud();
   if (brAliveCount() <= 1 && (!NET.active || NET.isHost)) {
+    if (player.alive && !brSpectating) { brTriggerWin(); return; }   // (CHANGE 1) local player is last -> 2s YOU WIN overlay (the brUpdate tick then finishes)
     let winner = null;
-    if (player.alive) winner = NET.active ? NET.selfName : 'YOU';
-    else { const b = bots.find(x => x.alive && !x.dying); winner = b ? b.name : null; if (NET.active) NET.players.forEach(p => { if (p.alive) winner = p.name; }); }
-    finishMatch({ winner: winner, br: true });
+    const b = bots.find(x => x.alive && !x.dying); winner = b ? b.name : null; if (NET.active) NET.players.forEach(p => { if (p.alive) winner = p.name; });
+    finishMatch({ winner: winner, br: true });   // a bot/peer won (local player already down) -> straight to results
   }
 }
 function brOnPlayerDeath() {                              // BR: no respawn — record placement, then spectate the rest
@@ -10225,6 +10279,10 @@ function brOnPlayerDeath() {                              // BR: no respawn — 
 function brUpdate(dt) {
   if (!BR.active) return;
   BR.t += dt;
+  // (CHANGE 1) win sequence in progress: hold the 2s "YOU WIN" overlay, then transition to results.
+  if (brWinning) { brWinT -= dt; if (brWinT <= 0) { brWinning = false; brHideWinOverlay(); finishMatch({ winner: NET.active ? NET.selfName : 'YOU', br: true }); } return; }
+  // (CHANGE 1) continuous last-man-standing check (host/solo authoritative): sole survivor -> trigger the win.
+  if (!gameState.over && (!NET.active || NET.isHost) && player.alive && !brSpectating && BR.t > 2 && brOthersAlive() === 0) { brTriggerWin(); return; }
   if (typeof brUpdateLoot === 'function') brUpdateLoot(dt);   // stage 2: loot bob + pickup
   if (typeof brUpdateZone === 'function') brUpdateZone(dt);   // stage 3: shrink + OOB damage
   if (brSpectating && typeof brUpdateSpectator === 'function') brUpdateSpectator(dt);   // post-death camera (solo)
@@ -12761,15 +12819,23 @@ function refreshGpStatus() {
     + ' &nbsp;·&nbsp; input mode: <b>' + (GP.active ? 'GAMEPAD' : 'keyboard') + '</b>';
 }
 (function setupControllerUI() {
+  // (BUILDER PRO) sectioned, rebindable rows. '__sec' entries are non-rebindable section headers.
   const GP_ROWS = [
-    ['fire', 'Fire / Attack'], ['ads', 'Aim Down Sights / Block'], ['jump', 'Jump'], ['crouch', 'Crouch / Dive'],
-    ['reload', 'Reload'], ['karambit', 'Swap to Melee'], ['quickMelee', 'Inspect Weapon (R3)'], ['sprint', 'Sprint'],
-    ['grenade', 'Throw Impulse'], ['lethal', 'Throw Lethal'], ['use', 'Cigar / Drink JD'], ['interact', 'Interact / Climb'],
-    ['weapon1', 'Weapon Slot 1'], ['weapon2', 'Weapon Slot 2'], ['scoreboard', 'Scoreboard / Inventory (hold)'], ['pause', 'Pause / Menu']
+    ['__sec', 'MOVEMENT'],
+    ['jump', 'Jump (A / ✕)'], ['sprint', 'Sprint (L3)'], ['crouch', 'Crouch (D-Pad ↓)'],
+    ['__sec', 'COMBAT'],
+    ['fire', 'Fire (RT / R2)'], ['ads', 'Aim / Block (LT / L2)'], ['reload', 'Reload (X / □)'],
+    ['interact', 'Interact / Use (B / ○)'], ['meleeAttack', 'Melee Attack (R3)'], ['meleeToggle', 'Equip Melee (Y / △)'],
+    ['__sec', 'INVENTORY'],
+    ['slotLeft', 'Slot Left (LB / L1)'], ['slotRight', 'Slot Right (RB / R1)'],
+    ['prevWeapon', 'Previous Weapon (D-Pad ←)'], ['nextWeapon', 'Next Weapon (D-Pad →)'], ['inventory', 'Open Inventory (D-Pad ↑)'],
+    ['__sec', 'MENUS'],
+    ['pause', 'Pause (Start / Options)'], ['scoreboard', 'Scoreboard (Select / Touchpad)']
   ];
   function renderGpBinds() {
     const list = el('gpBindList'); if (!list) return; list.innerHTML = '';
     GP_ROWS.forEach(([a, label]) => {
+      if (a === '__sec') { const h = document.createElement('div'); h.className = 'cSec'; h.textContent = label; h.style.cssText = 'font:800 12px "Segoe UI",sans-serif;letter-spacing:1.5px;color:#7fb0e0;margin:12px 0 4px;border-bottom:1px solid rgba(127,176,224,0.25);padding-bottom:3px'; list.appendChild(h); return; }
       const row = document.createElement('div'); row.className = 'ctrlRow';
       row.innerHTML = `<span class="cName">${label}</span>`;
       const kb = document.createElement('div'); kb.className = 'ctrlKey'; kb.dataset.action = a;
@@ -12778,9 +12844,11 @@ function refreshGpStatus() {
       kb.onclick = () => { GP.rebindAction = (GP.rebindAction === a ? null : a); renderGpBinds(); };
       row.appendChild(kb); list.appendChild(row);
     });
-    // a fixed-combos hint (sticks / triggers / scorestreaks aren't remappable)
-    const note = document.createElement('div'); note.className = 'cNote'; note.style.cssText = 'opacity:.6;font-size:12px;margin-top:8px;line-height:1.5';
-    note.innerHTML = 'Sticks (move / look) &amp; triggers (LT/RT) are fixed. Scorestreaks = <b>LT + DPad</b>, King Kong = <b>LB + RB</b>.';
+    // fixed combos (modifier-based — not single-button rebindable)
+    const note = document.createElement('div'); note.className = 'cNote'; note.style.cssText = 'opacity:.7;font-size:12px;margin-top:12px;line-height:1.6';
+    note.innerHTML = '<b style="color:#7fb0e0">SCORESTREAKS</b> (FFA/TDM): <b>LB + A</b> Saber+JD · <b>LB + B</b> Flamethrower · <b>LB + X</b> RC Rocket · <b>LB + Y</b> Kirks Avengers<br>'
+      + '<b style="color:#7fb0e0">MORE</b>: <b>LB + RB</b> BR Map · <b>hold B / ○</b> (1.5s) Drop Item · <b>hold Start + Select</b> (2s) King Kong<br>'
+      + 'Sticks (move / look) &amp; triggers (fire / aim) are fixed. Labels show your controller type (Xbox / PlayStation).';
     list.appendChild(note);
   }
   function refreshGpOpts() {
@@ -12890,10 +12958,10 @@ const GPUI = {
   },
   poll(dt, just, pressed, val, lx, ly) {
     const screen = this.activeScreen(); if (!screen) { this.hide(); this._screen = null; return; }
-    const B = GP.bind;
-    // any controller input this frame cancels the mouse takeover
-    const navUp = just(B.use) || ly < -0.55, navDown = just(B.interact) || ly > 0.55, navLeft = just(B.weapon1) || lx < -0.55, navRight = just(B.weapon2) || lx > 0.55;
-    const aPress = just(B.jump), bPress = just(B.crouch), yPress = just(B.karambit), lbPress = just(B.grenade), rbPress = just(B.lethal), startPress = just(B.pause);
+    // Menu navigation uses FIXED standard button indices (layout-independent of gameplay rebinds):
+    // D-pad 12↑/13↓/14←/15→, A(0)=select, B(1)=back, Y(3)=customize, LB(4)/RB(5)=tabs, Start(9)=back.
+    const navUp = just(12) || ly < -0.55, navDown = just(13) || ly > 0.55, navLeft = just(14) || lx < -0.55, navRight = just(15) || lx > 0.55;
+    const aPress = just(0), bPress = just(1), yPress = just(3), lbPress = just(4), rbPress = just(5), startPress = just(9);
     const anyInput = navUp || navDown || navLeft || navRight || aPress || bPress || yPress || lbPress || rbPress || startPress;
     if (anyInput) this.mouseActive = false;
     if (screen !== this._screen) { this._screen = screen; this.collect(screen); if (this.idx < 0 && this.els.length) this.idx = 0; this.shown = true; }
@@ -12911,7 +12979,7 @@ const GPUI = {
       }
     } else this.navCd = 0;
     // LT/RT quick slider nudge
-    if (onSlider) { const lt = val(B.ads) > 0.6, rt = val(B.fire) > 0.6; if ((lt || rt) && this.navCd <= 0) { this.navCd = 0.05; const step = (parseFloat(cur.step) || 1) * (rt ? 2 : -2); cur.value = Math.max(+cur.min, Math.min(+cur.max, (parseFloat(cur.value) || 0) + step)); cur.dispatchEvent(new Event('input', { bubbles: true })); } }
+    if (onSlider) { const lt = val(6) > 0.6, rt = val(7) > 0.6; if ((lt || rt) && this.navCd <= 0) { this.navCd = 0.05; const step = (parseFloat(cur.step) || 1) * (rt ? 2 : -2); cur.value = Math.max(+cur.min, Math.min(+cur.max, (parseFloat(cur.value) || 0) + step)); cur.dispatchEvent(new Event('input', { bubbles: true })); } }
     if (aPress) this.activate();
     if (bPress || startPress) this.back(screen);
     if (yPress) this.yAction();

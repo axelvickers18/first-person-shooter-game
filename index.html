@@ -4518,9 +4518,8 @@ GP.poll = function (dt) {
     }
     // ---- FACE BUTTONS (only when neither LB nor SELECT is acting as a modifier) ----
     if (!lbDown && !selDown) {
-      // B/○: tap = Interact; the held flag drives the BR 0.5s weapon-SWAP (brUpdateLoot); HOLD 1.5s = drop —
-      // but ONLY when NOT looking at a swappable item (so swap@0.5s and drop@1.5s never collide).
-      this.held.interact = pressed(B.interact);
+      // B/○: tap = Interact (pick up / OPEN / quick-press auto-SWAP — all handled in brTrySwapLoot); HOLD 1.5s = drop,
+      // but ONLY when NOT looking at a swappable item (so a swap tap and a drop hold never collide).
       if (pressed(B.interact)) { this._bHeld = true; this._bT = (this._bT || 0) + dt; if (BR.active && this._bT >= 1.5 && !this._bFired && !(typeof brSwapTarget !== 'undefined' && brSwapTarget)) { this._bFired = true; gameAction('dropWeapon', false); } }
       else { if (this._bHeld && !this._bFired) gameAction('interact', false); this._bHeld = false; this._bT = 0; this._bFired = false; }
       if (just(B.reload)) gameAction('reload', false);             // X/□
@@ -10433,7 +10432,7 @@ function brUpdateLootPop(o, dt) {
   o.mesh.rotateOnAxis(p.spinAxis, dt * Math.PI * 2 / p.dur);   // ~one full tumble across the airtime
   if (u >= 1) { o.mesh.position.copy(o.pos); o.mesh.rotation.set(0, 0, 0); o.popping = false; o.pop = null; if (typeof sfxImpact === 'function') sfxImpact('stick', o.pos); }
 }
-function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } }); BR_LOOT.length = 0; brSwapTarget = null; brChestSeq = 0; }
+function brClearLoot() { BR_LOOT.forEach(L => { if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } if (L.labelSprite) { scene.remove(L.labelSprite); if (L.labelSprite.material) L.labelSprite.material.dispose(); L.labelSprite = null; } }); BR_LOOT.length = 0; brSwapTarget = null; brChestSeq = 0; if (typeof brSetHighlight === 'function') brSetHighlight(null); }
 let brLootDebug = false;   // set true to log every loot spawn position (Part 1 diagnostics)
 let brChestSeq = 0;        // (Part 3) stable per-chest id for networked open/looted state sync
 function brCeilingY(x, z) {   // height of the lowest ceiling/roof slab overhead at (x,z), or Infinity if open sky
@@ -10665,17 +10664,18 @@ function brUseSelected() {   // use the held consumable (cigar smoke / JD drink 
   console.log('[BR-DEBUG] brUseSelected after-throw type=' + it.t + ' before=' + before + ' after=' + brCount(it.t) + ' ok=' + ok);
   if (ok) { brHeldUseT = 0.45; if (brCount(it.t) <= 0) { const i = brSel; brInv[i] = null; brSelectAfterEmpty(i); } updateHUD(); }
 }
-function brTakeLoot(L, label, col, raw) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col, raw); }
+function brTakeLoot(L, label, col, raw) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } if (L.labelSprite) { L.labelSprite.visible = false; scene.remove(L.labelSprite); if (L.labelSprite.material) L.labelSprite.material.dispose(); L.labelSprite = null; } brPickupToast(label, col, raw); }
 function brPickupToast(label, col, raw) { const p = el('brPickup'); if (!p) return; p.textContent = (raw ? '' : 'PICKED UP: ') + label; p.style.color = col || '#fff'; p.style.transition = 'none'; p.style.opacity = '1'; clearTimeout(p._t); requestAnimationFrame(() => { p.style.transition = 'opacity 1.4s'; }); p._t = setTimeout(() => { p.style.opacity = '0'; }, 900); }
 function brPickWeapon(L) {
-  // (Fix 3) only consume the ground weapon if it actually fit an empty slot; a full inventory does NOTHING
-  // on tap-E (the player drops with X, or HOLD-E to swap — see brUpdateLoot).
-  if (brGiveWeapon(L.key, L.cfg, L.rarity, (L.ammo != null) ? { ammo: L.ammo, reserve: L.reserve } : null))
-    brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
+  // (Change 4) QUICK-PRESS E: empty slot → pick up; FULL + holding a weapon → auto-swap (drop held at the ground
+  // weapon's spot, take the ground one into that slot); FULL + holding melee/consumable → do nothing.
+  if (brFirstEmpty() >= 0) {
+    if (brGiveWeapon(L.key, L.cfg, L.rarity, (L.ammo != null) ? { ammo: L.ammo, reserve: L.reserve } : null))
+      brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
+  } else if (brHeldWeapon()) brPerformWeaponSwap(L);
 }
-// (Fix 3) HOLD-E weapon swap: drop the currently-held weapon at the ground weapon's spot, take the ground weapon
-// into that same slot. Only valid when inventory is FULL and the held item is a weapon (not melee/consumable).
-let brHoldSwapT = 0;
+// Weapon swap: drop the currently-held weapon at the ground weapon's spot, take the ground weapon into that same
+// slot. Only valid when inventory is FULL and the held item is a weapon (not melee/consumable). (Change 4: quick-press.)
 function brPerformWeaponSwap(L) {
   if (!L || L.taken || !brHeldWeapon()) return;
   const i = brSel; if (i < 0 || i > 4 || !brInv[i] || brInv[i].t !== 'weapon') return;
@@ -10729,24 +10729,77 @@ function updateBrJdDrink(dt) {
   updateHUD();
   if (brJdT >= JD_DUR) brJdComplete();
 }
+/* ---- (Change 2) floating item-name labels: billboarded sprites, always-on-top, within 15u, ≤60 visible ---- */
+let brLookTarget = null, brHlMesh = null;             // raycast-targeted loot + currently-highlighted mesh
+const brLabelTexCache = {};
+function brLootName(L) { return L.kind === 'weapon' ? (WEAPONS[L.key] ? WEAPONS[L.key].name : 'Weapon') : (L.kind === 'ammo' ? 'Ammo' : (brItemMeta(L.kind) ? brItemMeta(L.kind).name : L.kind)); }
+function brMakeLabelTex(text) {
+  if (brLabelTexCache[text]) return brLabelTexCache[text];
+  const c = document.createElement('canvas'), m = c.getContext('2d'); m.font = "bold 40px 'Segoe UI',sans-serif";
+  const w = Math.ceil(m.measureText(text).width) + 18; c.width = w; c.height = 56;
+  const x = c.getContext('2d'); x.font = "bold 40px 'Segoe UI',sans-serif"; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.lineWidth = 5; x.strokeStyle = 'rgba(0,0,0,0.85)'; x.strokeText(text, w / 2, 30); x.fillStyle = '#ffffff'; x.fillText(text, w / 2, 30);
+  const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter; t._w = w; brLabelTexCache[text] = t; return t;
+}
+function brEnsureLabel(L) {
+  if (L.labelSprite) return L.labelSprite;
+  const tex = brMakeLabelTex(brLootName(L));
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+  s.renderOrder = 997; scene.add(s); L.labelSprite = s; return s;
+}
+function brHideLabel(L) { if (L.labelSprite) L.labelSprite.visible = false; }
+/* ---- (Change 3) look-at highlight: subtle emissive boost on the raycast-targeted mesh only ---- */
+function brSetHighlight(L) {
+  const mesh = L ? L.mesh : null; if (brHlMesh === mesh) return;
+  if (brHlMesh) brHlMesh.traverse(o => { if (o.material && o.userData._emi != null) { if (o.material.emissive) o.material.emissive.setHex(o.userData._emi); o.userData._emi = null; } });
+  brHlMesh = mesh;
+  if (mesh) mesh.traverse(o => { if (o.material && o.material.emissive) { o.userData._emi = o.material.emissive.getHex(); o.material.emissive.setHex(0x555555); } });
+}
 function brUpdateLoot(dt) {
-  brSwapTarget = null;
+  brSwapTarget = null; brLookTarget = null;
   const px = player.pos.x, pz = player.pos.z, py = player.pos.y; let nearestSwap = 1e9, nearestLooted = 1e9, lootedNear = null;
-  for (const L of BR_LOOT) {
-    if (L.taken) continue;
-    if (typeof brUpdateChestAnim === 'function') brUpdateChestAnim(L, dt);   // chests: lid-open animation (Part 5)
-    if (L.mesh && !L.chest) { if (L.popping) brUpdateLootPop(L, dt); else { L.mesh.rotation.y += dt * 1.2; L.mesh.position.y = L.pos.y + Math.sin(performance.now() * 0.003 + L.pos.x) * 0.12; } }   // (FIX 3) arc out of the chest, then resume the idle bob/spin once landed
-    if (!player.alive) continue;
-    const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
-    if (d > 2.8 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;
-    if (L.chest) { if (L.state === 'closed') { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } } else if (L.state === 'looted' && d < nearestLooted) { nearestLooted = d; lootedNear = L; } continue; }   // closed: E to open; looted: show [LOOTED]
-    if (L.kind === 'ammo') { if (brHasGun()) { brRefillAmmo(); brTakeLoot(L, '+AMMO', '#8aa0b0', true); } continue; }   // (Part 2) ammo always auto-refills your guns
-    if (L.kind === 'weapon') { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }                  // (Part 2) weapons ALWAYS need E (never an accidental swap)
-    // (Part 2) consumable: AUTO-stack if you ALREADY carry it (with room); a NEW type needs E
-    const haveSlot = brSlotOfType(L.kind) >= 0, lim = BR_STACK[L.kind] || 1;
-    if (haveSlot && brCount(L.kind) < lim) { brTakeConsumable(L.kind); const m = brItemMeta(L.kind), c = brCount(L.kind); brTakeLoot(L, '+1 ' + m.name + (c > 1 ? ' ×' + c : ''), brLootCol(L.kind), true); continue; }
-    if (!haveSlot && brCanTake(L.kind)) { if (d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } }                 // new consumable, inventory has room -> E to pick up
+  // (Change 1a) RAYCAST 4u from the camera → the loot/chest the player is LOOKING at (wins over proximity).
+  let rayT = null;
+  if (player.alive) {
+    const meshes = []; for (const L of BR_LOOT) { if (!L.taken && L.mesh) { L.mesh.userData._brL = L; meshes.push(L.mesh); } }
+    if (meshes.length) {
+      const o = camera.getWorldPosition(new THREE.Vector3()), dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+      const hits = new THREE.Raycaster(o, dir, 0.2, 4.0).intersectObjects(meshes, true);
+      if (hits.length) { let mm = hits[0].object; while (mm && !mm.userData._brL) mm = mm.parent; if (mm && mm.userData._brL && !mm.userData._brL.taken) rayT = mm.userData._brL; }
+    }
   }
+  let labelCount = 0;
+  for (const L of BR_LOOT) {
+    if (L.taken) { brHideLabel(L); continue; }
+    if (typeof brUpdateChestAnim === 'function') brUpdateChestAnim(L, dt);   // chests: lid-open animation (Part 5)
+    if (L.mesh && !L.chest) { if (L.popping) brUpdateLootPop(L, dt); else { L.mesh.rotation.y += dt * 1.2; L.mesh.position.y = L.pos.y + Math.sin(performance.now() * 0.003 + L.pos.x) * 0.12; } }   // arc out of the chest, then idle bob/spin
+    if (!player.alive) { brHideLabel(L); continue; }
+    const d = Math.hypot(px - L.pos.x, pz - L.pos.z);
+    // (Change 2) floating name label for non-chest / non-ammo items within 15u (capped at 60)
+    if (!L.chest && L.kind !== 'ammo' && L.mesh && d < 15 && labelCount < 60) {
+      labelCount++; const s = brEnsureLabel(L); s.visible = true;
+      s.position.set(L.mesh.position.x, L.mesh.position.y + 1.25, L.mesh.position.z);
+      s.material.opacity = Math.max(0, Math.min(1, (15 - d) / 0.6));               // smooth fade over the last ~0.6u
+      const sc = 0.74 + 0.5 * Math.max(0, (9 - d) / 9), asp = (s.material.map && s.material.map._w) ? s.material.map._w / 56 : 1.6; s.scale.set(asp * sc, sc, 1);
+    } else brHideLabel(L);
+    // (Change 5) AMMO auto-pickup within 2u (no E), only if you carry a gun that uses it
+    if (L.kind === 'ammo') { if (d < 2.0 && brHasGun()) { brRefillAmmo(); brTakeLoot(L, '+ROUNDS', '#8aa0b0', true); } continue; }
+    // (Change 1b) PROXIMITY fallback (2.5u) — only used if the raycast missed
+    if (d > 2.5 || Math.abs(py - (L.pos.y - 0.9)) > 4) continue;
+    if (L.chest) { if (L.state === 'closed') { if (!rayT && d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } } else if (L.state === 'looted' && d < nearestLooted) { nearestLooted = d; lootedNear = L; } continue; }
+    if (L.kind === 'weapon') { if (!rayT && d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } continue; }
+    const haveSlot = brSlotOfType(L.kind) >= 0, lim = BR_STACK[L.kind] || 1;
+    if (haveSlot && brCount(L.kind) < lim) { brTakeConsumable(L.kind); const m = brItemMeta(L.kind), c = brCount(L.kind); brTakeLoot(L, '+1 ' + m.name + (c > 1 ? ' ×' + c : ''), brLootCol(L.kind), true); continue; }   // AUTO-stack owned consumables
+    if (!haveSlot && brCanTake(L.kind)) { if (!rayT && d < nearestSwap) { nearestSwap = d; brSwapTarget = L; } }              // new consumable → E to pick up
+  }
+  // (Change 1a) raycast target wins. Resolve what action it offers.
+  if (rayT && !rayT.taken) {
+    if (rayT.chest) { if (rayT.state === 'closed') brSwapTarget = rayT; else if (rayT.state === 'looted') lootedNear = rayT; }
+    else if (rayT.kind === 'weapon') brSwapTarget = rayT;
+    else if (rayT.kind !== 'ammo') { const haveSlot = brSlotOfType(rayT.kind) >= 0, lim = BR_STACK[rayT.kind] || 1; if ((!haveSlot && brCanTake(rayT.kind)) || (haveSlot && brCount(rayT.kind) < lim)) brSwapTarget = rayT; }
+    brLookTarget = rayT;
+  }
+  brSetHighlight(brLookTarget);   // (Change 3) highlight ONLY the looked-at item (not proximity-only)
   const sp = el('brSwapPrompt');
   if (sp) {
     if (brSwapTarget) {
@@ -10754,20 +10807,15 @@ function brUpdateLoot(dt) {
       if (L.chest) sp.innerHTML = 'Press ' + ekey + ' to OPEN ' + (L.rarity !== 'common' ? '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + '</b> ' : '') + 'CHEST';
       else if (L.kind === 'weapon') {
         const full = brFirstEmpty() < 0, wname = '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'weapon') + '</b>';
-        // (Fix 3) empty slot → tap-E pick up. Full + holding a weapon → HOLD-E to swap. Full + melee/consumable held → can't.
+        // (Change 4) empty slot → PICK UP; full + holding a weapon → quick-press SWAP; full + melee/consumable → can't.
         if (!full) sp.innerHTML = 'Press ' + ekey + ' to PICK UP ' + wname;
-        else if (brHeldWeapon()) sp.innerHTML = '<b style="color:#ffe600">HOLD ' + IM.keyLabel(IM.bind.interact) + '</b> to SWAP for ' + wname + (brHoldSwapT > 0 ? ' <span style="color:#ffd34a">…' + Math.round(brHoldSwapT / 0.5 * 100) + '%</span>' : '');
+        else if (brHeldWeapon()) sp.innerHTML = 'Press ' + ekey + ' to SWAP for ' + wname;
         else sp.innerHTML = '<b style="color:#8a98a6; letter-spacing:1px;">INVENTORY FULL</b>';
       }
       else { const m = brItemMeta(L.kind); sp.innerHTML = 'Press ' + ekey + ' to PICK UP <b style="color:' + brLootCol(L.kind) + '">' + m.name + '</b>'; }
-    } else if (lootedNear) { sp.style.display = 'block'; sp.innerHTML = '<b style="color:#8a98a6; letter-spacing:1px;">[ LOOTED ]</b>'; }   // (Part 3) empty chest — no interaction
+    } else if (lootedNear) { sp.style.display = 'block'; sp.innerHTML = '<b style="color:#8a98a6; letter-spacing:1px;">[ LOOTED ]</b>'; }
     else sp.style.display = 'none';
   }
-  // (Fix 3) HOLD-E (0.5s) to swap the held weapon for a full inventory's ground weapon.
-  if (brSwapTarget && brSwapTarget.kind === 'weapon' && brFirstEmpty() < 0 && brHeldWeapon() && IM.down('interact')) {
-    brHoldSwapT += dt;
-    if (brHoldSwapT >= 0.5) { brHoldSwapT = 0; brPerformWeaponSwap(brSwapTarget); brSwapTarget = null; }
-  } else brHoldSwapT = 0;
 }
 function brRarHex(r) { return '#' + (BR_RAR[r] ? BR_RAR[r].c : 0xffffff).toString(16).padStart(6, '0'); }
 function brWeaponAmmoOf(it) {   // {ammo,reserve,out} for a weapon slot — live state for the held one, cached for the rest
@@ -11057,12 +11105,13 @@ function brClearArc() { brArcOn = false; if (brArcGroup) { scene.remove(brArcGro
    ~12-16 min match; bots taking zone damage is a later refinement.) */
 // (FIX 2) zone damage HP/sec per phase — each ~2x the last, scaled up to keep pace with the 150 BR HP.
 const BR_ZONE_DAMAGE = [3, 6, 12, 25, 50];
+// (Change 6) every phase ≈50% faster than before (hold/warn/shrink each halved, rounded). Damage unchanged.
 const BR_ZONES = [
-  { hold: 55, warn: 15, shrink: 45, rFrac: 0.72, dmg: BR_ZONE_DAMAGE[0] },
-  { hold: 30, warn: 15, shrink: 40, rFrac: 0.46, dmg: BR_ZONE_DAMAGE[1] },
-  { hold: 25, warn: 12, shrink: 35, rFrac: 0.26, dmg: BR_ZONE_DAMAGE[2] },
-  { hold: 20, warn: 10, shrink: 28, rFrac: 0.12, dmg: BR_ZONE_DAMAGE[3] },
-  { hold: 16, warn: 8,  shrink: 22, rFrac: 0.04, dmg: BR_ZONE_DAMAGE[4] }
+  { hold: 28, warn: 8, shrink: 22, rFrac: 0.72, dmg: BR_ZONE_DAMAGE[0] },   // was hold55/warn15/shrink45
+  { hold: 15, warn: 8, shrink: 20, rFrac: 0.46, dmg: BR_ZONE_DAMAGE[1] },   // was 30/15/40
+  { hold: 13, warn: 6, shrink: 18, rFrac: 0.26, dmg: BR_ZONE_DAMAGE[2] },   // was 25/12/35
+  { hold: 10, warn: 5, shrink: 14, rFrac: 0.12, dmg: BR_ZONE_DAMAGE[3] },   // was 20/10/28
+  { hold: 8,  warn: 4, shrink: 11, rFrac: 0.04, dmg: BR_ZONE_DAMAGE[4] }    // was 16/8/22
 ];
 function brInitZone() {
   if (!island) return;

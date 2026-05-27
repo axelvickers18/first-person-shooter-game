@@ -1302,6 +1302,16 @@
       <label class="optRow"><span>Invert Look Y-Axis</span><input type="checkbox" id="gpInvertY"></label>
     </div>
     <div class="ctrlScroll" id="gpBindList"></div>
+    <div class="gpCombos" style="font:600 12px 'Segoe UI',sans-serif; color:#bcd0e0; line-height:1.7; margin-top:10px; border-top:1px solid #2a3a4c; padding-top:8px;">
+      <div style="color:#7fd0ff; font-weight:800; letter-spacing:1px; margin-bottom:4px;">COMBOS &amp; CONTEXT ACTIONS (fixed)</div>
+      <div><b>Menus / Lobby:</b> Stick/D-Pad navigate • A/✕ select • B/○ back • LB/RB switch tabs • sliders ◄ ► (or LT/RT)</div>
+      <div><b>Inventory (D-Pad↑):</b> Stick highlight • A/✕ equip+close • hold A + move + release swap • X/□ drop slot • B/○ or D-Pad↑ close</div>
+      <div><b>Pickup (B/○):</b> tap = pick up/interact • hold 0.5s (full + weapon) = swap • hold 1.5s (no item) = drop</div>
+      <div><b>Attachments:</b> LT + L3 = laser • LT + R3 = flashlight &nbsp; | &nbsp; <b>Inspect:</b> hold Y/△ (with a gun)</div>
+      <div><b>BR Map:</b> LB+RB open • B/○ close &nbsp; | &nbsp; <b>BR Ping:</b> Select + D-Pad↑ (aim direction)</div>
+      <div><b>Killcam:</b> A/✕ or B/○ skip &nbsp; | &nbsp; <b>Control hints:</b> Select + Y/△ &nbsp; | &nbsp; <b>Scorestreaks (FFA/TDM):</b> LB + A/B/X/Y</div>
+      <div style="color:#8a98a6;"><b>Chat &amp; image upload</b> require a keyboard/mouse.</div>
+    </div>
     <div class="ctrlBtns">
       <button class="smallbtn" id="gpReset">RESET BINDINGS</button>
       <button class="smallbtn" id="gpViewTut">VIEW CONTROLS DIAGRAM</button>
@@ -4438,6 +4448,7 @@ GP.poll = function (dt) {
   if (this.rebindAction) { for (let i = 0; i < b.length; i++) if (just(i)) { if (typeof gpApplyBind === 'function') gpApplyBind(this.rebindAction, i); break; } this.snapshot(b); return; }
   // (Part 2) any menu / overlay open => the gamepad drives UI navigation instead of gameplay
   if (typeof GPUI !== 'undefined' && GPUI.menuOpen()) { GPUI.poll(dt, just, pressed, val, lx, ly); this.snapshot(b); return; }
+  if (typeof killcam !== 'undefined' && killcam.active) { if (just(B.jump) || just(B.interact)) skipKillcam(); this.snapshot(b); return; }   // (controller parity) A/✕ or B/○ skips the killcam
 
   const playing = gameState.running && !paused && !brWinning;
   const ltDown = val(B.ads) > 0.5 || pressed(B.ads);    // LT/L2 = ADS / block
@@ -4495,18 +4506,32 @@ GP.poll = function (dt) {
     if (lbDown) this._lbHeld = true;
     else { if (this._lbHeld && !this._lbCombo) gameAction('prevWeapon', false); this._lbHeld = false; this._lbCombo = false; }
     if (just(B.slotRight) && !lbDown) gameAction('nextWeapon', false);
-    // ---- FACE BUTTONS (only when LB is NOT acting as the modifier) ----
-    if (!lbDown) {
-      // B/○ = Interact on a tap; HOLD 1.5s in BR = drop the held item (interact fires on release; drop on the hold threshold)
-      if (pressed(B.interact)) { this._bHeld = true; this._bT = (this._bT || 0) + dt; if (BR.active && this._bT >= 1.5 && !this._bFired) { this._bFired = true; gameAction('dropWeapon', false); } }
+    // ---- ATTACHMENT TOGGLES (controller parity): hold LT + click L3 = laser, LT + click R3 = flashlight ----
+    // (the LT modifier suppresses the normal L3 sprint / R3 melee for that click)
+    const ltMod = ltDown;
+    if (ltMod && just(B.sprint)) gameAction('toggleLaser', false);
+    if (ltMod && just(B.meleeAttack)) gameAction('flashlight', false);
+    // ---- SELECT combos (controller parity): SELECT + D-Pad↑ = BR ping; SELECT + Y = toggle control hints ----
+    if (selDown) {
+      if (just(B.inventory) && BR.active && typeof brPingAtAim === 'function') brPingAtAim();
+      if (just(B.meleeToggle)) gameAction('toggleHints', false);
+    }
+    // ---- FACE BUTTONS (only when neither LB nor SELECT is acting as a modifier) ----
+    if (!lbDown && !selDown) {
+      // B/○: tap = Interact; the held flag drives the BR 0.5s weapon-SWAP (brUpdateLoot); HOLD 1.5s = drop —
+      // but ONLY when NOT looking at a swappable item (so swap@0.5s and drop@1.5s never collide).
+      this.held.interact = pressed(B.interact);
+      if (pressed(B.interact)) { this._bHeld = true; this._bT = (this._bT || 0) + dt; if (BR.active && this._bT >= 1.5 && !this._bFired && !(typeof brSwapTarget !== 'undefined' && brSwapTarget)) { this._bFired = true; gameAction('dropWeapon', false); } }
       else { if (this._bHeld && !this._bFired) gameAction('interact', false); this._bHeld = false; this._bT = 0; this._bFired = false; }
       if (just(B.reload)) gameAction('reload', false);             // X/□
-      if (just(B.meleeToggle)) gameAction('use', false);           // Y/△ = equip-melee toggle (Q)
-    } else { this._bHeld = false; this._bT = 0; this._bFired = false; }
-    if (just(B.meleeAttack)) { if (ggKarambit && typeof meleeAttack === 'function') meleeAttack(-1); else gameAction('use', false); }   // R3 = melee attack (swing if melee out, else draw it)
+      // Y/△: tap = equip-melee toggle (Q); HOLD 0.5s while holding a gun = inspect weapon (T)
+      if (pressed(B.meleeToggle)) { this._yHeld = true; this._yT = (this._yT || 0) + dt; if (this._yT >= 0.5 && !this._yFired && !ggKarambit && typeof brHeldWeapon === 'function' && brHeldWeapon()) { this._yFired = true; gameAction('inspect', false); } }
+      else { if (this._yHeld && !this._yFired) gameAction('use', false); this._yHeld = false; this._yT = 0; this._yFired = false; }
+    } else { this._bHeld = false; this._bT = 0; this._bFired = false; this._yHeld = false; this._yT = 0; this._yFired = false; }
+    if (just(B.meleeAttack) && !ltMod) { if (ggKarambit && typeof meleeAttack === 'function') meleeAttack(-1); else gameAction('use', false); }   // R3 = melee (unless LT-modified)
     if (just(B.crouch)) gameAction('crouch', false);               // D-Pad ↓ press (dive when sprinting)
-    if (just(B.sprint)) gameAction('sprint', false);               // L3 press (slide / toggle latch)
-    if (just(B.inventory)) gameAction('inventory', false);         // D-Pad ↑ = open the inventory pop-up
+    if (just(B.sprint) && !ltMod) gameAction('sprint', false);     // L3 press (unless LT-modified)
+    if (just(B.inventory) && !selDown) gameAction('inventory', false);   // D-Pad ↑ = open inventory (SELECT+↑ pings instead)
     if (just(B.prevWeapon)) gameAction('prevWeapon', false);       // D-Pad ←
     if (just(B.nextWeapon)) gameAction('nextWeapon', false);       // D-Pad →
   }
@@ -11230,6 +11255,15 @@ function brSetPing(id, wx, wz, t) {   // place/replace this player's single ping
   const ix = brPings.findIndex(p => p.id === id); if (ix >= 0) { const ex = brPings[ix]; if (ex.beam) { scene.remove(ex.beam); disposeGroup(ex.beam); } brPings.splice(ix, 1); }
   brPings.push({ id, x: wx, z: wz, t: t || performance.now(), beam: brPingBeam(wx, wz, brPingColor(id)) });
 }
+// (controller parity) drop a ping where the player is AIMING — raycast the look ray vs world geometry up to
+// 200u; if nothing hit, ping ~50u ahead along the look direction. Same networked path as a map click.
+function brPingAtAim() {
+  if (!BR.active) return;
+  const origin = camera.getWorldPosition(new THREE.Vector3()), dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  let wx = player.pos.x + dir.x * 50, wz = player.pos.z + dir.z * 50;
+  try { const hits = new THREE.Raycaster(origin, dir.clone().normalize(), 0.5, 200).intersectObjects(colliders, false); if (hits.length) { wx = hits[0].point.x; wz = hits[0].point.z; } } catch (e) {}
+  brPlacePingLocal(wx, wz);
+}
 function brPlacePingLocal(wx, wz) {
   brSetPing(NET.active ? NET.selfId : 'self', wx, wz, performance.now());
   if (typeof sfxClick === 'function') sfxClick();
@@ -12854,12 +12888,12 @@ function vkClose() { if (_vkTarget) { _vkTarget.value = _vkVal; _vkTarget.dispat
 
 const GPUI = {
   _screen: null, els: [], idx: -1, shown: false, navCd: 0, mouseActive: false, _aB: false, _bB: false, _yB: false, _lbB: false, _rbB: false,
-  SCREENS: ['vk', 'fullControls', 'weaponCustom', 'skinCreator', 'invMenu', 'settingsScreen', 'resultsScreen', 'endScreen', 'teamSelect', 'pauseMenu', 'lobbyScreen', 'startScreen', 'joinScreen', 'mainMenu'],
+  SCREENS: ['vk', 'fullControls', 'weaponCustom', 'skinCreator', 'brInvPanel', 'invMenu', 'settingsScreen', 'resultsScreen', 'endScreen', 'teamSelect', 'pauseMenu', 'lobbyScreen', 'startScreen', 'joinScreen', 'mainMenu'],
   vis(e) { if (!e) return false; if (e.classList && e.classList.contains('hidden')) return false; const cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden' && e.offsetWidth > 0 && e.offsetHeight > 0; },
   activeScreen() { for (const id of this.SCREENS) { const e = el(id); if (this.vis(e)) return e; } return null; },
   menuOpen() { return GP.active ? this.activeScreen() : null; },
   collect(screen) {
-    this.els = [...screen.querySelectorAll('button, input, select, .invCard, .wcOpt, .wcCat, .skGalThumb, .skTool')].filter(e => this.vis(e) && !e.disabled);
+    this.els = [...screen.querySelectorAll('button, input, select, .invCard, .wcOpt, .wcCat, .skGalThumb, .skTool, [data-invslot]')].filter(e => this.vis(e) && !e.disabled);
     if (this.idx >= this.els.length) this.idx = this.els.length - 1; if (this.idx < 0 && this.els.length) this.idx = 0;
   },
   cur() { return this.els[this.idx] || null; },
@@ -12884,12 +12918,32 @@ const GPUI = {
     e.click();   // buttons, checkboxes, cards, tabs, tool buttons
   },
   yAction() { const e = this.cur(); if (e && e.classList && e.classList.contains('invCard')) { const b = e.querySelector('.wcBtn'); if (b) b.click(); } },
+  // Fortnite inventory pop-up: LEFT-STICK navigates the 2 rows; A tap = equip + close, A hold + move + release = drag-swap;
+  // X = drop the highlighted slot; D-Pad↑ / B / Start = close. (Cells carry data-invslot 0..4; both rows share the index.)
+  invNav(dt, just, pressed, lx, ly) {
+    const slotOf = () => { const c = this.cur(); return (c && c.getAttribute) ? +c.getAttribute('data-invslot') : -1; };
+    if (just(12) || just(1) || just(9)) { if (typeof brCloseInv === 'function') brCloseInv(); return; }   // D-pad↑ again / B / Start = close
+    this.navCd -= dt; const navUp = ly < -0.55, navDown = ly > 0.55, navLeft = lx < -0.55, navRight = lx > 0.55;
+    if (navUp || navDown || navLeft || navRight) { if (this.navCd <= 0) { this.navCd = 0.16; if (navUp) this.move(0, -1); else if (navDown) this.move(0, 1); else if (navLeft) this.move(-1, 0); else this.move(1, 0); } } else this.navCd = 0;
+    if (just(0)) { this._invFrom = slotOf(); this._invMoved = false; }                                    // A pressed: begin (tap or drag)
+    if (pressed(0) && this._invFrom >= 0) { const s = slotOf(); if (s >= 0 && s !== this._invFrom) this._invMoved = true; }
+    if (!pressed(0) && this._aDown && this._invFrom >= 0) {                                                // A released
+      const to = slotOf();
+      if (this._invMoved && to >= 0 && to !== this._invFrom) { if (typeof brInvSwap === 'function') brInvSwap(this._invFrom, to); }   // dragged → swap (stay open)
+      else { if (typeof brSelect === 'function') brSelect(this._invFrom); if (typeof brCloseInv === 'function') brCloseInv(); }       // tap → equip + close
+      this._invFrom = -1; this._invMoved = false; if (typeof brRenderInv === 'function') brRenderInv();
+    }
+    this._aDown = pressed(0);
+    if (just(2)) { const s = slotOf(); if (s >= 0 && BR.active && typeof brDropSlotAll === 'function') { brDropSlotAll(s); if (typeof brSelectAfterEmpty === 'function') brSelectAfterEmpty(s); if (typeof brRenderInv === 'function') brRenderInv(); } }   // X = drop slot
+    this.highlight();
+  },
   back(screen) {
     const id = screen.id;
     if (id === 'vk') { vkClose(); return; }
     if (id === 'pauseMenu') { resumeGame(); return; }
     if (id === 'settingsScreen') { const b = el('settingsBack'); if (b) b.click(); return; }
     if (id === 'invMenu') { if (typeof toggleInventory === 'function') toggleInventory(); return; }
+    if (id === 'brInvPanel') { if (typeof brCloseInv === 'function') brCloseInv(); return; }
     if (id === 'fullControls') { toggleFullControls(false); return; }
     if (id === 'teamSelect') { const b = el('tsBack'); if (b && b.style.display !== 'none') b.click(); return; }
     if (id === 'weaponCustom') { const b = el('wcClose'); if (b) b.click(); return; }
@@ -12921,6 +12975,7 @@ const GPUI = {
     else this.collect(screen);   // re-collect (lists/cards can change) — cheap
     if (this.mouseActive) { this.hide(); return; }
     this.shown = true;
+    if (screen.id === 'brInvPanel') { this.invNav(dt, just, pressed, lx, ly); return; }   // Fortnite inventory pop-up = custom controller handling
     // navigation (DPad = discrete; stick = cooldown-repeat)
     this.navCd -= dt; const stickNav = (Math.abs(lx) > 0.55 || Math.abs(ly) > 0.55);
     const cur = this.cur(), onSlider = cur && cur.tagName === 'INPUT' && cur.type === 'range';
@@ -14556,7 +14611,7 @@ const SkinCreator = (() => {
     el('skSave').onclick = saveAndUse;
     el('skClose').onclick = close;
     // image upload + stamp controls (Part 1)
-    el('skUpload').onclick = () => el('skFile').click();
+    el('skUpload').onclick = () => { if (GP.active) { el('skStatus').textContent = 'Use keyboard/mouse to upload an image.'; if (typeof sfxNotify === 'function') sfxNotify(); return; } el('skFile').click(); };   // (controller carve-out: OS file picker needs mouse/keyboard)
     el('skFile').onchange = (e) => { processUpload(e.target.files && e.target.files[0]); e.target.value = ''; };
     el('skUseBase').onclick = useAsBase;
     el('skStampSize').oninput = e => { stampSize = +e.target.value; el('skStampSizeVal').textContent = stampSize; };

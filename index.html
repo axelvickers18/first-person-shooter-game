@@ -994,6 +994,9 @@
 <div id="hurtFlash"></div>
 <div id="dmgArcs"></div>
 <div id="boostFlash"></div>
+<!-- TEMP DEBUG (damage-audio diagnostic, remove in follow-up): big red flash + on-screen audio-context state + call counter -->
+<div id="damageFlash" style="display:none; position:fixed; top:0; left:0; width:100%; height:30vh; z-index:60; background:rgba(255,0,0,0.55); align-items:center; justify-content:center; font:900 38px 'Segoe UI',sans-serif; color:#fff; text-shadow:0 2px 8px #000; letter-spacing:2px; pointer-events:none;"></div>
+<div id="audioDbg" style="position:fixed; left:10px; bottom:10px; z-index:60; font:800 13px 'Segoe UI',sans-serif; pointer-events:none; text-shadow:0 1px 3px #000; line-height:1.4;"></div>
 <div id="lootFlash"></div>
 <div id="jdFlash"></div>
 <div id="saberFlash"></div>
@@ -2445,6 +2448,28 @@ function sfxHurt(pos) { SND.play3d((ctx, out, t) => { aNoise(ctx, out, t, { dur:
 // player so a far-off shot is still clearly audible while keeping its direction. Cooldowns stop full-auto
 // spam: ≥80ms between thuds, ≥600ms between grunts (one grunt per burst). Heartbeat (low HP) is separate.
 let _hitThudT = 0, _hitGruntT = 0;
+/* ===== TEMP DEBUG (damage-audio 3rd attempt) — remove in a follow-up commit once we know audio works =====
+   The absolute simplest possible Web Audio beep: a 220Hz square wave wired DIRECTLY to the context
+   destination (bypasses SND.master / spatial panner / category gains / mute). If THIS doesn't play, no
+   Web Audio plays at all → the context itself is the problem. Fires alongside the visible red damage flash. */
+let __damageAudioCalls = 0;
+function playDamageBeep() {
+  try {
+    const ctx = SND.ctx; if (!ctx) { console.error('[DMG-BEEP] no SND.ctx'); return; }
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.frequency.value = 220; osc.type = 'square'; gain.gain.value = 0.3;
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.1);
+    __damageAudioCalls++; window.__damageAudioCalls = __damageAudioCalls;
+  } catch (e) { console.error('[DMG-BEEP] failed:', e); }
+}
+// TEMP DEBUG: huge unmissable red flash + damage readout (top 30% of the screen, 200ms).
+function showDamageFlash(dmg) {
+  const d = el('damageFlash'); if (!d) return;
+  d.textContent = 'DAMAGE TAKEN: -' + Math.max(1, Math.round(dmg)) + ' HP';
+  d.style.display = 'flex'; clearTimeout(d._t); d._t = setTimeout(() => { d.style.display = 'none'; }, 200);
+}
 const HIT_THUD_CD = 80, HIT_GRUNT_CD = 600, HIT_GRUNT_MIN = 8;
 function sfxHitTaken(dmg, srcPos) {
   if (SND.resume) SND.resume();   // (FIX 3) make sure the audio context is live even if it got suspended (covers cause (a))
@@ -10534,12 +10559,13 @@ function brFillLoadout() {
   }
   brSel = 0; brLastSlot = 0;   // hold the main weapon (the caller's ggEquip(mainGunKey()) does the actual equip); Q returns here
 }
-function brGiveWeapon(key, cfg, rar, stored) {   // pick up a weapon: fill an empty slot, else swap the held item
-  brSetupWeaponAmmo(key, cfg, rar, stored); const ws = weaponState[key];
-  const item = { t: 'weapon', key, cfg: cfg ? Object.assign({}, cfg) : null, rar: rar || 'common', ammo: ws ? ws.ammo : WEAPONS[key].mag, reserve: ws ? ws.reserve : 0 };
+function brGiveWeapon(key, cfg, rar, stored) {   // pick up a weapon into an EMPTY slot only — returns false if inventory full
   const e = brFirstEmpty();
-  if (e >= 0) { brInv[e] = item; if (ggKarambit || !brHeldWeapon()) brSelect(e); else updateHUD(); }   // auto-equip only if not already holding a gun
-  else { const i = (brSel >= 0 && brSel < 5) ? brSel : 0; brDropSlotAll(i); brInv[i] = item; brSelect(i); }   // inventory full -> drop the held item, take the weapon
+  if (e < 0) return false;   // (Fix 3) full inventory NEVER auto-swaps on pickup; the player must drop (X) or hold-E to swap
+  brSetupWeaponAmmo(key, cfg, rar, stored); const ws = weaponState[key];
+  brInv[e] = { t: 'weapon', key, cfg: cfg ? Object.assign({}, cfg) : null, rar: rar || 'common', ammo: ws ? ws.ammo : WEAPONS[key].mag, reserve: ws ? ws.reserve : 0 };
+  if (ggKarambit || !brHeldWeapon()) brSelect(e); else updateHUD();   // auto-equip only if not already holding a gun
+  return true;
 }
 function brTakeConsumable(t) {   // stack into an existing slot, else take a new slot (returns false if no room / full)
   const lim = BR_STACK[t] || 1;
@@ -10617,8 +10643,26 @@ function brUseSelected() {   // use the held consumable (cigar smoke / JD drink 
 function brTakeLoot(L, label, col, raw) { L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); } brPickupToast(label, col, raw); }
 function brPickupToast(label, col, raw) { const p = el('brPickup'); if (!p) return; p.textContent = (raw ? '' : 'PICKED UP: ') + label; p.style.color = col || '#fff'; p.style.transition = 'none'; p.style.opacity = '1'; clearTimeout(p._t); requestAnimationFrame(() => { p.style.transition = 'opacity 1.4s'; }); p._t = setTimeout(() => { p.style.opacity = '0'; }, 900); }
 function brPickWeapon(L) {
-  brGiveWeapon(L.key, L.cfg, L.rarity, (L.ammo != null) ? { ammo: L.ammo, reserve: L.reserve } : null);
-  brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
+  // (Fix 3) only consume the ground weapon if it actually fit an empty slot; a full inventory does NOTHING
+  // on tap-E (the player drops with X, or HOLD-E to swap — see brUpdateLoot).
+  if (brGiveWeapon(L.key, L.cfg, L.rarity, (L.ammo != null) ? { ammo: L.ammo, reserve: L.reserve } : null))
+    brTakeLoot(L, BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'WEAPON'), BR_RAR[L.rarity].c);
+}
+// (Fix 3) HOLD-E weapon swap: drop the currently-held weapon at the ground weapon's spot, take the ground weapon
+// into that same slot. Only valid when inventory is FULL and the held item is a weapon (not melee/consumable).
+let brHoldSwapT = 0;
+function brPerformWeaponSwap(L) {
+  if (!L || L.taken || !brHeldWeapon()) return;
+  const i = brSel; if (i < 0 || i > 4 || !brInv[i] || brInv[i].t !== 'weapon') return;
+  const old = brInv[i], ox = L.pos.x, oz = L.pos.z, oy = L.pos.y;
+  brSyncHeldAmmo();
+  L.taken = true; if (L.mesh) { scene.remove(L.mesh); disposeGroup(L.mesh); }   // remove the ground weapon
+  brSetupWeaponAmmo(L.key, L.cfg, L.rarity, (L.ammo != null) ? { ammo: L.ammo, reserve: L.reserve } : null);
+  const ws = weaponState[L.key];
+  brInv[i] = { t: 'weapon', key: L.key, cfg: L.cfg ? Object.assign({}, L.cfg) : null, rar: L.rarity || 'common', ammo: ws ? ws.ammo : WEAPONS[L.key].mag, reserve: ws ? ws.reserve : 0 };
+  brSelect(i);
+  const fromTop = new THREE.Vector3(player.pos.x, player.pos.y + 1.0, player.pos.z), o = brSpawnDroppedWeapon(ox, oz, old, oy); if (o) brStartLootPop(o, fromTop, 0.5);   // drop the old weapon where the ground one was
+  brPickupToast('SWAPPED for ' + (BR_RAR[L.rarity] ? BR_RAR[L.rarity].name : '') + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'weapon'), brRarHex(L.rarity));
 }
 function brPickConsumable(L) {   // (Part 2) E to pick up a NEW consumable type into a free slot
   if (!brTakeConsumable(L.kind)) return false;
@@ -10683,11 +10727,22 @@ function brUpdateLoot(dt) {
     if (brSwapTarget) {
       sp.style.display = 'block'; const ekey = '<b style="color:#ffe600">' + IM.keyLabel(IM.bind.interact) + '</b>', L = brSwapTarget;
       if (L.chest) sp.innerHTML = 'Press ' + ekey + ' to OPEN ' + (L.rarity !== 'common' ? '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + '</b> ' : '') + 'CHEST';
-      else if (L.kind === 'weapon') { const full = brFirstEmpty() < 0; sp.innerHTML = 'Press ' + ekey + (full ? ' to SWAP for ' : ' to PICK UP ') + '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'weapon') + '</b>'; }
+      else if (L.kind === 'weapon') {
+        const full = brFirstEmpty() < 0, wname = '<b style="color:' + brRarHex(L.rarity) + '">' + BR_RAR[L.rarity].name + ' ' + (WEAPONS[L.key] ? WEAPONS[L.key].name : 'weapon') + '</b>';
+        // (Fix 3) empty slot → tap-E pick up. Full + holding a weapon → HOLD-E to swap. Full + melee/consumable held → can't.
+        if (!full) sp.innerHTML = 'Press ' + ekey + ' to PICK UP ' + wname;
+        else if (brHeldWeapon()) sp.innerHTML = '<b style="color:#ffe600">HOLD ' + IM.keyLabel(IM.bind.interact) + '</b> to SWAP for ' + wname + (brHoldSwapT > 0 ? ' <span style="color:#ffd34a">…' + Math.round(brHoldSwapT / 0.5 * 100) + '%</span>' : '');
+        else sp.innerHTML = '<b style="color:#8a98a6; letter-spacing:1px;">INVENTORY FULL</b>';
+      }
       else { const m = brItemMeta(L.kind); sp.innerHTML = 'Press ' + ekey + ' to PICK UP <b style="color:' + brLootCol(L.kind) + '">' + m.name + '</b>'; }
     } else if (lootedNear) { sp.style.display = 'block'; sp.innerHTML = '<b style="color:#8a98a6; letter-spacing:1px;">[ LOOTED ]</b>'; }   // (Part 3) empty chest — no interaction
     else sp.style.display = 'none';
   }
+  // (Fix 3) HOLD-E (0.5s) to swap the held weapon for a full inventory's ground weapon.
+  if (brSwapTarget && brSwapTarget.kind === 'weapon' && brFirstEmpty() < 0 && brHeldWeapon() && IM.down('interact')) {
+    brHoldSwapT += dt;
+    if (brHoldSwapT >= 0.5) { brHoldSwapT = 0; brPerformWeaponSwap(brSwapTarget); brSwapTarget = null; }
+  } else brHoldSwapT = 0;
 }
 function brRarHex(r) { return '#' + (BR_RAR[r] ? BR_RAR[r].c : 0xffffff).toString(16).padStart(6, '0'); }
 function brWeaponAmmoOf(it) {   // {ammo,reserve,out} for a weapon slot — live state for the held one, cached for the rest
@@ -11353,6 +11408,8 @@ function updateHUD() {
   const _hbOn = gameState.running && player.alive && !brSpectating;
   const _hb = el('brHotbar'); if (_hb) { _hb.style.display = _hbOn ? 'flex' : 'none'; if (_hbOn) _hb.innerHTML = brHotbarHtml(); }
   const _wh = el('brWeapons'); if (_wh) { _wh.style.display = _hbOn ? 'block' : 'none'; if (_hbOn) _wh.innerHTML = brHeldDetailHtml(); }
+  // TEMP DEBUG (Fix 1): always-visible AudioContext state + damage-audio call counter (bottom-left).
+  { const adb = el('audioDbg'); if (adb) { const st = (SND.ctx ? SND.ctx.state : 'none'); adb.innerHTML = 'AudioCtx: <span style="color:' + (st === 'running' ? '#fff' : '#ff5a5a') + '">' + st + '</span><br><span style="color:#cfe0f0">Damage audio calls: ' + (window.__damageAudioCalls || 0) + '</span>'; } }
   updateStreakHUD();
 }
 
@@ -11571,6 +11628,10 @@ function hurtPlayer(dmg, srcPos) {
   player.health -= dmg;
   if (dmg > 0) GP.rumble(Math.min(0.9, 0.35 + dmg * 0.02), 0.5, 200);   // damage pulse (scales with the hit)
   showHurtFlash();
+  if (srcPos) player._lastHitFrom = srcPos.clone ? srcPos.clone() : new THREE.Vector3(srcPos.x, srcPos.y, srcPos.z);   // remembered for killcam tracers (Fix 2)
+  // TEMP DEBUG (Fix 1): the visible red flash + the dead-simple beep fire TOGETHER, on the same line as the
+  // real damage-audio call, so we can pinpoint exactly where the chain breaks (see flash? hear beep? counter?).
+  if (dmg >= 1) { showDamageFlash(dmg); playDamageBeep(); }
   console.log('[DMG-DEBUG] local damage taken: ' + (+dmg).toFixed(1) + ' from: ' + (srcPos ? 'positional' : 'non-positional/zone') + ' mode: ' + gameMode + ' health->' + player.health.toFixed(0));
   if (dmg >= 1 && player.health > 0) sfxHitTaken(dmg, srcPos);   // (CHANGE 4) directional thud + grunt toward the shooter (srcPos)
   if (dmg >= 1 && srcPos) showDamageArc(srcPos);          // red directional arc toward the source
@@ -11761,6 +11822,7 @@ function beginKillcam(info) {
     _cam: null, _sized: null, frames: null, killAbs: 0, killT: 0, killerCfgs: null, started: false, waiting: false, fallbackT: 0 });
   killcam.killerId = info.id || null;
   killcam.deathPos.copy(player.pos); killcam.name = info.name || (NET.active ? 'Someone' : 'A bot'); killcam.weapon = info.weapon || null; killcam.head = !!info.head;
+  killcam.killerPos = (player._lastHitFrom && player._lastHitFrom.clone) ? player._lastHitFrom.clone() : null; killcam._tracerT = 0;   // (Fix 2) origin for synthesized death-cam tracers
   killcam.dist = (info.id && NET.active && NET.players.has(info.id)) ? player.pos.distanceTo(NET.players.get(info.id).pos) : 0;
   killcam.world = _worldRing.slice(); killcam.selfPath = _camRing.slice();   // the victim's own last few seconds drive the victim avatar + bystanders
   buildVictimAvatar();
@@ -11837,6 +11899,18 @@ function killcamApply(dt) {
   SND.pitch = !replaying ? 1 : (inKill ? 0.5 : 0.7);
   killcam.bt += dt * (!replaying ? 1 : (inKill ? KC_KILLSLOW : KC_SLOW));
   if (!killcam.killed && killcam.bt >= killcam.killT) onKillMoment();   // kill FX at the 3s mark; playback then CONTINUES
+  // (Fix 2) DEATH-mode killcam (bot / disconnected killer = no recorded POV): synthesize the killer's tracer
+  // rounds streaking toward the victim in the ~1.2s before the kill, so tracers are visible like in a real
+  // POV replay. (Replay mode already re-fires real tracers via killcamFireFX.) Uses the same spawnTracer.
+  if (!replaying && killcam.killerPos && killcam.bt >= killcam.killT - 1.2 && killcam.bt <= killcam.killT + 0.15) {
+    killcam._tracerT -= dt;
+    if (killcam._tracerT <= 0) {
+      killcam._tracerT = 0.18;
+      const kp = killcam.killerPos, dp = killcam.deathPos;
+      const from = new THREE.Vector3(kp.x, kp.y + 1.4, kp.z), to = new THREE.Vector3(dp.x + (Math.random() - 0.5) * 0.8, dp.y + 1.1, dp.z + (Math.random() - 0.5) * 0.8);
+      if (from.distanceTo(to) > 2) { spawnTracer(from, to, { color: TRACER.color.bot, life: (TRACER.life.bot || 0.15) * 1.8 }); if (killcam.weapon && WEAPONS[killcam.weapon]) sfxFire(killcam.weapon, from); }
+    }
+  }
   if (killcam.bt >= killcam.span) { killcam.bt = killcam.span; finishKillcam(); return; }   // played the full 3s+2s → respawn
   const p = killcam.span > 0 ? Math.min(1, killcam.bt / killcam.span) : 1;
   // UI: timeline + countdown + slow-mo indicator
@@ -12112,6 +12186,14 @@ document.addEventListener('keydown', (e) => {
 
 // --- Audio: unlock the engine on the first user gesture (browser policy) + delegated UI sounds ---
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { SND.init(); SND.resume(); }));
+// TEMP DEBUG (Fix 1, STEP 5): an explicit ONE-TIME resume of the raw AudioContext on the very first gesture,
+// independent of SND, with a flag — Chrome requires a gesture before any AudioContext can produce sound.
+let __audioUnlocked = false;
+function __unlockAudioOnce() {
+  if (__audioUnlocked) return;
+  try { if (SND.ctx) { SND.ctx.resume(); __audioUnlocked = true; console.log('[DMG-BEEP] AudioContext resume() called on first gesture; state=' + SND.ctx.state); } } catch (e) { console.error('[DMG-BEEP] resume failed:', e); }
+}
+['pointerdown', 'keydown', 'click', 'touchstart'].forEach(ev => document.addEventListener(ev, __unlockAudioOnce, { passive: true }));
 document.addEventListener('mouseover', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && !b.disabled) sfxHover(); });
 document.addEventListener('mousedown', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && !b.disabled && !b.classList.contains('invCard')) sfxClick(); });
 
